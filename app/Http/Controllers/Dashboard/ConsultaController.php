@@ -324,6 +324,13 @@ class ConsultaController extends Controller
             )));
         }
 
+        // Contagem CNPJ × CPF do filtro atual — mesma régua de is_cnpj/is_cpf
+        // (dígitos do documento), que decide o pode_consultar da seleção.
+        $documentos = (clone $query)->toBase()->selectRaw(
+            "count(*) filter (where length(regexp_replace(coalesce(documento, ''), '[^0-9]', '', 'g')) = 14) as cnpjs,
+             count(*) filter (where length(regexp_replace(coalesce(documento, ''), '[^0-9]', '', 'g')) = 11) as cpfs"
+        )->first();
+
         // Ordenação.
         if ($ordenar === 'ultima_consulta') {
             $query->orderByRaw('ultima_consulta_em ASC NULLS FIRST')->orderBy('razao_social');
@@ -483,6 +490,10 @@ class ConsultaController extends Controller
                 'last_page' => $participantes->lastPage(),
                 'per_page' => $participantes->perPage(),
                 'total' => $participantes->total(),
+            ],
+            'documentos' => [
+                'cnpjs' => (int) ($documentos->cnpjs ?? 0),
+                'cpfs' => (int) ($documentos->cpfs ?? 0),
             ],
         ]);
     }
@@ -1798,6 +1809,10 @@ class ConsultaController extends Controller
             'creditos' => $r['creditos'],
             'novo_saldo' => $this->creditService->getBalance($user->fresh()),
             'redirect_url' => route('app.consulta.lote.show', ['id' => $lote->id]),
+            // RetryConsultaService::executar() troca o tab_id do lote (strip novo pro batch de
+            // retry) — sem devolver o valor atualizado aqui, o front continua ouvindo o SSE do
+            // tab_id antigo e o progresso real nunca chega (cai pro polling de 5s em 5s).
+            'tab_id' => $lote->tab_id,
         ]);
     }
 
@@ -1998,10 +2013,7 @@ class ConsultaController extends Controller
         // Fontes de regularidade que o plano deste lote inclui. Usado p/ marcar como "Falhou"
         // a certidão pedida mas que não retornou (code retry/fatal da InfoSimples → chave ausente)
         // em vez de exibi-la como "—" (indistinguível de fora do plano).
-        $esperadasCert = array_values(array_intersect(
-            $lote->plano?->consultas_incluidas ?? [],
-            ['cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts', 'cndt', 'sintegra'],
-        ));
+        $esperadasCert = $detalhePresenter->esperadasDoPlano($lote->plano?->consultas_incluidas);
 
         return $resultados->map(function (ConsultaResultado $resultado) use ($parecerService, $detalhePresenter, $fiscalResumos, $clienteResumos, $esperadasCert, $lote) {
             $parecerResumo = $resultado->isSucesso()

@@ -202,7 +202,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                     <div class="bg-gray-50 border border-gray-200 rounded p-3">
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Teto efetivo</p>
-                        <p class="text-base font-bold text-gray-900">{{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $capEfetivo)) }} <span class="text-[11px] font-normal text-gray-400">/ciclo</span></p>
+                        <p class="text-base font-bold text-gray-900"><span id="teto-efetivo-valor">{{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $capEfetivo)) }}</span> <span class="text-[11px] font-normal text-gray-400">/ciclo</span></p>
                     </div>
                     <div class="bg-gray-50 border border-gray-200 rounded p-3">
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Consumido no ciclo</p>
@@ -213,24 +213,23 @@
                         <p class="text-base font-bold text-gray-900">{{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $capPadrao)) }}</p>
                     </div>
                 </div>
-                @if($capEfetivo > 0)
-                <div class="mb-4">
+                <div id="consumo-ciclo-progresso" class="mb-4{{ $capEfetivo > 0 ? '' : ' hidden' }}">
                     <div class="flex items-center justify-between text-[11px] text-gray-500 mb-1">
-                        <span>Consumo do ciclo: {{ $pctConsumo }}%</span>
+                        <span>Consumo do ciclo: <span id="consumo-ciclo-percentual" data-consumo-creditos="{{ (int) $consumoCiclo }}">{{ $pctConsumo }}%</span></span>
                         <span>Projetado até o fim do ciclo: {{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $projecaoCiclo)) }}</span>
                     </div>
                     <div class="w-full h-2 rounded bg-gray-200 overflow-hidden">
-                        <div class="h-2 rounded" style="width: {{ $pctConsumo }}%; background-color: {{ $corBarra }}"></div>
+                        <div id="consumo-ciclo-barra" class="h-2 rounded" style="width: {{ $pctConsumo }}%; background-color: {{ $corBarra }}"></div>
                     </div>
                 </div>
-                @endif
                 <div class="flex flex-wrap items-end gap-3">
                     <div>
                         <label class="block text-[11px] text-gray-500 mb-1">Teto personalizado (R$)</label>
                         {{-- O usuário digita R$; o JS converte pra créditos (unidade interna do backend) no envio. --}}
-                        <input type="number" id="input-limite-consumo" min="0" max="{{ $precos->creditsToCurrency(1000000) }}" step="0.01"
-                               value="{{ $limiteAtual !== null && $limiteAtual !== '' ? $precos->creditsToCurrency((int) $limiteAtual) : '' }}"
+                        <input type="text" id="input-limite-consumo" inputmode="decimal" autocomplete="off"
+                               value="{{ $limiteAtual !== null && $limiteAtual !== '' ? number_format($precos->creditsToCurrency((int) $limiteAtual), 2, ',', '.') : '' }}"
                                data-credit-unit-price="{{ $precos->creditUnitPrice() }}"
+                               data-max-credits="1000000" aria-describedby="limite-feedback"
                                placeholder="Padrão do plano" class="text-[13px] py-2.5 px-3 border border-gray-300 rounded w-48">
                     </div>
                     <button id="btn-salvar-limite" type="button" class="px-3 py-2.5 rounded bg-gray-800 hover:bg-gray-700 text-white text-[13px] font-semibold transition">Salvar</button>
@@ -783,20 +782,75 @@
         var btn = document.getElementById('btn-salvar-limite');
         var input = document.getElementById('input-limite-consumo');
         var feedback = document.getElementById('limite-feedback');
+        var tetoEfetivo = document.getElementById('teto-efetivo-valor');
+        var progresso = document.getElementById('consumo-ciclo-progresso');
+        var percentual = document.getElementById('consumo-ciclo-percentual');
+        var barra = document.getElementById('consumo-ciclo-barra');
         if (!btn || !input) { return; }
 
         var token = document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '';
         // Input em R$; backend fala créditos → converter na ida (÷ preço unitário) e na volta (×).
         var unitPrice = parseFloat(input.dataset.creditUnitPrice) || 0.20;
+        var maxCredits = parseInt(input.dataset.maxCredits, 10) || 1000000;
+        var consumoCreditos = percentual ? parseInt(percentual.dataset.consumoCreditos, 10) || 0 : 0;
+        var numeroBrl = function (valor) {
+            return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
         var brl = function (creditos) {
-            return 'R$ ' + (Math.round(creditos * unitPrice * 100) / 100)
-                .toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return 'R$ ' + numeroBrl(Math.round(creditos * unitPrice * 100) / 100);
+        };
+        var filtrarMoeda = function (valor) {
+            var limpo = String(valor || '').replace(/[^\d,.]/g, '');
+            var separador = Math.max(limpo.lastIndexOf(','), limpo.lastIndexOf('.'));
+            var inteiro = (separador >= 0 ? limpo.slice(0, separador) : limpo).replace(/\D/g, '');
+            var decimal = separador >= 0 ? limpo.slice(separador + 1).replace(/\D/g, '').slice(0, 2) : '';
+
+            inteiro = inteiro.replace(/^0+(?=\d)/, '');
+            if (separador >= 0) {
+                return (inteiro || '0') + ',' + decimal;
+            }
+
+            return inteiro;
+        };
+        var parseMoeda = function (valor) {
+            var normalizado = filtrarMoeda(valor);
+            if (normalizado === '' || normalizado === '0,') { return normalizado === '' ? null : 0; }
+
+            return parseFloat(normalizado.replace(',', '.'));
+        };
+        var atualizarResumo = function (capCreditos) {
+            if (tetoEfetivo) {
+                tetoEfetivo.textContent = brl(capCreditos);
+            }
+
+            if (!progresso || !percentual || !barra) { return; }
+            if (capCreditos <= 0) {
+                progresso.classList.add('hidden');
+                return;
+            }
+
+            var pct = Math.min(100, Math.round(consumoCreditos * 100 / capCreditos));
+            var cor = pct >= 100 ? '#dc2626' : (pct >= 80 ? '#d97706' : '#1f2937');
+            percentual.textContent = pct + '%';
+            barra.style.width = pct + '%';
+            barra.style.backgroundColor = cor;
+            progresso.classList.remove('hidden');
         };
 
+        input.addEventListener('input', function () {
+            input.value = filtrarMoeda(input.value);
+        });
+        input.addEventListener('blur', function () {
+            var valor = parseMoeda(input.value);
+            if (valor !== null && !isNaN(valor)) {
+                input.value = numeroBrl(valor);
+            }
+        });
+
         btn.addEventListener('click', function () {
-            var raw = input.value.trim().replace(',', '.');
-            var limite = raw === '' ? null : Math.round(parseFloat(raw) / unitPrice);
-            if (limite !== null && (isNaN(limite) || limite < 0 || limite > 1000000)) {
+            var valor = parseMoeda(input.value);
+            var limite = valor === null ? null : Math.round(valor / unitPrice);
+            if (limite !== null && (isNaN(limite) || limite < 0 || limite > maxCredits)) {
                 feedback.textContent = 'Valor inválido.';
                 feedback.style.color = '#dc2626';
                 return;
@@ -811,7 +865,11 @@
             }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
               .then(function (res) {
                   if (res.ok && res.j.success) {
-                      feedback.textContent = '✓ Teto atualizado (' + brl(Number(res.j.cap_efetivo)) + '/ciclo).';
+                      var limiteSalvo = res.j.limite_consumo_automatico;
+                      var capEfetivo = Number(res.j.cap_efetivo);
+                      input.value = limiteSalvo === null ? '' : numeroBrl(Number(limiteSalvo) * unitPrice);
+                      atualizarResumo(capEfetivo);
+                      feedback.textContent = '✓ Teto atualizado (' + brl(capEfetivo) + '/ciclo).';
                       feedback.style.color = '#047857';
                   } else {
                       feedback.textContent = (res.j && (res.j.error || res.j.message)) || 'Não foi possível salvar.';

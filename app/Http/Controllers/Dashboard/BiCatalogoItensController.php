@@ -13,6 +13,7 @@ use App\Support\Cfop;
 use App\Support\CsvExport;
 use App\Support\PdfReport;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 
 class BiCatalogoItensController extends Controller
@@ -20,6 +21,9 @@ class BiCatalogoItensController extends Controller
     use RespondeAjax;
 
     private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
+
+    /** Itens por página na tabela principal. */
+    private const POR_PAGINA = 50;
 
     public function __construct(
         private NotaItemUnificadoService $service,
@@ -85,9 +89,20 @@ class BiCatalogoItensController extends Controller
 
         $reconciliacao = $this->reconciliacao->resumo($userId, $filtros);
 
+        // KPIs e exportações usam o conjunto completo ($itens); a TABELA pagina em memória
+        // (já-agregada em SQL, ordenada por valor) para não despejar centenas de linhas de uma vez.
+        $pagina = LengthAwarePaginator::resolveCurrentPage();
+        $itensPaginados = new LengthAwarePaginator(
+            $itens->forPage($pagina, self::POR_PAGINA)->values(),
+            $itens->count(),
+            self::POR_PAGINA,
+            $pagina,
+            ['path' => LengthAwarePaginator::resolveCurrentPath(), 'query' => $request->except('page')],
+        );
+
         $clientes = Cliente::where('user_id', $userId)->orderByDesc('is_empresa_propria')->orderBy('razao_social')->get(['id', 'razao_social']);
 
-        $data = ['itens' => $itens, 'kpis' => $kpis, 'clientes' => $clientes, 'filtros' => $filtros,
+        $data = ['itensPaginados' => $itensPaginados, 'kpis' => $kpis, 'clientes' => $clientes, 'filtros' => $filtros,
             'facetas' => $facetas, 'cfopOpcoes' => $cfopOpcoes,
             'divergencias' => $divergenciasView, 'semCatalogo' => $semCatalogoView, 'reconciliacao' => $reconciliacao,
             'mostrarDispensados' => $mostrarDispensados, 'totalDispensados' => $totalDispensados];

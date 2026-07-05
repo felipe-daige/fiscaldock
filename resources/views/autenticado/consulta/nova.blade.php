@@ -185,7 +185,7 @@
                             <span class="text-[10px] font-semibold text-gray-400">O que cada plano consulta</span>
                         </div>
                         <div class="overflow-x-auto border border-gray-200 rounded">
-                            <table class="w-full text-xs">
+                            <table class="w-full text-xs tabela-cards">
                                 <thead style="background-color: #f9fafb;">
                                     <tr class="text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
                                         <th class="py-2 px-3">Produto</th>
@@ -204,16 +204,16 @@
                                             <td class="py-2 px-3">
                                                 <span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold whitespace-nowrap" style="background-color: {{ $pd['badge_hex'] }};">{{ $pd['nome'] }}</span>
                                             </td>
-                                            <td class="py-2 px-3 text-gray-600">{{ implode(' · ', $pd['consultas']) }}</td>
-                                            <td class="py-2 px-3 font-medium text-gray-900 whitespace-nowrap">
+                                            <td class="py-2 px-3 text-gray-600" data-label="Inclui">{{ implode(' · ', $pd['consultas']) }}</td>
+                                            <td class="py-2 px-3 font-medium text-gray-900 whitespace-nowrap" data-label="Custo">
                                                 @if ($pd['gratuito'])
                                                     Gratuito
                                                 @else
                                                     {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) $pd['creditos'])) }}/CNPJ
                                                 @endif
                                             </td>
-                                            <td class="py-2 px-3 text-gray-500">{{ $pd['casos_uso'][0] ?? '—' }}</td>
-                                            <td class="py-2 px-3">
+                                            <td class="py-2 px-3 text-gray-500" data-label="Quando usar">{{ $pd['casos_uso'][0] ?? '—' }}</td>
+                                            <td class="py-2 px-3" data-label="Acesso">
                                                 @if ($pd['locked'])
                                                     <span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold whitespace-nowrap" style="background-color: #d97706;">Requer 1ª compra</span>
                                                 @else

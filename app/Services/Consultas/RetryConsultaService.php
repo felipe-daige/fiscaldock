@@ -16,9 +16,12 @@ use Illuminate\Support\Facades\Cache;
  * Reconsulta de fontes com falha transitória (classe `retry`, ex. código 600 da InfoSimples).
  *
  * A fonte que falhou já foi estornada no fechamento do lote (ver ResultadoFonte::ehFalhaEstornavel),
- * então a reconsulta cobra o preço do PLANO com desconto, por CNPJ afetado. Retry é ilimitado
- * (re-falha total = estorno → líquido zero). Elegíveis: `retry` e `erro_participante` —
- * `fatal`/`interno` não.
+ * então a reconsulta cobra o preço do PLANO com desconto, por CNPJ afetado. Retry é ilimitado.
+ * Elegíveis: `retry` e `erro_participante` — `fatal`/`interno` não.
+ *
+ * Settlement (FecharRetryService): re-falha total da classe `retry` = estorno → líquido zero
+ * (o provedor não fatura instabilidade). Re-falha `erro_participante` MANTÉM a cobrança: a fonte
+ * oficial respondeu recusando os dados e a InfoSimples fatura essa resposta (`billable: true`).
  */
 class RetryConsultaService
 {
@@ -260,7 +263,7 @@ class RetryConsultaService
             userId: $lote->user_id,
             tabId: (string) $lote->tab_id,
             consultasIncluidas: $lote->plano->resolvedConsultasIncluidas(),
-            alvo: $this->resolverAlvo($tipo, $id),
+            alvo: $this->resolverAlvo($lote->id, $tipo, $id),
             etapas: $lote->plano->resolvedEtapas(),
             alvoIndice: $alvoIndice,
             totalAlvos: $totalAlvos,
@@ -269,19 +272,28 @@ class RetryConsultaService
     }
 
     /**
-     * @return array{cnpj:string, uf:?string, crt:mixed}
+     * @return array{cnpj:string, uf:?string, crt:mixed, matriz_filial:?string}
      */
-    private function resolverAlvo(string $tipo, int $id): array
+    private function resolverAlvo(int $loteId, string $tipo, int $id): array
     {
+        // Retry não roda o cadastro de novo (só as fontes que falharam), então o indicador
+        // oficial (RFB) de matriz/filial vem do resultado já persistido nesse lote — sem ele,
+        // CndFederalFonte::params() cairia de volta na ORDEM do CNPJ (heurística que já
+        // mandou consulta pro CNPJ errado num caso real: ver lote #220).
+        $matrizFilial = ConsultaResultado::where('consulta_lote_id', $loteId)
+            ->where($tipo === 'cliente' ? 'cliente_id' : 'participante_id', $id)
+            ->value('resultado_dados');
+        $matrizFilial = is_array($matrizFilial) ? ($matrizFilial['matriz_filial'] ?? null) : null;
+
         if ($tipo === 'cliente') {
             $c = Cliente::find($id);
 
-            return ['cnpj' => preg_replace('/[^0-9]/', '', (string) $c?->documento), 'uf' => $c?->uf, 'crt' => null];
+            return ['cnpj' => preg_replace('/[^0-9]/', '', (string) $c?->documento), 'uf' => $c?->uf, 'crt' => null, 'matriz_filial' => $matrizFilial];
         }
 
         $p = Participante::find($id);
 
-        return ['cnpj' => preg_replace('/[^0-9]/', '', (string) $p?->documento), 'uf' => $p?->uf, 'crt' => $p?->crt];
+        return ['cnpj' => preg_replace('/[^0-9]/', '', (string) $p?->documento), 'uf' => $p?->uf, 'crt' => $p?->crt, 'matriz_filial' => $matrizFilial];
     }
 
     /**

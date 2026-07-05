@@ -29,7 +29,17 @@ class CndFederalFonte extends FonteCertidaoInfoSimples
         // Consultar a filial retorna 620 ("A certidão deve ser emitida para o CNPJ da matriz"),
         // cobrado pela InfoSimples e irrecuperável por retry. A certidão da matriz vale para
         // todos os estabelecimentos; ResultadoDetalhePresenter::notaMatrizFederal explica no card.
-        if (Cnpj::ehFilial($params['cnpj'])) {
+        //
+        // `matriz_filial` (quando presente) vem do `identificador_matriz_filial` da própria RFB,
+        // propagado pelo cadastro — mais confiável que a ORDEM do CNPJ: já vimos empresa real
+        // com ordem ≠ 0001 marcada MATRIZ pela Receita (e a filial "0001" correspondente sendo
+        // outro estabelecimento). Usar só a ordem nesses casos troca pro CNPJ errado e a InfoSimples
+        // nunca emite — reconsulta ilimitada (classe `retry`) que nunca teria sucesso.
+        $ehFilial = isset($alvo['matriz_filial'])
+            ? $alvo['matriz_filial'] === 'filial'
+            : Cnpj::ehFilial($params['cnpj']);
+
+        if ($ehFilial) {
             $params['cnpj'] = Cnpj::matriz($params['cnpj']);
         }
 

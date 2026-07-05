@@ -195,7 +195,7 @@
             </div>
             @if($historicoCreditos->count() > 0)
                 <div class="overflow-x-auto">
-                    <table class="min-w-full">
+                    <table class="min-w-full tabela-cards">
                         <thead>
                             <tr class="border-b border-gray-300">
                                 <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Data</th>
@@ -214,12 +214,12 @@
                                 @endphp
                                 <tr class="hover:bg-gray-50/50 transition-colors">
                                     <td class="px-3 py-2.5 text-sm text-gray-700 whitespace-nowrap">{{ $tx->created_at->format('d/m/Y H:i') }}</td>
-                                    <td class="px-3 py-2.5 text-sm">
+                                    <td class="px-3 py-2.5 text-sm" data-label="Tipo">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badge['hex'] }}">{{ $badge['label'] }}</span>
                                     </td>
-                                    <td class="px-3 py-2.5 text-sm text-gray-600">{{ $tx->description ?? '-' }}</td>
-                                    <td class="px-3 py-2.5 text-sm text-right font-semibold {{ $amountClass }}">{{ $amountPrefix }}@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) abs($tx->amount)))</td>
-                                    <td class="px-3 py-2.5 text-sm text-right text-gray-500">{{ $tx->balance_after !== null ? \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $tx->balance_after)) : '-' }}</td>
+                                    <td class="px-3 py-2.5 text-sm text-gray-600" data-label="Descrição">{{ $tx->description ?? '-' }}</td>
+                                    <td class="px-3 py-2.5 text-sm text-right font-semibold {{ $amountClass }}" data-label="Valor (R$)">{{ $amountPrefix }}@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) abs($tx->amount)))</td>
+                                    <td class="px-3 py-2.5 text-sm text-right text-gray-500" data-label="Saldo após">{{ $tx->balance_after !== null ? \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $tx->balance_after)) : '-' }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

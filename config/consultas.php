@@ -211,7 +211,9 @@ return [
 
     // Reconsulta de fontes com falha transitória (classe `retry`, ex. código 600).
     // 'desconto_pct' = desconto sobre o preço do PLANO na reconsulta (cobrada por CNPJ afetado).
-    // Retry é ilimitado: falha total é estornada, então retentar não custa nada líquido.
+    // Retry é ilimitado. Re-falha da classe `retry` é estornada (provedor não fatura instabilidade
+    // → líquido zero); re-falha `erro_participante` mantém a cobrança (a fonte oficial responde
+    // recusando os dados e o provedor FATURA a chamada, ex. 620 FGTS billable).
     'retry' => [
         'desconto_pct' => (int) env('CONSULTAS_RETRY_DESCONTO_PCT', 50),
 
@@ -258,7 +260,7 @@ return [
                 'rotulo' => 'Fonte recusou os dados do CNPJ',
                 'aguardar_minutos' => 0,
                 'icone' => '⚠',
-                'orientacao' => 'A fonte oficial recusou a consulta com os dados deste CNPJ. Confira o cadastro (CNPJ/UF/situação) e reconsulte — se persistir, comunique o suporte.',
+                'orientacao' => 'A fonte oficial recusou a consulta com os dados deste CNPJ. Confira o cadastro (CNPJ/UF/situação) antes de reconsultar: essa resposta é faturada pela fonte, então a reconsulta é cobrada mesmo que a recusa se repita. Se persistir, comunique o suporte.',
             ],
         ],
     ],

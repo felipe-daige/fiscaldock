@@ -11,8 +11,11 @@ use Illuminate\Support\Facades\Cache;
 /**
  * Settlement da reconsulta (retry). A cobrança é por CNPJ (preço do plano com desconto), guardada
  * no envelope `consulta_retry_charge:{lote}:{tipo}:{id}` como escalar. Estorna o valor cheio do
- * CNPJ apenas quando NENHUMA fonte reconsultada daquele CNPJ voltou com sucesso (todas re-falharam
- * = ainda marcadas em `_fontes_erro`). Se ≥1 fonte teve sucesso, mantém a receita do retry.
+ * CNPJ apenas quando NENHUMA fonte reconsultada daquele CNPJ foi ENTREGUE. Entregue = sucesso
+ * (gravar() limpou a fonte de `_fontes_erro`) OU re-falha `erro_participante`: a fonte oficial
+ * respondeu recusando os dados do CNPJ (ex. 620 FGTS) e a InfoSimples FATURA essa resposta
+ * (`billable: true`) — provedor cobrou, a cobrança fica com o usuário (mesma regra do lote
+ * original, onde `erro_participante` nunca foi estornável — ver ResultadoFonte::ehFalhaEstornavel).
  */
 class FecharRetryService
 {
@@ -45,16 +48,19 @@ class FecharRetryService
             $erros = $this->persistencia->normalizarFontesErro(($row?->resultado_dados ?? [])['_fontes_erro'] ?? []);
             $cobrado = (int) Cache::get("consulta_retry_charge:{$loteId}:{$tipo}:{$id}", 0);
 
-            // Zero-sucesso = TODAS as fontes reconsultadas ainda em _fontes_erro (sucesso teria
-            // limpado via gravar()). Só então estorna o valor cheio do CNPJ.
-            $algumaSucesso = false;
+            // Estorna só quando NENHUMA fonte foi entregue: sucesso (fora de _fontes_erro) e
+            // re-falha `erro_participante` contam como entrega — nesta classe a fonte oficial
+            // respondeu (recusando os dados) e o provedor fatura a chamada, então o custo
+            // repassa ao usuário em vez de virar estorno.
+            $algumaEntregue = false;
             foreach ($fontes as $chave) {
-                if (! isset($erros[$chave])) {
-                    $algumaSucesso = true;
+                $erro = $erros[$chave] ?? null;
+                if ($erro === null || ($erro['status'] ?? null) === 'erro_participante') {
+                    $algumaEntregue = true;
                     break;
                 }
             }
-            if (! $algumaSucesso) {
+            if (! $algumaEntregue) {
                 $estorno += $cobrado;
             }
 

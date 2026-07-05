@@ -52,7 +52,7 @@
                     </div>
                     @if($ultimasTransacoes->count() > 0)
                         <div class="overflow-x-auto">
-                            <table class="min-w-full">
+                            <table class="min-w-full tabela-cards">
                                 <thead>
                                     <tr class="border-b border-gray-300">
                                         <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Data</th>
@@ -81,13 +81,13 @@
                                         @endphp
                                         <tr class="hover:bg-gray-50/50 transition-colors">
                                             <td class="px-3 py-2.5 text-sm text-gray-700 whitespace-nowrap">{{ $tx->created_at->format('d/m/Y H:i') }}</td>
-                                            <td class="px-3 py-2.5 text-sm text-gray-700">
+                                            <td class="px-3 py-2.5 text-sm text-gray-700" data-label="Execução">
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusHex }}">{{ $statusLabel }}</span>
                                                 <span class="ml-2">Lote #{{ $tx->id }}</span>
                                             </td>
-                                            <td class="px-3 py-2.5 text-sm text-gray-600">{{ $tx->plano->nome ?? '-' }}</td>
-                                            <td class="px-3 py-2.5 text-sm text-gray-700 text-center">{{ $tx->total_participantes ?? '-' }}</td>
-                                            <td class="px-3 py-2.5 text-sm font-semibold text-right {{ $tx->creditos_cobrados > 0 ? 'text-red-600' : 'text-gray-400' }}">
+                                            <td class="px-3 py-2.5 text-sm text-gray-600" data-label="Produto">{{ $tx->plano->nome ?? '-' }}</td>
+                                            <td class="px-3 py-2.5 text-sm text-gray-700 text-center" data-label="Participantes">{{ $tx->total_participantes ?? '-' }}</td>
+                                            <td class="px-3 py-2.5 text-sm font-semibold text-right {{ $tx->creditos_cobrados > 0 ? 'text-red-600' : 'text-gray-400' }}" data-label="Custo (R$)">
                                                 @if($tx->creditos_cobrados > 0)
                                                     −@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $tx->creditos_cobrados))
                                                 @else

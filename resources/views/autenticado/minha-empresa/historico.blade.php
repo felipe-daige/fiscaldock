@@ -30,7 +30,7 @@
         <div id="lista-empresa-historico" data-spa-list class="bg-white rounded border border-gray-300 overflow-hidden">
             @if(($consultas ?? collect())->count() > 0)
                 <div class="overflow-x-auto">
-                    <table class="min-w-full">
+                    <table class="min-w-full tabela-cards">
                         <thead>
                             <tr class="border-b border-gray-300">
                                 <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Data</th>
@@ -62,10 +62,10 @@
                                             {{ $consulta->consultado_em ? $consulta->consultado_em->format('H:i') : '' }}
                                         </div>
                                     </td>
-                                    <td class="px-3 py-3 whitespace-nowrap">
+                                    <td class="px-3 py-3 whitespace-nowrap" data-label="Plano">
                                         <div class="text-sm text-gray-700">{{ $consulta->lote->plano->nome ?? 'N/A' }}</div>
                                     </td>
-                                    <td class="px-3 py-3">
+                                    <td class="px-3 py-3" data-label="Consultas">
                                         <div class="flex flex-wrap gap-1">
                                             @foreach($consulta->getConsultasRealizadas() as $tipo)
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
@@ -75,7 +75,7 @@
                                             @endforeach
                                         </div>
                                     </td>
-                                    <td class="px-3 py-3 whitespace-nowrap text-center">
+                                    <td class="px-3 py-3 whitespace-nowrap text-center" data-label="Status">
                                         @if($consulta->isSucesso())
                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
                                                   style="background-color: #047857">Sucesso</span>
@@ -90,14 +90,14 @@
                                             <p class="mt-1 text-[11px] text-gray-500 normal-case whitespace-normal max-w-[18rem] mx-auto">{{ $consulta->getMensagemExibivel() }}</p>
                                         @endif
                                     </td>
-                                    <td class="px-3 py-3 whitespace-nowrap text-center">
+                                    <td class="px-3 py-3 whitespace-nowrap text-center" data-label="Score">
                                         @if($consulta->isSucesso())
                                             <span class="text-lg font-bold font-mono" style="color: {{ $scoreHex }}">{{ ($scoreData['classificacao'] ?? '') === 'inconclusivo' ? 'N/C' : $scoreData['score_total'] }}</span>
                                         @else
                                             <span class="text-gray-400">—</span>
                                         @endif
                                     </td>
-                                    <td class="px-3 py-3 whitespace-nowrap text-right text-xs">
+                                    <td class="px-3 py-3 whitespace-nowrap text-right text-xs" data-label="Ações">
                                         @if($consulta->lote)
                                             <a href="/app/consulta/lote/{{ $consulta->lote->id }}/baixar" class="text-gray-600 hover:text-gray-900 hover:underline">
                                                 Baixar CSV

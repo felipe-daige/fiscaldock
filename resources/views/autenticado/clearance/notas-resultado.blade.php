@@ -225,7 +225,7 @@
                     <p class="mt-1 text-[11px] text-gray-500">Listagem ordenada por severidade. Ruído abaixo da tolerância ({{ $formatMoney(\App\Services\Clearance\DivergenciaService::TOLERANCIA_ABSOLUTA_RUIDO) }} / {{ number_format(\App\Services\Clearance\DivergenciaService::TOLERANCIA_PERCENTUAL_RUIDO, 1, ',', '.') }}%) fica em seção separada.</p>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="min-w-full">
+                    <table class="min-w-full tabela-cards">
                         <thead>
                             <tr class="border-b border-gray-300">
                                 <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Documento</th>
@@ -265,19 +265,19 @@
                                             <p class="text-[10px] text-gray-400 mt-0.5">{{ $linha->natureza_operacao }}</p>
                                         @endif
                                     </td>
-                                    <td class="px-3 py-3 text-sm text-gray-700">
+                                    <td class="px-3 py-3 text-sm text-gray-700" data-label="Emitente">
                                         {{ $linha->emit_nome ?: $linha->emit_cnpj ?: '—' }}
                                         @if(($linha->dest_nome ?? null) || ($linha->dest_cnpj ?? null))
                                             <p class="text-[10px] text-gray-400 mt-0.5">→ {{ $linha->dest_nome ?: $linha->dest_cnpj }}</p>
                                         @endif
                                     </td>
-                                    <td class="px-3 py-3 text-sm text-gray-900 text-right font-mono whitespace-nowrap">{{ $linha->declarado_valor_label }}</td>
-                                    <td class="px-3 py-3 text-sm text-gray-900 text-right font-mono whitespace-nowrap">{{ $linha->valor_total_label ?? ($linha->valor_total !== null ? $formatMoney($linha->valor_total) : '—') }}</td>
-                                    <td class="px-3 py-3 text-sm text-right font-mono whitespace-nowrap" style="color: {{ $sevHex }}">
+                                    <td class="px-3 py-3 text-sm text-gray-900 text-right font-mono whitespace-nowrap" data-label="Declarado">{{ $linha->declarado_valor_label }}</td>
+                                    <td class="px-3 py-3 text-sm text-gray-900 text-right font-mono whitespace-nowrap" data-label="SEFAZ">{{ $linha->valor_total_label ?? ($linha->valor_total !== null ? $formatMoney($linha->valor_total) : '—') }}</td>
+                                    <td class="px-3 py-3 text-sm text-right font-mono whitespace-nowrap" style="color: {{ $sevHex }}" data-label="Δ">
                                         <span class="font-bold">{{ $linha->delta_valor_label }}</span>
                                         <p class="text-[10px] mt-0.5">{{ $linha->delta_percentual_label }}</p>
                                     </td>
-                                    <td class="px-3 py-3">
+                                    <td class="px-3 py-3" data-label="Severidade">
                                         <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $sevHex }}">{{ $sevLabel }}</span>
                                         @if(!empty($linha->motivos))
                                             <ul class="mt-1 space-y-0.5">
@@ -326,7 +326,7 @@
                     <span class="text-[10px] text-gray-400 uppercase tracking-wide">expandir</span>
                 </summary>
                 <div class="border-t border-gray-200">
-                    <table class="min-w-full">
+                    <table class="min-w-full tabela-cards">
                         <thead>
                             <tr class="border-b border-gray-200 bg-gray-50">
                                 <th class="px-3 py-2 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Documento</th>
@@ -354,16 +354,16 @@
                                             <a href="{{ $linha->comprovante_url }}" target="_blank" rel="noopener" class="text-[10px] text-blue-700 hover:underline">ver na Receita ↗</a>
                                         @endif
                                     </td>
-                                    <td class="px-3 py-2 text-sm text-gray-700 align-top">
+                                    <td class="px-3 py-2 text-sm text-gray-700 align-top" data-label="Emitente / Destinatário">
                                         {{ $linha->emit_nome ?: $linha->emit_cnpj ?: '—' }}
                                         @if(($linha->dest_nome ?? null) || ($linha->dest_cnpj ?? null))
                                             <p class="text-[10px] text-gray-400 mt-0.5">→ {{ $linha->dest_nome ?: $linha->dest_cnpj }}</p>
                                         @endif
                                     </td>
-                                    <td class="px-3 py-2 text-sm text-gray-700 text-right font-mono align-top whitespace-nowrap">{{ $linha->declarado_valor_label }}</td>
-                                    <td class="px-3 py-2 text-sm text-gray-700 text-right font-mono align-top whitespace-nowrap">{{ $linha->valor_total_label ?? ($linha->valor_total !== null ? $formatMoney($linha->valor_total) : '—') }}</td>
-                                    <td class="px-3 py-2 text-sm text-gray-500 text-right font-mono align-top whitespace-nowrap">{{ $linha->delta_valor_label }}</td>
-                                    <td class="px-3 py-2 align-top">
+                                    <td class="px-3 py-2 text-sm text-gray-700 text-right font-mono align-top whitespace-nowrap" data-label="Declarado">{{ $linha->declarado_valor_label }}</td>
+                                    <td class="px-3 py-2 text-sm text-gray-700 text-right font-mono align-top whitespace-nowrap" data-label="SEFAZ">{{ $linha->valor_total_label ?? ($linha->valor_total !== null ? $formatMoney($linha->valor_total) : '—') }}</td>
+                                    <td class="px-3 py-2 text-sm text-gray-500 text-right font-mono align-top whitespace-nowrap" data-label="Δ">{{ $linha->delta_valor_label }}</td>
+                                    <td class="px-3 py-2 align-top" data-label="Situação SEFAZ">
                                         <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $linha->status_hex ?? '#374151' }}">{{ $linha->status_label ?? $linha->status }}</span>
                                         @if(!empty($linha->motivos))
                                             <ul class="mt-1 space-y-0.5">

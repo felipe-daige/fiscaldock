@@ -141,6 +141,7 @@
             'label' => 'Baixar Relatório',
             'href' => '/app/consulta/lote/' . $ultimaConsulta->lote->id . '/baixar',
             'primary' => false,
+            'download' => true,
         ];
     }
 @endphp
@@ -220,7 +221,7 @@
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Certidões e Última Consulta</span>
             </div>
             <div class="overflow-x-auto">
-                <table class="min-w-full">
+                <table class="min-w-full tabela-cards">
                     <thead>
                         <tr class="border-b border-gray-300">
                             <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Indicador</th>
@@ -232,18 +233,18 @@
                         @foreach($certidaoLinhas as $linha)
                             <tr class="hover:bg-gray-50/50 transition-colors">
                                 <td class="px-3 py-3 text-sm text-gray-700">{{ $linha['nome'] }}</td>
-                                <td class="px-3 py-3">
+                                <td class="px-3 py-3" data-label="Status">
                                     <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $linha['badge']['hex'] }}">{{ $linha['badge']['label'] }}</span>
                                 </td>
-                                <td class="px-3 py-3 text-sm text-gray-700">{{ $linha['validade'] }}</td>
+                                <td class="px-3 py-3 text-sm text-gray-700" data-label="Validade / Referência">{{ $linha['validade'] }}</td>
                             </tr>
                         @endforeach
                         <tr class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-3 py-3 text-sm text-gray-700">ÚLTIMA CONSULTA</td>
-                            <td class="px-3 py-3">
+                            <td class="px-3 py-3" data-label="Status">
                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #0f766e">CONSULTA</span>
                             </td>
-                            <td class="px-3 py-3 text-sm text-gray-700">
+                            <td class="px-3 py-3 text-sm text-gray-700" data-label="Validade / Referência">
                                 <div>{{ $ultimaConsultaResumo['data'] }}</div>
                                 <div class="text-[11px] text-gray-500 mt-1">{{ $ultimaConsultaResumo['tipos'] }}</div>
                                 @if($ultimaConsultaMensagem)
@@ -284,7 +285,8 @@
             <div class="p-4">
                 <div class="flex flex-wrap gap-3">
                     @foreach($acoes as $acao)
-                        <a href="{{ $acao['href'] }}" data-link class="{{ $acao['primary'] ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50' }} inline-flex items-center justify-center rounded text-sm font-medium px-4 py-2 transition-colors">
+                        {{-- Ação de download NÃO leva data-link: o SPA faria fetch XHR do arquivo pra dentro do #app em vez de baixar. --}}
+                        <a href="{{ $acao['href'] }}" @unless(!empty($acao['download'])) data-link @endunless class="{{ $acao['primary'] ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50' }} inline-flex items-center justify-center rounded text-sm font-medium px-4 py-2 transition-colors">
                             {{ $acao['label'] }}
                         </a>
                     @endforeach

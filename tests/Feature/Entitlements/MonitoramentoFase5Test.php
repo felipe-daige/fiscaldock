@@ -142,9 +142,27 @@ it('o contador define o cap de consumo na assinatura', function () {
 
     actingAs($user)->postJson(route('app.monitoramento.limite-consumo'), ['limite' => 20])
         ->assertOk()
-        ->assertJson(['success' => true, 'cap_efetivo' => 20]);
+        ->assertJson([
+            'success' => true,
+            'limite_consumo_automatico' => 20,
+            'cap_efetivo' => 20,
+        ]);
 
     expect((int) $user->subscription()->first()->limite_consumo_automatico)->toBe(20);
+});
+
+it('o contador limpa o teto personalizado e recebe o cap padrão para atualizar a tela', function () {
+    $user = User::factory()->create();
+    fase5Assinar($user, 'essencial', ['limite_consumo_automatico' => 42]);
+    $capPadrao = app(EntitlementService::class)->planFor($user)->creditos_inclusos;
+
+    actingAs($user)->postJson(route('app.monitoramento.limite-consumo'), ['limite' => null])
+        ->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('limite_consumo_automatico', null)
+        ->assertJsonPath('cap_efetivo', $capPadrao);
+
+    expect($user->subscription()->first()->limite_consumo_automatico)->toBeNull();
 });
 
 it('definir cap sem assinatura retorna 409', function () {

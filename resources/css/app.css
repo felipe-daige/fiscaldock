@@ -475,6 +475,60 @@
     }
 }
 
+/* ===========================================================================
+   Tabela responsiva (mobile) — colapsa as linhas em "cards" abaixo de 768px.
+
+   Uso:
+     1. adicionar a classe `tabela-cards` na <table>;
+     2. em cada <td> que deva exibir um rótulo no card, colocar
+        `data-label="Nome da coluna"`.
+   Células sem `data-label` (checkbox, ações, colspan de estado vazio /
+   linha expandida) permanecem empilhadas sem rótulo.
+
+   Mantém o MESMO DOM da tabela desktop — nenhuma marcação duplicada — então
+   o JS (seleção, ordenação, expandir) e os testes continuam intactos. No
+   desktop (>=768px) a media query não se aplica e a tabela renderiza normal.
+   =========================================================================== */
+@media (max-width: 767px) {
+    .tabela-cards thead {
+        display: none;
+    }
+    .tabela-cards,
+    .tabela-cards tbody {
+        display: block;
+        width: 100%;
+    }
+    .tabela-cards tr {
+        display: block;
+        margin: 0.5rem;
+        background: #fff;
+        border: 1px solid #e5e7eb;      /* gray-200 */
+        border-radius: 0.375rem;
+    }
+    .tabela-cards td {
+        display: block;
+        width: auto !important;         /* neutraliza larguras fixas de coluna (w-40, w-32…) */
+        max-width: none !important;
+        padding: 0.375rem 0.75rem;
+        border: 0 !important;           /* neutraliza divide-y entre linhas */
+    }
+    .tabela-cards td[data-label] {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .tabela-cards td[data-label]::before {
+        content: attr(data-label);
+        flex-shrink: 0;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #9ca3af;                 /* gray-400 */
+    }
+}
+
 /* Loading localizado de paginação de lista (mecanismo navegarLista do spa.js) */
 [data-spa-list] {
     position: relative;

@@ -58,6 +58,37 @@ class ResultadoDetalhePresenter
     ];
 
     /**
+     * Certidões de regularidade que viram badge (CertidaoBadge) no resumo/situação geral.
+     * Distinta de SIGLAS: exclui `sintegra` (inscrição estadual, não certidão de regularidade).
+     */
+    private const CERTIDOES_BADGE = ['cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts', 'cndt'];
+
+    /**
+     * Certidões de regularidade (dentre as canônicas) que um plano inclui — usar como
+     * `$esperadas` em blocos()/certidoes() para não marcar como "erro na integração" uma
+     * certidão que nunca fez parte do plano contratado (nunca foi consultada). Fonte única
+     * do filtro: chamadores não devem repetir a lista de certidões inline.
+     *
+     * @param  array<int, string>|null  $consultasIncluidas  ex.: $lote->plano?->consultas_incluidas
+     * @return array<int, string>
+     */
+    public function esperadasDoPlano(?array $consultasIncluidas): array
+    {
+        return array_values(array_intersect($consultasIncluidas ?? [], array_keys(self::SIGLAS)));
+    }
+
+    /**
+     * Atalho de esperadasDoPlano() a partir do próprio resultado (via lote->plano). Sem
+     * lote/plano associado (dado legado) devolve vazio: fonte ausente fica neutra, não erro.
+     *
+     * @return array<int, string>
+     */
+    public function esperadasDoResultado(ConsultaResultado $resultado): array
+    {
+        return $this->esperadasDoPlano($resultado->lote?->plano?->consultas_incluidas);
+    }
+
+    /**
      * @param  array<int, string>  $esperadas  chaves de fonte que o plano do lote inclui.
      *                                         Quando informado, certidões pedidas mas ausentes
      *                                         no resultado viram placeholder de erro (em vez de
@@ -296,7 +327,7 @@ class ResultadoDetalhePresenter
         }
 
         // Certidões presentes → conta regulares × com pendência × indeterminadas.
-        $certidoes = ['cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts', 'cndt'];
+        $certidoes = self::CERTIDOES_BADGE;
         $regulares = [];
         $pendencias = [];
         $indeterminadas = [];
@@ -358,7 +389,7 @@ class ResultadoDetalhePresenter
 
         $temPendencia = false;      // certidão com pendência (atenção)
         $temIndeterminada = false;  // certidão sem emissão
-        foreach (['cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts', 'cndt'] as $chave) {
+        foreach (self::CERTIDOES_BADGE as $chave) {
             if (! isset($dados[$chave]) || ! is_array($dados[$chave])) {
                 continue;
             }
@@ -671,7 +702,15 @@ class ResultadoDetalhePresenter
     private function notaMatrizFederal(ConsultaResultado $resultado): ?string
     {
         $cnpj = $resultado->participante?->documento ?: $resultado->cliente?->documento;
-        if (! $cnpj || ! Cnpj::ehFilial((string) $cnpj)) {
+        if (! $cnpj) {
+            return null;
+        }
+
+        // Indicador oficial (RFB) tem prioridade sobre a ORDEM do CNPJ — já vimos matriz real
+        // fora de 0001 (ver lote #220), o que faria a ordem sozinha mostrar a nota errada.
+        $matrizFilial = $resultado->getDado('matriz_filial');
+        $ehFilial = $matrizFilial !== null ? $matrizFilial === 'filial' : Cnpj::ehFilial((string) $cnpj);
+        if (! $ehFilial) {
             return null;
         }
 
@@ -704,6 +743,10 @@ class ResultadoDetalhePresenter
             'cnd_federal' => 'O que isso significa: a Receita Federal/PGFN não conseguiu emitir a certidão pela internet — '
                 .'normalmente há pendência ou dados em análise que exigem verificação do próprio contribuinte, pelo e-CAC '
                 .'(cav.receita.fazenda.gov.br) ou em uma unidade da RFB. Sem certidão emitida, a recusa por si só não comprova irregularidade fiscal.',
+            'crf_fgts' => 'O que isso significa: a Caixa recusou a emissão do CRF FGTS pela internet, geralmente por constar '
+                .'impedimento junto à Caixa e/ou à PGFN. O detalhe é restrito ao empregador, no Conectividade Social '
+                .'(conectividadesocialv2.caixa.gov.br) ou no Regularize da PGFN (regularize.pgfn.gov.br). '
+                .'Sem certidão emitida, a recusa por si só não comprova irregularidade fiscal.',
             default => 'O que isso significa: a fonte oficial não emitiu a certidão pela internet. O detalhe do motivo é '
                 .'restrito ao próprio contribuinte, no portal do órgão ou no atendimento presencial. Sem certidão emitida, '
                 .'a recusa por si só não comprova irregularidade fiscal.',

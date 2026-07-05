@@ -446,7 +446,7 @@
  </div>
  @if(!empty($frete['rotas']))
  <p class="text-xs font-medium text-gray-600 mb-1.5">Top 5 Rotas</p>
- <table class="min-w-full text-xs">
+ <table class="min-w-full text-xs tabela-cards">
  <thead><tr class="border-b border-gray-300">
  <th class="text-left py-1.5 px-2 text-gray-500 uppercase">Rota (Origem → Destino)</th>
  <th class="text-right py-1.5 px-2 text-gray-500 uppercase">CT-es</th>
@@ -456,8 +456,8 @@
  @foreach($frete['rotas'] as $rota)
  <tr>
  <td class="py-1.5 px-2 text-gray-700 font-mono">{{ $rota['rota'] ?? ($rota['origem'] ?? '?') . ' → ' . ($rota['destino'] ?? '?') }}</td>
- <td class="py-1.5 px-2 text-right text-gray-700">{{ $rota['count'] ?? 0 }}</td>
- <td class="py-1.5 px-2 text-right font-mono text-gray-900">R$ {{ number_format($rota['valor_total'] ?? 0, 2, ',', '.') }}</td>
+ <td class="py-1.5 px-2 text-right text-gray-700" data-label="CT-es">{{ $rota['count'] ?? 0 }}</td>
+ <td class="py-1.5 px-2 text-right font-mono text-gray-900" data-label="Valor">R$ {{ number_format($rota['valor_total'] ?? 0, 2, ',', '.') }}</td>
  </tr>
  @endforeach
  </tbody>
@@ -654,7 +654,7 @@
  @if(isset($geo['uf_declarante']))
  <p class="text-xs text-gray-500 mb-1.5">UF declarante: <span class="font-bold text-gray-700">{{ $geo['uf_declarante'] }}</span></p>
  @endif
- <table class="min-w-full text-xs">
+ <table class="min-w-full text-xs tabela-cards">
  <thead><tr class="border-b border-gray-300">
  <th class="text-left py-1.5 px-2 text-gray-500 uppercase">UF</th>
  <th class="text-right py-1.5 px-2 text-gray-500 uppercase">Notas</th>
@@ -664,8 +664,8 @@
  @foreach($ufsData as $ufKey => $uf)
  <tr>
  <td class="py-1.5 px-2 text-gray-700 font-bold">{{ $uf['sigla'] ?? $uf['uf'] ?? $ufKey }}</td>
- <td class="py-1.5 px-2 text-right text-gray-700">{{ $uf['count'] ?? 0 }}</td>
- <td class="py-1.5 px-2 text-right font-mono text-gray-900">R$ {{ number_format($uf['valor_total'] ?? $uf['valor'] ?? 0, 2, ',', '.') }}</td>
+ <td class="py-1.5 px-2 text-right text-gray-700" data-label="Notas">{{ $uf['count'] ?? 0 }}</td>
+ <td class="py-1.5 px-2 text-right font-mono text-gray-900" data-label="Valor">R$ {{ number_format($uf['valor_total'] ?? $uf['valor'] ?? 0, 2, ',', '.') }}</td>
  </tr>
  @endforeach
  </tbody>

@@ -15,12 +15,6 @@ use App\Services\RiskScoreService;
  */
 final class DossieClienteBuilder
 {
-    /**
-     * Certidões canônicas de regularidade. A que não retornou vira card "Não consultado"
-     * no dossiê (em vez de sumir) — mesmo critério do relatório do lote (consulta-lote/_cnpj).
-     */
-    private const CERTIDOES_ESPERADAS = ['cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts', 'cndt', 'sintegra'];
-
     public function __construct(
         private ClienteMovimentacaoService $movimentacao,
         private ResultadoDetalhePresenter $presenter,
@@ -32,6 +26,7 @@ final class DossieClienteBuilder
     {
         $ultima = ConsultaResultado::where('cliente_id', $c->id)
             ->where('status', ConsultaResultado::STATUS_SUCESSO)
+            ->with('lote.plano')
             ->orderByDesc('consultado_em')
             ->first();
 
@@ -48,8 +43,9 @@ final class DossieClienteBuilder
         $consulta = [
             'tem' => (bool) $ultima,
             'resumo' => $ultima ? $this->presenter->resumoTextual($ultima) : null,
-            // Passa as certidões esperadas → fonte sem retorno vira card "Não consultado".
-            'blocos' => $ultima ? $this->presenter->blocos($ultima, self::CERTIDOES_ESPERADAS) : [],
+            // Passa as certidões que o PLANO desta consulta realmente incluiu → fonte pedida mas
+            // sem retorno vira card de erro; fonte fora do plano não aparece como erro falso.
+            'blocos' => $ultima ? $this->presenter->blocos($ultima, $this->presenter->esperadasDoResultado($ultima)) : [],
             'consultado_em' => $ultima?->consultado_em?->format('d/m/Y H:i'),
         ];
 

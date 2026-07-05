@@ -153,7 +153,15 @@ it('painel renderiza a barra de consumo do ciclo quando há cap', function () {
 
     $resp = actingAs($user)->get(route('app.monitoramento.painel'));
 
-    $resp->assertOk()->assertSee('Consumo do ciclo')->assertSee('Projetado at');
+    $resp->assertOk()
+        ->assertSee('Consumo do ciclo')
+        ->assertSee('Projetado at')
+        ->assertSee('id="teto-efetivo-valor"', false)
+        ->assertSee('id="consumo-ciclo-percentual"', false)
+        ->assertSee('id="consumo-ciclo-barra"', false)
+        ->assertSee('id="input-limite-consumo" inputmode="decimal"', false)
+        ->assertSee('value="10,00"', false)
+        ->assertSee('data-max-credits="1000000"', false);
 });
 
 it('modal novo monitorado expõe o estimador de custo mensal/trimestral', function () {

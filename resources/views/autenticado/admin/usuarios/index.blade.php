@@ -22,7 +22,7 @@
         </form>
 
         <div class="bg-white rounded border border-gray-300 overflow-x-auto">
-            <table class="w-full text-sm">
+            <table class="w-full text-sm tabela-cards">
                 <thead class="bg-gray-50 text-[10px] uppercase tracking-wide text-gray-400">
                     <tr>
                         <th class="text-left px-3 py-2.5">Usuário</th>
@@ -46,13 +46,13 @@
                             <a href="/app/admin/usuarios/{{ $u->id }}" data-link class="text-blue-600 underline cursor-pointer">{{ $u->name }} {{ $u->sobrenome }}</a>
                             <div class="text-[11px] text-gray-400">{{ $u->email }}</div>
                         </td>
-                        <td class="px-3 py-2 text-gray-700">{{ $u->empresa ?: '—' }}</td>
-                        <td class="px-3 py-2 text-gray-700">{{ $plano }}</td>
-                        <td class="px-3 py-2 text-right text-gray-900 font-semibold">{{ $fmtN($u->credits) }}</td>
-                        <td class="px-3 py-2 text-[12px] text-gray-500">{{ \Carbon\Carbon::parse($u->created_at)->format('d/m/Y') }}</td>
-                        <td class="px-3 py-2 text-[12px] text-gray-500">{{ $quando($u->ultima_atividade_ts) }}</td>
-                        <td class="px-3 py-2 text-right text-gray-700">{{ $fmtN($u->qtd_consultas) }}</td>
-                        <td class="px-3 py-2 text-right text-gray-700">{{ $fmtN($u->qtd_importacoes) }}</td>
+                        <td class="px-3 py-2 text-gray-700" data-label="Empresa">{{ $u->empresa ?: '—' }}</td>
+                        <td class="px-3 py-2 text-gray-700" data-label="Plano">{{ $plano }}</td>
+                        <td class="px-3 py-2 text-right text-gray-900 font-semibold" data-label="Créditos">{{ $fmtN($u->credits) }}</td>
+                        <td class="px-3 py-2 text-[12px] text-gray-500" data-label="Criado">{{ \Carbon\Carbon::parse($u->created_at)->format('d/m/Y') }}</td>
+                        <td class="px-3 py-2 text-[12px] text-gray-500" data-label="Última atividade">{{ $quando($u->ultima_atividade_ts) }}</td>
+                        <td class="px-3 py-2 text-right text-gray-700" data-label="Consultas">{{ $fmtN($u->qtd_consultas) }}</td>
+                        <td class="px-3 py-2 text-right text-gray-700" data-label="Importações">{{ $fmtN($u->qtd_importacoes) }}</td>
                         <td class="px-3 py-2">
                             @if($u->is_admin)<span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase text-white" style="background-color:#334155">admin</span>@endif
                             @if($u->deletion_requested_at)<span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase text-white" style="background-color:#dc2626">exclusão</span>@endif

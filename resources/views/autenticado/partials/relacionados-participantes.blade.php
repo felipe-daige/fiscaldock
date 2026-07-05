@@ -44,7 +44,7 @@
             }
         @endphp
         <div class="overflow-x-auto">
-            <table class="w-full">
+            <table class="w-full tabela-cards">
                 <thead>
                     <tr class="border-b border-gray-300">
                         <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Participante</th>
@@ -77,8 +77,8 @@
                                     {{ number_format($participante->efd_notas_count ?? 0, 0, ',', '.') }} nota(s) vinculada(s)
                                 </div>
                             </td>
-                            <td class="px-3 py-3 text-sm text-gray-700 font-mono">{{ $participante->cnpj_formatado }}</td>
-                            <td class="px-3 py-3">
+                            <td class="px-3 py-3 text-sm text-gray-700 font-mono" data-label="Documento">{{ $participante->cnpj_formatado }}</td>
+                            <td class="px-3 py-3" data-label="Situação">
                                 @if(($participante->situacao_cadastral ?? '') === 'ATIVA')
                                     <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Ativa</span>
                                 @elseif($participante->situacao_cadastral)
@@ -89,12 +89,12 @@
                                     <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Sem Mov.</span>
                                 @endif
                             </td>
-                            <td class="px-3 py-3">
+                            <td class="px-3 py-3" data-label="Origem">
                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origem['hex'] }}">
                                     {{ $origem['label'] }}
                                 </span>
                             </td>
-                            <td class="px-3 py-3 text-right">
+                            <td class="px-3 py-3 text-right" data-label="Ação">
                                 <a href="/app/participante/{{ $participante->id }}" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">
                                     Abrir
                                 </a>

@@ -458,7 +458,7 @@
 
             if (data.success) {
                 renderParticipantes(data.data);
-                updatePaginacao(data.pagination);
+                updatePaginacao(data.pagination, data.documentos);
             } else {
                 showError('Erro ao carregar participantes');
             }
@@ -595,7 +595,7 @@
     /**
      * Atualiza controles de paginacao.
      */
-    function updatePaginacao(pagination) {
+    function updatePaginacao(pagination, documentos) {
         if (!pagination) return;
 
         state.currentPage = pagination.current_page;
@@ -604,7 +604,12 @@
 
         if (elements.participantesCount) {
             const n = pagination.total;
-            elements.participantesCount.textContent = n + ' participante' + (n !== 1 ? 's' : '') + ' encontrado' + (n !== 1 ? 's' : '');
+            let texto = n + ' participante' + (n !== 1 ? 's' : '') + ' encontrado' + (n !== 1 ? 's' : '');
+            if (documentos && (documentos.cnpjs > 0 || documentos.cpfs > 0)) {
+                texto += ' (' + documentos.cnpjs + ' CNPJ' + (documentos.cnpjs !== 1 ? 's' : '')
+                    + ' · ' + documentos.cpfs + ' CPF' + (documentos.cpfs !== 1 ? 's' : '') + ')';
+            }
+            elements.participantesCount.textContent = texto;
         }
 
         const inicio = (pagination.current_page - 1) * pagination.per_page + 1;

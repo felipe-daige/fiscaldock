@@ -225,6 +225,31 @@ it('mostra a descrição CONFAZ de cada CFOP nas opções do filtro', function (
     expect($html)->toContain('Venda de mercadoria adquirida'); // descrição do CFOP 5102
 });
 
+it('pagina a tabela de itens (50 por página) e mostra o intervalo', function () {
+    [$user, $clienteId] = seedBiUser();
+    for ($i = 0; $i < 51; $i++) {
+        $chave = str_pad((string) $i, 44, '0', STR_PAD_LEFT);
+        biEfdItemCfop($user->id, $clienteId, $chave, 'ITEM'.$i, 5102);
+    }
+
+    $p1 = actingAs($user)->get('/app/bi/catalogo-itens')->assertOk()->getContent();
+    expect($p1)->toContain('de 51 item(ns)'); // rodapé com o total
+    expect($p1)->toContain('page=2');          // link de paginação presente
+
+    // página 2 responde e traz o 51º item (não cabe na primeira página)
+    actingAs($user)->get('/app/bi/catalogo-itens?page=2')->assertOk();
+})->group('bi');
+
+it('renderiza o CFOP como chip com tinta por tipo de operação na tabela de itens', function () {
+    [$user, $clienteId] = seedBiUser();
+    biEfdItemCfop($user->id, $clienteId, str_pad('A', 44, '0', STR_PAD_LEFT), 'CHIP', 5102); // 5xxx = saída
+
+    $html = actingAs($user)->get('/app/bi/catalogo-itens')->assertOk()->getContent();
+
+    expect($html)->toContain('background-color:#ecfdf5'); // tinta de "saída" do chip CFOP
+    expect($html)->toContain('>5102<');
+})->group('bi');
+
 function biTrialUserCliente(): array
 {
     $user = User::factory()->trialAtivo()->create(['credits' => 100]);

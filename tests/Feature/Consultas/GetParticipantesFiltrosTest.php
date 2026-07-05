@@ -156,3 +156,27 @@ it('devolve total na paginacao', function () {
 
     getParticipantesReq($user)->assertJsonPath('pagination.total', 3);
 });
+
+it('devolve contagem de cnpjs e cpfs do filtro atual', function () {
+    $user = User::factory()->create();
+    participanteFiltro($user); // CNPJ (14 dígitos)
+    participanteFiltro($user); // CNPJ
+    participanteFiltro($user, ['documento' => (string) random_int(10000000000, 99999999999)]); // CPF (11 dígitos)
+
+    getParticipantesReq($user)
+        ->assertJsonPath('pagination.total', 3)
+        ->assertJsonPath('documentos.cnpjs', 2)
+        ->assertJsonPath('documentos.cpfs', 1);
+});
+
+it('contagem de cnpjs e cpfs respeita filtros ativos', function () {
+    $user = User::factory()->create();
+    participanteFiltro($user, ['uf' => 'SP']);
+    participanteFiltro($user, ['uf' => 'RJ']);
+    participanteFiltro($user, ['uf' => 'SP', 'documento' => (string) random_int(10000000000, 99999999999)]);
+
+    getParticipantesReq($user, ['uf' => 'SP'])
+        ->assertJsonPath('pagination.total', 2)
+        ->assertJsonPath('documentos.cnpjs', 1)
+        ->assertJsonPath('documentos.cpfs', 1);
+});

@@ -97,7 +97,7 @@
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Consultas</span>
             </div>
             <div class="overflow-x-auto">
-                <table class="min-w-full">
+                <table class="min-w-full tabela-cards">
                     <thead>
                         <tr class="border-b border-gray-300">
                             <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Data</th>
@@ -116,23 +116,23 @@
                                 <td class="px-3 py-3 text-sm text-gray-700 font-mono whitespace-nowrap">
                                     {{ $consulta->created_at->format('d/m/Y H:i') }}
                                 </td>
-                                <td class="px-3 py-3 text-sm font-mono text-gray-900 whitespace-nowrap">
+                                <td class="px-3 py-3 text-sm font-mono text-gray-900 whitespace-nowrap" data-label="CNPJ">
                                     {{ preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $consulta->participante->cnpj ?? '') }}
                                 </td>
-                                <td class="px-3 py-3 text-sm text-gray-900 max-w-xs truncate">
+                                <td class="px-3 py-3 text-sm text-gray-900 max-w-xs truncate" data-label="Razão Social">
                                     {{ $consulta->participante->razao_social ?? '-' }}
                                 </td>
-                                <td class="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
+                                <td class="px-3 py-3 text-sm text-gray-700 whitespace-nowrap" data-label="Plano">
                                     {{ $consulta->plano->nome ?? '-' }}
                                 </td>
-                                <td class="px-3 py-3 whitespace-nowrap text-center">
+                                <td class="px-3 py-3 whitespace-nowrap text-center" data-label="Tipo">
                                     @if($consulta->tipo === 'avulso')
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Avulso</span>
                                     @else
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">Assinatura</span>
                                     @endif
                                 </td>
-                                <td class="px-3 py-3 whitespace-nowrap text-center">
+                                <td class="px-3 py-3 whitespace-nowrap text-center" data-label="Status">
                                     @if($consulta->status === 'sucesso')
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Sucesso</span>
                                     @elseif($consulta->status === 'pendente')
@@ -143,10 +143,10 @@
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">Erro</span>
                                     @endif
                                 </td>
-                                <td class="px-3 py-3 text-sm text-gray-700 font-mono whitespace-nowrap">
+                                <td class="px-3 py-3 text-sm text-gray-700 font-mono whitespace-nowrap" data-label="Custo">
                                     @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $consulta->creditos_cobrados))
                                 </td>
-                                <td class="px-3 py-3 text-right whitespace-nowrap text-xs">
+                                <td class="px-3 py-3 text-right whitespace-nowrap text-xs" data-label="Ações">
                                     <button type="button"
                                             class="btn-ver-resultado text-gray-600 hover:text-gray-900 hover:underline"
                                             data-consulta-id="{{ $consulta->id }}">

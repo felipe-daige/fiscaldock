@@ -1133,7 +1133,7 @@
         }
 
         var html = '<div class="overflow-x-auto border border-gray-200">';
-        html += '<table class="min-w-full">';
+        html += '<table class="min-w-full tabela-cards">';
         html += '<thead><tr class="border-b border-gray-300">';
         html += '<th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Número</th>';
         html += '<th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Série</th>';
@@ -1148,11 +1148,11 @@
             var pId = item.participante_id || item.cod_part;
             html += '<tr class="hover:bg-gray-50/50 transition-colors">';
             html += '<td class="px-3 py-3 text-sm text-gray-700">' + escapeHtml(item.numero || item.num_doc || '-') + '</td>';
-            html += '<td class="px-3 py-3 text-sm text-gray-700">' + escapeHtml(item.serie || '-') + '</td>';
-            html += '<td class="px-3 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">' + escapeHtml(item.modelo || item.cod_mod || '-') + '</span></td>';
-            html += '<td class="px-3 py-3 text-sm text-gray-700 max-w-[150px] truncate">' + escapeHtml(item.participante || item.participante_nome || '-') + '</td>';
-            html += '<td class="px-3 py-3 text-sm text-gray-700">' + formatarData(item.data || item.dt_doc) + '</td>';
-            html += '<td class="px-3 py-3 text-sm font-semibold text-gray-900 text-right font-mono">' + formatarMoeda(item.valor || item.vl_doc) + '</td>';
+            html += '<td class="px-3 py-3 text-sm text-gray-700" data-label="Série">' + escapeHtml(item.serie || '-') + '</td>';
+            html += '<td class="px-3 py-3" data-label="Modelo"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">' + escapeHtml(item.modelo || item.cod_mod || '-') + '</span></td>';
+            html += '<td class="px-3 py-3 text-sm text-gray-700 max-w-[150px] truncate" data-label="Participante">' + escapeHtml(item.participante || item.participante_nome || '-') + '</td>';
+            html += '<td class="px-3 py-3 text-sm text-gray-700" data-label="Data">' + formatarData(item.data || item.dt_doc) + '</td>';
+            html += '<td class="px-3 py-3 text-sm font-semibold text-gray-900 text-right font-mono" data-label="Valor">' + formatarMoeda(item.valor || item.vl_doc) + '</td>';
             html += '<td class="px-3 py-3 text-center">';
             html += '<div class="flex items-center justify-center gap-3">';
             if (item.nota_id) {
@@ -1186,7 +1186,7 @@
         }
 
         var html = '<div class="overflow-x-auto border border-gray-200">';
-        html += '<table class="min-w-full">';
+        html += '<table class="min-w-full tabela-cards">';
         html += '<thead><tr class="border-b border-gray-300">';
         html += '<th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Participante</th>';
         html += '<th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">CNPJ</th>';
@@ -1198,8 +1198,8 @@
             var pId = item.participante_id || item.id;
             html += '<tr class="hover:bg-gray-50/50 transition-colors">';
             html += '<td class="px-3 py-3 text-sm text-gray-700 max-w-[200px] truncate">' + escapeHtml(item.razao_social || item.nome || item.participante || '-') + '</td>';
-            html += '<td class="px-3 py-3 text-sm text-gray-700 font-mono">' + formatCnpj(item.cnpj) + '</td>';
-            html += '<td class="px-3 py-3 text-sm text-gray-700">' + escapeHtml(item.status || item.situacao || item.info || '-') + '</td>';
+            html += '<td class="px-3 py-3 text-sm text-gray-700 font-mono" data-label="CNPJ">' + formatCnpj(item.cnpj) + '</td>';
+            html += '<td class="px-3 py-3 text-sm text-gray-700" data-label="Status / Info">' + escapeHtml(item.status || item.situacao || item.info || '-') + '</td>';
             html += '<td class="px-3 py-3 text-center">';
             if (pId) {
                 html += '<a href="/app/participante/' + pId + '" data-link class="inline-flex items-center gap-1 text-xs text-gray-700 hover:text-gray-900 hover:underline font-medium">';

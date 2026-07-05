@@ -90,12 +90,12 @@
         {{-- Trilha administrativa --}}
         <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
             <div class="px-4 py-2.5 border-b border-gray-200"><p class="text-sm font-semibold text-gray-800">Trilha administrativa</p></div>
-            <table class="w-full text-sm"><tbody class="divide-y divide-gray-100">
+            <table class="w-full text-sm tabela-cards"><tbody class="divide-y divide-gray-100">
             @forelse($trilhaAdmin as $log)
                 <tr>
                     <td class="px-3 py-2 w-40 text-[12px] text-gray-500">{{ optional($log->created_at)->format('d/m/Y H:i') }}</td>
-                    <td class="px-3 py-2 w-32 text-[11px] font-semibold text-gray-600">{{ $log->acao }}</td>
-                    <td class="px-3 py-2 text-[12px] text-gray-700">{{ $log->motivo }} <span class="text-gray-400">· {{ $log->admin->name ?? '—' }}</span></td>
+                    <td class="px-3 py-2 w-32 text-[11px] font-semibold text-gray-600" data-label="Ação">{{ $log->acao }}</td>
+                    <td class="px-3 py-2 text-[12px] text-gray-700" data-label="Motivo">{{ $log->motivo }} <span class="text-gray-400">· {{ $log->admin->name ?? '—' }}</span></td>
                 </tr>
             @empty
                 <tr><td colspan="3" class="px-3 py-6 text-center text-gray-400">Sem ações administrativas.</td></tr>
@@ -106,14 +106,14 @@
         {{-- Timeline --}}
         <div class="bg-white rounded border border-gray-300 overflow-hidden">
             <div class="px-4 py-2.5 border-b border-gray-200"><p class="text-sm font-semibold text-gray-800">Atividade recente</p></div>
-            <table class="w-full text-sm">
+            <table class="w-full text-sm tabela-cards">
                 <tbody class="divide-y divide-gray-100">
                 @forelse($timeline as $ev)
                     <tr>
                         <td class="px-3 py-2 w-40 text-[12px] text-gray-500">{{ $ev['data'] ? \Carbon\Carbon::parse($ev['data'])->format('d/m/Y H:i') : '—' }}</td>
-                        <td class="px-3 py-2 w-32"><span class="text-[11px] font-semibold text-gray-600">{{ $tipoLabel[$ev['tipo']] ?? $ev['tipo'] }}</span></td>
-                        <td class="px-3 py-2 text-gray-800">{{ $ev['titulo'] }}</td>
-                        <td class="px-3 py-2 text-[12px] text-gray-500">{{ $ev['detalhe'] }}</td>
+                        <td class="px-3 py-2 w-32" data-label="Tipo"><span class="text-[11px] font-semibold text-gray-600">{{ $tipoLabel[$ev['tipo']] ?? $ev['tipo'] }}</span></td>
+                        <td class="px-3 py-2 text-gray-800" data-label="Título">{{ $ev['titulo'] }}</td>
+                        <td class="px-3 py-2 text-[12px] text-gray-500" data-label="Detalhe">{{ $ev['detalhe'] }}</td>
                     </tr>
                 @empty
                     <tr><td colspan="4" class="px-3 py-6 text-center text-gray-400 text-sm">Sem atividade registrada.</td></tr>

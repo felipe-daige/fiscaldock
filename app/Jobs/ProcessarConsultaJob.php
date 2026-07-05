@@ -182,6 +182,11 @@ class ProcessarConsultaJob implements ShouldQueue
                 if (! empty($dados['endereco']['municipio'])) {
                     $alvo['municipio'] = $dados['endereco']['municipio'];
                 }
+                // Indicador oficial (RFB) de matriz/filial, propagado pras fontes seguintes
+                // (ex.: CndFederalFonte::params()) — mais confiável que a ORDEM do CNPJ.
+                if (! empty($dados['matriz_filial'])) {
+                    $alvo['matriz_filial'] = $dados['matriz_filial'];
+                }
 
                 // Regime tributário é da PJ inteira, mas a RFB só publica no CNPJ da
                 // matriz — filial consultada ficava "Não informado". 1 chamada extra
@@ -191,7 +196,7 @@ class ProcessarConsultaJob implements ShouldQueue
                 if ($fonte instanceof \App\Services\Consultas\Fontes\CadastroFonte
                     && $resp->status === 'sucesso'
                     && $fonte->regimeIndefinido($dados)
-                    && \App\Support\Cnpj::ehFilial($cnpjAlvo)) {
+                    && ($alvo['matriz_filial'] ?? null) === 'filial') {
                     try {
                         $throttle->aguardar($fonte->provider());
                         $respMatriz = $provider->consultar('', ['cnpj' => \App\Support\Cnpj::matriz($cnpjAlvo)]);

@@ -287,6 +287,46 @@ it('settlement NÃO estorna se ao menos uma fonte do CNPJ voltou com sucesso', f
     expect(app(CreditService::class)->getBalance($user->fresh()))->toBe($saldoAntes); // receita mantida (1 sucesso)
 });
 
+it('settlement NÃO estorna re-falha erro_participante — fonte faturada pelo provedor (espelha lote 220)', function () {
+    [$lote, $p, $user] = montarLoteComPlano('compliance');
+    $precoPlano = (int) ceil($lote->plano->custo_creditos * 0.5);
+
+    Cache::put("consulta_retry_charge:{$lote->id}:participante:{$p->id}", $precoPlano, 86400);
+    // crf_fgts re-falhou com 620: a Caixa respondeu recusando os dados do CNPJ → a InfoSimples
+    // fatura a chamada (billable: true) → a cobrança do retry fica com o usuário.
+    gravarFontesErro($lote->id, $p->id, [
+        'crf_fgts' => ['origem' => 'integracao', 'status' => 'erro_participante', 'codigo' => 620, 'tentativas' => 1],
+    ]);
+    $saldoAntes = app(CreditService::class)->getBalance($user);
+
+    app(FecharRetryService::class)->fechar($lote->id, [
+        ['alvo_tipo' => 'participante', 'alvo_id' => $p->id, 'fonte' => 'crf_fgts'],
+    ]);
+
+    expect(app(CreditService::class)->getBalance($user->fresh()))->toBe($saldoAntes); // sem estorno
+});
+
+it('settlement misto (re-falha retry + re-falha erro_participante) mantém a cobrança do CNPJ', function () {
+    [$lote, $p, $user] = montarLoteComPlano('compliance');
+    $precoPlano = (int) ceil($lote->plano->custo_creditos * 0.5);
+
+    Cache::put("consulta_retry_charge:{$lote->id}:participante:{$p->id}", $precoPlano, 86400);
+    // cnd_federal re-falhou por instabilidade (não faturada), mas o crf_fgts 620 foi faturado
+    // pelo provedor → o envelope do CNPJ é escalar, então a cobrança fica integral.
+    gravarFontesErro($lote->id, $p->id, [
+        'cnd_federal' => ['origem' => 'integracao', 'status' => 'retry', 'codigo' => 618, 'tentativas' => 1],
+        'crf_fgts' => ['origem' => 'integracao', 'status' => 'erro_participante', 'codigo' => 620, 'tentativas' => 1],
+    ]);
+    $saldoAntes = app(CreditService::class)->getBalance($user);
+
+    app(FecharRetryService::class)->fechar($lote->id, [
+        ['alvo_tipo' => 'participante', 'alvo_id' => $p->id, 'fonte' => 'cnd_federal'],
+        ['alvo_tipo' => 'participante', 'alvo_id' => $p->id, 'fonte' => 'crf_fgts'],
+    ]);
+
+    expect(app(CreditService::class)->getBalance($user->fresh()))->toBe($saldoAntes); // sem estorno
+});
+
 // ---------------------------------------------------------------------------
 // Task 4 — Endpoints HTTP (pendentes + retry)
 // ---------------------------------------------------------------------------

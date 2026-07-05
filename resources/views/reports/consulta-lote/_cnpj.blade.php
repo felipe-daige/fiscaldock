@@ -62,8 +62,7 @@
 
                         @if(!empty($bloco['comprovante_url']))
                             <div class="comprovante">
-                                <a href="{{ $bloco['comprovante_url'] }}">Baixar certidão / comprovante (PDF)</a>
-                                <div class="url">{{ $bloco['comprovante_url'] }}</div>
+                                <a href="{{ $bloco['comprovante_url'] }}">Baixar certidão / comprovante (PDF) ↗</a>
                             </div>
                         @endif
                     </div>

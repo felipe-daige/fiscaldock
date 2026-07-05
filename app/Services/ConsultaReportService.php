@@ -96,10 +96,7 @@ class ConsultaReportService
     {
         // Mesmo critério da tela web: certidões pedidas pelo plano mas sem retorno viram
         // card "Falhou" no detalhamento (em vez de sumir).
-        $esperadasCert = array_values(array_intersect(
-            $lote->plano?->consultas_incluidas ?? [],
-            ['cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts', 'cndt', 'sintegra'],
-        ));
+        $esperadasCert = $this->detalhePresenter->esperadasDoPlano($lote->plano?->consultas_incluidas);
 
         $resultados = $lote->resultados()
             ->with(['participante', 'participante.score', 'cliente'])

@@ -244,6 +244,7 @@ class RiskScoreController extends Controller
 
         $ultima = ConsultaResultado::where('participante_id', $participante->id)
             ->where('status', ConsultaResultado::STATUS_SUCESSO)
+            ->with('lote.plano')
             ->orderByDesc('consultado_em')
             ->first();
 
@@ -251,10 +252,10 @@ class RiskScoreController extends Controller
             return response()->json(['html' => '<div class="text-xs text-gray-500 py-3">Sem consulta de certidões para este CNPJ. <a href="/app/consulta" data-link class="text-blue-600 hover:underline">Consultar agora</a>.</div>']);
         }
 
-        // Todas as certidões canônicas → a que não retornou aparece como "não consultada"
-        // (mesmo critério do dossiê/relatório do lote).
-        $esperadas = ['cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts', 'cndt', 'sintegra'];
+        // Certidões que o PLANO desta consulta realmente incluiu → fonte pedida mas sem retorno
+        // aparece como erro; fonte fora do plano não vira erro falso (mesmo critério do dossiê).
         $presenter = app(ResultadoDetalhePresenter::class);
+        $esperadas = $presenter->esperadasDoResultado($ultima);
 
         $html = view('autenticado.consulta.partials.detalhe-blocos', [
             'blocos' => $presenter->blocos($ultima, $esperadas),
@@ -271,53 +272,6 @@ class RiskScoreController extends Controller
         return response()->json(['html' => $html]);
     }
 
-    /**
-     * Dashboard resumido de risco (para AJAX).
-     */
-    public function dashboard(Request $request)
-    {
-        if (! Auth::check()) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
-
-        $userId = Auth::id();
-
-        $estatisticas = $this->riskScoreService->getEstatisticas($userId);
-
-        // Top 10 participantes de maior risco
-        $maiorRisco = ParticipanteScore::where('user_id', $userId)
-            ->with('participante:id,cnpj,razao_social')
-            ->orderByDesc('score_total')
-            ->limit(10)
-            ->get()
-            ->map(function ($score) {
-                return [
-                    'id' => $score->participante_id,
-                    'cnpj' => $score->participante->documento ?? '',
-                    'razao_social' => $score->participante->razao_social ?? '',
-                    'score' => $score->score_total,
-                    'classificacao' => $score->classificacao,
-                ];
-            });
-
-        // Distribuicao por classificacao (para grafico)
-        $distribuicao = [
-            ['classificacao' => 'Baixo Risco', 'quantidade' => $estatisticas['baixo_risco'], 'cor' => '#22c55e'],
-            ['classificacao' => 'Medio Risco', 'quantidade' => $estatisticas['medio_risco'], 'cor' => '#eab308'],
-            ['classificacao' => 'Alto Risco', 'quantidade' => $estatisticas['alto_risco'], 'cor' => '#f97316'],
-            ['classificacao' => 'Critico', 'quantidade' => $estatisticas['critico'], 'cor' => '#ef4444'],
-        ];
-
-        return response()->json([
-            'estatisticas' => $estatisticas,
-            'maior_risco' => $maiorRisco,
-            'distribuicao' => $distribuicao,
-        ]);
-    }
-
-    /**
-     * Verifica se e requisicao AJAX.
-     */
     /**
      * Renderiza view com suporte a AJAX.
      */

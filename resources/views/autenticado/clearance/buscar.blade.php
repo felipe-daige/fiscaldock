@@ -137,7 +137,7 @@
                         <span class="text-[10px] font-semibold text-gray-400">Consulta avulsa por chave</span>
                     </div>
                     <div class="overflow-x-auto border border-gray-200 rounded">
-                        <table class="w-full text-xs">
+                        <table class="w-full text-xs tabela-cards">
                             <thead style="background-color: #f9fafb;">
                                 <tr class="text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
                                     <th class="py-2 px-3">Documento</th>
@@ -150,31 +150,31 @@
                             <tbody class="divide-y divide-gray-100 text-gray-700">
                                 <tr>
                                     <td class="py-2 px-3 font-medium text-gray-900">NF-e</td>
-                                    <td class="py-2 px-3">55</td>
-                                    <td class="py-2 px-3">44 dígitos</td>
-                                    <td class="py-2 px-3"><span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #047857;">Suportado</span></td>
-                                    <td class="py-2 px-3 text-gray-500">Consulta pela chave de acesso nacional.</td>
+                                    <td class="py-2 px-3" data-label="Modelo">55</td>
+                                    <td class="py-2 px-3" data-label="Chave">44 dígitos</td>
+                                    <td class="py-2 px-3" data-label="Status"><span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #047857;">Suportado</span></td>
+                                    <td class="py-2 px-3 text-gray-500" data-label="Observação">Consulta pela chave de acesso nacional.</td>
                                 </tr>
                                 <tr>
                                     <td class="py-2 px-3 font-medium text-gray-900">NFC-e</td>
-                                    <td class="py-2 px-3">65</td>
-                                    <td class="py-2 px-3">44 dígitos</td>
-                                    <td class="py-2 px-3"><span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #047857;">Suportado</span></td>
-                                    <td class="py-2 px-3 text-gray-500">Mesma validação por chave usada para NF-e.</td>
+                                    <td class="py-2 px-3" data-label="Modelo">65</td>
+                                    <td class="py-2 px-3" data-label="Chave">44 dígitos</td>
+                                    <td class="py-2 px-3" data-label="Status"><span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #047857;">Suportado</span></td>
+                                    <td class="py-2 px-3 text-gray-500" data-label="Observação">Mesma validação por chave usada para NF-e.</td>
                                 </tr>
                                 <tr>
                                     <td class="py-2 px-3 font-medium text-gray-900">CT-e</td>
-                                    <td class="py-2 px-3">57</td>
-                                    <td class="py-2 px-3">44 dígitos</td>
-                                    <td class="py-2 px-3"><span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #047857;">Suportado</span></td>
-                                    <td class="py-2 px-3 text-gray-500">Consulta avulsa para documentos de transporte.</td>
+                                    <td class="py-2 px-3" data-label="Modelo">57</td>
+                                    <td class="py-2 px-3" data-label="Chave">44 dígitos</td>
+                                    <td class="py-2 px-3" data-label="Status"><span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #047857;">Suportado</span></td>
+                                    <td class="py-2 px-3 text-gray-500" data-label="Observação">Consulta avulsa para documentos de transporte.</td>
                                 </tr>
                                 <tr>
                                     <td class="py-2 px-3 font-medium text-gray-900">NFS-e</td>
-                                    <td class="py-2 px-3">—</td>
-                                    <td class="py-2 px-3">Municipal</td>
-                                    <td class="py-2 px-3"><span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #6b7280;">Em breve</span></td>
-                                    <td class="py-2 px-3 text-gray-500">Fora do fluxo atual de consulta avulsa.</td>
+                                    <td class="py-2 px-3" data-label="Modelo">—</td>
+                                    <td class="py-2 px-3" data-label="Chave">Municipal</td>
+                                    <td class="py-2 px-3" data-label="Status"><span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #6b7280;">Em breve</span></td>
+                                    <td class="py-2 px-3 text-gray-500" data-label="Observação">Fora do fluxo atual de consulta avulsa.</td>
                                 </tr>
                             </tbody>
                         </table>

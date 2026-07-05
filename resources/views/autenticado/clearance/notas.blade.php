@@ -122,7 +122,7 @@
                         <span class="text-[10px] font-semibold text-gray-400">Quem pode ser verificado hoje</span>
                     </div>
                     <div class="overflow-x-auto border border-gray-200 rounded">
-                        <table class="w-full text-xs">
+                        <table class="w-full text-xs tabela-cards">
                             <thead style="background-color: #f9fafb;">
                                 <tr class="text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
                                     <th class="py-2 px-3">Documento</th>
@@ -135,31 +135,31 @@
                             <tbody class="divide-y divide-gray-100 text-gray-700">
                                 <tr>
                                     <td class="py-2 px-3 font-medium text-gray-900">NF-e</td>
-                                    <td class="py-2 px-3">55</td>
-                                    <td class="py-2 px-3">44 dígitos</td>
-                                    <td class="py-2 px-3"><span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #047857;">Suportado</span></td>
-                                    <td class="py-2 px-3 text-gray-500">Fonte nacional unificada.</td>
+                                    <td class="py-2 px-3" data-label="Modelo">55</td>
+                                    <td class="py-2 px-3" data-label="Chave">44 dígitos</td>
+                                    <td class="py-2 px-3" data-label="Status"><span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #047857;">Suportado</span></td>
+                                    <td class="py-2 px-3 text-gray-500" data-label="Observação">Fonte nacional unificada.</td>
                                 </tr>
                                 <tr>
                                     <td class="py-2 px-3 font-medium text-gray-900">NFC-e</td>
-                                    <td class="py-2 px-3">65</td>
-                                    <td class="py-2 px-3">44 dígitos</td>
-                                    <td class="py-2 px-3"><span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #047857;">Suportado</span></td>
-                                    <td class="py-2 px-3 text-gray-500">Mesma base da NF-e.</td>
+                                    <td class="py-2 px-3" data-label="Modelo">65</td>
+                                    <td class="py-2 px-3" data-label="Chave">44 dígitos</td>
+                                    <td class="py-2 px-3" data-label="Status"><span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #047857;">Suportado</span></td>
+                                    <td class="py-2 px-3 text-gray-500" data-label="Observação">Mesma base da NF-e.</td>
                                 </tr>
                                 <tr>
                                     <td class="py-2 px-3 font-medium text-gray-900">CT-e / CT-e OS</td>
-                                    <td class="py-2 px-3">57 / 67</td>
-                                    <td class="py-2 px-3">44 dígitos</td>
-                                    <td class="py-2 px-3"><span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #047857;">Suportado</span></td>
-                                    <td class="py-2 px-3 text-gray-500">Transportes e serviços de transporte.</td>
+                                    <td class="py-2 px-3" data-label="Modelo">57 / 67</td>
+                                    <td class="py-2 px-3" data-label="Chave">44 dígitos</td>
+                                    <td class="py-2 px-3" data-label="Status"><span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #047857;">Suportado</span></td>
+                                    <td class="py-2 px-3 text-gray-500" data-label="Observação">Transportes e serviços de transporte.</td>
                                 </tr>
                                 <tr>
                                     <td class="py-2 px-3 font-medium text-gray-900">NFS-e</td>
-                                    <td class="py-2 px-3">—</td>
-                                    <td class="py-2 px-3">Municipal / 50 dig. nacional</td>
-                                    <td class="py-2 px-3"><span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #6b7280;">Fora de escopo</span></td>
-                                    <td class="py-2 px-3 text-gray-500">Sem fonte nacional unificada — ver nota abaixo.</td>
+                                    <td class="py-2 px-3" data-label="Modelo">—</td>
+                                    <td class="py-2 px-3" data-label="Chave">Municipal / 50 dig. nacional</td>
+                                    <td class="py-2 px-3" data-label="Status"><span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #6b7280;">Fora de escopo</span></td>
+                                    <td class="py-2 px-3 text-gray-500" data-label="Observação">Sem fonte nacional unificada — ver nota abaixo.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -392,7 +392,7 @@
                 </div>
             </div>
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                <table class="min-w-full divide-y divide-gray-200 text-sm tabela-cards">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-3 py-2 text-left"><input type="checkbox" id="chk-master" class="w-4 h-4"></th>
@@ -465,27 +465,27 @@
                                 <td class="px-3 py-2">
                                     <input type="checkbox" class="w-4 h-4 chk-nota" value="{{ $n->id }}">
                                 </td>
-                                <td class="px-3 py-2">
+                                <td class="px-3 py-2" data-label="Origem">
                                     <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemHex }}">
                                         {{ strtoupper($n->origem) }}
                                     </span>
                                 </td>
-                                <td class="px-3 py-2 font-mono text-xs">{{ $n->numero }}/{{ $n->serie }}</td>
-                                <td class="px-3 py-2 text-xs">{{ $dataEmissao?->format('d/m/Y') }}</td>
-                                <td class="px-3 py-2 text-xs text-gray-700 truncate max-w-[180px]">{{ $n->emit_razao_social }}</td>
-                                <td class="px-3 py-2 text-xs text-gray-700 truncate max-w-[180px]">{{ $n->dest_razao_social }}</td>
-                                <td class="px-3 py-2 text-xs text-right font-mono">R$ {{ number_format((float) $n->valor_total, 2, ',', '.') }}</td>
-                                <td class="px-3 py-2 text-xs">
+                                <td class="px-3 py-2 font-mono text-xs" data-label="Nota">{{ $n->numero }}/{{ $n->serie }}</td>
+                                <td class="px-3 py-2 text-xs" data-label="Emissão">{{ $dataEmissao?->format('d/m/Y') }}</td>
+                                <td class="px-3 py-2 text-xs text-gray-700 truncate max-w-[180px]" data-label="Emitente">{{ $n->emit_razao_social }}</td>
+                                <td class="px-3 py-2 text-xs text-gray-700 truncate max-w-[180px]" data-label="Destinatário">{{ $n->dest_razao_social }}</td>
+                                <td class="px-3 py-2 text-xs text-right font-mono" data-label="Valor">R$ {{ number_format((float) $n->valor_total, 2, ',', '.') }}</td>
+                                <td class="px-3 py-2 text-xs" data-label="Modelo">
                                     <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $modeloHex }}">
                                         {{ $modeloLabel }}
                                     </span>
                                 </td>
-                                <td class="px-3 py-2 text-xs">
+                                <td class="px-3 py-2 text-xs" data-label="Tipo">
                                     <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $n->tipo_nota === 'entrada' ? '#047857' : '#d97706' }}">
                                         {{ ucfirst($n->tipo_nota) }}
                                     </span>
                                 </td>
-                                <td class="px-3 py-2 text-xs">
+                                <td class="px-3 py-2 text-xs" data-label="Status">
                                     <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white td-status" style="background-color: {{ $s['hex'] }}">{{ $s['label'] }}</span>
                                 </td>
                                 <td class="px-3 py-2 text-right">

@@ -50,8 +50,13 @@ class PersistenciaCnpj
             $dados['consultas_realizadas'] = $realizadas;
         }
 
-        // Sucesso da fonte limpa qualquer marca de erro anterior dela (re-consulta deu certo).
-        if ($resultado->status === 'sucesso' && isset($dados['_fontes_erro'][$resultado->chave])) {
+        // Bloco não-vazio da fonte = produziu conteúdo persistível (sucesso, ou um desfecho
+        // reconhecido tipo INDETERMINADO/NAO_ENCONTRADA/impedimento real — ex.: CrfFgtsFonte
+        // mapeando `erro_participante` p/ "Irregular") — limpa qualquer marca de erro anterior
+        // dela. Sem isso, uma marca de retry de tentativa passada nunca seria limpa (o status
+        // aqui não é literalmente 'sucesso'), e o botão de reconsulta continuaria oferecido
+        // pra uma fonte que já deu um resultado definitivo.
+        if (! empty($resultado->dados) && isset($dados['_fontes_erro'][$resultado->chave])) {
             unset($dados['_fontes_erro'][$resultado->chave]);
             if (empty($dados['_fontes_erro'])) {
                 unset($dados['_fontes_erro']);

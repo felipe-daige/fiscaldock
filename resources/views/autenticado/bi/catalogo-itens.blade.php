@@ -1,26 +1,66 @@
 @php
     $fmtMoeda = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
+
+    // Renderiza uma lista "a,b,c" como chips que quebram linha (fim da sobreposição de CFOP/CST
+    // em coluna table-fixed estreita). CFOP recebe tinta por entrada/saída; cap em $max + "+N".
+    $chips = function (?string $raw, bool $cfop = false, int $max = 6) {
+        $vals = array_values(array_filter(array_map('trim', explode(',', (string) $raw)), fn ($v) => $v !== ''));
+        if ($vals === []) {
+            return '<span class="text-gray-400">—</span>';
+        }
+        $tint = [
+            'entrada' => ['#eff6ff', '#1d4ed8'],
+            'saida' => ['#ecfdf5', '#047857'],
+            'indefinido' => ['#f3f4f6', '#374151'],
+        ];
+        $html = '<div class="flex flex-wrap gap-1">';
+        foreach (array_slice($vals, 0, $max) as $v) {
+            $tipo = $cfop ? \App\Support\Cfop::tipoOperacao($v) : 'indefinido';
+            [$bg, $fg] = $tint[$tipo];
+            // title por chip: daltônico não distingue entrada(azul)/saída(verde) só pela cor.
+            $title = $cfop && $tipo !== 'indefinido' ? ' title="'.e($v.' — '.$tipo).'"' : '';
+            $html .= '<span class="font-mono text-[10px] leading-none px-1.5 py-1 rounded"'.$title.' style="background-color:'.$bg.';color:'.$fg.'">'.e($v).'</span>';
+        }
+        if (count($vals) > $max) {
+            $html .= '<span class="text-[10px] leading-none px-1 py-1 text-gray-400 font-semibold">+'.(count($vals) - $max).'</span>';
+        }
+
+        return $html.'</div>';
+    };
+
+    // Cor do badge de origem (efd/xml/ambas) — reutilizado na tabela, nos cards e nos alertas.
+    $origemCor = fn (string $fonte) => ['efd' => '#1d4ed8', 'xml' => '#7c3aed', 'ambas' => '#047857'][$fonte] ?? '#334155';
 @endphp
 <div class="min-h-screen bg-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
 
-        <div class="mb-4 sm:mb-6">
-            <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Catálogo × Itens de Nota</h1>
-            <p class="text-xs text-gray-500 mt-0.5">Itens movimentados nas notas (XML + EFD), cruzados com o catálogo do contribuinte.</p>
+        <div class="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div>
+                <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Catálogo × Itens de Nota</h1>
+                <p class="text-xs text-gray-500 mt-0.5">Itens movimentados nas notas (XML + EFD), cruzados com o catálogo do contribuinte.</p>
+            </div>
+            <x-acoes-menu label="Exportar" align="right">
+                <x-acoes-item href="{{ route('app.bi.catalogo-itens.exportar-xlsx', request()->query()) }}">Excel (XLSX)</x-acoes-item>
+                <x-acoes-item href="{{ route('app.bi.catalogo-itens.exportar', request()->query()) }}">Excel (CSV)</x-acoes-item>
+                <x-acoes-item href="{{ route('app.bi.catalogo-itens.exportar-pdf', request()->query()) }}">PDF</x-acoes-item>
+            </x-acoes-menu>
         </div>
 
         {{-- KPIs --}}
         <div class="grid grid-cols-2 lg:grid-cols-6 gap-3 mb-5">
+            {{-- $alerta: KPIs de problema pintam o número (e a borda) só quando > 0 — zero problemas fica
+                 mudo, então o olho vai direto pro que precisa de ação, sem 3 blocos âmbar idênticos. --}}
             @foreach([
-                ['Itens movimentados', $kpis['total_itens'], '#1d4ed8'],
-                ['Com catálogo', $kpis['com_catalogo'], '#047857'],
-                ['Sem catálogo', $kpis['sem_catalogo'], '#b45309'],
-                ['Sem NCM', $kpis['sem_ncm'], '#b45309'],
-                ['NCM a revisar', $kpis['ncm_revisar'] ?? 0, '#b45309'],
-            ] as [$label, $valor, $cor])
-                <div class="bg-white rounded border border-gray-300 border-l-4 p-3" style="border-left-color: {{ $cor }}">
+                ['Itens movimentados', $kpis['total_itens'], '#1d4ed8', false],
+                ['Com catálogo', $kpis['com_catalogo'], '#047857', false],
+                ['Sem catálogo', $kpis['sem_catalogo'], '#b45309', true],
+                ['Sem NCM', $kpis['sem_ncm'], '#b45309', true],
+                ['NCM a revisar', $kpis['ncm_revisar'] ?? 0, '#b45309', true],
+            ] as [$label, $valor, $cor, $alerta])
+                @php $ativo = ! $alerta || $valor > 0; @endphp
+                <div class="bg-white rounded border border-gray-300 border-l-4 p-3" style="border-left-color: {{ $ativo ? $cor : '#d1d5db' }}">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{{ $label }}</p>
-                    <p class="text-lg font-bold text-gray-900">{{ number_format($valor, 0, ',', '.') }}</p>
+                    <p class="text-lg font-bold" style="color: {{ $alerta && $valor > 0 ? $cor : ($ativo ? '#111827' : '#9ca3af') }}">{{ number_format($valor, 0, ',', '.') }}</p>
                 </div>
             @endforeach
             <div class="bg-white rounded border border-gray-300 border-l-4 p-3" style="border-left-color: #334155">
@@ -53,84 +93,45 @@
 
         {{-- NCM a revisar (documento × cadastro) --}}
         @if($divergencias->isNotEmpty())
-            <div class="bg-white rounded border border-gray-300 border-l-4 mb-4" style="border-left-color:#b45309">
-                <div class="px-4 py-2.5 border-b border-gray-200">
-                    <p class="text-sm font-semibold text-gray-800">NCM a revisar (documento × cadastro) — {{ $divergencias->where('dispensado', false)->count() }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">O NCM informado no documento (XML) difere do cadastrado no seu catálogo (registro 0200). Pode gerar tributação/ST incorreta e malha fiscal. <strong>Como corrigir:</strong> confirme o NCM correto do produto e ajuste o cadastro 0200 na próxima EFD — ou corrija a emissão, se o documento estiver errado. Dispense se já conferiu/corrigiu.</p>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50 text-[10px] uppercase tracking-wide text-gray-400">
-                            <tr>
-                                <th class="text-left px-3 py-2">Código</th>
-                                <th class="text-left px-3 py-2">Descrição</th>
-                                <th class="text-left px-3 py-2">NCM documento</th>
-                                <th class="text-left px-3 py-2">NCM cadastro</th>
-                                <th class="text-left px-3 py-2">Importação</th>
-                                <th class="text-right px-3 py-2">Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            @foreach($divergencias as $d)
-                                <tr @if($d['dispensado']) style="opacity:.5" @endif>
-                                    <td class="px-3 py-2 font-mono text-gray-900">{{ $d['codigo_item'] }}</td>
-                                    <td class="px-3 py-2 text-gray-700 truncate max-w-xs" title="{{ $d['descricao'] }}">{{ $d['descricao'] ?: '—' }}</td>
-                                    <td class="px-3 py-2 font-mono font-semibold" style="color:#b45309">{{ $d['ncm_xml'] ?: '—' }}</td>
-                                    <td class="px-3 py-2 font-mono text-gray-600">{{ $d['cat_ncm'] ?: '—' }}</td>
-                                    <td class="px-3 py-2 text-[11px]"><div class="max-w-[200px] truncate text-blue-600 underline" title="{{ $d['importacoes'] }}">{{ $d['importacoes'] ?: '—' }}</div></td>
-                                    <td class="px-3 py-2 text-right whitespace-nowrap">
-                                        @if($d['dispensado'])
-                                            <button type="button" onclick="catalogoAlerta.restaurar('ncm_divergente', @js($d['codigo_item']))" class="text-[11px] text-blue-600 underline cursor-pointer">Restaurar</button>
-                                        @else
-                                            <button type="button" onclick="catalogoAlerta.pedir('ncm_divergente', @js($d['codigo_item']))" class="text-[11px] text-red-600 cursor-pointer">Ignorar</button>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <x-catalogo.painel-alerta
+                titulo="NCM a revisar (documento × cadastro)"
+                :contagem="$divergencias->where('dispensado', false)->count()"
+                :colunas="['Código', 'Descrição', 'NCM documento', 'NCM cadastro', 'Importação', 'Ação']">
+                <x-slot:ajuda>O NCM informado no documento (XML) difere do cadastrado no seu catálogo (registro 0200). Pode gerar tributação/ST incorreta e malha fiscal. <strong>Como corrigir:</strong> confirme o NCM correto do produto e ajuste o cadastro 0200 na próxima EFD — ou corrija a emissão, se o documento estiver errado. Dispense se já conferiu/corrigiu.</x-slot:ajuda>
+                @foreach($divergencias as $d)
+                    <tr data-alerta-row @if($d['dispensado']) style="opacity:.5" @endif>
+                        <td class="px-3 py-2 font-mono text-gray-900">{{ $d['codigo_item'] }}</td>
+                        <td class="px-3 py-2 text-gray-700 truncate max-w-xs" title="{{ $d['descricao'] }}">{{ $d['descricao'] ?: '—' }}</td>
+                        <td class="px-3 py-2 font-mono font-semibold" style="color:#b45309">{{ $d['ncm_xml'] ?: '—' }}</td>
+                        <td class="px-3 py-2 font-mono text-gray-600">{{ $d['cat_ncm'] ?: '—' }}</td>
+                        <td class="px-3 py-2 text-[11px]"><div class="max-w-[200px] truncate text-blue-600 underline" title="{{ $d['importacoes'] }}">{{ $d['importacoes'] ?: '—' }}</div></td>
+                        <td class="px-3 py-2 text-right whitespace-nowrap">
+                            <x-catalogo.botao-alerta tipo="ncm_divergente" :codigo="$d['codigo_item']" :dispensado="$d['dispensado']" />
+                        </td>
+                    </tr>
+                @endforeach
+            </x-catalogo.painel-alerta>
         @endif
 
         {{-- Itens sem catálogo (0200) --}}
         @if($semCatalogo->isNotEmpty())
-            <div class="bg-white rounded border border-gray-300 border-l-4 mb-4" style="border-left-color:#b45309">
-                <div class="px-4 py-2.5 border-b border-gray-200">
-                    <p class="text-sm font-semibold text-gray-800">Itens sem catálogo (0200) — {{ $semCatalogo->where('dispensado', false)->count() }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">Código movimentado em nota mas fora do seu registro 0200. <strong>Serviços</strong> (ex.: montagem) não exigem 0200 — pode ignorar. <strong>Produtos</strong> devem ser cadastrados no 0200 para consistência fiscal e para casar NCM/alíquota.</p>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50 text-[10px] uppercase tracking-wide text-gray-400">
-                            <tr>
-                                <th class="text-left px-3 py-2">Código</th>
-                                <th class="text-left px-3 py-2">Descrição</th>
-                                <th class="text-left px-3 py-2">Origem</th>
-                                <th class="text-left px-3 py-2">Importação</th>
-                                <th class="text-right px-3 py-2">Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            @foreach($semCatalogo as $i)
-                                <tr @if($i['dispensado']) style="opacity:.5" @endif>
-                                    <td class="px-3 py-2 font-mono text-gray-900">{{ $i['codigo_item'] }}</td>
-                                    <td class="px-3 py-2 text-gray-700 truncate max-w-xs" title="{{ $i['descricao'] }}">{{ $i['descricao'] ?: '—' }}</td>
-                                    <td class="px-3 py-2"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase text-white" style="background-color: {{ ['efd' => '#1d4ed8', 'xml' => '#7c3aed', 'ambas' => '#047857'][$i['fontes']] ?? '#334155' }}">{{ $i['fontes'] }}</span></td>
-                                    <td class="px-3 py-2 text-[11px]"><div class="max-w-[200px] truncate text-blue-600 underline" title="{{ $i['importacoes'] }}">{{ $i['importacoes'] ?: '—' }}</div></td>
-                                    <td class="px-3 py-2 text-right whitespace-nowrap">
-                                        @if($i['dispensado'])
-                                            <button type="button" onclick="catalogoAlerta.restaurar('sem_catalogo', @js($i['codigo_item']))" class="text-[11px] text-blue-600 underline cursor-pointer">Restaurar</button>
-                                        @else
-                                            <button type="button" onclick="catalogoAlerta.pedir('sem_catalogo', @js($i['codigo_item']))" class="text-[11px] text-red-600 cursor-pointer">Ignorar</button>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <x-catalogo.painel-alerta
+                titulo="Itens sem catálogo (0200)"
+                :contagem="$semCatalogo->where('dispensado', false)->count()"
+                :colunas="['Código', 'Descrição', 'Origem', 'Importação', 'Ação']">
+                <x-slot:ajuda>Código movimentado em nota mas fora do seu registro 0200. <strong>Serviços</strong> (ex.: montagem) não exigem 0200 — pode ignorar. <strong>Produtos</strong> devem ser cadastrados no 0200 para consistência fiscal e para casar NCM/alíquota.</x-slot:ajuda>
+                @foreach($semCatalogo as $i)
+                    <tr data-alerta-row @if($i['dispensado']) style="opacity:.5" @endif>
+                        <td class="px-3 py-2 font-mono text-gray-900">{{ $i['codigo_item'] }}</td>
+                        <td class="px-3 py-2 text-gray-700 truncate max-w-xs" title="{{ $i['descricao'] }}">{{ $i['descricao'] ?: '—' }}</td>
+                        <td class="px-3 py-2"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase text-white" style="background-color: {{ $origemCor($i['fontes']) }}">{{ $i['fontes'] }}</span></td>
+                        <td class="px-3 py-2 text-[11px]"><div class="max-w-[200px] truncate text-blue-600 underline" title="{{ $i['importacoes'] }}">{{ $i['importacoes'] ?: '—' }}</div></td>
+                        <td class="px-3 py-2 text-right whitespace-nowrap">
+                            <x-catalogo.botao-alerta tipo="sem_catalogo" :codigo="$i['codigo_item']" :dispensado="$i['dispensado']" />
+                        </td>
+                    </tr>
+                @endforeach
+            </x-catalogo.painel-alerta>
         @endif
 
         {{-- Filtros (padrão /app/clientes) --}}
@@ -168,70 +169,34 @@
                 </div>
 
                 {{-- CFOP --}}
-                <div class="relative" data-pop>
-                    <label class="block text-[11px] text-gray-500 mb-1">CFOP</label>
-                    <button type="button" data-pop-toggle class="w-full flex items-center justify-between gap-2 text-[13px] py-2.5 px-3 border border-gray-300 rounded bg-white hover:border-gray-400">
-                        <span class="truncate {{ count($cfopsSel) ? 'text-gray-900 font-medium' : 'text-gray-500' }}">{{ count($cfopsSel) ? count($cfopsSel).' selec.' : 'Todos' }}</span>
-                        <svg data-pop-chevron class="w-4 h-4 text-gray-400 transition-transform shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div data-pop-panel class="hidden absolute z-30 left-0 mt-1 w-80 max-w-[calc(100vw-2.5rem)] bg-white border border-gray-300 rounded shadow-lg">
-                        <div class="flex items-center gap-2 p-2 border-b border-gray-200 bg-gray-50 rounded-t">
-                            <input type="text" oninput="catFiltro.buscar('cfop', this.value)" placeholder="buscar código ou descrição…" class="flex-1 min-w-0 text-[12px] py-1.5 px-2.5 border border-gray-300 rounded">
-                            <span id="cfopCount" class="text-[11px] font-semibold whitespace-nowrap" style="color:#1d4ed8">{{ count($cfopsSel) ? count($cfopsSel).' sel.' : '' }}</span>
-                        </div>
-                        <div id="cfopBox" class="max-h-[240px] overflow-y-auto divide-y divide-gray-100">
-                            @forelse($cfopOpcoes as $cf)
-                                <label data-row data-search="{{ strtolower($cf['codigo'].' '.$cf['descricao']) }}" class="flex items-center gap-2 px-2.5 py-1.5 text-[12px] cursor-pointer hover:bg-gray-50">
-                                    <input type="checkbox" name="cfops[]" value="{{ $cf['codigo'] }}" onchange="catFiltro.contar('cfop')" @checked(in_array($cf['codigo'], $cfopsSel, true))>
-                                    <span class="font-mono font-semibold text-gray-900">{{ $cf['codigo'] }}</span>
-                                    @if($cf['tipo'] !== 'indefinido')
-                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase text-white shrink-0" style="background-color: {{ $cf['tipo'] === 'entrada' ? '#1d4ed8' : '#047857' }}">{{ $cf['tipo'] }}</span>
-                                    @endif
-                                    <span class="text-gray-600 truncate" title="{{ $cf['descricao'] }}">{{ $cf['descricao'] ?: '—' }}</span>
-                                </label>
-                            @empty
-                                <span class="block px-2.5 py-2 text-[11px] text-gray-400">Sem dados no período/filtro.</span>
-                            @endforelse
-                        </div>
-                        @if(count($cfopOpcoes))
-                            <div class="px-2.5 py-1.5 border-t border-gray-200 bg-gray-50 rounded-b flex gap-3">
-                                <button type="button" onclick="catFiltro.marcar('cfop', true)" class="text-[11px] text-blue-600 cursor-pointer">Marcar visíveis</button>
-                                <button type="button" onclick="catFiltro.marcar('cfop', false)" class="text-[11px] text-gray-500 cursor-pointer">Limpar seleção</button>
-                            </div>
-                        @endif
-                    </div>
-                </div>
+                <x-multi-select-pop grupo="cfop" label="CFOP" :selecionados="$cfopsSel" width="w-80"
+                    placeholder="buscar código ou descrição…" :temOpcoes="count($cfopOpcoes) > 0">
+                    @forelse($cfopOpcoes as $cf)
+                        <label data-row data-search="{{ strtolower($cf['codigo'].' '.$cf['descricao']) }}" class="flex items-center gap-2 px-2.5 py-1.5 text-[12px] cursor-pointer hover:bg-gray-50">
+                            <input type="checkbox" name="cfops[]" value="{{ $cf['codigo'] }}" onchange="catFiltro.contar('cfop')" @checked(in_array($cf['codigo'], $cfopsSel, true))>
+                            <span class="font-mono font-semibold text-gray-900">{{ $cf['codigo'] }}</span>
+                            @if($cf['tipo'] !== 'indefinido')
+                                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase text-white shrink-0" style="background-color: {{ $cf['tipo'] === 'entrada' ? '#1d4ed8' : '#047857' }}">{{ $cf['tipo'] }}</span>
+                            @endif
+                            <span class="text-gray-600 truncate" title="{{ $cf['descricao'] }}">{{ $cf['descricao'] ?: '—' }}</span>
+                        </label>
+                    @empty
+                        <span class="block px-2.5 py-2 text-[11px] text-gray-400">Sem dados no período/filtro.</span>
+                    @endforelse
+                </x-multi-select-pop>
 
                 {{-- CST --}}
-                <div class="relative" data-pop>
-                    <label class="block text-[11px] text-gray-500 mb-1">CST</label>
-                    <button type="button" data-pop-toggle class="w-full flex items-center justify-between gap-2 text-[13px] py-2.5 px-3 border border-gray-300 rounded bg-white hover:border-gray-400">
-                        <span class="truncate {{ count($cstsSel) ? 'text-gray-900 font-medium' : 'text-gray-500' }}">{{ count($cstsSel) ? count($cstsSel).' selec.' : 'Todos' }}</span>
-                        <svg data-pop-chevron class="w-4 h-4 text-gray-400 transition-transform shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div data-pop-panel class="hidden absolute z-30 right-0 lg:left-0 mt-1 w-52 max-w-[calc(100vw-2.5rem)] bg-white border border-gray-300 rounded shadow-lg">
-                        <div class="flex items-center gap-2 p-2 border-b border-gray-200 bg-gray-50 rounded-t">
-                            <input type="text" oninput="catFiltro.buscar('cst', this.value)" placeholder="buscar…" class="flex-1 min-w-0 text-[12px] py-1.5 px-2.5 border border-gray-300 rounded">
-                            <span id="cstCount" class="text-[11px] font-semibold whitespace-nowrap" style="color:#1d4ed8">{{ count($cstsSel) ? count($cstsSel).' sel.' : '' }}</span>
-                        </div>
-                        <div id="cstBox" class="max-h-[240px] overflow-y-auto divide-y divide-gray-100">
-                            @forelse($facetas['csts'] ?? [] as $ct)
-                                <label data-row data-search="{{ strtolower($ct) }}" class="flex items-center gap-2 px-2.5 py-1.5 text-[12px] cursor-pointer hover:bg-gray-50">
-                                    <input type="checkbox" name="csts[]" value="{{ $ct }}" onchange="catFiltro.contar('cst')" @checked(in_array($ct, $cstsSel, true))>
-                                    <span class="font-mono font-semibold text-gray-900">{{ $ct }}</span>
-                                </label>
-                            @empty
-                                <span class="block px-2.5 py-2 text-[11px] text-gray-400">Sem dados.</span>
-                            @endforelse
-                        </div>
-                        @if(count($facetas['csts'] ?? []))
-                            <div class="px-2.5 py-1.5 border-t border-gray-200 bg-gray-50 rounded-b flex gap-3">
-                                <button type="button" onclick="catFiltro.marcar('cst', true)" class="text-[11px] text-blue-600 cursor-pointer">Marcar visíveis</button>
-                                <button type="button" onclick="catFiltro.marcar('cst', false)" class="text-[11px] text-gray-500 cursor-pointer">Limpar seleção</button>
-                            </div>
-                        @endif
-                    </div>
-                </div>
+                <x-multi-select-pop grupo="cst" label="CST" :selecionados="$cstsSel" width="w-52"
+                    panelAlign="right-0 lg:left-0" :temOpcoes="count($facetas['csts'] ?? []) > 0">
+                    @forelse($facetas['csts'] ?? [] as $ct)
+                        <label data-row data-search="{{ strtolower($ct) }}" class="flex items-center gap-2 px-2.5 py-1.5 text-[12px] cursor-pointer hover:bg-gray-50">
+                            <input type="checkbox" name="csts[]" value="{{ $ct }}" onchange="catFiltro.contar('cst')" @checked(in_array($ct, $cstsSel, true))>
+                            <span class="font-mono font-semibold text-gray-900">{{ $ct }}</span>
+                        </label>
+                    @empty
+                        <span class="block px-2.5 py-2 text-[11px] text-gray-400">Sem dados.</span>
+                    @endforelse
+                </x-multi-select-pop>
             </div>
 
             {{-- ações --}}
@@ -243,67 +208,72 @@
             </div>
         </form>
 
-        {{-- Cabeçalho da tabela + exportações (refletem o filtro atual; sem filtro = todos) --}}
-        <div class="flex items-center justify-between mb-2">
-            <p class="text-[12px] text-gray-500">{{ number_format($itens->count(), 0, ',', '.') }} item(ns) · {{ $fmtMoeda($kpis['valor_movimentado']) }}</p>
-            <x-acoes-menu label="Exportar" align="right">
-                <x-acoes-item href="{{ route('app.bi.catalogo-itens.exportar-xlsx', request()->query()) }}">Excel (XLSX)</x-acoes-item>
-                <x-acoes-item href="{{ route('app.bi.catalogo-itens.exportar', request()->query()) }}">Excel (CSV)</x-acoes-item>
-                <x-acoes-item href="{{ route('app.bi.catalogo-itens.exportar-pdf', request()->query()) }}">PDF</x-acoes-item>
-            </x-acoes-menu>
+        {{-- Contagem/intervalo (reflete o filtro atual; sem filtro = todos) --}}
+        <div class="mb-2">
+            <p class="text-[12px] text-gray-500">
+                @if($itensPaginados->total() > 0)
+                    {{ number_format($itensPaginados->firstItem(), 0, ',', '.') }}–{{ number_format($itensPaginados->lastItem(), 0, ',', '.') }}
+                    de {{ number_format($itensPaginados->total(), 0, ',', '.') }} item(ns)
+                @else
+                    0 item(ns)
+                @endif
+                · {{ $fmtMoeda($kpis['valor_movimentado']) }}
+            </p>
         </div>
 
-        {{-- Tabela --}}
-        <div class="bg-white rounded border border-gray-300 overflow-x-auto">
+        {{-- Tabela (md+) --}}
+        <div class="bg-white rounded border border-gray-300 overflow-x-auto hidden md:block">
             <table class="w-full text-sm table-fixed">
+                <caption class="sr-only">Itens movimentados em notas cruzados com o catálogo</caption>
                 <thead class="bg-gray-50 text-[10px] uppercase tracking-wide text-gray-400">
                     <tr>
-                        <th class="text-left px-3 py-2.5" style="width:9%">Código</th>
-                        <th class="text-left px-3 py-2.5" style="width:20%">Descrição</th>
-                        <th class="text-left px-3 py-2.5" style="width:6%">Origem</th>
-                        <th class="text-left px-3 py-2.5 hidden lg:table-cell" style="width:13%">Arquivo de origem</th>
-                        <th class="text-left px-3 py-2.5 hidden sm:table-cell" style="width:8%">NCM</th>
-                        <th class="text-left px-3 py-2.5 hidden md:table-cell" style="width:7%">CFOP</th>
-                        <th class="text-left px-3 py-2.5 hidden xl:table-cell" style="width:6%">CST</th>
-                        <th class="text-right px-3 py-2.5 hidden sm:table-cell" style="width:6%">Qtd</th>
-                        <th class="text-right px-3 py-2.5 hidden lg:table-cell" style="width:5%">Ocorr.</th>
-                        <th class="text-right px-3 py-2.5 hidden md:table-cell" style="width:7%">Alíq. méd.</th>
-                        <th class="text-right px-3 py-2.5" style="width:11%">Valor movimentado</th>
-                        <th class="text-left px-3 py-2.5" style="width:14%">Catálogo</th>
+                        <th scope="col" class="text-left px-3 py-2.5" style="width:9%">Código</th>
+                        <th scope="col" class="text-left px-3 py-2.5" style="width:15%">Descrição</th>
+                        <th scope="col" class="text-left px-3 py-2.5" style="width:5%">Origem</th>
+                        <th scope="col" class="text-left px-3 py-2.5 hidden lg:table-cell" style="width:10%">Arquivo de origem</th>
+                        <th scope="col" class="text-left px-3 py-2.5 hidden sm:table-cell" style="width:7%">NCM</th>
+                        <th scope="col" class="text-left px-3 py-2.5 hidden md:table-cell" style="width:10%">CFOP</th>
+                        <th scope="col" class="text-left px-3 py-2.5 hidden xl:table-cell" style="width:7%">CST</th>
+                        <th scope="col" class="text-right px-3 py-2.5 hidden sm:table-cell" style="width:4%">Qtd</th>
+                        <th scope="col" class="text-right px-3 py-2.5 hidden lg:table-cell" style="width:4%">Ocorr.</th>
+                        <th scope="col" class="text-right px-3 py-2.5 hidden md:table-cell" style="width:6%">Alíq. méd.</th>
+                        <th scope="col" class="text-right px-3 py-2.5" style="width:12%">Valor movimentado</th>
+                        <th scope="col" class="text-left px-3 py-2.5" style="width:11%">Catálogo</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                @forelse($itens as $item)
-                    @php
-                        $origemCor = ['efd' => '#1d4ed8', 'xml' => '#7c3aed', 'ambas' => '#047857'][$item['fontes']] ?? '#334155';
-                    @endphp
+                @forelse($itensPaginados as $item)
                     <tr>
-                        <td class="px-3 py-2 font-mono text-gray-900 truncate" title="{{ $item['codigo_item'] }}">{{ $item['codigo_item'] }}</td>
-                        <td class="px-3 py-2 text-gray-700 truncate" title="{{ $item['descricao'] }}">{{ $item['descricao'] ?: '—' }}</td>
-                        <td class="px-3 py-2">
-                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase text-white" style="background-color: {{ $origemCor }}">{{ $item['fontes'] }}</span>
+                        <td class="px-3 py-2 font-mono text-gray-900 align-top break-all">{{ $item['codigo_item'] }}</td>
+                        <td class="px-3 py-2 text-gray-700 align-top truncate" title="{{ $item['descricao'] }}">{{ $item['descricao'] ?: '—' }}</td>
+                        <td class="px-3 py-2 align-top">
+                            <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold uppercase text-white" style="background-color: {{ $origemCor($item['fontes']) }}">{{ $item['fontes'] }}</span>
                         </td>
                         <td class="px-3 py-2 text-[11px] align-top hidden lg:table-cell">
-                            <div class="max-w-[200px] space-y-0.5">
-                                @forelse($item['importacoes'] as $imp)
+                            @php $imps = collect($item['importacoes']); @endphp
+                            <div class="max-w-[200px] space-y-0.5" @if($imps->count() > 2) title="{{ $imps->pluck('label')->implode(' · ') }}" @endif>
+                                @forelse($imps->take(2) as $imp)
                                     <a href="{{ $imp['fonte'] === 'xml' ? route('app.importacao.xml.detalhes', $imp['id']) : route('app.importacao.efd.detalhes', $imp['id']) }}" data-link class="block truncate text-blue-600 underline cursor-pointer" title="{{ $imp['label'] }}">{{ $imp['label'] }}</a>
                                 @empty
                                     <span class="text-gray-400">—</span>
                                 @endforelse
+                                @if($imps->count() > 2)
+                                    <span class="block text-[10px] text-gray-400 font-semibold">+{{ $imps->count() - 2 }} outra(s)</span>
+                                @endif
                             </div>
                         </td>
-                        <td class="px-3 py-2 font-mono text-gray-600 hidden sm:table-cell">{{ $item['ncm'] ?: '—' }}</td>
-                        <td class="px-3 py-2 text-gray-600 hidden md:table-cell">{{ $item['cfops'] ?: '—' }}</td>
-                        <td class="px-3 py-2 text-gray-600 hidden xl:table-cell">{{ $item['csts'] ?: '—' }}</td>
-                        <td class="px-3 py-2 text-right text-gray-700 hidden sm:table-cell">{{ number_format($item['quantidade'], 0, ',', '.') }}</td>
-                        <td class="px-3 py-2 text-right text-gray-700 hidden lg:table-cell">{{ $item['ocorrencias'] }}</td>
-                        <td class="px-3 py-2 text-right text-gray-600 hidden md:table-cell">{{ $item['aliquota_media'] !== null ? number_format($item['aliquota_media'], 2, ',', '.').'%' : '—' }}</td>
-                        <td class="px-3 py-2 text-right text-gray-900 font-semibold whitespace-nowrap">{{ $fmtMoeda($item['valor_total']) }}</td>
-                        <td class="px-3 py-2 truncate">
+                        <td class="px-3 py-2 font-mono text-gray-600 align-top hidden sm:table-cell">{{ $item['ncm'] ?: '—' }}</td>
+                        <td class="px-3 py-2 align-top hidden md:table-cell">{!! $chips($item['cfops'], cfop: true) !!}</td>
+                        <td class="px-3 py-2 align-top hidden xl:table-cell">{!! $chips($item['csts']) !!}</td>
+                        <td class="px-3 py-2 text-right text-gray-700 align-top hidden sm:table-cell">{{ number_format($item['quantidade'], 0, ',', '.') }}</td>
+                        <td class="px-3 py-2 text-right text-gray-700 align-top hidden lg:table-cell">{{ $item['ocorrencias'] }}</td>
+                        <td class="px-3 py-2 text-right text-gray-600 align-top hidden md:table-cell">{{ $item['aliquota_media'] !== null ? number_format($item['aliquota_media'], 2, ',', '.').'%' : '—' }}</td>
+                        <td class="px-3 py-2 text-right text-gray-900 font-semibold align-top whitespace-nowrap">{{ $fmtMoeda($item['valor_total']) }}</td>
+                        <td class="px-3 py-2 align-top truncate">
                             @if($item['tem_catalogo'])
                                 <span class="text-[11px] text-gray-600" title="{{ $item['catalogo']['descr_item'] }}">{{ $item['catalogo']['descr_item'] }}</span>
                             @else
-                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase text-white" style="background-color: #b45309">sem catálogo</span>
+                                <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold uppercase text-white" style="background-color: #b45309">sem catálogo</span>
                             @endif
                         </td>
                     </tr>
@@ -313,20 +283,64 @@
                 </tbody>
             </table>
         </div>
+
+        {{-- Cards (mobile) --}}
+        <div class="md:hidden space-y-2">
+            @forelse($itensPaginados as $item)
+                <div class="bg-white rounded border border-gray-300 p-3">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="min-w-0">
+                            <p class="font-mono text-[13px] text-gray-900 break-all leading-tight">{{ $item['codigo_item'] }}</p>
+                            <p class="text-[12px] text-gray-600 mt-0.5 line-clamp-2">{{ $item['descricao'] ?: '—' }}</p>
+                        </div>
+                        <span class="shrink-0 inline-block px-1.5 py-0.5 rounded text-[10px] font-bold uppercase text-white" style="background-color: {{ $origemCor($item['fontes']) }}">{{ $item['fontes'] }}</span>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-gray-100">
+                        <div class="min-w-0">
+                            <p class="text-[9px] text-gray-400 uppercase tracking-wide">NCM</p>
+                            <p class="font-mono text-[12px] text-gray-700">{{ $item['ncm'] ?: '—' }}</p>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <p class="text-[9px] text-gray-400 uppercase tracking-wide">Valor movimentado</p>
+                            <p class="text-[13px] font-semibold text-gray-900 whitespace-nowrap">{{ $fmtMoeda($item['valor_total']) }}</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-2">
+                        <p class="text-[9px] text-gray-400 uppercase tracking-wide mb-1">CFOP</p>
+                        {!! $chips($item['cfops'], cfop: true, max: 8) !!}
+                    </div>
+
+                    <div class="mt-2 pt-2 border-t border-gray-100">
+                        @if($item['tem_catalogo'])
+                            <p class="text-[9px] text-gray-400 uppercase tracking-wide">Catálogo</p>
+                            <p class="text-[12px] text-gray-600 line-clamp-1">{{ $item['catalogo']['descr_item'] }}</p>
+                        @else
+                            <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold uppercase text-white" style="background-color: #b45309">sem catálogo</span>
+                        @endif
+                    </div>
+                </div>
+            @empty
+                <div class="bg-white rounded border border-gray-300 px-3 py-6 text-center text-gray-400 text-sm">Nenhum item movimentado no período/filtro.</div>
+            @endforelse
+        </div>
+
+        @if($itensPaginados->hasPages())
+            <div class="mt-4">
+                {{ $itensPaginados->onEachSide(1)->links() }}
+            </div>
+        @endif
     </div>
 
     {{-- Modal de confirmação de dispensa --}}
-    <div id="catalogoAlertaModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
-        <div class="absolute inset-0 bg-black/40" onclick="catalogoAlerta.cancelar()"></div>
-        <div class="relative bg-white rounded-lg shadow-xl max-w-sm w-full mx-4 p-5">
-            <p class="text-sm font-semibold text-gray-900 mb-1">Ignorar alerta?</p>
-            <p class="text-[12px] text-gray-500 mb-4">O alerta sai da lista e das contagens. Você pode revê-lo depois em “Mostrar ignorados”.</p>
-            <div class="flex justify-end gap-2">
-                <button type="button" onclick="catalogoAlerta.cancelar()" class="px-3 py-1.5 text-[12px] rounded border border-gray-300 text-gray-600">Cancelar</button>
-                <button type="button" onclick="catalogoAlerta.confirmar()" class="px-3 py-1.5 text-[12px] rounded text-white font-semibold" style="background-color:#dc2626">Ignorar</button>
-            </div>
+    <x-modal id="catalogoAlertaModal" titulo="Ignorar alerta?">
+        <p class="text-[12px] text-gray-500 mb-4">O alerta sai da lista e das contagens. Você pode revê-lo depois em “Mostrar ignorados”.</p>
+        <div class="flex justify-end gap-2">
+            <button type="button" onclick="catalogoAlerta.cancelar()" class="px-3 py-1.5 text-[12px] rounded border border-gray-300 text-gray-600">Cancelar</button>
+            <button type="button" onclick="catalogoAlerta.confirmar()" class="px-3 py-1.5 text-[12px] rounded text-white font-semibold" style="background-color:#dc2626">Ignorar</button>
         </div>
-    </div>
+    </x-modal>
 </div>
 
 <script>
@@ -346,6 +360,10 @@ window.catalogoAlerta = window.catalogoAlerta || (function () {
             return false;
         }
     }
+    // Refresh parcial via SPA (preserva o shell/sidebar) com fallback pro reload duro.
+    const recarregar = () => (typeof window.navigateTo === 'function'
+        ? window.navigateTo(window.location.href)
+        : window.location.reload());
     return {
         pedir(tipo, codigo) { pendente = { tipo, codigo }; modal()?.classList.remove('hidden'); },
         cancelar() { pendente = null; modal()?.classList.add('hidden'); },
@@ -354,11 +372,11 @@ window.catalogoAlerta = window.catalogoAlerta || (function () {
             const ok = await post('/app/bi/catalogo-itens/alerta/descartar', { tipo: pendente.tipo, codigo_item: pendente.codigo });
             modal()?.classList.add('hidden');
             pendente = null;
-            ok ? window.location.reload() : alert('Não foi possível ignorar o alerta.');
+            ok ? recarregar() : alert('Não foi possível ignorar o alerta.');
         },
         async restaurar(tipo, codigo) {
             const ok = await post('/app/bi/catalogo-itens/alerta/restaurar', { tipo, codigo_item: codigo });
-            ok ? window.location.reload() : alert('Não foi possível restaurar o alerta.');
+            ok ? recarregar() : alert('Não foi possível restaurar o alerta.');
         },
     };
 })();

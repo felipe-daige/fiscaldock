@@ -101,7 +101,7 @@
                 <p class="px-4 py-6 text-sm text-gray-500">Nenhum fornecedor com certidão ou situação irregular entre os que você comprou. Nada a tratar neste cruzamento.</p>
             @else
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
+                    <table class="w-full text-sm tabela-cards">
                         <thead class="bg-gray-50 text-[10px] uppercase tracking-wide text-gray-400">
                             <tr>
                                 <th class="text-left px-4 py-2">Fornecedor</th>
@@ -117,13 +117,13 @@
                                         <div class="font-medium text-gray-900">{{ $f['razao_social'] }}</div>
                                         <div class="text-[11px] text-gray-400">{{ $f['documento'] }}</div>
                                     </td>
-                                    <td class="px-4 py-2.5">
+                                    <td class="px-4 py-2.5" data-label="Motivo">
                                         @foreach($f['motivos'] as $m)
                                             <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white mb-0.5" style="background-color: #dc2626">{{ $m }}</span>
                                         @endforeach
                                     </td>
-                                    <td class="px-4 py-2.5 text-right font-semibold text-gray-900">{{ $fmtMoeda($f['valor_comprado']) }}</td>
-                                    <td class="px-4 py-2.5 text-right text-gray-600">{{ $f['qtd_notas'] }}</td>
+                                    <td class="px-4 py-2.5 text-right font-semibold text-gray-900" data-label="Comprado">{{ $fmtMoeda($f['valor_comprado']) }}</td>
+                                    <td class="px-4 py-2.5 text-right text-gray-600" data-label="Notas">{{ $f['qtd_notas'] }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -142,7 +142,7 @@
                 <p class="px-4 py-6 text-sm text-gray-500">Nenhum fornecedor sancionado (CEIS/CGU) entre os que você comprou. Nada a tratar neste cruzamento.</p>
             @else
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
+                    <table class="w-full text-sm tabela-cards">
                         <thead class="bg-gray-50 text-[10px] uppercase tracking-wide text-gray-400">
                             <tr>
                                 <th class="text-left px-4 py-2">Fornecedor</th>
@@ -158,15 +158,15 @@
                                         <div class="font-medium text-gray-900">{{ $f['razao_social'] }}</div>
                                         <div class="text-[11px] text-gray-400">{{ $f['documento'] }}</div>
                                     </td>
-                                    <td class="px-4 py-2.5">
+                                    <td class="px-4 py-2.5" data-label="Bases">
                                         @forelse($f['bases'] as $b)
                                             <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white mb-0.5" style="background-color: #b45309">{{ $b }}</span>
                                         @empty
                                             <span class="text-gray-400 text-[11px]">—</span>
                                         @endforelse
                                     </td>
-                                    <td class="px-4 py-2.5 text-right font-semibold text-gray-900">{{ $fmtMoeda($f['valor_comprado']) }}</td>
-                                    <td class="px-4 py-2.5 text-right text-gray-600">{{ $f['qtd_notas'] }}</td>
+                                    <td class="px-4 py-2.5 text-right font-semibold text-gray-900" data-label="Comprado">{{ $fmtMoeda($f['valor_comprado']) }}</td>
+                                    <td class="px-4 py-2.5 text-right text-gray-600" data-label="Notas">{{ $f['qtd_notas'] }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -185,7 +185,7 @@
                 <p class="px-4 py-6 text-sm text-gray-500">Nenhuma nota cancelada na SEFAZ no acervo verificado. Este cruzamento depende do clearance de notas (verificação SEFAZ).</p>
             @else
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
+                    <table class="w-full text-sm tabela-cards">
                         <thead class="bg-gray-50 text-[10px] uppercase tracking-wide text-gray-400">
                             <tr>
                                 <th class="text-left px-4 py-2">Documento</th>
@@ -197,13 +197,13 @@
                         <tbody class="divide-y divide-gray-100">
                             @foreach($canceladas as $n)
                                 <tr>
-                                    <td class="px-4 py-2.5 text-[11px] text-gray-600">{{ $n['numero'] }}<br><span class="text-gray-400">{{ $n['chave_acesso'] }}</span></td>
+                                    <td class="px-4 py-2.5 text-[11px] text-gray-600" data-label="Documento">{{ $n['numero'] }}<br><span class="text-gray-400">{{ $n['chave_acesso'] }}</span></td>
                                     <td class="px-4 py-2.5">
                                         <div class="font-medium text-gray-900">{{ $n['emit_nome'] }}</div>
                                         <div class="text-[11px] text-gray-400">{{ $n['emit_cnpj'] }}</div>
                                     </td>
-                                    <td class="px-4 py-2.5 text-gray-700">{{ $n['situacao_emitente'] ?? 'Não consultado' }}</td>
-                                    <td class="px-4 py-2.5 text-right text-gray-900">{{ $n['valor'] !== null ? $fmtMoeda($n['valor']) : '—' }}</td>
+                                    <td class="px-4 py-2.5 text-gray-700" data-label="Situação">{{ $n['situacao_emitente'] ?? 'Não consultado' }}</td>
+                                    <td class="px-4 py-2.5 text-right text-gray-900" data-label="Valor">{{ $n['valor'] !== null ? $fmtMoeda($n['valor']) : '—' }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
