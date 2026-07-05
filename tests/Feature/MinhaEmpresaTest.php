@@ -472,6 +472,23 @@ test('kpi de notas conta base unificada XML e EFD', function () {
     $response->assertSee('5 notas registradas');
 });
 
+test('score alto usa cor distinta do medio', function () {
+    $cliente = empresaPropria($this->user);
+    \App\Models\ParticipanteScore::create([
+        'user_id' => $this->user->id,
+        'cliente_id' => $cliente->id,
+        'score_total' => 70,
+        'classificacao' => 'alto',
+        'ultima_consulta_em' => now(),
+    ]);
+
+    $response = $this->get('/app/minha-empresa');
+
+    $response->assertOk();
+    $response->assertSee('ALTO');
+    $response->assertSee('#ea580c', false); // laranja escuro distinto do âmbar #d97706 do médio
+});
+
 test('certidao positiva pura vira Irregular via CertidaoBadge e expoe comprovante', function () {
     $cliente = empresaPropria($this->user);
     $plano = MonitoramentoPlano::porCodigo('gratuito') ?? MonitoramentoPlano::firstOrFail();

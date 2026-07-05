@@ -18,7 +18,7 @@
         $scoreBadge = match($score->classificacao) {
             'baixo' => ['label' => 'BAIXO', 'hex' => '#047857', 'valor' => $score->score_total . '/100'],
             'medio' => ['label' => 'MÉDIO', 'hex' => '#d97706', 'valor' => $score->score_total . '/100'],
-            'alto' => ['label' => 'ALTO', 'hex' => '#d97706', 'valor' => $score->score_total . '/100'],
+            'alto' => ['label' => 'ALTO', 'hex' => '#ea580c', 'valor' => $score->score_total . '/100'],
             'critico' => ['label' => 'CRÍTICO', 'hex' => '#dc2626', 'valor' => $score->score_total . '/100'],
             'inconclusivo' => ['label' => 'NÃO CONCLUSIVO', 'hex' => '#9ca3af', 'valor' => '—'],
             default => ['label' => strtoupper((string) $score->classificacao), 'hex' => '#9ca3af', 'valor' => $score->score_total . '/100'],
