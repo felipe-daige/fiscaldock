@@ -154,6 +154,114 @@ test('dashboard mostra empresa quando configurada', function () {
     $response->assertSee('Empresa Dashboard Ltda');
 })->skip('Database session conflicts with RefreshDatabase trait');
 
+test('dashboard reflete consulta gravada no cliente da empresa propria', function () {
+    $cliente = Cliente::create([
+        'user_id' => $this->user->id,
+        'tipo_pessoa' => 'PJ',
+        'documento' => '12345678000199',
+        'nome' => 'Empresa Propria',
+        'razao_social' => 'Empresa Propria Ltda',
+        'is_empresa_propria' => true,
+    ]);
+
+    $plano = MonitoramentoPlano::porCodigo('gratuito') ?? MonitoramentoPlano::firstOrFail();
+
+    $lote = ConsultaLote::create([
+        'user_id' => $this->user->id,
+        'plano_id' => $plano->id,
+        'status' => ConsultaLote::STATUS_FINALIZADO,
+        'total_participantes' => 1,
+        'creditos_cobrados' => 0,
+        'tab_id' => 'tab-minha-empresa-cliente',
+        'processado_em' => now(),
+    ]);
+
+    // Pós-cutover: consulta com alvo cliente grava cliente_id, participante_id fica NULL.
+    ConsultaResultado::create([
+        'consulta_lote_id' => $lote->id,
+        'cliente_id' => $cliente->id,
+        'participante_id' => null,
+        'status' => ConsultaResultado::STATUS_SUCESSO,
+        'resultado_dados' => [
+            'situacao_cadastral' => 'ATIVA',
+            'cndt' => ['status' => 'NEGATIVA', 'validade' => now()->addMonths(3)->toDateString()],
+            'consultas_realizadas' => ['cadastro', 'cndt'],
+        ],
+        'consultado_em' => now(),
+    ]);
+
+    $response = $this->get('/app/minha-empresa');
+
+    $response->assertOk();
+    $response->assertSee('ATIVA');
+    $response->assertSee('NEGATIVA');
+    $response->assertDontSee('Nenhuma consulta registrada');
+});
+
+test('dashboard usa score persistido no cliente quando participante nao tem', function () {
+    $cliente = Cliente::create([
+        'user_id' => $this->user->id,
+        'tipo_pessoa' => 'PJ',
+        'documento' => '12345678000199',
+        'nome' => 'Empresa Propria',
+        'razao_social' => 'Empresa Propria Ltda',
+        'is_empresa_propria' => true,
+    ]);
+
+    \App\Models\ParticipanteScore::create([
+        'user_id' => $this->user->id,
+        'cliente_id' => $cliente->id,
+        'score_total' => 87,
+        'classificacao' => 'baixo',
+        'ultima_consulta_em' => now(),
+    ]);
+
+    $response = $this->get('/app/minha-empresa');
+
+    $response->assertOk();
+    $response->assertSee('87/100');
+    $response->assertDontSee('NÃO AVALIADO');
+});
+
+test('historico lista consulta gravada no cliente da empresa propria', function () {
+    $cliente = Cliente::create([
+        'user_id' => $this->user->id,
+        'tipo_pessoa' => 'PJ',
+        'documento' => '12345678000199',
+        'nome' => 'Empresa Propria',
+        'razao_social' => 'Empresa Propria Ltda',
+        'is_empresa_propria' => true,
+    ]);
+
+    $plano = MonitoramentoPlano::porCodigo('gratuito') ?? MonitoramentoPlano::firstOrFail();
+
+    $lote = ConsultaLote::create([
+        'user_id' => $this->user->id,
+        'plano_id' => $plano->id,
+        'status' => ConsultaLote::STATUS_FINALIZADO,
+        'total_participantes' => 1,
+        'creditos_cobrados' => 0,
+        'tab_id' => 'tab-minha-empresa-hist-cliente',
+        'processado_em' => now(),
+    ]);
+
+    ConsultaResultado::create([
+        'consulta_lote_id' => $lote->id,
+        'cliente_id' => $cliente->id,
+        'participante_id' => null,
+        'status' => ConsultaResultado::STATUS_SUCESSO,
+        'resultado_dados' => [
+            'situacao_cadastral' => 'ATIVA',
+            'mensagem' => 'Consulta gravada no alvo cliente.',
+        ],
+        'consultado_em' => now(),
+    ]);
+
+    $this->get('/app/minha-empresa/historico')
+        ->assertOk()
+        ->assertSee('Consulta gravada no alvo cliente.');
+});
+
 test('historico da minha empresa exibe mensagem operacional da consulta', function () {
     $cliente = Cliente::create([
         'user_id' => $this->user->id,

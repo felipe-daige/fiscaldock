@@ -54,11 +54,20 @@ class MinhaEmpresaController extends Controller
             ]
         );
 
-        // Buscar score de risco
-        $score = $participante->score;
+        // Buscar score de risco. Pós-cutover a consulta grava o score no alvo:
+        // consulta de cliente → participante_scores.cliente_id; de participante → participante_id.
+        // A empresa própria pode ter sido consultada pelos dois caminhos — considerar ambos.
+        $score = collect([$participante->score, $empresa->score])
+            ->filter()
+            ->sortByDesc('ultima_consulta_em')
+            ->first();
 
-        // Buscar ultima consulta RAF
-        $ultimaConsulta = ConsultaResultado::where('participante_id', $participante->id)
+        // Buscar ultima consulta RAF — mesmo racional: resultado pode estar
+        // ligado ao participante espelho OU ao cliente (empresa própria).
+        $ultimaConsulta = ConsultaResultado::where(function ($query) use ($participante, $empresa) {
+            $query->where('participante_id', $participante->id)
+                ->orWhere('cliente_id', $empresa->id);
+        })
             ->where('status', 'sucesso')
             ->latest('consultado_em')
             ->first();
@@ -185,13 +194,16 @@ class MinhaEmpresaController extends Controller
             ->where('documento', $cnpjLimpo)
             ->first();
 
-        $consultas = collect();
-        if ($participante) {
-            $consultas = ConsultaResultado::where('participante_id', $participante->id)
-                ->with('lote')
-                ->latest('consultado_em')
-                ->paginate(20);
-        }
+        // Resultado pode estar no participante espelho OU no cliente (empresa própria).
+        $consultas = ConsultaResultado::where(function ($query) use ($participante, $empresa) {
+            if ($participante) {
+                $query->where('participante_id', $participante->id);
+            }
+            $query->orWhere('cliente_id', $empresa->id);
+        })
+            ->with('lote')
+            ->latest('consultado_em')
+            ->paginate(20);
 
         return $this->render($request, 'historico', [
             'empresa' => $empresa,
