@@ -109,9 +109,9 @@
                 </a>
             </div>
             <div class="flex flex-wrap items-center gap-2 mt-3">
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $situacaoBadge['hex'] }}">{{ $situacaoBadge['label'] }}</span>
+                <span class="inline-block whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $situacaoBadge['hex'] }}">{{ $situacaoBadge['label'] }}</span>
                 @foreach($regimes as $regime)
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $regime['hex'] }}">{{ $regime['label'] }}</span>
+                    <span class="inline-block whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $regime['hex'] }}">{{ $regime['label'] }}</span>
                 @endforeach
             </div>
         </div>
@@ -125,7 +125,7 @@
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Score de Risco</p>
                     <p class="text-lg sm:text-xl font-bold text-gray-900">{{ $scoreBadge['valor'] }}</p>
                     <div class="mt-1 sm:mt-2 flex flex-wrap items-center gap-2">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $scoreBadge['hex'] }}">{{ $scoreBadge['label'] }}</span>
+                        <span class="inline-block whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $scoreBadge['hex'] }}">{{ $scoreBadge['label'] }}</span>
                         @if($score?->ultima_consulta_em)
                             <span class="text-[11px] text-gray-500">{{ $score->ultima_consulta_em->format('d/m/Y') }}</span>
                         @endif
@@ -192,7 +192,7 @@
                             <tr class="hover:bg-gray-50/50 transition-colors">
                                 <td class="px-3 py-3 text-sm text-gray-700">{{ $linha['nome'] }}</td>
                                 <td class="px-3 py-3" data-label="Status">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $linha['badge']['hex'] }}">{{ $linha['badge']['label'] }}</span>
+                                    <span class="inline-block whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $linha['badge']['hex'] }}">{{ $linha['badge']['label'] }}</span>
                                 </td>
                                 <td class="px-3 py-3 text-sm text-gray-700" data-label="Validade / Referência">{{ $linha['validade'] }}</td>
                                 <td class="px-3 py-3 text-sm" data-label="Comprovante">
@@ -260,7 +260,7 @@
 
                 @if($certificado ?? null)
                     <div class="flex flex-wrap items-center gap-3">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $certificado['badge_hex'] }}">
+                        <span class="inline-block whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $certificado['badge_hex'] }}">
                             {{ $certificado['expirado'] ? 'Expirado' : 'Válido' }}
                         </span>
                         <span class="text-sm text-gray-700">Válido até <strong>{{ $certificado['validade']->format('d/m/Y') }}</strong></span>
