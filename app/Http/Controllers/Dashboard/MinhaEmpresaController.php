@@ -110,7 +110,6 @@ class MinhaEmpresaController extends Controller
             'participante' => $participante,
             'score' => $score,
             'ultimaConsulta' => $ultimaConsulta,
-            'dadosConsulta' => $dadosConsulta,
             'certidoes' => $certidoes,
             'certidaoLinhas' => $this->montarCertidaoLinhas($certidoes),
             'alertas' => $alertas,
