@@ -3,9 +3,13 @@
 use App\Models\Cliente;
 use App\Models\ConsultaLote;
 use App\Models\ConsultaResultado;
+use App\Models\EfdImportacao;
+use App\Models\EfdNota;
 use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Models\User;
+use App\Models\XmlImportacao;
+use App\Models\XmlNota;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -14,6 +18,19 @@ beforeEach(function () {
     $this->user = User::factory()->create(['credits' => 100]);
     $this->actingAs($this->user);
 });
+
+/** Cria uma empresa própria (Cliente PJ) para o usuário do teste. */
+function empresaPropria(User $user): Cliente
+{
+    return Cliente::create([
+        'user_id' => $user->id,
+        'tipo_pessoa' => 'PJ',
+        'documento' => '12345678000199',
+        'nome' => 'Empresa Propria',
+        'razao_social' => 'Empresa Propria Ltda',
+        'is_empresa_propria' => true,
+    ]);
+}
 
 test('usuario sem empresa propria ve tela de configuracao', function () {
     $response = $this->get('/app/minha-empresa');
@@ -391,4 +408,65 @@ test('historico da minha empresa exibe mensagem operacional da consulta', functi
     $this->get('/app/minha-empresa/historico')
         ->assertOk()
         ->assertSee('Consulta conciliada com base no acervo de EFD.');
+});
+
+test('kpi de notas conta base unificada XML e EFD', function () {
+    $cliente = empresaPropria($this->user);
+
+    $impEfd = EfdImportacao::create([
+        'user_id' => $this->user->id,
+        'cliente_id' => $cliente->id,
+        'tipo_efd' => 'EFD ICMS/IPI',
+        'filename' => 'i.txt',
+        'status' => 'concluido',
+        'iniciado_em' => now(),
+    ]);
+    $impXml = XmlImportacao::create([
+        'user_id' => $this->user->id,
+        'cliente_id' => $cliente->id,
+        'status' => 'concluido',
+        'tipo_documento' => 'NFE',
+    ]);
+
+    // 2 EFD + 3 XML, chaves distintas → base unificada = 5 (contra 3 se contasse só XML).
+    foreach (['a', 'b'] as $i => $c) {
+        EfdNota::create([
+            'user_id' => $this->user->id,
+            'cliente_id' => $cliente->id,
+            'importacao_id' => $impEfd->id,
+            'numero' => 100 + $i,
+            'serie' => '1',
+            'modelo' => '55',
+            'data_emissao' => '2024-01-15',
+            'valor_desconto' => 0,
+            'cancelada' => false,
+            'origem_arquivo' => 'fiscal',
+            'tipo_operacao' => 'saida',
+            'valor_total' => 1000,
+            'chave_acesso' => str_pad($c, 44, $c),
+        ]);
+    }
+    foreach (['x', 'y', 'z'] as $i => $c) {
+        XmlNota::create([
+            'user_id' => $this->user->id,
+            'cliente_id' => $cliente->id,
+            'importacao_xml_id' => $impXml->id,
+            'tipo_documento' => 'NFE',
+            'numero_documento' => 200 + $i,
+            'serie' => 1,
+            'data_emissao' => '2024-01-15 10:00:00',
+            'tipo_nota' => XmlNota::TIPO_SAIDA,
+            'emit_documento' => '12345678000199',
+            'emit_razao_social' => 'EMPRESA PROPRIA',
+            'dest_documento' => '13305697000150',
+            'dest_razao_social' => 'DESTINATARIO XYZ',
+            'valor_total' => 300,
+            'chave_acesso' => str_pad($c, 44, $c),
+        ]);
+    }
+
+    $response = $this->get('/app/minha-empresa');
+
+    $response->assertOk();
+    $response->assertSee('5 notas registradas');
 });

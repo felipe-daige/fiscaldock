@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Models\ConsultaResultado;
 use App\Models\Participante;
-use App\Models\XmlNota;
 use App\Services\Clearance\CertificadoDigitalService;
 use App\Services\RiskScoreService;
 use Illuminate\Http\Request;
@@ -82,9 +81,11 @@ class MinhaEmpresaController extends Controller
         // (ex.: CND Federal com código de retry esgotado) — o usuário pagou, precisa saber.
         $alertas = $this->gerarAlertas($certidoes, $score, $dadosConsulta['_fontes_erro'] ?? []);
 
-        // Contagens para KPIs
+        // Contagens para KPIs. Notas = base unificada XML+EFD (deduplicada), não só XML.
         $totalParticipantes = Participante::where('user_id', $user->id)->count();
-        $totalNotas = XmlNota::where('user_id', $user->id)->count();
+        $totalNotas = app(\App\Services\NotaFiscalService::class)
+            ->listarUnificadas((int) $user->id, [], 1, 1)
+            ->total();
 
         $data = [
             'empresa' => $empresa,
