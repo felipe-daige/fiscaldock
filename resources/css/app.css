@@ -347,6 +347,13 @@
     .sidebar__item--disabled {
         @apply opacity-60 cursor-default;
     }
+    .sidebar__item:focus-visible,
+    .sidebar__group-trigger:focus-visible,
+    .sidebar__group-menu-item:focus-visible,
+    .sidebar__user-menu-item:focus-visible,
+    .sidebar__user-trigger:focus-visible {
+        @apply outline-none ring-2 ring-gray-400 ring-offset-1;
+    }
     .sidebar__item-icon,
     .sidebar__user-avatar {
         @apply w-4 h-4 text-gray-400 shrink-0;
@@ -380,6 +387,13 @@
     }
     .sidebar__group-menu {
         @apply mt-1 ml-5 pl-4 border-l border-gray-200 space-y-1;
+    }
+    @keyframes sidebar-group-open {
+        from { opacity: 0; transform: translateY(-4px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    details[open] > .sidebar__group-menu {
+        animation: sidebar-group-open 0.18s ease;
     }
     .sidebar__group-menu-item,
     .sidebar__user-menu-item {

@@ -572,6 +572,7 @@ function setActiveLink(path) {
 
     sidebarLinks.forEach(link => {
         link.classList.remove('sidebar__item--active');
+        link.removeAttribute('aria-current');
     });
     let bestSpaLink = null;
     let bestSpaLinkLen = -1;
@@ -586,10 +587,12 @@ function setActiveLink(path) {
     });
     if (bestSpaLink) {
         bestSpaLink.classList.add('sidebar__item--active');
+        bestSpaLink.setAttribute('aria-current', 'page');
     }
 
     sidebarGroupItems.forEach(link => {
         link.classList.remove('sidebar__group-menu-item--active');
+        link.removeAttribute('aria-current');
     });
     sidebarGroupTriggers.forEach(trigger => {
         trigger.classList.remove('sidebar__group-trigger--active');
@@ -607,6 +610,7 @@ function setActiveLink(path) {
     });
     if (bestSpaGroupItem) {
         bestSpaGroupItem.classList.add('sidebar__group-menu-item--active');
+        bestSpaGroupItem.setAttribute('aria-current', 'page');
 
         const group = bestSpaGroupItem.closest('[data-sidebar-group]');
         const trigger = group ? group.querySelector('[data-sidebar-group-trigger]') : null;
@@ -620,6 +624,7 @@ function setActiveLink(path) {
 
     sidebarUserLinks.forEach(link => {
         link.classList.remove('sidebar__user-menu-item--active');
+        link.removeAttribute('aria-current');
     });
     userTriggers.forEach(trigger => {
         trigger.classList.remove('sidebar__user-trigger--active');
@@ -627,6 +632,7 @@ function setActiveLink(path) {
     sidebarUserLinks.forEach(link => {
         if (matchesSidebarPath(link.getAttribute('href'), path)) {
             link.classList.add('sidebar__user-menu-item--active');
+            link.setAttribute('aria-current', 'page');
 
             const userDetails = link.closest('details');
             const userTrigger = userDetails ? userDetails.querySelector('.sidebar__user-trigger') : null;
