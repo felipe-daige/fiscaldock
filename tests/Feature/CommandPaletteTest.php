@@ -41,3 +41,11 @@ it('respeita a flag da busca avulsa no registry', function () {
 
     expect($html)->not->toContain('\/app\/clearance\/buscar');
 });
+
+it('carrega o script da command palette no layout', function () {
+    $user = User::factory()->trialAtivo()->create();
+
+    $html = actingAs($user)->get('/app/dashboard')->assertOk()->getContent();
+
+    expect($html)->toContain('js/command-palette.js');
+});

@@ -579,6 +579,37 @@
         @apply text-sm font-bold text-gray-900 uppercase tracking-wide;
     }
 
+    /* ═══ Command palette (Ctrl+K) ═══ */
+    .palette__overlay {
+        @apply fixed inset-0 bg-gray-900/40 hidden items-start justify-center px-4;
+        z-index: 70;
+        padding-top: 15vh;
+    }
+    .palette__overlay--open {
+        @apply flex;
+    }
+    .palette__panel {
+        @apply w-full max-w-lg bg-white rounded-lg border border-gray-300 shadow-xl overflow-hidden;
+    }
+    .palette__input {
+        @apply w-full px-4 py-3 text-sm text-gray-900 border-b border-gray-200 outline-none placeholder-gray-400;
+    }
+    .palette__list {
+        @apply max-h-80 overflow-y-auto py-1;
+    }
+    .palette__item {
+        @apply flex items-center gap-3 px-4 py-2 text-sm text-gray-700 cursor-pointer;
+    }
+    .palette__item--sel {
+        @apply bg-gray-100 text-gray-900;
+    }
+    .palette__grupo {
+        @apply ml-auto text-[10px] font-semibold text-gray-400 uppercase tracking-widest;
+    }
+    .palette__vazio {
+        @apply px-4 py-6 text-sm text-gray-500 text-center;
+    }
+
     @media (min-width: 768px) {
         .layout-with-sidebar {
             padding-left: var(--sidebar-w, 256px);
