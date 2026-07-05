@@ -160,9 +160,16 @@ function initLayout() {
             collapseBtn.removeEventListener('click', _sidebarCollapseHandler);
             _sidebarCollapseHandler = null;
         }
+        const rotularColapso = function (collapsed) {
+            const rotulo = collapsed ? 'Expandir menu' : 'Recolher menu';
+            collapseBtn.setAttribute('aria-label', rotulo);
+            collapseBtn.setAttribute('title', rotulo);
+        };
+        rotularColapso(document.documentElement.classList.contains('sidebar-collapsed'));
         _sidebarCollapseHandler = function () {
             const collapsed = document.documentElement.classList.toggle('sidebar-collapsed');
             try { localStorage.setItem('sidebar:collapsed', collapsed ? '1' : '0'); } catch (e) { /* modo privado */ }
+            rotularColapso(collapsed);
         };
         collapseBtn.addEventListener('click', _sidebarCollapseHandler);
     }

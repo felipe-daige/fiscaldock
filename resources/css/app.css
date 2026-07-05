@@ -307,7 +307,7 @@
         .sidebar-collapsed {
             --sidebar-w: 64px;
         }
-        .sidebar-collapsed .sidebar__brand-link,
+        .sidebar-collapsed .sidebar__brand-copy,
         .sidebar-collapsed .sidebar__section-title,
         .sidebar-collapsed .sidebar__item-label,
         .sidebar-collapsed .sidebar__group-arrow,
