@@ -134,3 +134,24 @@ it('sidebar funde Clearance como grupo dentro de INTELIGÊNCIA', function () {
     $trecho = substr($html, strpos($html, 'href="/app/clearance/dashboard"') - 200, 400);
     expect($trecho)->toContain('data-sidebar-group-item');
 });
+
+it('menu do usuário agrupa em blocos Conta/Financeiro e esconde Admin de não-admin', function () {
+    $user = User::factory()->trialAtivo()->create(['is_admin' => false]);
+
+    $html = actingAs($user)->get('/app/dashboard')->assertOk()->getContent();
+
+    expect($html)
+        ->toContain('sidebar__user-menu-heading')
+        ->toContain('>Conta</div>')
+        ->toContain('>Financeiro</div>')
+        ->not->toContain('>Admin</div>');
+});
+
+it('menu do usuário mostra bloco Admin para admin', function () {
+    $user = User::factory()->trialAtivo()->create(['is_admin' => true]);
+
+    $html = actingAs($user)->get('/app/dashboard')->assertOk()->getContent();
+
+    expect($html)->toContain('>Admin</div>')
+        ->toContain('href="/app/admin"');
+});

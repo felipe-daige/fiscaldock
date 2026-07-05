@@ -463,6 +463,12 @@
     .sidebar__user-menu {
         @apply mt-2 space-y-1;
     }
+    .sidebar__user-menu-heading {
+        @apply px-3 pt-2 pb-1 text-[9px] font-semibold text-gray-400 uppercase tracking-widest;
+    }
+    .sidebar__user-menu-divider {
+        @apply my-1 border-t border-gray-200;
+    }
     .sidebar__user-menu-item-icon {
         @apply w-4 h-4 text-gray-400 shrink-0;
     }
