@@ -4,7 +4,7 @@ use App\Models\AdminPendencia;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
+uses(Tests\TestCase::class, RefreshDatabase::class);
 
 function pendencia(array $attrs = []): AdminPendencia
 {
