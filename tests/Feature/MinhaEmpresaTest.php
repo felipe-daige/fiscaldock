@@ -211,7 +211,8 @@ test('dashboard reflete consulta gravada no cliente da empresa propria', functio
 
     $response->assertOk();
     $response->assertSee('ATIVA');
-    $response->assertSee('NEGATIVA');
+    // CND Negativa é classificada como Regular pelo badge canônico (sem débitos).
+    $response->assertSee('Regular');
     $response->assertDontSee('Nenhuma consulta registrada');
 });
 
@@ -469,4 +470,36 @@ test('kpi de notas conta base unificada XML e EFD', function () {
 
     $response->assertOk();
     $response->assertSee('5 notas registradas');
+});
+
+test('certidao positiva pura vira Irregular via CertidaoBadge e expoe comprovante', function () {
+    $cliente = empresaPropria($this->user);
+    $plano = MonitoramentoPlano::porCodigo('gratuito') ?? MonitoramentoPlano::firstOrFail();
+    $lote = ConsultaLote::create([
+        'user_id' => $this->user->id,
+        'plano_id' => $plano->id,
+        'status' => ConsultaLote::STATUS_FINALIZADO,
+        'total_participantes' => 1,
+        'creditos_cobrados' => 0,
+        'tab_id' => 'tab-badge',
+        'processado_em' => now(),
+    ]);
+    ConsultaResultado::create([
+        'consulta_lote_id' => $lote->id,
+        'cliente_id' => $cliente->id,
+        'status' => ConsultaResultado::STATUS_SUCESSO,
+        'resultado_dados' => [
+            'situacao_cadastral' => 'ATIVA',
+            'cnd_federal' => ['status' => 'Positiva', 'comprovante' => 'https://exemplo/pdf'],
+        ],
+        'consultado_em' => now(),
+    ]);
+
+    $response = $this->get('/app/minha-empresa');
+
+    $response->assertOk();
+    // CertidaoBadge classifica "Positiva" pura como Irregular (não mostra "POSITIVA" cru).
+    $response->assertSee('Irregular');
+    // Link do comprovante presente.
+    $response->assertSee('https://exemplo/pdf', false);
 });

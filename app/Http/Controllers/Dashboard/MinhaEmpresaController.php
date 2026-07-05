@@ -94,6 +94,7 @@ class MinhaEmpresaController extends Controller
             'ultimaConsulta' => $ultimaConsulta,
             'dadosConsulta' => $dadosConsulta,
             'certidoes' => $certidoes,
+            'certidaoLinhas' => $this->montarCertidaoLinhas($certidoes),
             'alertas' => $alertas,
             'totalParticipantes' => $totalParticipantes,
             'totalNotas' => $totalNotas,
@@ -223,27 +224,104 @@ class MinhaEmpresaController extends Controller
             'cnd_federal' => [
                 'status' => $dados['cnd_federal']['status'] ?? null,
                 'validade' => $this->normalizarValidade($dados['cnd_federal'] ?? null),
+                'comprovante' => $this->comprovanteDe($dados['cnd_federal'] ?? null),
                 'consultado' => isset($dados['cnd_federal']),
             ],
             'cnd_estadual' => [
                 'status' => $dados['cnd_estadual']['status'] ?? $dados['cnd_estadual'] ?? null,
                 'validade' => $this->normalizarValidade($dados['cnd_estadual'] ?? null),
+                'comprovante' => $this->comprovanteDe($dados['cnd_estadual'] ?? null),
                 'consultado' => isset($dados['cnd_estadual']),
             ],
             'fgts' => [
                 'status' => $dados['crf_fgts']['status'] ?? $dados['crf_fgts'] ?? null,
                 'validade' => $this->normalizarValidade($dados['crf_fgts'] ?? null),
+                'comprovante' => $this->comprovanteDe($dados['crf_fgts'] ?? null),
                 'consultado' => isset($dados['crf_fgts']),
             ],
             'cndt' => [
                 'status' => $dados['cndt']['status'] ?? $dados['cndt'] ?? null,
                 'validade' => $this->normalizarValidade($dados['cndt'] ?? null),
+                'comprovante' => $this->comprovanteDe($dados['cndt'] ?? null),
                 'consultado' => isset($dados['cndt']),
             ],
             'situacao_cadastral' => $dados['situacao_cadastral'] ?? null,
             'simples_nacional' => $dados['simples_nacional'] ?? null,
             'mei' => $dados['mei'] ?? null,
         ];
+    }
+
+    /** URL do comprovante (PDF/HTML) de um bloco de certidão, se houver. */
+    private function comprovanteDe(mixed $bloco): ?string
+    {
+        if (! is_array($bloco)) {
+            return null;
+        }
+
+        $url = $bloco['comprovante'] ?? null;
+
+        return is_string($url) && trim($url) !== '' ? $url : null;
+    }
+
+    /**
+     * Monta as linhas da tabela de certidões já classificadas pelo badge canônico
+     * (`CertidaoBadge`), evitando a classificação manual que antes vivia na view e divergia.
+     *
+     * @return list<array{nome: string, badge: array{label: string, hex: string}, validade: string, comprovante: ?string}>
+     */
+    private function montarCertidaoLinhas(array $certidoes): array
+    {
+        $itens = [
+            ['key' => 'cnd_federal', 'nome' => 'CND FEDERAL', 'indeterminado' => true],
+            ['key' => 'cnd_estadual', 'nome' => 'CND ESTADUAL', 'indeterminado' => false],
+            ['key' => 'fgts', 'nome' => 'CRF FGTS', 'indeterminado' => false],
+            ['key' => 'cndt', 'nome' => 'CNDT', 'indeterminado' => false],
+        ];
+
+        $linhas = [];
+        foreach ($itens as $item) {
+            $dado = $certidoes[$item['key']] ?? [];
+            $consultado = $dado['consultado'] ?? false;
+
+            if (! $consultado) {
+                $badge = ['label' => 'NÃO CONSULTADO', 'hex' => '#9ca3af'];
+            } else {
+                $badge = \App\Support\CertidaoBadge::classificar($dado['status'] ?? '', $item['indeterminado']);
+            }
+
+            $linhas[] = [
+                'nome' => $item['nome'],
+                'badge' => ['label' => $badge['label'], 'hex' => $badge['hex']],
+                'validade' => $this->validadeTexto($dado['validade'] ?? null, (bool) $consultado),
+                'comprovante' => $dado['comprovante'] ?? null,
+            ];
+        }
+
+        return $linhas;
+    }
+
+    /** Texto amigável da validade (ISO → BR, com aviso de vencimento próximo). */
+    private function validadeTexto(?string $validadeIso, bool $consultado): string
+    {
+        if (! $validadeIso) {
+            return $consultado ? 'Não informado' : 'Não consultado';
+        }
+
+        try {
+            $data = \Carbon\Carbon::parse($validadeIso);
+            $dias = (int) now()->diffInDays($data, false);
+
+            if ($dias <= 0) {
+                return 'Vencida em '.$data->format('d/m/Y');
+            }
+            if ($dias <= 7) {
+                return 'Vence em '.$dias.' dias';
+            }
+
+            return $data->format('d/m/Y');
+        } catch (\Throwable) {
+            return $validadeIso;
+        }
     }
 
     /**

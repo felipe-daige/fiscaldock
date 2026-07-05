@@ -42,59 +42,7 @@
         ['label' => 'EMAIL', 'valor' => $empresa->email ?: 'Não informado', 'mono' => false],
     ];
 
-    $certidaoItems = [
-        ['key' => 'cnd_federal', 'nome' => 'CND FEDERAL'],
-        ['key' => 'cnd_estadual', 'nome' => 'CND ESTADUAL'],
-        ['key' => 'fgts', 'nome' => 'CRF FGTS'],
-        ['key' => 'cndt', 'nome' => 'CNDT'],
-    ];
-
-    $certidaoLinhas = [];
-    foreach ($certidaoItems as $item) {
-        $dado = $certidoes[$item['key']] ?? [];
-        $consultado = $dado['consultado'] ?? false;
-        $status = strtoupper((string) ($dado['status'] ?? ''));
-        $validade = $dado['validade'] ?? null;
-        $badge = ['label' => 'NÃO CONSULTADO', 'hex' => '#9ca3af'];
-
-        if ($consultado && $status !== '') {
-            if (in_array($status, ['NEGATIVA', 'REGULAR', 'REGULARIDADE'])) {
-                $badge = ['label' => 'NEGATIVA', 'hex' => '#047857'];
-            } elseif (str_contains($status, 'POSITIVA COM EFEITO') || str_contains($status, 'EFEITO DE NEGATIVA')) {
-                $badge = ['label' => 'POSITIVA C/ EFEITO', 'hex' => '#d97706'];
-            } elseif (in_array($status, ['POSITIVA', 'IRREGULAR', 'IRREGULARIDADE'])) {
-                $badge = ['label' => 'POSITIVA', 'hex' => '#dc2626'];
-            } else {
-                $badge = ['label' => $status, 'hex' => '#374151'];
-            }
-        }
-
-        $validadeTexto = 'Não informado';
-        if ($validade) {
-            try {
-                $dataValidade = \Carbon\Carbon::parse($validade);
-                $diasRestantes = now()->diffInDays($dataValidade, false);
-
-                if ($diasRestantes <= 0) {
-                    $validadeTexto = 'Vencida em ' . $dataValidade->format('d/m/Y');
-                } elseif ($diasRestantes <= 7) {
-                    $validadeTexto = 'Vence em ' . (int) $diasRestantes . ' dias';
-                } else {
-                    $validadeTexto = $dataValidade->format('d/m/Y');
-                }
-            } catch (\Exception $e) {
-                $validadeTexto = (string) $validade;
-            }
-        } elseif (! $consultado) {
-            $validadeTexto = 'Não consultado';
-        }
-
-        $certidaoLinhas[] = [
-            'nome' => $item['nome'],
-            'badge' => $badge,
-            'validade' => $validadeTexto,
-        ];
-    }
+    // $certidaoLinhas vem pronto do controller (classificado por CertidaoBadge canônico).
 
     $consultasRealizadas = [];
     if ($ultimaConsulta) {
@@ -217,9 +165,16 @@
         </div>
 
         <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6 sm:mb-8">
-            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Certidões e Última Consulta</span>
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Certidões</span>
+                <span class="text-[11px] text-gray-500">
+                    Última consulta: {{ $ultimaConsultaResumo['data'] }}
+                    @if($ultimaConsultaResumo['tipos'] !== 'Sem consultas realizadas') · {{ $ultimaConsultaResumo['tipos'] }} @endif
+                </span>
             </div>
+            @if($ultimaConsultaMensagem)
+                <div class="px-4 py-2 border-b border-gray-100 text-[11px] text-gray-500">{{ $ultimaConsultaMensagem }}</div>
+            @endif
             <div class="overflow-x-auto">
                 <table class="min-w-full tabela-cards">
                     <thead>
@@ -227,6 +182,7 @@
                             <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Indicador</th>
                             <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Status</th>
                             <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Validade / Referência</th>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Comprovante</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -237,21 +193,15 @@
                                     <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $linha['badge']['hex'] }}">{{ $linha['badge']['label'] }}</span>
                                 </td>
                                 <td class="px-3 py-3 text-sm text-gray-700" data-label="Validade / Referência">{{ $linha['validade'] }}</td>
+                                <td class="px-3 py-3 text-sm" data-label="Comprovante">
+                                    @if($linha['comprovante'])
+                                        <a href="{{ $linha['comprovante'] }}" target="_blank" rel="noopener" class="text-[12px] text-blue-700 hover:underline">Abrir</a>
+                                    @else
+                                        <span class="text-[12px] text-gray-400">—</span>
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
-                        <tr class="hover:bg-gray-50/50 transition-colors">
-                            <td class="px-3 py-3 text-sm text-gray-700">ÚLTIMA CONSULTA</td>
-                            <td class="px-3 py-3" data-label="Status">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #0f766e">CONSULTA</span>
-                            </td>
-                            <td class="px-3 py-3 text-sm text-gray-700" data-label="Validade / Referência">
-                                <div>{{ $ultimaConsultaResumo['data'] }}</div>
-                                <div class="text-[11px] text-gray-500 mt-1">{{ $ultimaConsultaResumo['tipos'] }}</div>
-                                @if($ultimaConsultaMensagem)
-                                    <div class="text-[11px] text-gray-500 mt-1">{{ $ultimaConsultaMensagem }}</div>
-                                @endif
-                            </td>
-                        </tr>
                     </tbody>
                 </table>
             </div>
