@@ -1,4 +1,8 @@
-@props(['href', 'suffix' => null, 'suffixTitle' => null, 'pill' => null])
+@props(['href', 'suffix' => null, 'suffixTitle' => null, 'pill' => null, 'pillUntil' => null])
+
+@php
+    $pillVisivel = $pill && (! $pillUntil || now()->lte(\Illuminate\Support\Carbon::parse($pillUntil)->endOfDay()));
+@endphp
 
 <a
     href="{{ $href }}"
@@ -9,7 +13,7 @@
 >
     <span class="sidebar__group-menu-item-label">{{ $slot }}</span>
 
-    @if($pill)
+    @if($pillVisivel)
         <span class="sidebar__group-menu-item-pill" style="background-color: #dcfce7; color: #166534;">{{ $pill }}</span>
     @elseif($suffix)
         <span class="sidebar__group-menu-item-suffix" aria-hidden="true">
@@ -23,7 +27,7 @@
         </span>
     @endif
 
-    @if($suffixTitle && ! $pill)
+    @if($suffixTitle && ! $pillVisivel)
         <span class="sidebar__group-menu-item-tooltip" role="tooltip">{{ $suffixTitle }}</span>
     @endif
 </a>

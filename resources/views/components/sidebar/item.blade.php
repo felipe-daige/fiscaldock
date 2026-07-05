@@ -1,4 +1,8 @@
-@props(['href', 'icon' => null, 'badge' => null, 'badgeLabel' => null, 'pill' => null])
+@props(['href', 'icon' => null, 'badge' => null, 'badgeLabel' => null, 'pill' => null, 'pillUntil' => null])
+
+@php
+    $pillVisivel = $pill && (! $pillUntil || now()->lte(\Illuminate\Support\Carbon::parse($pillUntil)->endOfDay()));
+@endphp
 
 <a href="{{ $href }}" data-link data-sidebar-link {{ $attributes->merge(['class' => 'sidebar__item']) }}>
     @if($icon)
@@ -8,7 +12,7 @@
 
     @if($badge)
         <span class="sidebar__item-badge-count" aria-label="{{ $badgeLabel ?? $badge }}" style="background-color: #d97706;">{{ $badge }}</span>
-    @elseif($pill)
+    @elseif($pillVisivel)
         <span style="margin-left:auto; font-size:9px; font-weight:700; line-height:1; padding:2px 6px; border-radius:9999px; background-color:#dcfce7; color:#166534; text-transform:uppercase; letter-spacing:0.04em;">{{ $pill }}</span>
     @endif
 </a>

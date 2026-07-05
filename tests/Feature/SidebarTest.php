@@ -78,3 +78,30 @@ it('sidebar leva direto a nova consulta e mantém historico/planos no cabeçalho
         ->assertSee('href="/app/consulta/historico"', false)
         ->assertSee('href="/app/consulta/planos"', false);
 });
+
+it('esconde o pill quando pill-until já passou', function () {
+    $vencido = \Illuminate\Support\Facades\Blade::render(
+        '<x-sidebar.item href="/x" pill="Novo" pill-until="2020-01-01">X</x-sidebar.item>'
+    );
+    $vigente = \Illuminate\Support\Facades\Blade::render(
+        '<x-sidebar.item href="/x" pill="Novo" pill-until="2999-01-01">X</x-sidebar.item>'
+    );
+    $grupoVencido = \Illuminate\Support\Facades\Blade::render(
+        '<x-sidebar.group-item href="/x" pill="Novo" pill-until="2020-01-01">X</x-sidebar.group-item>'
+    );
+
+    expect($vencido)->not->toContain('Novo')
+        ->and($vigente)->toContain('Novo')
+        ->and($grupoVencido)->not->toContain('Novo');
+});
+
+it('sidebar não marca mais Importação XML como novo', function () {
+    $user = User::factory()->trialAtivo()->create();
+
+    $html = actingAs($user)->get('/app/dashboard')->assertOk()->getContent();
+
+    // O item XML continua, mas sem pill "Novo" (live desde 2026-06)
+    expect($html)->toContain('href="/app/importacao/xml"');
+    $trechoXml = substr($html, strpos($html, 'href="/app/importacao/xml"'), 400);
+    expect($trechoXml)->not->toContain('Novo');
+});
