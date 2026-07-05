@@ -1,15 +1,44 @@
 <?php
 
+use App\Models\AccountSubscription;
 use App\Models\MonitoramentoAssinatura;
 use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Models\ParticipanteGrupo;
+use App\Models\SubscriptionPlan;
 use App\Models\User;
+use Database\Seeders\SubscriptionPlanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 use function Pest\Laravel\actingAs;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    Cache::flush(); // guards 1×/ciclo do freio vivem no cache — isolar entre testes
+});
+
+/** Assinatura de conta (paga) — como freioAssinar em FreioConsumoV2Test, plano `essencial`. */
+function painelAssinar(User $user, array $overrides = []): void
+{
+    test()->seed(SubscriptionPlanSeeder::class);
+    $plano = SubscriptionPlan::where('codigo', 'essencial')->first();
+    AccountSubscription::create(array_merge([
+        'user_id' => $user->id, 'subscription_plan_id' => $plano->id,
+        'status' => 'ativa', 'ciclo' => 'mensal', 'ultimo_grant_em' => now()->subDay(),
+    ], $overrides));
+}
+
+/** Consumo já registrado no ciclo corrente do freio (deduções type=monitoramento_assinatura). */
+function painelConsumoNoCiclo(User $user, int $creditos): void
+{
+    DB::table('credit_transactions')->insert([
+        'user_id' => $user->id, 'amount' => -$creditos, 'balance_after' => 0,
+        'type' => 'monitoramento_assinatura', 'created_at' => now(), 'updated_at' => now(),
+    ]);
+}
 
 it('painel lista monitorados dos 3 tipos com plano/frequência/custo', function () {
     $user = User::factory()->create();
@@ -77,4 +106,52 @@ it('/app/consulta/painel serve a tela e /app/consulta/nova redireciona', functio
     $user = User::factory()->create();
     actingAs($user)->get('/app/consulta/painel')->assertOk();
     actingAs($user)->get('/app/consulta/nova')->assertRedirect('/app/consulta/painel');
+});
+
+it('painel mostra badge do motivo em assinatura pausada por saldo', function () {
+    $user = User::factory()->create();
+    $plano = MonitoramentoPlano::porCodigo('licitacao') ?? MonitoramentoPlano::firstOrFail();
+    $p = Participante::create(['user_id' => $user->id, 'documento' => '11222333000181', 'razao_social' => 'Part Pausado', 'uf' => 'SP']);
+    $assinatura = MonitoramentoAssinatura::create([
+        'user_id' => $user->id, 'participante_id' => $p->id, 'plano_id' => $plano->id,
+        'status' => 'ativo', 'frequencia_dias' => 30,
+    ]);
+    $assinatura->pausar('saldo');
+
+    $resp = actingAs($user)->get(route('app.monitoramento.painel'));
+
+    $resp->assertOk()->assertSee('sem saldo');
+});
+
+it('painel mostra badge aguardando próximo ciclo quando o freio segura a assinatura', function () {
+    $user = User::factory()->create(['credits' => 100]);
+    painelAssinar($user, ['limite_consumo_automatico' => 5]); // cap 5
+    painelConsumoNoCiclo($user, 5); // consumo 5 já feito no ciclo
+
+    $plano = MonitoramentoPlano::porCodigo('licitacao') ?? MonitoramentoPlano::firstOrFail(); // custo 20 > cap 5
+    $p = Participante::create(['user_id' => $user->id, 'documento' => '11222333000181', 'razao_social' => 'Part Aguardando', 'uf' => 'SP']);
+    MonitoramentoAssinatura::create([
+        'user_id' => $user->id, 'participante_id' => $p->id, 'plano_id' => $plano->id,
+        'status' => 'ativo', 'frequencia_dias' => 30, 'proxima_execucao_em' => now()->subDay(),
+    ]);
+
+    $resp = actingAs($user)->get(route('app.monitoramento.painel'));
+
+    $resp->assertOk()->assertSee('aguardando próximo ciclo');
+});
+
+it('painel renderiza a barra de consumo do ciclo quando há cap', function () {
+    $user = User::factory()->create(['credits' => 100]);
+    painelAssinar($user, ['limite_consumo_automatico' => 50]);
+
+    $plano = MonitoramentoPlano::porCodigo('licitacao') ?? MonitoramentoPlano::firstOrFail();
+    $p = Participante::create(['user_id' => $user->id, 'documento' => '11222333000181', 'razao_social' => 'Part Barra', 'uf' => 'SP']);
+    MonitoramentoAssinatura::create([
+        'user_id' => $user->id, 'participante_id' => $p->id, 'plano_id' => $plano->id,
+        'status' => 'ativo', 'frequencia_dias' => 30, 'proxima_execucao_em' => now()->subDay(),
+    ]);
+
+    $resp = actingAs($user)->get(route('app.monitoramento.painel'));
+
+    $resp->assertOk()->assertSee('Consumo do ciclo')->assertSee('Projetado at');
 });

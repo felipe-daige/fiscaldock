@@ -13,6 +13,9 @@
     $capPadrao = $u ? (int) $entitlements->planFor($u)->creditos_inclusos : 0;
     $limiteAtual = $assinaturaConta?->limite_consumo_automatico;
     $precos = app(\App\Services\PricingCatalogService::class);
+    $projecaoCiclo = $consumoCiclo + collect($assinaturas)->where('vence_no_ciclo', true)->sum('custo_ciclo');
+    $pctConsumo = $capEfetivo > 0 ? min(100, (int) round($consumoCiclo * 100 / $capEfetivo)) : 0;
+    $corBarra = $pctConsumo >= 100 ? '#dc2626' : ($pctConsumo >= 80 ? '#d97706' : '#1f2937');
 @endphp
 <div class="p-4 lg:p-6 space-y-4">
     <div class="flex items-center justify-between flex-wrap gap-2">
@@ -63,7 +66,15 @@
                                     <span class="block text-[11px] text-gray-400">{{ $a['alvo_doc'] }}</span>
                                 @endif
                             </div>
-                            <span class="inline-flex px-1.5 py-0.5 rounded text-white text-[10px]" style="background-color: {{ $a['status'] === 'ativo' ? '#047857' : '#9ca3af' }}">{{ $a['status'] }}</span>
+                            <div class="flex flex-wrap items-center justify-end gap-1">
+                                <span class="inline-flex px-1.5 py-0.5 rounded text-white text-[10px]" style="background-color: {{ $a['status'] === 'ativo' ? '#047857' : '#9ca3af' }}">{{ $a['status'] }}</span>
+                                @if(($a['status'] ?? '') === 'pausado' && !empty($a['pausada_motivo']))
+                                    <span class="inline-flex px-1.5 py-0.5 rounded text-white text-[10px]" style="background-color: #b45309">{{ ['saldo' => 'sem saldo', 'falhas' => 'falhas seguidas', 'manual' => 'pausa manual'][$a['pausada_motivo']] ?? $a['pausada_motivo'] }}</span>
+                                @endif
+                                @if(!empty($a['aguardando_ciclo']))
+                                    <span class="inline-flex px-1.5 py-0.5 rounded text-white text-[10px]" style="background-color: #6b7280">aguardando próximo ciclo</span>
+                                @endif
+                            </div>
                         </div>
                         <div class="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500">
                             <span>Plano: <span class="text-gray-700">{{ $a['plano_nome'] }}</span></span>
@@ -145,7 +156,15 @@
                                 <td class="px-2 text-right text-gray-700 whitespace-nowrap">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $a['custo_ciclo'])) }}</td>
                                 <td class="px-2 text-right text-gray-700 whitespace-nowrap">≈ {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $a['custo_mes'])) }}</td>
                                 <td class="px-2">
-                                    <span class="inline-flex px-1.5 py-0.5 rounded text-white text-[10px]" style="background-color: {{ $a['status'] === 'ativo' ? '#047857' : '#9ca3af' }}">{{ $a['status'] }}</span>
+                                    <div class="flex flex-wrap items-center gap-1">
+                                        <span class="inline-flex px-1.5 py-0.5 rounded text-white text-[10px]" style="background-color: {{ $a['status'] === 'ativo' ? '#047857' : '#9ca3af' }}">{{ $a['status'] }}</span>
+                                        @if(($a['status'] ?? '') === 'pausado' && !empty($a['pausada_motivo']))
+                                            <span class="inline-flex px-1.5 py-0.5 rounded text-white text-[10px]" style="background-color: #b45309">{{ ['saldo' => 'sem saldo', 'falhas' => 'falhas seguidas', 'manual' => 'pausa manual'][$a['pausada_motivo']] ?? $a['pausada_motivo'] }}</span>
+                                        @endif
+                                        @if(!empty($a['aguardando_ciclo']))
+                                            <span class="inline-flex px-1.5 py-0.5 rounded text-white text-[10px]" style="background-color: #6b7280">aguardando próximo ciclo</span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-3 text-right whitespace-nowrap">
                                     @if($a['status'] === 'ativo')
@@ -169,7 +188,7 @@
             <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Freio de consumo do auto-monitor</span>
         </div>
         <div class="p-4">
-            <p class="text-xs text-gray-500 mb-4 max-w-2xl">Defina o limite de gasto em R$ que o monitoramento automático pode consumir por ciclo. Ao atingir o limite, as assinaturas de monitoramento são pausadas automaticamente até o próximo ciclo — protegendo seu saldo de consumo inesperado.</p>
+            <p class="text-xs text-gray-500 mb-4 max-w-2xl">Defina o limite de gasto em R$ que o monitoramento automático pode consumir por ciclo. Ao atingir o limite, as próximas consultas automáticas aguardam o próximo ciclo — nada é pausado nem cancelado, e elas retomam sozinhas. Seu saldo fica protegido de consumo inesperado.</p>
             @if(! $assinaturaConta)
                 <div class="bg-blue-50 border border-blue-200 rounded p-3 text-xs text-gray-700 flex items-start gap-2">
                     <svg class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -194,6 +213,17 @@
                         <p class="text-base font-bold text-gray-900">{{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $capPadrao)) }}</p>
                     </div>
                 </div>
+                @if($capEfetivo > 0)
+                <div class="mb-4">
+                    <div class="flex items-center justify-between text-[11px] text-gray-500 mb-1">
+                        <span>Consumo do ciclo: {{ $pctConsumo }}%</span>
+                        <span>Projetado até o fim do ciclo: {{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $projecaoCiclo)) }}</span>
+                    </div>
+                    <div class="w-full h-2 rounded bg-gray-200 overflow-hidden">
+                        <div class="h-2 rounded" style="width: {{ $pctConsumo }}%; background-color: {{ $corBarra }}"></div>
+                    </div>
+                </div>
+                @endif
                 <div class="flex flex-wrap items-end gap-3">
                     <div>
                         <label class="block text-[11px] text-gray-500 mb-1">Teto personalizado (R$)</label>

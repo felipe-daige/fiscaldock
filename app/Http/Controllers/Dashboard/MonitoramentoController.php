@@ -133,12 +133,15 @@ class MonitoramentoController extends Controller
 
         $user = Auth::user();
 
+        $capConsumo = $this->entitlements->consumptionCap($user);
+        $fimCiclo = $this->entitlements->fimCicloMonitoramento($user);
+
         $assinaturas = MonitoramentoAssinatura::with(['participante', 'cliente', 'grupo.participantes', 'plano'])
             ->where('user_id', $user->id)
             ->whereIn('status', ['ativo', 'pausado'])
             ->orderByDesc('created_at')
             ->get()
-            ->map(function (MonitoramentoAssinatura $a) {
+            ->map(function (MonitoramentoAssinatura $a) use ($fimCiclo, $user) {
                 $ultima = $a->consultas()->whereNotNull('executado_em')->orderByDesc('executado_em')->first();
 
                 return [
@@ -150,6 +153,15 @@ class MonitoramentoController extends Controller
                     'plano_nome' => $a->plano?->nome,
                     'frequencia' => $a->frequencia,
                     'status' => $a->status,
+                    'pausada_motivo' => $a->pausada_motivo,
+                    // Derivado, zero coluna: ativa + vencida + freio seguraria o disparo agora.
+                    'aguardando_ciclo' => $a->status === 'ativo'
+                        && $a->proxima_execucao_em?->isPast()
+                        && $this->entitlements->monitoramentoCapEstourado($user, $a->custoCiclo()),
+                    // Vai disparar (e gastar) dentro do ciclo de consumo corrente? Alimenta a projeção.
+                    'vence_no_ciclo' => $a->status === 'ativo'
+                        && $a->proxima_execucao_em !== null
+                        && $a->proxima_execucao_em->lt($fimCiclo),
                     'custo_ciclo' => $a->custoCiclo(),
                     // Estimativa mensal: ciclos que cabem em 30 dias × custo do ciclo.
                     'custo_mes' => (int) round($a->custoCiclo() * 30 / max(1, (int) $a->frequencia_dias)),
