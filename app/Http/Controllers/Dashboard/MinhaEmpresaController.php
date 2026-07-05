@@ -78,8 +78,9 @@ class MinhaEmpresaController extends Controller
         // CNDs e certidoes
         $certidoes = $this->extrairCertidoes($dadosConsulta);
 
-        // Alertas recentes
-        $alertas = $this->gerarAlertas($certidoes, $score);
+        // Alertas recentes. `_fontes_erro` = fontes pedidas pelo plano que não voltaram
+        // (ex.: CND Federal com código de retry esgotado) — o usuário pagou, precisa saber.
+        $alertas = $this->gerarAlertas($certidoes, $score, $dadosConsulta['_fontes_erro'] ?? []);
 
         // Contagens para KPIs
         $totalParticipantes = Participante::where('user_id', $user->id)->count();
@@ -220,22 +221,22 @@ class MinhaEmpresaController extends Controller
         return [
             'cnd_federal' => [
                 'status' => $dados['cnd_federal']['status'] ?? null,
-                'validade' => $dados['cnd_federal']['validade'] ?? null,
+                'validade' => $this->normalizarValidade($dados['cnd_federal'] ?? null),
                 'consultado' => isset($dados['cnd_federal']),
             ],
             'cnd_estadual' => [
                 'status' => $dados['cnd_estadual']['status'] ?? $dados['cnd_estadual'] ?? null,
-                'validade' => $dados['cnd_estadual']['validade'] ?? null,
+                'validade' => $this->normalizarValidade($dados['cnd_estadual'] ?? null),
                 'consultado' => isset($dados['cnd_estadual']),
             ],
             'fgts' => [
                 'status' => $dados['crf_fgts']['status'] ?? $dados['crf_fgts'] ?? null,
-                'validade' => $dados['crf_fgts']['validade'] ?? null,
+                'validade' => $this->normalizarValidade($dados['crf_fgts'] ?? null),
                 'consultado' => isset($dados['crf_fgts']),
             ],
             'cndt' => [
                 'status' => $dados['cndt']['status'] ?? $dados['cndt'] ?? null,
-                'validade' => $dados['cndt']['validade'] ?? null,
+                'validade' => $this->normalizarValidade($dados['cndt'] ?? null),
                 'consultado' => isset($dados['cndt']),
             ],
             'situacao_cadastral' => $dados['situacao_cadastral'] ?? null,
@@ -245,9 +246,39 @@ class MinhaEmpresaController extends Controller
     }
 
     /**
+     * Normaliza a validade de um bloco de certidão para ISO (Y-m-d).
+     *
+     * As Fontes emitem o campo canônico `data_validade` em formato BR (d/m/Y) — a leitura
+     * antiga usava a chave `validade`, que não existe no payload, deixando toda validade nula
+     * (coluna "Não informado" e alerta de vencimento que nunca dispara). Devolve ISO para a
+     * view/alertas parsearem com `Carbon::parse` sem ambiguidade de locale.
+     */
+    private function normalizarValidade(mixed $bloco): ?string
+    {
+        if (! is_array($bloco)) {
+            return null;
+        }
+
+        $raw = $bloco['data_validade'] ?? $bloco['validade'] ?? null;
+        if (! is_string($raw) || trim($raw) === '') {
+            return null;
+        }
+
+        try {
+            return \Carbon\Carbon::createFromFormat('d/m/Y', trim($raw))->toDateString();
+        } catch (\Throwable) {
+            try {
+                return \Carbon\Carbon::parse(trim($raw))->toDateString();
+            } catch (\Throwable) {
+                return null;
+            }
+        }
+    }
+
+    /**
      * Gera alertas baseados nas certidoes e score.
      */
-    private function gerarAlertas(array $certidoes, ?object $score): array
+    private function gerarAlertas(array $certidoes, ?object $score, array $fontesErro = []): array
     {
         $alertas = [];
 
@@ -266,6 +297,9 @@ class MinhaEmpresaController extends Controller
         $this->addAlertaCnd($alertas, 'CND Estadual', $certidoes['cnd_estadual']);
         $this->addAlertaCnd($alertas, 'CRF (FGTS)', $certidoes['fgts']);
         $this->addAlertaCnd($alertas, 'CNDT', $certidoes['cndt']);
+
+        // Fontes que o plano pediu mas não retornaram — consulta paga incompleta.
+        $this->addAlertasFontesErro($alertas, $fontesErro);
 
         // Alerta de score critico
         if ($score && $score->classificacao === 'critico') {
@@ -313,7 +347,7 @@ class MinhaEmpresaController extends Controller
         // Verificar validade proxima
         if (! empty($dados['validade'])) {
             $validade = \Carbon\Carbon::parse($dados['validade']);
-            $diasRestantes = now()->diffInDays($validade, false);
+            $diasRestantes = (int) now()->diffInDays($validade, false);
 
             if ($diasRestantes <= 0) {
                 $alertas[] = [
@@ -328,6 +362,44 @@ class MinhaEmpresaController extends Controller
                     'icone' => 'clock',
                 ];
             }
+        }
+    }
+
+    /**
+     * Adiciona um alerta por fonte que o plano pediu mas não retornou (`_fontes_erro`).
+     *
+     * Distinto de irregularidade: a certidão não foi emitida porque a fonte externa falhou
+     * (timeout/recusa/retry esgotado). Como a consulta é paga, o usuário precisa saber que
+     * aquele dado ficou em aberto.
+     */
+    private function addAlertasFontesErro(array &$alertas, array $fontesErro): void
+    {
+        $rotulos = [
+            'cnd_federal' => 'CND Federal',
+            'cnd_estadual' => 'CND Estadual',
+            'cnd_municipal' => 'CND Municipal',
+            'crf_fgts' => 'CRF (FGTS)',
+            'cndt' => 'CNDT',
+            'sintegra' => 'SINTEGRA',
+            'cgu_cnc' => 'CGU/CNC',
+            'cnj_improbidade' => 'CNJ Improbidade',
+            'protestos' => 'Protestos',
+        ];
+
+        foreach ($fontesErro as $chave => $erro) {
+            if (! is_string($chave)) {
+                continue;
+            }
+
+            $nome = $rotulos[$chave] ?? strtoupper(str_replace('_', ' ', $chave));
+            $tentativas = is_array($erro) ? ($erro['tentativas'] ?? null) : null;
+            $sufixo = $tentativas ? " após {$tentativas} tentativa(s)" : '';
+
+            $alertas[] = [
+                'tipo' => 'atencao',
+                'mensagem' => "{$nome}: consulta não foi concluída{$sufixo} — a fonte oficial não respondeu. Refaça a consulta desta fonte.",
+                'icone' => 'alert-circle',
+            ];
         }
     }
 

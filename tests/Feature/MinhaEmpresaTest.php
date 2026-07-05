@@ -223,6 +223,92 @@ test('dashboard usa score persistido no cliente quando participante nao tem', fu
     $response->assertDontSee('NÃO AVALIADO');
 });
 
+test('alertas usam data_validade formato BR e avisam certidao vencendo', function () {
+    $cliente = Cliente::create([
+        'user_id' => $this->user->id,
+        'tipo_pessoa' => 'PJ',
+        'documento' => '12345678000199',
+        'nome' => 'Empresa Propria',
+        'razao_social' => 'Empresa Propria Ltda',
+        'is_empresa_propria' => true,
+    ]);
+
+    $plano = MonitoramentoPlano::porCodigo('gratuito') ?? MonitoramentoPlano::firstOrFail();
+
+    $lote = ConsultaLote::create([
+        'user_id' => $this->user->id,
+        'plano_id' => $plano->id,
+        'status' => ConsultaLote::STATUS_FINALIZADO,
+        'total_participantes' => 1,
+        'creditos_cobrados' => 0,
+        'tab_id' => 'tab-minha-empresa-validade',
+        'processado_em' => now(),
+    ]);
+
+    // Payload real das fontes usa data_validade em formato BR (d/m/Y).
+    ConsultaResultado::create([
+        'consulta_lote_id' => $lote->id,
+        'cliente_id' => $cliente->id,
+        'status' => ConsultaResultado::STATUS_SUCESSO,
+        'resultado_dados' => [
+            'situacao_cadastral' => 'ATIVA',
+            'crf_fgts' => ['status' => 'REGULAR', 'data_validade' => now()->addDays(3)->format('d/m/Y')],
+            'cndt' => ['status' => 'Negativa', 'data_validade' => '24/08/2099'],
+        ],
+        'consultado_em' => now(),
+    ]);
+
+    $response = $this->get('/app/minha-empresa');
+
+    $response->assertOk();
+    // Alerta de vencimento próximo dispara (antes: chave 'validade' inexistente → nunca).
+    $response->assertSee('Vence em');
+    $response->assertDontSee('Nenhum alerta no momento');
+    // Coluna Validade renderiza a data BR corretamente (não "Não informado", não mês/dia trocado).
+    $response->assertSee('24/08/2099');
+});
+
+test('alerta de fonte com falha aparece nos alertas operacionais', function () {
+    $cliente = Cliente::create([
+        'user_id' => $this->user->id,
+        'tipo_pessoa' => 'PJ',
+        'documento' => '12345678000199',
+        'nome' => 'Empresa Propria',
+        'razao_social' => 'Empresa Propria Ltda',
+        'is_empresa_propria' => true,
+    ]);
+
+    $plano = MonitoramentoPlano::porCodigo('gratuito') ?? MonitoramentoPlano::firstOrFail();
+
+    $lote = ConsultaLote::create([
+        'user_id' => $this->user->id,
+        'plano_id' => $plano->id,
+        'status' => ConsultaLote::STATUS_FINALIZADO,
+        'total_participantes' => 1,
+        'creditos_cobrados' => 0,
+        'tab_id' => 'tab-minha-empresa-fonte-erro',
+        'processado_em' => now(),
+    ]);
+
+    ConsultaResultado::create([
+        'consulta_lote_id' => $lote->id,
+        'cliente_id' => $cliente->id,
+        'status' => ConsultaResultado::STATUS_SUCESSO,
+        'resultado_dados' => [
+            'situacao_cadastral' => 'ATIVA',
+            '_fontes_erro' => ['cnd_federal' => ['codigo' => 615, 'origem' => 'integracao', 'status' => 'retry', 'tentativas' => 8]],
+        ],
+        'consultado_em' => now(),
+    ]);
+
+    $response = $this->get('/app/minha-empresa');
+
+    $response->assertOk();
+    $response->assertSee('CND Federal', false);
+    $response->assertSee('não foi concluída');
+    $response->assertDontSee('Nenhum alerta no momento');
+});
+
 test('historico lista consulta gravada no cliente da empresa propria', function () {
     $cliente = Cliente::create([
         'user_id' => $this->user->id,
