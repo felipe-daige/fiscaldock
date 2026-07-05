@@ -36,12 +36,6 @@ trait AgregacaoFiscalHelpers
         return $atual === null || $nova > $atual ? $nova : $atual;
     }
 
-    /** Itens por lista mostrados antes do "ver mais" no card de panorama. */
-    protected function panoramaVisivel(): int
-    {
-        return (int) config('consultas.panorama_fiscal.visivel', 10);
-    }
-
     /** Teto de itens buscados/expandíveis por lista no card de panorama. */
     protected function panoramaMaximo(): int
     {
