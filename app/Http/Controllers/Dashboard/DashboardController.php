@@ -820,41 +820,6 @@ class DashboardController extends Controller
         return redirect('/app/perfil')->with('status', 'Senha alterada.');
     }
 
-    /**
-     * Renderiza uma página placeholder "Em construção" com dados customizados.
-     */
-    private function renderPlaceholder(Request $request, string $titulo, string $descricao, string $icone, array $features = [])
-    {
-        $placeholderView = self::AUTH_VIEW_PREFIX.'partials.placeholder';
-
-        if (! Auth::check()) {
-            if ($this->isAjaxRequest($request)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Você não está logado',
-                    'redirect' => '/login',
-                ]);
-            }
-
-            return redirect('/login');
-        }
-
-        $data = [
-            'titulo' => $titulo,
-            'descricao' => $descricao,
-            'icone' => $icone,
-            'features' => $features,
-        ];
-
-        if ($this->isAjaxRequest($request)) {
-            return view($placeholderView, $data);
-        }
-
-        return view(self::AUTH_LAYOUT_VIEW, array_merge([
-            'initialView' => $placeholderView,
-        ], $data));
-    }
-
     public function alertas(Request $request)
     {
         if (! Auth::check()) {
@@ -1453,51 +1418,6 @@ class DashboardController extends Controller
             'pacote' => $dados,
             'pricing' => $this->pricingCatalogService->getCommercialSummaryForUser(Auth::user()),
         ]);
-    }
-
-    public function scoreFiscalPlaceholder(Request $request)
-    {
-        return $this->renderPlaceholder($request,
-            'Score Fiscal',
-            'Avaliação de risco fiscal e compliance de participantes.',
-            'document-check',
-            [
-                'Score de risco ponderado por categoria',
-                'Classificação automática (baixo a crítico)',
-                'Consulta em lote de participantes',
-                'Monitoramento contínuo de CNDs',
-            ]
-        );
-    }
-
-    public function validacaoPlaceholder(Request $request)
-    {
-        return $this->renderPlaceholder($request,
-            'Validação Contábil',
-            'Análise e validação inteligente de notas fiscais.',
-            'calculator',
-            [
-                'Validação automática de notas fiscais',
-                'Alertas por nível (bloqueante, atenção, info)',
-                'Análise de CFOP, CST e NCM',
-                'Score de conformidade por nota',
-            ]
-        );
-    }
-
-    public function biPlaceholder(Request $request)
-    {
-        return $this->renderPlaceholder($request,
-            'BI Fiscal',
-            'Dashboard gerencial para análise de faturamento, compras e tributos.',
-            'chart',
-            [
-                'Faturamento por período e cliente',
-                'Análise de compras e fornecedores',
-                'Carga tributária efetiva',
-                'Top 10 clientes e fornecedores',
-            ]
-        );
     }
 
     private function buildTrialResumo($user): array

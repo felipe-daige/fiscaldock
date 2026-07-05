@@ -392,52 +392,6 @@ class XmlImportacaoController extends Controller
     }
 
     /**
-     * Página de importação de XMLs (versão funcional - dev only).
-     */
-    public function indexDev(Request $request)
-    {
-        $xmlView = self::AUTH_VIEW_PREFIX.'xml';
-
-        if (! view()->exists($xmlView)) {
-            abort(404);
-        }
-
-        if (! Auth::check()) {
-            return $this->redirectToLogin($request);
-        }
-
-        $user = Auth::user();
-
-        // Buscar clientes do usuário para o select
-        $clientes = Cliente::where('user_id', $user->id)
-            ->orderBy('razao_social')
-            ->get();
-
-        // Últimas importações do usuário
-        $importacoes = XmlImportacao::where('user_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get();
-
-        $data = [
-            'clientes' => $clientes,
-            'importacoes' => $importacoes,
-            'credits' => $this->creditService->getBalance($user),
-            'planos' => MonitoramentoPlano::ativos(),
-        ];
-
-        if ($this->isAjaxRequest($request)) {
-            $renderedView = view($xmlView, $data)->render();
-
-            return response($renderedView)->header('Content-Type', 'text/html');
-        }
-
-        return view(self::AUTH_LAYOUT_VIEW, array_merge([
-            'initialView' => $xmlView,
-        ], $data));
-    }
-
-    /**
      * Inicia importação de XMLs enviando para n8n (sempre como ZIP).
      *
      * Se o modo de envio for 'xml' (arquivos avulsos), comprime em ZIP antes de enviar.
