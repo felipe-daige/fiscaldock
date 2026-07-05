@@ -105,3 +105,13 @@ it('sidebar não marca mais Importação XML como novo', function () {
     $trechoXml = substr($html, strpos($html, 'href="/app/importacao/xml"'), 400);
     expect($trechoXml)->not->toContain('Novo');
 });
+
+it('sidebar traz os elementos de scroll fade no nav', function () {
+    $user = User::factory()->trialAtivo()->create();
+
+    $html = actingAs($user)->get('/app/dashboard')->assertOk()->getContent();
+
+    expect($html)->toContain('sidebar__nav-wrap')
+        ->toContain('sidebar__nav-fade--top')
+        ->toContain('sidebar__nav-fade--bottom');
+});

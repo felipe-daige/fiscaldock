@@ -15,9 +15,13 @@
         </button>
     </div>
 
-    <nav class="sidebar__nav">
-        {{ $slot }}
-    </nav>
+    <div class="sidebar__nav-wrap">
+        <div class="sidebar__nav-fade sidebar__nav-fade--top" aria-hidden="true"></div>
+        <nav class="sidebar__nav">
+            {{ $slot }}
+        </nav>
+        <div class="sidebar__nav-fade sidebar__nav-fade--bottom" aria-hidden="true"></div>
+    </div>
 
     @if(isset($footer))
         {{ $footer }}

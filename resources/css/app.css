@@ -298,6 +298,24 @@
                text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors;
     }
 
+    .sidebar__nav-wrap {
+        @apply relative flex-1 min-h-0 flex flex-col;
+    }
+    .sidebar__nav-fade {
+        @apply absolute left-0 right-0 h-6 pointer-events-none opacity-0 z-10;
+        transition: opacity 0.15s ease;
+    }
+    .sidebar__nav-fade--top {
+        top: 0;
+        background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0));
+    }
+    .sidebar__nav-fade--bottom {
+        bottom: 0;
+        background: linear-gradient(to top, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0));
+    }
+    .sidebar__nav-wrap--up .sidebar__nav-fade--top { opacity: 1; }
+    .sidebar__nav-wrap--down .sidebar__nav-fade--bottom { opacity: 1; }
+
     .sidebar__nav {
         @apply flex-1 min-h-0 px-3 py-4 overflow-y-auto overflow-x-hidden;
         overscroll-behavior: contain;

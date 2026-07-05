@@ -7,6 +7,7 @@ let _sidebarOpenHandler = null;
 let _sidebarCloseHandler = null;
 let _sidebarOverlayHandler = null;
 let _sidebarLinkClickHandler = null;
+let _sidebarNavScrollHandler = null;
 let _sidebarGroupHandlers = [];
 let _sidebarUserHandler = null;
 let _mobileMenuLinkHandler = null;
@@ -129,6 +130,25 @@ function initLayout() {
             closeSidebarDrawer();
         };
         sidebar.addEventListener('click', _sidebarLinkClickHandler);
+    }
+
+    // Scroll fade do nav — pista visual de que a navegação rola
+    const navWrap = document.querySelector('.sidebar__nav-wrap');
+    const navScroller = navWrap ? navWrap.querySelector('.sidebar__nav') : null;
+    if (navScroller) {
+        const atualizarNavFades = function () {
+            navWrap.classList.toggle('sidebar__nav-wrap--up', navScroller.scrollTop > 4);
+            navWrap.classList.toggle(
+                'sidebar__nav-wrap--down',
+                navScroller.scrollTop + navScroller.clientHeight < navScroller.scrollHeight - 4
+            );
+        };
+        if (_sidebarNavScrollHandler) {
+            navScroller.removeEventListener('scroll', _sidebarNavScrollHandler);
+        }
+        _sidebarNavScrollHandler = atualizarNavFades;
+        navScroller.addEventListener('scroll', _sidebarNavScrollHandler, { passive: true });
+        atualizarNavFades();
     }
 
     // Dropdown menu - close on outside click
