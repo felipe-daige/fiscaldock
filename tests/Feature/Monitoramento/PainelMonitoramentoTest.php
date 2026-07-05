@@ -155,3 +155,21 @@ it('painel renderiza a barra de consumo do ciclo quando há cap', function () {
 
     $resp->assertOk()->assertSee('Consumo do ciclo')->assertSee('Projetado at');
 });
+
+it('modal novo monitorado expõe o estimador de custo mensal/trimestral', function () {
+    $user = User::factory()->create();
+    $grupo = ParticipanteGrupo::create(['user_id' => $user->id, 'nome' => 'Grupo Custo']);
+    $p = Participante::create(['user_id' => $user->id, 'documento' => '11222333000181', 'razao_social' => 'Membro', 'uf' => 'SP']);
+    $grupo->participantes()->attach($p->id);
+
+    $resp = actingAs($user)->get(route('app.monitoramento.painel'));
+
+    $resp->assertOk()
+        // linha do estimador (escondida até ter alvo selecionado)
+        ->assertSee('id="mon-custo-estimado"', false)
+        // dados que o JS usa pro cálculo: custo em créditos por plano,
+        // nº de membros por grupo e preço unitário do crédito no form
+        ->assertSee('data-custo="', false)
+        ->assertSee('data-membros="1"', false)
+        ->assertSee('id="form-monitorar" data-credit-unit-price="', false);
+});

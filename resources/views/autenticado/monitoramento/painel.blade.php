@@ -278,7 +278,7 @@
                 <span class="text-sm font-semibold text-gray-800">Novo monitorado</span>
                 <button type="button" onclick="document.getElementById('modal-monitorar').classList.add('hidden')" class="text-gray-400 text-xl leading-none">&times;</button>
             </div>
-            <form id="form-monitorar" class="p-4 space-y-3">
+            <form id="form-monitorar" data-credit-unit-price="{{ $precos->creditUnitPrice() }}" class="p-4 space-y-3">
                 <div>
                     <label class="text-[11px] text-gray-500 block mb-1">Buscar em</label>
                     <select id="mon-tipo" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded" onchange="painelTipoChange()">
@@ -309,7 +309,7 @@
                     <select id="mon-grupo-opcao" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded" onchange="painelGrupoChange()">
                         <option value="">Sem grupo — monitorar individualmente</option>
                         @foreach($grupos as $g)
-                            <option value="{{ $g->id }}" data-monitorado="{{ in_array($g->id, $gruposMonitorados) ? 1 : 0 }}">{{ $g->nome }} — {{ $g->participantes_count }} {{ $g->participantes_count === 1 ? 'membro' : 'membros' }}{{ in_array($g->id, $gruposMonitorados) ? ' · já monitorado' : '' }}</option>
+                            <option value="{{ $g->id }}" data-monitorado="{{ in_array($g->id, $gruposMonitorados) ? 1 : 0 }}" data-membros="{{ $g->participantes_count }}">{{ $g->nome }} — {{ $g->participantes_count }} {{ $g->participantes_count === 1 ? 'membro' : 'membros' }}{{ in_array($g->id, $gruposMonitorados) ? ' · já monitorado' : '' }}</option>
                         @endforeach
                         <option value="novo">+ Criar novo grupo…</option>
                     </select>
@@ -319,21 +319,24 @@
                 <div id="mon-plano-freq" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="text-[11px] text-gray-500 block mb-1">Plano</label>
-                        <select id="mon-plano" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
+                        <select id="mon-plano" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded" onchange="monAtualizarCusto()">
                             @foreach($planos as $pl)
-                                <option value="{{ $pl['id'] }}">{{ $pl['nome'] }} — {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $pl['custo'])) }}/CNPJ</option>
+                                <option value="{{ $pl['id'] }}" data-custo="{{ (int) $pl['custo'] }}">{{ $pl['nome'] }} — {{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $pl['custo'])) }}/CNPJ</option>
                             @endforeach
                         </select>
                     </div>
                     <div>
                         <label class="text-[11px] text-gray-500 block mb-1">Frequência</label>
-                        <select id="mon-frequencia" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
+                        <select id="mon-frequencia" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded" onchange="monAtualizarCusto()">
                             <option value="semanal">Semanal</option>
                             <option value="quinzenal">Quinzenal</option>
                             <option value="mensal" selected>Mensal</option>
                         </select>
                     </div>
                 </div>
+                {{-- Estimador de custo: transparência de preço antes de confirmar. Display-only —
+                     o débito real e o aviso de cap continuam 100% no backend. --}}
+                <p id="mon-custo-estimado" class="hidden text-[11px] text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2"></p>
                 <div class="flex justify-end gap-2">
                     <button type="button" onclick="document.getElementById('modal-monitorar').classList.add('hidden')" class="text-xs px-3 py-1.5 text-gray-600">Cancelar</button>
                     <button type="submit" class="text-xs px-3 py-1.5 rounded text-white" style="background-color: #047857">Monitorar</button>
@@ -437,6 +440,7 @@
         });
         painelAtualizarGrupoBloco();
         painelAtualizarSugestaoGrupo();
+        monAtualizarCusto();
     }
     function painelAtualizarSugestaoGrupo() {
         // Selecionou 2+ participantes e ainda não escolheu grupo? Sugere criar um com eles.
@@ -484,6 +488,40 @@
         }
         hint.classList.toggle('hidden', hint.textContent === '');
         painelAtualizarSugestaoGrupo();
+        monAtualizarCusto();
+    }
+    // ── Estimador de custo do novo monitoramento (display-only) ─────────────
+    // Espelha a matemática do backend: custo_ciclo = N alvos × custo do plano;
+    // por período = custo_ciclo × (dias do período / frequencia_dias), como o
+    // custo_mes do painel. Débito real e aviso de cap seguem no backend.
+    function monAtualizarCusto() {
+        var box = document.getElementById('mon-custo-estimado');
+        var gsel = document.getElementById('mon-grupo-opcao');
+        var gopt = gsel.selectedOptions[0];
+        var grupoMonitorado = gsel.value !== '' && gsel.value !== 'novo' && gopt && gopt.dataset.monitorado === '1';
+        var nAlvos = monSelecionados.length;
+        if (gsel.value !== '' && gsel.value !== 'novo' && !grupoMonitorado) {
+            // Grupo existente: membros atuais + participantes sendo adicionados + clientes avulsos.
+            nAlvos += parseInt(gopt.dataset.membros, 10) || 0;
+        }
+        var popt = document.getElementById('mon-plano').selectedOptions[0];
+        var custoCreditos = popt ? parseInt(popt.dataset.custo, 10) || 0 : 0;
+        // Grupo já monitorado só adiciona membros à assinatura existente (sem plano novo) —
+        // o custo dela muda, mas quem dita é o plano da assinatura antiga, não este form.
+        if (grupoMonitorado || nAlvos < 1 || custoCreditos < 1) {
+            box.classList.add('hidden');
+            return;
+        }
+        var freqDias = { diario: 1, semanal: 7, quinzenal: 15, mensal: 30 }[document.getElementById('mon-frequencia').value] || 30;
+        var unitPrice = parseFloat(document.getElementById('form-monitorar').dataset.creditUnitPrice) || 0.20;
+        var brlFmt = function (creditos) {
+            return 'R$ ' + (creditos * unitPrice).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+        var ciclo = nAlvos * custoCreditos;
+        box.textContent = 'Custo estimado: ' + brlFmt(Math.round(ciclo * 30 / freqDias)) + '/mês · '
+            + brlFmt(Math.round(ciclo * 90 / freqDias)) + '/trimestre ('
+            + nAlvos + ' CNPJ' + (nAlvos > 1 ? 's' : '') + ' × ' + brlFmt(custoCreditos) + ' por consulta)';
+        box.classList.remove('hidden');
     }
     // ── Lista de alvos (busca e "ver todos") ─────────────────────────────────
     // Compartilhada pelos modais "Novo monitorado" (mon) e do grupo (membros).
