@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Status de disponibilidade de uma integração externa (fonte de consulta ou serviço de
@@ -37,9 +38,19 @@ class IntegracaoStatus extends Model
         return [self::STATUS_OPERACIONAL, self::STATUS_DEGRADADO, self::STATUS_FORA, self::STATUS_MANUTENCAO];
     }
 
+    public const CACHE_KEY_PROBLEMAS = 'integracao_status:problemas_count';
+
+    /** Cacheado: a sidebar renderiza em todo full-load. Bust em saved/deleted. */
     public static function problemasCount(): int
     {
-        return static::query()->problemas()->count();
+        return (int) Cache::remember(self::CACHE_KEY_PROBLEMAS, 60, fn () => static::query()->problemas()->count());
+    }
+
+    protected static function booted(): void
+    {
+        $bust = fn () => Cache::forget(self::CACHE_KEY_PROBLEMAS);
+        static::saved($bust);
+        static::deleted($bust);
     }
 
     public function scopeGrupo(Builder $q, string $grupo): Builder
