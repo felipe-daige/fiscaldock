@@ -8,6 +8,12 @@
             </span>
         </a>
 
+        <button id="sidebar-collapse-btn" type="button" class="sidebar__collapse-btn" aria-label="Recolher menu" title="Recolher menu">
+            <svg class="w-4 h-4 sidebar__collapse-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+            </svg>
+        </button>
+
         <button id="sidebar-close-btn" type="button" class="sidebar__close-btn" aria-label="Fechar menu">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>

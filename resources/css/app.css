@@ -248,10 +248,10 @@
 
     .sidebar {
         @apply fixed inset-y-0 left-0 z-50 flex flex-col bg-white border-r border-gray-300;
-        width: 256px;
+        width: var(--sidebar-w, 256px);
         max-height: 100vh;
         height: 100vh;
-        transition: transform 0.25s ease;
+        transition: transform 0.25s ease, width 0.2s ease;
         transform: translateX(-100%);
     }
 
@@ -296,6 +296,48 @@
     .sidebar__close-btn {
         @apply inline-flex md:hidden items-center justify-center w-9 h-9 rounded border border-gray-300
                text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors;
+    }
+    .sidebar__collapse-btn {
+        @apply hidden md:inline-flex items-center justify-center w-7 h-7 rounded border border-gray-300
+               text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors shrink-0;
+    }
+
+    /* Colapso: só desktop — no mobile o drawer ignora a classe */
+    @media (min-width: 768px) {
+        .sidebar-collapsed {
+            --sidebar-w: 64px;
+        }
+        .sidebar-collapsed .sidebar__brand-link,
+        .sidebar-collapsed .sidebar__section-title,
+        .sidebar-collapsed .sidebar__item-label,
+        .sidebar-collapsed .sidebar__group-arrow,
+        .sidebar-collapsed .sidebar__group-menu,
+        .sidebar-collapsed .sidebar__user-name,
+        .sidebar-collapsed .sidebar__user-role,
+        .sidebar-collapsed .sidebar__logout-label {
+            display: none;
+        }
+        .sidebar-collapsed .sidebar__brand {
+            justify-content: center;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+        .sidebar-collapsed .sidebar__collapse-icon {
+            transform: rotate(180deg);
+        }
+        .sidebar-collapsed .sidebar__item,
+        .sidebar-collapsed .sidebar__group-trigger,
+        .sidebar-collapsed .sidebar__user-trigger {
+            justify-content: center;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+        .sidebar-collapsed .sidebar__group-trigger > div {
+            justify-content: center;
+        }
+        .sidebar-collapsed .sidebar__user-trigger > .min-w-0 {
+            display: none;
+        }
     }
 
     .sidebar__nav-wrap {
@@ -505,10 +547,10 @@
 
     @media (min-width: 768px) {
         .layout-with-sidebar {
-            padding-left: 256px;
+            padding-left: var(--sidebar-w, 256px);
         }
         .layout-sidebar-expanded {
-            padding-left: 256px;
+            padding-left: var(--sidebar-w, 256px);
         }
     }
 }

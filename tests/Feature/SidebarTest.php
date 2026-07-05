@@ -155,3 +155,13 @@ it('menu do usuário mostra bloco Admin para admin', function () {
     expect($html)->toContain('>Admin</div>')
         ->toContain('href="/app/admin"');
 });
+
+it('layout traz o toggle de colapso e o script anti-flash', function () {
+    $user = User::factory()->trialAtivo()->create();
+
+    $html = actingAs($user)->get('/app/dashboard')->assertOk()->getContent();
+
+    expect($html)
+        ->toContain('id="sidebar-collapse-btn"')
+        ->toContain("localStorage.getItem('sidebar:collapsed')");
+});
