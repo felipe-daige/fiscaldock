@@ -36,6 +36,13 @@ it('agrega kpis/cfop/cst/impostos escopados por cliente_id, excluindo canceladas
         'cfop' => 1102, 'cst_icms' => '00', 'aliquota_icms' => 18, 'valor_icms' => 180,
         'created_at' => now(), 'updated_at' => now(),
     ]);
+    // C190 consolidado — fonte canônica de CFOP/CST/ICMS lida pelo service.
+    DB::table('efd_notas_consolidados')->insert([
+        'efd_nota_id' => $nota->id, 'user_id' => $user->id,
+        'cfop' => '1102', 'cst_icms' => '00', 'aliquota_icms' => 18,
+        'valor_operacao' => 1000, 'valor_bc_icms' => 1000, 'valor_icms' => 180, 'valor_ipi' => 0,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
     // nota cancelada do cliente -> deve ser ignorada
     EfdNota::create([
         'user_id' => $user->id, 'cliente_id' => $cliente->id, 'importacao_id' => $imp->id,

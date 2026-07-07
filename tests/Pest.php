@@ -183,9 +183,11 @@ function criarNotaEfd(\App\Models\User $u, \App\Models\Participante $p, string $
 {
     $cliente = \App\Models\Cliente::firstOrCreate(['user_id' => $u->id, 'documento' => '00000000000191'], ['razao_social' => 'Empresa Teste']);
     $imp = \App\Models\EfdImportacao::firstOrCreate(['user_id' => $u->id, 'tipo_efd' => 'EFD ICMS/IPI'], []);
+
     return \App\Models\EfdNota::create([
         'user_id' => $u->id, 'cliente_id' => $cliente->id, 'importacao_id' => $imp->id,
         'participante_id' => $p->id, 'modelo' => '55', 'numero' => (string) random_int(1, 9999999),
+        'origem_arquivo' => 'fiscal',
         'tipo_operacao' => $tipo, 'valor_total' => $valor, 'data_emissao' => $data, 'cancelada' => $cancelada,
     ]);
 }
@@ -193,6 +195,20 @@ function criarNotaEfd(\App\Models\User $u, \App\Models\Participante $p, string $
 function criarItemEfd(\App\Models\EfdNota $n, array $attrs): \App\Models\EfdNotaItem
 {
     return \App\Models\EfdNotaItem::create(array_merge([
-        'efd_nota_id' => $n->id, 'user_id' => $n->user_id, 'numero_item' => 1, 'codigo_item' => 'COD' . random_int(1, 9999),
+        'efd_nota_id' => $n->id, 'user_id' => $n->user_id, 'numero_item' => 1, 'codigo_item' => 'COD'.random_int(1, 9999),
+    ], $attrs));
+}
+
+/**
+ * Cria a consolidação C190 (efd_notas_consolidados) — fonte canônica de ICMS/IPI/CFOP/CST.
+ * Os MovimentacaoService (participante/cliente) leem CFOP/CST/ICMS daqui, não do item-level.
+ */
+function criarConsolidadoEfd(\App\Models\EfdNota $n, array $attrs): void
+{
+    \Illuminate\Support\Facades\DB::table('efd_notas_consolidados')->insert(array_merge([
+        'efd_nota_id' => $n->id, 'user_id' => $n->user_id,
+        'cst_icms' => '00', 'cfop' => '5102', 'aliquota_icms' => 0,
+        'valor_operacao' => 0, 'valor_bc_icms' => 0, 'valor_icms' => 0, 'valor_ipi' => 0,
+        'created_at' => now(), 'updated_at' => now(),
     ], $attrs));
 }

@@ -1,13 +1,10 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\Cliente;
-use App\Models\EfdImportacao;
 use App\Models\EfdNota;
-use App\Models\EfdNotaItem;
 use App\Models\Participante;
 use App\Models\User;
 use App\Services\Participantes\ParticipanteMovimentacaoService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
@@ -47,11 +44,21 @@ it('porCompetencia pivota entrada/saida e ignora data nula', function () {
         ->and($comp[0])->toBe(['competencia' => '2026-01', 'entrada' => 100.0, 'saida' => 70.0]);
 });
 
-it('porCfop e porCst agregam itens ordenando cfop por valor', function () {
-    $n1 = criarNotaEfd($this->user, $this->p, 'saida', '2026-01-10', 100);
-    $n2 = criarNotaEfd($this->user, $this->p, 'saida', '2026-01-11', 100);
-    criarItemEfd($n1, ['cfop' => '5102', 'cst_icms' => '00', 'valor_total' => 30, 'valor_icms' => 3, 'aliquota_icms' => 10, 'valor_pis' => 1, 'valor_cofins' => 2]);
-    criarItemEfd($n2, ['cfop' => '6102', 'cst_icms' => '00', 'valor_total' => 90, 'valor_icms' => 9, 'aliquota_icms' => 10, 'valor_pis' => 1, 'valor_cofins' => 2]);
+it('porCfop/porCst/impostos leem C190 (ICMS) + itens contribuições (PIS/COFINS)', function () {
+    // CFOP/CST/ICMS vêm do consolidado C190 (fonte canônica), não do item-level.
+    $n1 = criarNotaEfd($this->user, $this->p, 'saida', '2026-01-10', 30);
+    $n2 = criarNotaEfd($this->user, $this->p, 'saida', '2026-01-11', 90);
+    criarConsolidadoEfd($n1, ['cfop' => '5102', 'cst_icms' => '00', 'valor_operacao' => 30, 'valor_icms' => 3, 'aliquota_icms' => 10]);
+    criarConsolidadoEfd($n2, ['cfop' => '6102', 'cst_icms' => '00', 'valor_operacao' => 90, 'valor_icms' => 9, 'aliquota_icms' => 10]);
+
+    // PIS/COFINS vêm dos itens da EFD de contribuições (gêmea da mesma NF-e).
+    $nc = \App\Models\EfdNota::create([
+        'user_id' => $this->user->id, 'cliente_id' => $n1->cliente_id, 'importacao_id' => $n1->importacao_id,
+        'participante_id' => $this->p->id, 'modelo' => '55', 'numero' => '900001', 'origem_arquivo' => 'contribuicoes',
+        'tipo_operacao' => 'saida', 'valor_total' => 120, 'data_emissao' => '2026-01-10', 'cancelada' => false,
+    ]);
+    criarItemEfd($nc, ['numero_item' => 1, 'cfop' => '5102', 'valor_total' => 30, 'valor_pis' => 1, 'valor_cofins' => 2]);
+    criarItemEfd($nc, ['numero_item' => 2, 'cfop' => '6102', 'valor_total' => 90, 'valor_pis' => 1, 'valor_cofins' => 2]);
 
     $cfop = $this->svc->porCfop($this->p);
     expect($cfop[0]['cfop'])->toBe('6102')->and($cfop[0]['valor'])->toBe(90.0);
