@@ -28,8 +28,6 @@ return new class extends Migration
             $table->smallInteger('score_fgts')->nullable();
             $table->smallInteger('score_trabalhista')->nullable();
             $table->smallInteger('score_compliance')->nullable();  // CGU CNC (CEIS/CNEP/CEPIM) + CNJ
-            $table->smallInteger('score_esg')->nullable();         // dívida: sem fonte (ESG)
-            $table->smallInteger('score_protestos')->nullable();   // dívida: sem fonte (protestos)
 
             // Score consolidado — null = nada avaliado
             $table->smallInteger('score_total')->nullable();

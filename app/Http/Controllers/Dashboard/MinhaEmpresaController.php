@@ -11,6 +11,8 @@ use App\Services\Clearance\CertificadoDigitalService;
 use App\Services\RiskScoreService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class MinhaEmpresaController extends Controller
@@ -77,6 +79,10 @@ class MinhaEmpresaController extends Controller
         // CNDs e certidoes
         $certidoes = $this->extrairCertidoes($dadosConsulta);
 
+        // Geocodifica o participante espelho (uma vez, cacheado no DB) p/ o mapa de localização,
+        // a partir do endereço da última consulta. Falha de rede nunca quebra a página.
+        $this->geocodificarSeNecessario($participante, $dadosConsulta['endereco'] ?? []);
+
         // Alertas recentes. `_fontes_erro` = fontes pedidas pelo plano que não voltaram
         // (ex.: CND Federal com código de retry esgotado) — o usuário pagou, precisa saber.
         $alertas = $this->gerarAlertas($certidoes, $score, $dadosConsulta['_fontes_erro'] ?? []);
@@ -105,13 +111,30 @@ class MinhaEmpresaController extends Controller
             })
             ->first();
 
+        // Perfil do score (breakdown por categoria) — mesma decomposição de clientes/show e
+        // risk/show, para a Minha Empresa não ficar só com o total sem o "porquê".
+        $scoreDetalhamento = $score
+            ? $this->riskScoreService->detalhar([
+                'cadastral' => $score->score_cadastral,
+                'cnd_federal' => $score->score_cnd_federal,
+                'cnd_estadual' => $score->score_cnd_estadual,
+                'fgts' => $score->score_fgts,
+                'trabalhista' => $score->score_trabalhista,
+            ])
+            : [];
+
         $data = [
             'empresa' => $empresa,
             'participante' => $participante,
             'score' => $score,
+            'scoreDetalhamento' => $scoreDetalhamento,
             'ultimaConsulta' => $ultimaConsulta,
+            'dadosConsulta' => $dadosConsulta,
             'certidoes' => $certidoes,
-            'certidaoLinhas' => $this->montarCertidaoLinhas($certidoes),
+            // Classifica pelo bloco bruto (não só a string de status) com aplicarIndeterminado=true —
+            // MESMA regra canônica do detalhe do lote (ResultadoDetalhePresenter), pra não divergir:
+            // certidão que não emitiu (conseguiu_emitir=false) é INDETERMINADA, nunca Irregular.
+            'certidaoLinhas' => $this->montarCertidaoLinhas($certidoes, $dadosConsulta),
             'alertas' => $alertas,
             'totalParticipantes' => $totalParticipantes,
             'totalNotas' => $totalNotas,
@@ -290,13 +313,14 @@ class MinhaEmpresaController extends Controller
      *
      * @return list<array{nome: string, badge: array{label: string, hex: string}, validade: string, comprovante: ?string}>
      */
-    private function montarCertidaoLinhas(array $certidoes): array
+    private function montarCertidaoLinhas(array $certidoes, array $dadosConsulta = []): array
     {
+        // `raw` = chave do bloco bruto em resultado_dados (fgts vive como `crf_fgts`).
         $itens = [
-            ['key' => 'cnd_federal', 'nome' => 'CND FEDERAL', 'indeterminado' => true],
-            ['key' => 'cnd_estadual', 'nome' => 'CND ESTADUAL', 'indeterminado' => false],
-            ['key' => 'fgts', 'nome' => 'CRF FGTS', 'indeterminado' => false],
-            ['key' => 'cndt', 'nome' => 'CNDT', 'indeterminado' => false],
+            ['key' => 'cnd_federal', 'raw' => 'cnd_federal', 'nome' => 'CND FEDERAL'],
+            ['key' => 'cnd_estadual', 'raw' => 'cnd_estadual', 'nome' => 'CND ESTADUAL'],
+            ['key' => 'fgts', 'raw' => 'crf_fgts', 'nome' => 'CRF FGTS'],
+            ['key' => 'cndt', 'raw' => 'cndt', 'nome' => 'CNDT'],
         ];
 
         $linhas = [];
@@ -304,15 +328,22 @@ class MinhaEmpresaController extends Controller
             $dado = $certidoes[$item['key']] ?? [];
             $consultado = $dado['consultado'] ?? false;
 
+            $bruto = $dadosConsulta[$item['raw']] ?? [];
+
             if (! $consultado) {
-                $badge = ['label' => 'NÃO CONSULTADO', 'hex' => '#9ca3af'];
+                $badge = ['label' => 'NÃO CONSULTADO', 'hex' => '#9ca3af', 'motivo' => null];
             } else {
-                $badge = \App\Support\CertidaoBadge::classificar($dado['status'] ?? '', $item['indeterminado']);
+                // Classifica o bloco BRUTO (não a string) com aplicarIndeterminado=true — idêntico
+                // ao ResultadoDetalhePresenter::certidoes(), fonte única pra tabela e detalhe do lote.
+                $badge = \App\Support\CertidaoBadge::classificar($bruto ?: ($dado['status'] ?? ''), true);
             }
 
             $linhas[] = [
                 'nome' => $item['nome'],
                 'badge' => ['label' => $badge['label'], 'hex' => $badge['hex']],
+                'motivo' => $badge['motivo'] ?? null,
+                // Data em que a certidão foi efetivamente emitida/consultada (BR d/m/Y), quando a fonte informa.
+                'emissao' => is_array($bruto) ? ($bruto['emissao_data'] ?? null) : null,
                 'validade' => $this->validadeTexto($dado['validade'] ?? null, (bool) $consultado),
                 'comprovante' => $dado['comprovante'] ?? null,
             ];
@@ -372,6 +403,57 @@ class MinhaEmpresaController extends Controller
             } catch (\Throwable) {
                 return null;
             }
+        }
+    }
+
+    /**
+     * Geocodifica o participante espelho (lat/lng) a partir do endereço da última consulta,
+     * cacheando no DB — mesma estratégia do ParticipanteController (CEP via BrasilAPI, fallback
+     * município/UF via Nominatim). Só roda quando ainda não há coordenadas. Nunca lança: falha
+     * de rede apenas deixa o mapa oculto.
+     *
+     * @param  array<string, mixed>  $endereco  bloco `endereco` de resultado_dados
+     */
+    private function geocodificarSeNecessario(Participante $participante, array $endereco): void
+    {
+        if (! is_null($participante->latitude) && ! is_null($participante->longitude)) {
+            return;
+        }
+
+        $cep = preg_replace('/\D/', '', (string) ($endereco['cep'] ?? $participante->cep ?? ''));
+        $municipio = $endereco['municipio'] ?? $participante->municipio ?? null;
+        $uf = $endereco['uf'] ?? $participante->uf ?? null;
+
+        try {
+            $lat = null;
+            $lng = null;
+
+            // Tentativa 1: BrasilAPI via CEP (coordenadas do logradouro quando disponíveis).
+            if ($cep !== '' && strlen($cep) === 8) {
+                $resp = Http::timeout(5)->get("https://brasilapi.com.br/api/cep/v2/{$cep}");
+                if ($resp->successful()) {
+                    $lat = $resp->json('location.coordinates.latitude');
+                    $lng = $resp->json('location.coordinates.longitude');
+                }
+            }
+
+            // Tentativa 2: Nominatim via município/UF (centro da cidade).
+            if ((! $lat || ! $lng) && $municipio && $uf) {
+                $query = urlencode("{$municipio},{$uf},Brasil");
+                $resp = Http::timeout(5)
+                    ->withHeaders(['User-Agent' => 'FiscalDock/1.0'])
+                    ->get("https://nominatim.openstreetmap.org/search?q={$query}&format=json&limit=1");
+                if ($resp->successful()) {
+                    $lat = $resp->json('0.lat');
+                    $lng = $resp->json('0.lon');
+                }
+            }
+
+            if ($lat && $lng) {
+                $participante->update(['latitude' => $lat, 'longitude' => $lng]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Falha ao geocodificar empresa própria', ['participante_id' => $participante->id, 'erro' => $e->getMessage()]);
         }
     }
 
@@ -483,7 +565,6 @@ class MinhaEmpresaController extends Controller
             'sintegra' => 'SINTEGRA',
             'cgu_cnc' => 'CGU/CNC',
             'cnj_improbidade' => 'CNJ Improbidade',
-            'protestos' => 'Protestos',
         ];
 
         foreach ($fontesErro as $chave => $erro) {

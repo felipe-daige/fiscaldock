@@ -12,9 +12,13 @@ use Illuminate\Support\Facades\DB;
 /**
  * Resumo fiscal/relacional de um participante (contraparte) a partir das notas EFD.
  *
- * Fonte: efd_notas com origem_arquivo='fiscal' (evita a dobra fiscal × contribuições)
- * e cancelada=false. tipo_operacao='entrada' ⇒ o CNPJ é fornecedor da empresa
- * (cliente_id); 'saida' ⇒ é cliente da empresa.
+ * Movimentação agregada (papel/valor/qtd da LISTA de participantes: resumoMovimentacao,
+ * papelPorParticipante, valorMovimentadoPorParticipante, qtdNotasPorParticipante) usa a
+ * regra canônica do BI (BiService::dedupParticipanteSql, P1 escopado) — CONVERGE com a
+ * ficha `/app/participante` e o dossiê. O detalhe relacional por CFOP (`paraParticipantes`)
+ * segue `origem_arquivo='fiscal'` de propósito: CFOP/produto/nota são conceitos do arquivo
+ * ICMS/IPI. Sempre cancelada=false. tipo_operacao='entrada' ⇒ o CNPJ é fornecedor da
+ * empresa (cliente_id); 'saida' ⇒ é cliente da empresa.
  */
 class ParticipanteFiscalResumoService
 {
@@ -138,9 +142,9 @@ class ParticipanteFiscalResumoService
     {
         return DB::table('efd_notas')
             ->where('user_id', $userId)
-            ->where('origem_arquivo', 'fiscal')
             ->where('cancelada', false)
             ->whereNotNull('participante_id')
+            ->whereRaw(\App\Services\BiService::dedupParticipanteSql('efd_notas')) // P1: converge com a ficha/dossiê
             ->groupBy('participante_id')
             ->selectRaw("participante_id,
                 bool_or(tipo_operacao = 'entrada') as tem_entrada,
@@ -163,9 +167,9 @@ class ParticipanteFiscalResumoService
     {
         return DB::table('efd_notas')
             ->where('user_id', $userId)
-            ->where('origem_arquivo', 'fiscal')
             ->where('cancelada', false)
             ->whereNotNull('participante_id')
+            ->whereRaw(\App\Services\BiService::dedupParticipanteSql('efd_notas')) // P1: converge com a ficha/dossiê
             ->groupBy('participante_id')
             ->selectRaw('participante_id, COALESCE(SUM(valor_total), 0) as valor')
             ->get()
@@ -184,9 +188,9 @@ class ParticipanteFiscalResumoService
     {
         return DB::table('efd_notas')
             ->where('user_id', $userId)
-            ->where('origem_arquivo', 'fiscal')
             ->where('cancelada', false)
             ->whereNotNull('participante_id')
+            ->whereRaw(\App\Services\BiService::dedupParticipanteSql('efd_notas')) // P1: converge com a ficha/dossiê
             ->groupBy('participante_id')
             ->selectRaw('participante_id, COUNT(*) as qtd')
             ->get()
@@ -205,9 +209,9 @@ class ParticipanteFiscalResumoService
     {
         return DB::table('efd_notas')
             ->where('user_id', $userId)
-            ->where('origem_arquivo', 'fiscal')
             ->where('cancelada', false)
             ->whereNotNull('participante_id')
+            ->whereRaw(\App\Services\BiService::dedupParticipanteSql('efd_notas')) // P1: converge com a ficha/dossiê
             ->groupBy('participante_id')
             ->selectRaw("participante_id,
                 bool_or(tipo_operacao = 'entrada') as tem_entrada,

@@ -24,10 +24,7 @@
         crf_fgts: 'CRF/FGTS',
         cnd_estadual: 'CND Estadual',
         cndt: 'CNDT (Trabalhista)',
-        protestos: 'Protestos',
         lista_devedores_pgfn: 'Lista Devedores PGFN',
-        trabalho_escravo: 'Trabalho Escravo',
-        ibama_autuacoes: 'IBAMA Autuacoes',
         processos_cnj: 'Processos CNJ'
     };
 

@@ -105,8 +105,7 @@
                     <p class="text-[11px] text-gray-500 leading-relaxed mt-2">
                         A nota é a <strong>média ponderada só das fontes efetivamente consultadas</strong>: os pesos acima são
                         <strong>renormalizados</strong> sobre o que foi consultado — o que não foi checado (ou veio indeterminado)
-                        sai do cálculo. Cada fonte pontua 0 (regular) a 100 (irregular). Sanções (CGU/CNJ), ESG e protestos
-                        <strong>não entram no score hoje</strong> (sem fonte ativa nos planos).
+                        sai do cálculo. Cada fonte pontua 0 (regular) a 100 (irregular).
                     </p>
                 </div>
 
@@ -131,7 +130,6 @@
                     </p>
                 </div>
 
-                <p class="text-[11px] text-gray-400">ESG (trabalho escravo / IBAMA), sanções (CGU/CNJ) e protestos em cartório entrarão no score quando a fonte estiver ativa.</p>
             </div>
         </details>
 

@@ -27,7 +27,6 @@ class AppServiceProvider extends ServiceProvider
             new \App\Services\Consultas\Fontes\CguCncFonte,
             new \App\Services\Consultas\Fontes\CnjImprobidadeFonte,
             new \App\Services\Consultas\Fontes\CndMunicipalFonte,
-            new \App\Services\Consultas\Fontes\ProtestosFonte,
         ]));
 
         $this->app->bind(

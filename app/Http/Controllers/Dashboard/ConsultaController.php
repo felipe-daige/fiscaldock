@@ -644,10 +644,7 @@ class ConsultaController extends Controller
             'crf_fgts',
             'cnd_estadual',
             'cndt',
-            'protestos',
             'lista_devedores_pgfn',
-            'trabalho_escravo',
-            'ibama_autuacoes',
             'processos_cnj',
         ];
 

@@ -210,14 +210,6 @@ class ConsultaReportService
                 'ceis' => $this->formatarBoolean($dados['ceis'] ?? null),
                 'cnep' => $this->formatarBoolean($dados['cnep'] ?? null),
 
-                // ESG
-                'trabalho_escravo' => $this->formatarBoolean($dados['trabalho_escravo'] ?? null),
-                'ibama_autuacoes' => isset($dados['ibama_autuacoes']) ? count($dados['ibama_autuacoes']) : null,
-
-                // Protestos
-                'protestos_qtd' => isset($dados['protestos']) ? (is_array($dados['protestos']) ? count($dados['protestos']) : $dados['protestos']) : null,
-                'protestos_valor' => $dados['valor_protestos'] ?? null,
-
                 // Score calculado
                 'score_total' => $scoreData['score_total'],
                 'classificacao' => $scoreData['classificacao'],
@@ -374,19 +366,6 @@ class ConsultaReportService
             $colunas[] = 'CNEP';
         }
 
-        if (in_array('trabalho_escravo', $consultasIncluidas)) {
-            $colunas[] = 'Lista Trabalho Escravo';
-        }
-
-        if (in_array('ibama_autuacoes', $consultasIncluidas)) {
-            $colunas[] = 'IBAMA Autuacoes';
-        }
-
-        if (in_array('protestos', $consultasIncluidas)) {
-            $colunas[] = 'Protestos Qtd';
-            $colunas[] = 'Protestos Valor';
-        }
-
         // Sempre incluir score
         $colunas[] = 'Score Risco';
         $colunas[] = 'Classificacao';
@@ -426,10 +405,6 @@ class ConsultaReportService
                 'TCU Situacao' => $resultado['tcu_situacao'],
                 'CEIS' => $resultado['ceis'],
                 'CNEP' => $resultado['cnep'],
-                'Lista Trabalho Escravo' => $resultado['trabalho_escravo'],
-                'IBAMA Autuacoes' => $resultado['ibama_autuacoes'],
-                'Protestos Qtd' => $resultado['protestos_qtd'],
-                'Protestos Valor' => $resultado['protestos_valor'] !== null ? number_format($resultado['protestos_valor'], 2, ',', '.') : '',
                 'Score Risco' => $resultado['score_total'],
                 'Classificacao' => $this->getLabelClassificacao($resultado['classificacao']),
                 default => '',

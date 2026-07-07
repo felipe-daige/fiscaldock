@@ -61,19 +61,6 @@
         @endforeach
     </div>
 
-    {{-- Categorias planejadas (sem fonte de dado ainda) --}}
-    <div class="mt-6 pt-4 border-t border-gray-200">
-        <h4 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-3">Categorias em breve</h4>
-        <div class="space-y-2">
-            @foreach(['ESG (trabalho escravo / IBAMA)', 'Protestos em cartório'] as $futuro)
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-400">{{ $futuro }}</span>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #6b7280">Em breve</span>
-                </div>
-            @endforeach
-        </div>
-    </div>
-
     {{-- Legenda --}}
     <div class="mt-6 pt-4 border-t border-gray-200">
         <h4 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-3">Legenda dos Scores</h4>

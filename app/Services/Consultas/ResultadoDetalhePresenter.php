@@ -54,7 +54,6 @@ class ResultadoDetalhePresenter
         'sintegra' => 'O SINTEGRA (SEFAZ)',
         'cgu_cnc' => 'A Controladoria-Geral da União (CGU)',
         'cnj_improbidade' => 'O Conselho Nacional de Justiça (CNJ)',
-        'protestos' => 'O serviço de protestos',
     ];
 
     /**

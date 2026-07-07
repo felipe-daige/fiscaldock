@@ -1440,8 +1440,12 @@ class BiService
      * origens. A atribuição de participante difere entre fiscal e contribuicoes (medido:
      * 436 notas de contribuicoes de um participante tinham gêmea fiscal atribuída a OUTRO);
      * o dedup global dropparia essas notas legítimas da ficha. `$a` = alias da tabela.
+     *
+     * Público/estático: é a REGRA CANÔNICA de movimento por participante do BI (fonte de
+     * verdade). O dossiê do participante e o volume do Score Fiscal reusam daqui para
+     * convergir com a ficha `/app/participante` — não replicar a expressão.
      */
-    private function dedupParticipanteSql(string $a): string
+    public static function dedupParticipanteSql(string $a): string
     {
         return "({$a}.origem_arquivo = 'fiscal' OR NOT EXISTS (SELECT 1 FROM efd_notas f WHERE f.user_id = {$a}.user_id AND f.origem_arquivo = 'fiscal' AND f.chave_acesso IS NOT NULL AND f.chave_acesso = {$a}.chave_acesso AND f.participante_id = {$a}.participante_id))";
     }

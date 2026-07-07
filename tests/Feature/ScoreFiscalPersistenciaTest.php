@@ -52,9 +52,6 @@ it('persiste o score do participante ao fechar o lote', function () {
     expect($score->score_compliance)->toBe(0);
     expect($score->score_total)->toBe(0);
     expect($score->classificacao)->toBe('baixo');
-    // dívida: ESG/protestos sem fonte -> null
-    expect($score->score_esg)->toBeNull();
-    expect($score->score_protestos)->toBeNull();
 });
 
 it('classifica risco alto quando CND federal e estadual positivas', function () {

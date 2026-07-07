@@ -811,45 +811,6 @@
                             </div>
                             @endif
 
-                            {{-- Protestos --}}
-                            @if(in_array('protestos', $consultasRealizadas) && isset($dados['protestos']))
-                            <div class="border-t border-gray-200 pt-4">
-                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Protestos</h3>
-                                @if(empty($dados['protestos']))
-                                    <p class="text-sm text-green-600 font-medium">Nenhum protesto encontrado</p>
-                                @else
-                                    <div class="bg-white border border-gray-300 border-l-4 border-l-red-500 rounded p-4">
-                                        <p class="text-sm font-semibold text-red-700">{{ count($dados['protestos']) }} protesto(s) encontrado(s)</p>
-                                        <p class="text-xs text-red-600 mt-1">Consulte o relatório completo para detalhes</p>
-                                    </div>
-                                @endif
-                            </div>
-                            @endif
-
-                            {{-- ESG --}}
-                            @if((in_array('trabalho_escravo', $consultasRealizadas) || in_array('ibama_autuacoes', $consultasRealizadas)) && (isset($dados['trabalho_escravo']) || isset($dados['ibama_autuacoes'])))
-                            <div class="border-t border-gray-200 pt-4">
-                                <h3 class="text-sm font-semibold text-gray-700 mb-3">ESG</h3>
-                                <div class="grid grid-cols-2 gap-4">
-                                    @if(isset($dados['trabalho_escravo']))
-                                    <div class="bg-gray-50 border border-gray-200 rounded p-3">
-                                        <dt class="text-xs text-gray-500">Lista Trabalho Escravo</dt>
-                                        <dd class="mt-1 text-sm font-semibold {{ !$dados['trabalho_escravo'] ? 'text-green-600' : 'text-red-600' }}">
-                                            {{ $dados['trabalho_escravo'] ? 'Consta' : 'Nada consta' }}
-                                        </dd>
-                                    </div>
-                                    @endif
-                                    @if(isset($dados['ibama_autuacoes']))
-                                    <div class="bg-gray-50 border border-gray-200 rounded p-3">
-                                        <dt class="text-xs text-gray-500">Autuações IBAMA</dt>
-                                        <dd class="mt-1 text-sm font-semibold {{ empty($dados['ibama_autuacoes']) ? 'text-green-600' : 'text-red-600' }}">
-                                            {{ empty($dados['ibama_autuacoes']) ? 'Nenhuma' : count($dados['ibama_autuacoes']) . ' autuacao(oes)' }}
-                                        </dd>
-                                    </div>
-                                    @endif
-                                </div>
-                            </div>
-                            @endif
                         </div>
                     </div>
                 @else

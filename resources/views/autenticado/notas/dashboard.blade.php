@@ -772,22 +772,6 @@
                         <p class="text-[10px] text-gray-400 mt-0.5">Empresas inidôneas</p>
                         <span class="mt-1.5 px-2 py-0.5 text-[10px] font-medium rounded-full bg-gray-100 text-gray-500">Em breve</span>
                     </div>
-                    <div class="flex flex-col items-center text-center p-3 rounded border border-dashed border-gray-300 bg-gray-50">
-                        <div class="w-10 h-10 bg-white rounded flex items-center justify-center mb-2 border border-gray-300">
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
-                        </div>
-                        <p class="text-xs font-medium text-gray-600">Protestos</p>
-                        <p class="text-[10px] text-gray-400 mt-0.5">IEPTB / CENPROT</p>
-                        <span class="mt-1.5 px-2 py-0.5 text-[10px] font-medium rounded-full bg-gray-100 text-gray-500">Em breve</span>
-                    </div>
-                    <div class="flex flex-col items-center text-center p-3 rounded border border-dashed border-gray-300 bg-gray-50">
-                        <div class="w-10 h-10 bg-white rounded flex items-center justify-center mb-2 border border-gray-300">
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                        </div>
-                        <p class="text-xs font-medium text-gray-600">Trabalho escravo</p>
-                        <p class="text-[10px] text-gray-400 mt-0.5">Lista suja MTE</p>
-                        <span class="mt-1.5 px-2 py-0.5 text-[10px] font-medium rounded-full bg-gray-100 text-gray-500">Em breve</span>
-                    </div>
                 </div>
             </div>
         </div>

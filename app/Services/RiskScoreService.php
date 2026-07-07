@@ -15,11 +15,9 @@ class RiskScoreService
      * Pesos por categoria. A soma NÃO precisa dar 1.0 — o total é renormalizado
      * dinamicamente sobre as categorias efetivamente avaliadas (ver calcularScoreTotal).
      *
-     * ESG (trabalho escravo / IBAMA), Protestos e Sanções/compliance (CGU/CNJ) foram
-     * removidos: as fontes saíram dos planos ativos, então o subscore vinha sempre "não
-     * avaliado" e só poluía o detalhamento. Débito documentado em docs/score-fiscal/README.md
-     * — quando a fonte voltar e passar a gravar o dado, basta reintroduzir o peso aqui (a
-     * renormalização cuida do resto).
+     * Sanções/compliance (CGU/CNJ) não entram no peso: o subscore vinha sempre "não
+     * avaliado" e só poluía o detalhamento. Para reintroduzir uma categoria, basta
+     * adicionar o peso aqui (a renormalização cuida do resto).
      */
     private array $pesos = [
         'cadastral' => 0.15,
@@ -401,8 +399,6 @@ class RiskScoreService
                 'score_fgts' => $scores['fgts'],
                 'score_trabalhista' => $scores['trabalhista'],
                 'score_compliance' => $scores['compliance'],
-                'score_esg' => null,       // dívida: sem fonte (docs/score-fiscal/README.md)
-                'score_protestos' => null, // dívida: sem fonte (docs/score-fiscal/README.md)
                 'score_total' => $scoreTotal,
                 'score_credito_reforma' => $this->scoreCreditoReforma($dados, $alvo),
                 'classificacao' => $classificacao,

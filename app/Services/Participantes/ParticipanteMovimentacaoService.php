@@ -13,22 +13,32 @@ use Illuminate\Support\Facades\DB;
  */
 final class ParticipanteMovimentacaoService
 {
-    /** Notas EFD do participante, não canceladas. */
+    /**
+     * Notas EFD do participante, não canceladas, DEDUPLICADAS por origem com a regra
+     * canônica do BI (P1 escopado ao participante). Fonte única: BiService::dedupParticipanteSql
+     * — o dossiê PDF converge com a ficha `/app/participante` (a NF-e escriturada nas duas EFD
+     * não dobra; documentos só-contribuições, ex. NFS-e de serviço, entram uma vez).
+     */
     private function notasQuery(Participante $p): \Illuminate\Database\Eloquent\Builder
     {
         return EfdNota::query()
             ->where('user_id', $p->user_id)
             ->where('participante_id', $p->id)
-            ->where(fn ($q) => $q->whereNull('cancelada')->orWhere('cancelada', false));
+            ->where('cancelada', false)
+            ->whereRaw(\App\Services\BiService::dedupParticipanteSql('efd_notas'));
     }
 
-    /** Itens das notas EFD do participante, não canceladas (join defensivo). */
-    private function itensQuery(Participante $p): Builder
+    /**
+     * Consolidado C190 (fonte canônica de ICMS/IPI/CFOP/CST) das notas fiscais não canceladas.
+     * Mesma base de TopMovimentacaoQuery::cfops → infográfico e tabela do dossiê reconciliam.
+     */
+    private function consolidadosQuery(Participante $p): Builder
     {
-        return DB::table('efd_notas_itens as i')
-            ->join('efd_notas as n', 'n.id', '=', 'i.efd_nota_id')
+        return DB::table('efd_notas_consolidados as c')
+            ->join('efd_notas as n', 'n.id', '=', 'c.efd_nota_id')
             ->where('n.user_id', $p->user_id)
             ->where('n.participante_id', $p->id)
+            ->where('n.origem_arquivo', 'fiscal')
             ->where(fn ($q) => $q->whereNull('n.cancelada')->orWhere('n.cancelada', false));
     }
 
@@ -86,9 +96,10 @@ final class ParticipanteMovimentacaoService
 
     public function porCfop(Participante $p, int $limite = 10): array
     {
-        return $this->itensQuery($p)
-            ->selectRaw('i.cfop as cfop, count(*) as qtd, coalesce(sum(i.valor_total),0) as valor')
-            ->groupBy('i.cfop')
+        return $this->consolidadosQuery($p)
+            ->whereNotNull('c.cfop')
+            ->selectRaw('c.cfop as cfop, count(*) as qtd, coalesce(sum(c.valor_operacao),0) as valor')
+            ->groupBy('c.cfop')
             ->orderByDesc('valor')
             ->limit($limite)
             ->get()
@@ -107,33 +118,46 @@ final class ParticipanteMovimentacaoService
 
     public function porCst(Participante $p): array
     {
-        return $this->itensQuery($p)
-            ->selectRaw('i.cst_icms as cst, count(*) as qtd, coalesce(sum(i.valor_total),0) as valor')
-            ->groupBy('i.cst_icms')
+        return $this->consolidadosQuery($p)
+            ->selectRaw('c.cst_icms as cst, count(*) as qtd, coalesce(sum(c.valor_operacao),0) as valor')
+            ->groupBy('c.cst_icms')
             ->orderByDesc('valor')
             ->get()
             ->map(fn ($r) => ['cst' => (string) $r->cst, 'qtd' => (int) $r->qtd, 'valor' => (float) $r->valor])
             ->all();
     }
 
+    /**
+     * ICMS/IPI vêm do C190 consolidado (fonte canônica; o item-level valor_icms fica ~zero na
+     * EFD ICMS/IPI, o imposto está no registro C190). PIS/COFINS vêm dos itens da EFD de
+     * contribuições. Alíquota média ponderada pela base ICMS (C190), sem diluir com PIS/COFINS.
+     */
     public function impostos(Participante $p): array
     {
-        $r = $this->itensQuery($p)
+        $r = $this->consolidadosQuery($p)
             ->selectRaw('
-                coalesce(sum(i.valor_icms),0) as icms,
-                coalesce(sum(i.valor_pis),0) as pis,
-                coalesce(sum(i.valor_cofins),0) as cofins,
-                coalesce(sum(i.aliquota_icms * i.valor_total),0) as aliq_peso,
-                coalesce(sum(i.valor_total),0) as base
+                coalesce(sum(c.valor_icms),0) as icms,
+                coalesce(sum(c.valor_ipi),0) as ipi,
+                coalesce(sum(c.aliquota_icms * c.valor_operacao),0) as aliq_peso,
+                coalesce(sum(c.valor_operacao),0) as base
             ')
+            ->first();
+
+        $pc = DB::table('efd_notas_itens as i')
+            ->join('efd_notas as n', 'n.id', '=', 'i.efd_nota_id')
+            ->where('n.user_id', $p->user_id)
+            ->where('n.participante_id', $p->id)
+            ->where('n.origem_arquivo', 'contribuicoes')
+            ->where(fn ($q) => $q->whereNull('n.cancelada')->orWhere('n.cancelada', false))
+            ->selectRaw('coalesce(sum(i.valor_pis),0) as pis, coalesce(sum(i.valor_cofins),0) as cofins')
             ->first();
 
         $base = (float) ($r->base ?? 0);
 
         return [
             'icms' => (float) ($r->icms ?? 0),
-            'pis' => (float) ($r->pis ?? 0),
-            'cofins' => (float) ($r->cofins ?? 0),
+            'pis' => (float) ($pc->pis ?? 0),
+            'cofins' => (float) ($pc->cofins ?? 0),
             'aliquota_icms_media' => $base > 0 ? round(((float) $r->aliq_peso) / $base, 2) : 0.0,
         ];
     }

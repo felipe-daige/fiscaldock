@@ -74,7 +74,6 @@
                         <option value="fiscal_federal">Fiscal Federal</option>
                         <option value="fiscal_completo">Fiscal Completo</option>
                         <option value="due_diligence">Due Diligence</option>
-                        <option value="esg">ESG</option>
                         <option value="completo">Completo</option>
                     </select>
                 </div>
@@ -268,7 +267,6 @@
                         'fiscal_federal': 'fiscal federal',
                         'fiscal_completo': 'fiscal completo',
                         'due_diligence': 'due diligence',
-                        'esg': 'esg',
                         'completo': 'completo',
                     };
                     if (!planoCell.includes(planoNomes[plano] || plano)) {
@@ -385,14 +383,6 @@
                     html += '<div class="bg-gray-50 rounded border border-gray-200 p-3">';
                     html += '<p class="text-xs text-gray-500">CNDT (Trabalhista)</p>';
                     html += '<p class="text-sm font-semibold ' + cndtClass + '">' + r.detalhes.cndt.status + '</p>';
-                    html += '</div>';
-                }
-
-                if (r.detalhes.protestos !== undefined) {
-                    const protestosClass = r.detalhes.protestos === 0 ? 'text-green-600' : 'text-red-600';
-                    html += '<div class="bg-gray-50 rounded border border-gray-200 p-3">';
-                    html += '<p class="text-xs text-gray-500">Protestos</p>';
-                    html += '<p class="text-sm font-semibold ' + protestosClass + '">' + r.detalhes.protestos + ' registro(s)</p>';
                     html += '</div>';
                 }
 

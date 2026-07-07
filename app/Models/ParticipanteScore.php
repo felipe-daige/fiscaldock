@@ -19,8 +19,6 @@ class ParticipanteScore extends Model
         'score_fgts',
         'score_trabalhista',
         'score_compliance',
-        'score_esg',
-        'score_protestos',
         'score_total',
         'score_credito_reforma',
         'classificacao',
@@ -38,8 +36,6 @@ class ParticipanteScore extends Model
             'score_fgts' => 'integer',
             'score_trabalhista' => 'integer',
             'score_compliance' => 'integer',
-            'score_esg' => 'integer',
-            'score_protestos' => 'integer',
             'score_total' => 'integer',
             'score_credito_reforma' => 'integer',
             'ultima_consulta_em' => 'datetime',
@@ -154,8 +150,8 @@ class ParticipanteScore extends Model
 
     /**
      * Categorias avaliáveis com seus subscores. `score = null` → não avaliado nesta consulta
-     * (fonte não consultada / INDETERMINADA). ESG, Protestos e Sanções (CGU/CNJ) ficam de fora
-     * (fonte fora dos planos ativos; ver docs/score-fiscal/README.md e RiskScoreService::$pesos).
+     * (fonte não consultada / INDETERMINADA). Sanções (CGU/CNJ) ficam de fora do peso
+     * (ver RiskScoreService::$pesos).
      */
     public function getScoresDetalhadosAttribute(): array
     {

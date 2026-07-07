@@ -1015,17 +1015,6 @@ class ValidacaoContabilService
                     $score += 100;
                 }
 
-                if ($scoreEmit->score_esg >= 100) {
-                    $alertas[] = [
-                        'categoria' => 'operacoes',
-                        'nivel' => 'bloqueante',
-                        'codigo' => 'EMIT_TRABALHO_ESCRAVO',
-                        'mensagem' => 'Emitente em lista de trabalho escravo',
-                        'detalhe' => "CNPJ {$ctx['emit_cnpj']} consta na lista suja",
-                    ];
-                    $score += 100;
-                }
-
                 if ($scoreEmit->classificacao === 'critico') {
                     $alertas[] = [
                         'categoria' => 'operacoes',

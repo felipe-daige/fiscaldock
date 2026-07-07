@@ -43,7 +43,6 @@ return [
         'sintegra' => 'certidoes_estaduais',
         'cgu_cnc' => 'sancoes',
         'cnj_improbidade' => 'sancoes',
-        'protestos' => 'sancoes',
     ],
 
     // Nome amigável de cada fonte, usado na mensagem de progresso ("Consultando {nome} (i de N)").
@@ -59,7 +58,6 @@ return [
         'sintegra' => 'SINTEGRA',
         'cgu_cnc' => 'sanções CGU',
         'cnj_improbidade' => 'improbidade (CNJ)',
-        'protestos' => 'protestos',
     ],
 
     // Atributos de consultas_incluidas que NÃO são fontes — renderizados inline a partir dos
@@ -206,7 +204,6 @@ return [
         'cgu_cnc' => (int) env('CONSULTA_CREDITOS_CGU_CNC', 2),
         'cnj_improbidade' => (int) env('CONSULTA_CREDITOS_CNJ_IMPROBIDADE', 2),
         'cnd_municipal' => (int) env('CONSULTA_CREDITOS_CND_MUNICIPAL', 2),
-        'protestos' => (int) env('CONSULTA_CREDITOS_PROTESTOS', 2),
     ],
 
     // Reconsulta de fontes com falha transitória (classe `retry`, ex. código 600).
