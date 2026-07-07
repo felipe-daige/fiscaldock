@@ -43,8 +43,6 @@ class ParticipanteController extends Controller
         'crf_fgts' => 'FGTS',
         'cndt' => 'CNDT',
         'sintegra' => 'Sintegra',
-        'cgu_cnc' => 'Sanções',
-        'cnj_improbidade' => 'Improbidade',
     ];
 
     public function __construct(
@@ -605,8 +603,8 @@ class ParticipanteController extends Controller
             }
 
             // Badge compacto de TODAS as fontes que a última consulta trouxe (CND Federal/
-            // Estadual/Municipal, FGTS, CNDT, SINTEGRA, sanções CGU, improbidade CNJ). A cor
-            // reflete a regularidade classificada pela fonte única (CertidaoBadge via presenter).
+            // Estadual/Municipal, FGTS, CNDT, SINTEGRA). A cor reflete a regularidade
+            // classificada pela fonte única (CertidaoBadge via presenter).
             $certidoesBadges = [];
             if ($ultimoResultado) {
                 foreach ($this->detalhePresenter->blocos($ultimoResultado) as $bloco) {

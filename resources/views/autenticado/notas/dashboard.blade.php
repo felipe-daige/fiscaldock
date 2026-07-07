@@ -764,14 +764,6 @@
                         <p class="text-[10px] text-gray-400 mt-0.5">Regularidade fiscal</p>
                         <span class="mt-1.5 px-2 py-0.5 text-[10px] font-medium rounded-full bg-gray-100 text-gray-500">Em breve</span>
                     </div>
-                    <div class="flex flex-col items-center text-center p-3 rounded border border-dashed border-gray-300 bg-gray-50">
-                        <div class="w-10 h-10 bg-white rounded flex items-center justify-center mb-2 border border-gray-300">
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                        </div>
-                        <p class="text-xs font-medium text-gray-600">CEIS / CNEP</p>
-                        <p class="text-[10px] text-gray-400 mt-0.5">Empresas inidôneas</p>
-                        <span class="mt-1.5 px-2 py-0.5 text-[10px] font-medium rounded-full bg-gray-100 text-gray-500">Em breve</span>
-                    </div>
                 </div>
             </div>
         </div>

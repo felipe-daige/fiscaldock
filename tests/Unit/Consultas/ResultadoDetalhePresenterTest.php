@@ -147,41 +147,6 @@ it('completa a UF da CND Estadual a partir do endereço quando a resposta vem se
     expect($itens->get('UF')['valor'])->toBe('MS');
 });
 
-it('monta bloco de sanções (CGU) com bases e classificação regular quando nada consta', function () {
-    $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
-        'cgu_cnc' => [
-            'possui_sancao' => false,
-            'bases' => [
-                ['nome' => 'CEIS', 'situacao' => 'Nada Consta'],
-                ['nome' => 'CNEP', 'situacao' => 'Nada Consta'],
-            ],
-            'comprovante' => 'https://exemplo/comprovante.pdf',
-        ],
-    ]));
-
-    $b = bloco($blocos, 'cgu_cnc');
-    expect($b)->not->toBeNull();
-    expect($b['badge']['label'])->toBe('Regular');
-    expect($b['comprovante_url'])->toBe('https://exemplo/comprovante.pdf');
-    $tituloListas = array_column($b['listas'], 'titulo');
-    expect($tituloListas)->toContain('Bases consultadas');
-});
-
-it('monta bloco de improbidade com comprovante e badge regular sem condenação', function () {
-    $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
-        'cnj_improbidade' => [
-            'possui_condenacao' => false,
-            'total_condenacoes' => 0,
-            'comprovante' => 'https://exemplo/cnj.pdf',
-        ],
-    ]));
-
-    $b = bloco($blocos, 'cnj_improbidade');
-    expect($b)->not->toBeNull();
-    expect($b['badge']['label'])->toBe('Regular');
-    expect($b['comprovante_url'])->toBe('https://exemplo/cnj.pdf');
-});
-
 it('mostra CND Municipal INDISPONIVEL com mensagem em vez de sumir', function () {
     $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
         'cnd_municipal' => ['status' => 'INDISPONIVEL', 'mensagem' => 'CND Municipal não disponível para DOURADOS/MS.'],
@@ -199,7 +164,7 @@ it('não cria bloco para fonte ausente', function () {
     ]));
 
     expect(bloco($blocos, 'cndt'))->toBeNull();
-    expect(bloco($blocos, 'cgu_cnc'))->toBeNull();
+    expect(bloco($blocos, 'sintegra'))->toBeNull();
 });
 
 it('gera resumo textual com situação cadastral e regularidade quando tudo OK', function () {
@@ -209,26 +174,21 @@ it('gera resumo textual com situação cadastral e regularidade quando tudo OK',
         'regime_tributario' => 'Simples Nacional',
         'cnd_federal' => ['status' => 'Negativa'],
         'cndt' => ['status' => 'Negativa'],
-        'cgu_cnc' => ['possui_sancao' => false],
-        'cnj_improbidade' => ['possui_condenacao' => false],
     ]));
 
     expect($texto)->toContain('ATIVA');
     expect(mb_strtolower($texto))->toContain('regular');
-    expect(mb_strtolower($texto))->toContain('sem sanç');
 });
 
 it('gera resumo textual sinalizando pendências e inatividade', function () {
     $texto = (new ResultadoDetalhePresenter())->resumoTextual(resultadoComDados([
         'situacao_cadastral' => 'BAIXADA',
         'cnd_federal' => ['status' => 'Positiva'],
-        'cgu_cnc' => ['possui_sancao' => true, 'bases_com_registro' => ['CEIS']],
     ]));
 
     $low = mb_strtolower($texto);
     expect($low)->toContain('baixada');
     expect($low)->toContain('pend'); // pendência/pendências
-    expect($low)->toContain('sanç');
 });
 
 it('agrega a análise do lote por fonte e por CNPJ', function () {
@@ -262,7 +222,7 @@ it('agrega a análise do lote por fonte e por CNPJ', function () {
 
 it('ordena cadastro primeiro e mantém ordem canônica das fontes', function () {
     $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
-        'cnj_improbidade' => ['possui_condenacao' => false],
+        'sintegra' => ['situacao' => 'Habilitado'],
         'cnd_federal' => ['status' => 'Negativa'],
         'razao_social' => 'ACME',
         'situacao_cadastral' => 'ATIVA',
@@ -270,7 +230,7 @@ it('ordena cadastro primeiro e mantém ordem canônica das fontes', function () 
 
     $chaves = array_column($blocos, 'chave');
     expect($chaves[0])->toBe('cadastro');
-    expect(array_search('cnd_federal', $chaves, true))->toBeLessThan(array_search('cnj_improbidade', $chaves, true));
+    expect(array_search('cnd_federal', $chaves, true))->toBeLessThan(array_search('sintegra', $chaves, true));
 });
 
 // ── Strip de certidões (coluna agrupada) + estado "Falhou" ───────────────────

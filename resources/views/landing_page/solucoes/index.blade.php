@@ -421,7 +421,7 @@
                     Saiba antes do fisco quando um fornecedor vira risco
                 </h2>
                 <p class="text-base text-gray-600 leading-relaxed mb-6">
-                    Cada CNPJ extraído do SPED recebe consulta de situação cadastral via Receita Federal e, nas consultas premium pagas, enriquecimento via sistemas públicos oficiais (CND Federal). Integração com SINTEGRA e CEIS está no roadmap.
+                    Cada CNPJ extraído do SPED recebe consulta de situação cadastral via Receita Federal e, nas consultas premium pagas, enriquecimento via sistemas públicos oficiais (CND Federal, CND Estadual, CND Municipal, CNDT, FGTS e SINTEGRA).
                 </p>
                 <ul class="space-y-3 mb-7">
                     @foreach ([
@@ -545,7 +545,7 @@
                                     <div class="sol-score" style="background: linear-gradient(135deg, #b91c1c 0%, #ef4444 100%);">94</div>
                                     <div class="min-w-0">
                                         <div class="text-xs font-semibold text-gray-900 truncate">Metal Forja do Sul ME</div>
-                                        <div class="text-[10px] text-gray-500">CNPJ baixado · CEIS</div>
+                                        <div class="text-[10px] text-gray-500">CNPJ baixado · CND positiva</div>
                                     </div>
                                 </div>
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold" style="background-color: #fef2f2; color: #b91c1c;">crítico</span>

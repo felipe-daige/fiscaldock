@@ -1004,17 +1004,6 @@ class ValidacaoContabilService
             $scoreEmit = ParticipanteScore::where('participante_id', $ctx['emit_participante_id'])->first();
 
             if ($scoreEmit) {
-                if ($scoreEmit->score_compliance >= 100) {
-                    $alertas[] = [
-                        'categoria' => 'operacoes',
-                        'nivel' => 'bloqueante',
-                        'codigo' => 'EMIT_LISTA_RESTRITIVA',
-                        'mensagem' => 'Emitente em lista restritiva (CEIS/CNEP/TCU)',
-                        'detalhe' => "CNPJ {$ctx['emit_cnpj']} consta em cadastro de empresas inidoneas",
-                    ];
-                    $score += 100;
-                }
-
                 if ($scoreEmit->classificacao === 'critico') {
                     $alertas[] = [
                         'categoria' => 'operacoes',
@@ -1025,20 +1014,6 @@ class ValidacaoContabilService
                     ];
                     $score += 50;
                 }
-            }
-        }
-
-        if ($ctx['dest_participante_id'] && $ctx['tipo_nota'] === 0) {
-            $scoreDest = ParticipanteScore::where('participante_id', $ctx['dest_participante_id'])->first();
-            if ($scoreDest && $scoreDest->score_compliance >= 100) {
-                $alertas[] = [
-                    'categoria' => 'operacoes',
-                    'nivel' => 'atencao',
-                    'codigo' => 'DEST_LISTA_RESTRITIVA',
-                    'mensagem' => 'Destinatario em lista restritiva',
-                    'detalhe' => "CNPJ {$ctx['dest_cnpj']} em cadastro restritivo",
-                ];
-                $score += 40;
             }
         }
 

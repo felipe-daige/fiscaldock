@@ -120,9 +120,7 @@ final class PlanoCatalog
             [
                 'codigo' => 'due_diligence',
                 'nome' => 'Due Diligence',
-                'descricao' => 'Compliance ampliado com sanções e CNJ',
-                // processos (tribunal/trt) removidos por ora: faltam parâmetros (606).
-                // Reativar quando resolvido no InfoSimples.
+                'descricao' => 'Compliance ampliado com certidões federais, estaduais e municipais',
                 'consultas_incluidas' => [
                     'situacao_cadastral',
                     'dados_cadastrais',
@@ -136,15 +134,12 @@ final class PlanoCatalog
                     'cndt',
                     'cnd_estadual',
                     'cnd_municipal',
-                    'cgu_cnc',
-                    'cnj_improbidade',
                 ],
                 'etapas' => [
                     ['numero' => 1, 'chave' => 'inicializacao', 'label' => 'Preparando consulta'],
                     ['numero' => 2, 'chave' => 'cadastrais', 'label' => 'Dados cadastrais'],
                     ['numero' => 3, 'chave' => 'certidoes_federais', 'label' => 'Certidões Federais'],
                     ['numero' => 4, 'chave' => 'certidoes_estaduais', 'label' => 'Certidões Estaduais/Municipais'],
-                    ['numero' => 5, 'chave' => 'sancoes', 'label' => 'Sanções e Processos'],
                     ['numero' => 0, 'chave' => 'finalizacao', 'label' => 'Salvando resultados'],
                 ],
                 'custo_creditos' => 35,
@@ -155,7 +150,7 @@ final class PlanoCatalog
             [
                 'codigo' => 'enterprise',
                 'nome' => 'Enterprise',
-                'descricao' => 'Raio-X completo do CNPJ, incluindo processos judiciais no CNJ',
+                'descricao' => 'Raio-X completo do CNPJ',
                 'consultas_incluidas' => [
                     'situacao_cadastral',
                     'dados_cadastrais',
@@ -164,20 +159,17 @@ final class PlanoCatalog
                     'qsa',
                     'regime_tributario',
                     'sintegra',
-                    'tcu_consolidada',
                     'cnd_federal',
                     'crf_fgts',
                     'cnd_estadual',
+                    'cnd_municipal',
                     'cndt',
-                    'lista_devedores_pgfn',
-                    'processos_cnj',
                 ],
                 'etapas' => [
                     ['numero' => 1, 'chave' => 'inicializacao', 'label' => 'Preparando consulta'],
                     ['numero' => 2, 'chave' => 'cadastrais', 'label' => 'Dados cadastrais'],
                     ['numero' => 3, 'chave' => 'certidoes_federais', 'label' => 'Certidões Federais'],
                     ['numero' => 4, 'chave' => 'certidoes_estaduais', 'label' => 'Certidões Estaduais/Municipais'],
-                    ['numero' => 5, 'chave' => 'sancoes', 'label' => 'Sanções e Processos'],
                     ['numero' => 0, 'chave' => 'finalizacao', 'label' => 'Salvando resultados'],
                 ],
                 'custo_creditos' => 12,

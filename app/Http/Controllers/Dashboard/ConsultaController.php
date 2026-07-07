@@ -639,13 +639,11 @@ class ConsultaController extends Controller
             'simples_nacional',
             'mei',
             'sintegra',
-            'tcu_consolidada',
             'cnd_federal',
             'crf_fgts',
             'cnd_estadual',
+            'cnd_municipal',
             'cndt',
-            'lista_devedores_pgfn',
-            'processos_cnj',
         ];
 
         return collect($mapaFallback)

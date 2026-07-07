@@ -60,7 +60,7 @@ class ProcessarConsultaJob implements ShouldQueue
         // fontes UF-dependentes (ex: CND Estadual). O cadastro é a 1ª fonte de todo plano.
         $alvo = $this->alvo;
 
-        // Ordena as fontes pela ETAPA (cadastrais→federais→estaduais→sancoes) para que o
+        // Ordena as fontes pela ETAPA (cadastrais→federais→estaduais) para que o
         // progresso avance de forma monotônica. O cadastro (etapa 2) cai naturalmente em
         // primeiro, garantindo a captura de UF/município antes das fontes UF-dependentes.
         $fontes = $registry->fontesDe($this->consultasIncluidas);
@@ -88,7 +88,7 @@ class ProcessarConsultaJob implements ShouldQueue
 
             // % GLOBAL (alvos concluídos + fração de fontes do alvo atual), monotônico — a UI
             // não tem clamp anti-retrocesso, então o valor precisa só crescer. Várias fontes
-            // caem na mesma etapa (federais/estaduais/sanções): emitir esse % + a mensagem/campos
+            // caem na mesma etapa (federais/estaduais): emitir esse % + a mensagem/campos
             // por fonte faz a barra AVANÇAR dentro do grupo (antes ficava "parada" porque o
             // payload por grupo era idêntico e o SSE dedup-a por hash) E faz lotes multi-CNPJ
             // não resetarem a 0% a cada empresa. A mensagem nomeia a fonte (e a empresa, se >1).

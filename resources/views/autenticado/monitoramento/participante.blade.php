@@ -751,39 +751,6 @@
                             @endif
 
 
-                            {{-- Compliance (TCU/CEIS/CNEP) --}}
-                            @if(in_array('tcu_consolidada', $consultasRealizadas) && isset($dados['tcu_consolidada']))
-                            <div class="border-t border-gray-200 pt-4">
-                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Compliance</h3>
-                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
-                                        <dt class="text-xs text-gray-500">CEIS</dt>
-                                        <dd class="mt-1 text-sm font-semibold {{ !($dados['tcu_consolidada']['ceis'] ?? false) ? 'text-green-600' : 'text-red-600' }}">
-                                            {{ ($dados['tcu_consolidada']['ceis'] ?? false) ? 'Consta' : 'Nada consta' }}
-                                        </dd>
-                                    </div>
-                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
-                                        <dt class="text-xs text-gray-500">CNEP</dt>
-                                        <dd class="mt-1 text-sm font-semibold {{ !($dados['tcu_consolidada']['cnep'] ?? false) ? 'text-green-600' : 'text-red-600' }}">
-                                            {{ ($dados['tcu_consolidada']['cnep'] ?? false) ? 'Consta' : 'Nada consta' }}
-                                        </dd>
-                                    </div>
-                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
-                                        <dt class="text-xs text-gray-500">Acórdão TCU</dt>
-                                        <dd class="mt-1 text-sm font-semibold {{ !($dados['tcu_consolidada']['acordao_tcu'] ?? false) ? 'text-green-600' : 'text-red-600' }}">
-                                            {{ ($dados['tcu_consolidada']['acordao_tcu'] ?? false) ? 'Consta' : 'Nada consta' }}
-                                        </dd>
-                                    </div>
-                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
-                                        <dt class="text-xs text-gray-500">Licitação Impedida</dt>
-                                        <dd class="mt-1 text-sm font-semibold {{ !($dados['tcu_consolidada']['licitacao_impedida'] ?? false) ? 'text-green-600' : 'text-red-600' }}">
-                                            {{ ($dados['tcu_consolidada']['licitacao_impedida'] ?? false) ? 'Sim' : 'Não' }}
-                                        </dd>
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
-
                             {{-- QSA (Socios) --}}
                             @if(in_array('qsa', $consultasRealizadas) && !empty($dados['qsa']))
                             <div class="border-t border-gray-200 pt-4">

@@ -254,7 +254,7 @@
                     <div>
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Como funciona o saldo</p>
                         <ul class="space-y-1.5 text-[13px] text-gray-600 list-disc pl-4">
-                            <li>É saldo em reais para rodar <strong>consultas de CNPJ</strong> (situação cadastral, certidões, sanções) e <strong>clearance de notas fiscais</strong>.</li>
+                            <li>É saldo em reais para rodar <strong>consultas de CNPJ</strong> (situação cadastral e certidões) e <strong>clearance de notas fiscais</strong>.</li>
                             <li>Cada consulta tem preço fixo em reais conforme a <strong>profundidade</strong> escolhida — uma verificação simples custa menos que uma análise completa.</li>
                             <li>O saldo de boas-vindas <strong>expira em {{ config('trial.validade_dias') }} dias</strong>. Depois, você adiciona saldo para continuar no seu ritmo.</li>
                         </ul>

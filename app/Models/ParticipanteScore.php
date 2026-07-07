@@ -18,7 +18,6 @@ class ParticipanteScore extends Model
         'score_cnd_estadual',
         'score_fgts',
         'score_trabalhista',
-        'score_compliance',
         'score_total',
         'score_credito_reforma',
         'classificacao',
@@ -35,7 +34,6 @@ class ParticipanteScore extends Model
             'score_cnd_estadual' => 'integer',
             'score_fgts' => 'integer',
             'score_trabalhista' => 'integer',
-            'score_compliance' => 'integer',
             'score_total' => 'integer',
             'score_credito_reforma' => 'integer',
             'ultima_consulta_em' => 'datetime',
@@ -150,8 +148,7 @@ class ParticipanteScore extends Model
 
     /**
      * Categorias avaliáveis com seus subscores. `score = null` → não avaliado nesta consulta
-     * (fonte não consultada / INDETERMINADA). Sanções (CGU/CNJ) ficam de fora do peso
-     * (ver RiskScoreService::$pesos).
+     * (fonte não consultada / INDETERMINADA).
      */
     public function getScoresDetalhadosAttribute(): array
     {
@@ -183,7 +180,6 @@ class ParticipanteScore extends Model
                 'score' => $this->score_trabalhista,
                 'avaliado' => $this->score_trabalhista !== null,
             ],
-            // 'compliance' (Sanções CGU/CNJ) removido do detalhamento — fonte fora dos planos ativos.
         ];
     }
 

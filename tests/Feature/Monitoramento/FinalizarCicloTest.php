@@ -24,7 +24,7 @@ it('marca a consulta sucesso e deriva situação irregular do resultado do lote'
     ConsultaResultado::create([
         'consulta_lote_id' => $lote->id, 'participante_id' => $p->id,
         'status' => ConsultaResultado::STATUS_SUCESSO,
-        'resultado_dados' => ['situacao_cadastral' => 'ATIVA', 'cgu_cnc' => ['possui_sancao' => true]],
+        'resultado_dados' => ['situacao_cadastral' => 'ATIVA', 'cnd_federal' => ['status' => 'Positiva']],
     ]);
     $consulta = MonitoramentoConsulta::create([
         'user_id' => $user->id, 'plano_id' => $plano->id, 'participante_id' => $p->id,

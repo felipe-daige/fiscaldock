@@ -2997,7 +2997,7 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
                         <div class="fx-glyph mb-5" style="background-color: #eef2f7; border: 1px solid #dce3ed; color: #1e4fa0;">CNPJ</div>
                         <h3 class="text-base font-bold text-gray-900 mb-2">Consulta de CNPJ</h3>
                         <p class="text-sm text-gray-500 leading-relaxed mb-4">
-                            Um CNPJ entra, um dossiê sai: situação cadastral, regime tributário, certidões federais e estaduais, CNDT, FGTS, sanções e improbidade — 9 fontes oficiais em uma consulta, um a um ou em lote.
+                            Um CNPJ entra, um dossiê sai: situação cadastral, regime tributário, certidões federais, estaduais e municipais, CNDT, FGTS e SINTEGRA — fontes oficiais em uma consulta, um a um ou em lote.
                         </p>
                         <ul class="space-y-2">
                             <li class="flex items-start text-xs text-gray-600">
@@ -3012,7 +3012,7 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
                         <div class="flex flex-wrap gap-2" style="margin-top: auto; padding-top: 1.25rem; border-top: 1px solid #e5e7eb;">
                             <span class="text-[10px] font-medium uppercase tracking-wide text-gray-400 whitespace-nowrap" style="background-color: #f3f4f6; padding: 4px 10px; border-radius: 4px; display: inline-block;">Receita Federal</span>
                             <span class="text-[10px] font-medium uppercase tracking-wide text-gray-400 whitespace-nowrap" style="background-color: #f3f4f6; padding: 4px 10px; border-radius: 4px; display: inline-block;">PGFN</span>
-                            <span class="text-[10px] font-medium uppercase tracking-wide text-gray-400 whitespace-nowrap" style="background-color: #f3f4f6; padding: 4px 10px; border-radius: 4px; display: inline-block;">CEIS · CNJ</span>
+                            <span class="text-[10px] font-medium uppercase tracking-wide text-gray-400 whitespace-nowrap" style="background-color: #f3f4f6; padding: 4px 10px; border-radius: 4px; display: inline-block;">SINTEGRA · TST</span>
                         </div>
                     </div>
                     <!-- Vinheta: dossiê do CNPJ -->
@@ -3035,8 +3035,8 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
                                 <span class="fx-status fx-status--ok">regular</span>
                             </div>
                             <div class="fx-row" style="--d: 0.46s;">
-                                <span class="fx-row-doc">Sanções · CEIS</span>
-                                <span class="fx-status fx-status--ok">nada consta</span>
+                                <span class="fx-row-doc">CND Municipal · Prefeitura</span>
+                                <span class="fx-status fx-status--ok">regular</span>
                             </div>
                             <div class="fx-row" style="--d: 0.58s;">
                                 <span class="fx-row-doc">CND Estadual · SEFAZ</span>
@@ -3462,7 +3462,7 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
                 <h3>Fornecedor novo na cadeia</h3>
                 <p class="scenario-hora">Antes do primeiro pedido</p>
                 <p class="scenario-texto">
-                    Um CNPJ desconhecido entra na cadeia de compras do cliente. Antes da primeira nota, ele passa por <strong>situação cadastral, sanções (CEIS), improbidade e certidões</strong>. Score baixo? Você recomenda garantias — ou recusar.
+                    Um CNPJ desconhecido entra na cadeia de compras do cliente. Antes da primeira nota, ele passa por <strong>situação cadastral e certidões (federais, estaduais e municipais)</strong>. Score baixo? Você recomenda garantias — ou recusar.
                 </p>
                 <div class="scenario-outcome">
                     <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
@@ -3680,7 +3680,7 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
                         <span class="faq-icon" aria-hidden="true"></span>
                     </summary>
                     <div class="faq-a">
-                        Receita Federal, SEFAZ (todos os estados), PGFN, SINTEGRA e CEIS. Todos os dados vêm de fontes oficiais do governo, consultados em tempo real. Nenhuma informação é estimada ou inferida.
+                        Receita Federal, SEFAZ (todos os estados), PGFN, TST (CNDT), Caixa (FGTS), prefeituras (CND Municipal) e SINTEGRA. Todos os dados vêm de fontes oficiais do governo, consultados em tempo real. Nenhuma informação é estimada ou inferida.
                     </div>
                 </details>
 

@@ -205,11 +205,6 @@ class ConsultaReportService
                 'cndt_status' => $this->statusCertidaoExport($dados['cndt'] ?? null),
                 'cndt_validade' => $dados['cndt']['data_validade'] ?? null,
 
-                // Compliance
-                'tcu_situacao' => $dados['tcu_consolidada']['situacao'] ?? ($dados['tcu'] ?? null),
-                'ceis' => $this->formatarBoolean($dados['ceis'] ?? null),
-                'cnep' => $this->formatarBoolean($dados['cnep'] ?? null),
-
                 // Score calculado
                 'score_total' => $scoreData['score_total'],
                 'classificacao' => $scoreData['classificacao'],
@@ -360,12 +355,6 @@ class ConsultaReportService
             $colunas[] = 'CNDT Validade';
         }
 
-        if (in_array('tcu_consolidada', $consultasIncluidas)) {
-            $colunas[] = 'TCU Situacao';
-            $colunas[] = 'CEIS';
-            $colunas[] = 'CNEP';
-        }
-
         // Sempre incluir score
         $colunas[] = 'Score Risco';
         $colunas[] = 'Classificacao';
@@ -402,9 +391,6 @@ class ConsultaReportService
                 'CRF FGTS Status' => $resultado['crf_fgts_status'],
                 'CNDT Status' => $resultado['cndt_status'],
                 'CNDT Validade' => $resultado['cndt_validade'],
-                'TCU Situacao' => $resultado['tcu_situacao'],
-                'CEIS' => $resultado['ceis'],
-                'CNEP' => $resultado['cnep'],
                 'Score Risco' => $resultado['score_total'],
                 'Classificacao' => $this->getLabelClassificacao($resultado['classificacao']),
                 default => '',

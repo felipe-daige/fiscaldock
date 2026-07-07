@@ -29,14 +29,13 @@
                         <option value="3">Últimos 3 meses</option>
                         <option value="1">Este mês</option>
                     </select>
-                    {{-- Exports — <x-download-button> (onclick inline cache-robusto + spinner) --}}
+                    {{-- Exports — dropdown único (modais de planilha/PDF permanecem idênticos) --}}
                     @php $dataArq = now()->format('Ymd'); @endphp
-                    <button type="button"
-                            onclick="document.getElementById('modal-export-bi-pdf').classList.remove('hidden')"
-                            class="w-full sm:w-auto px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">PDF</button>
-                    <button type="button"
-                            onclick="document.getElementById('modal-export-bi').classList.remove('hidden')"
-                            class="w-full sm:w-auto px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">Planilha</button>
+                    <x-acoes-menu label="Exportar" align="right">
+                        <x-acoes-item onclick="document.getElementById('modal-export-bi').classList.remove('hidden')">Excel (XLSX)</x-acoes-item>
+                        <x-acoes-item onclick="document.getElementById('modal-export-bi').classList.remove('hidden')">Excel (CSV)</x-acoes-item>
+                        <x-acoes-item onclick="document.getElementById('modal-export-bi-pdf').classList.remove('hidden')">PDF</x-acoes-item>
+                    </x-acoes-menu>
                 </div>
             </div>
         </div>

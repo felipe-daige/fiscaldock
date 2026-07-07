@@ -39,7 +39,6 @@ it('persiste o score do participante ao fechar o lote', function () {
             'situacao_cadastral' => 'ATIVA',
             'cnd_federal' => ['status' => 'Negativa'],
             'cnd_estadual' => ['status' => 'Negativa'], // 2ª certidão → cobertura suficiente
-            'cgu_cnc' => ['possui_sancao' => false],
         ],
     ]);
 
@@ -49,13 +48,12 @@ it('persiste o score do participante ao fechar o lote', function () {
     expect($score)->not->toBeNull();
     expect($score->score_cadastral)->toBe(0);
     expect($score->score_cnd_federal)->toBe(0);
-    expect($score->score_compliance)->toBe(0);
     expect($score->score_total)->toBe(0);
     expect($score->classificacao)->toBe('baixo');
 });
 
 it('classifica risco alto quando CND federal e estadual positivas', function () {
-    // Compliance/sanções (CGU) saiu do score; certidão irregular maxa em 70 → 'alto'.
+    // Certidão irregular maxa em 70 → 'alto'.
     // cadastral omitido de propósito p/ não diluir o total (renorm só sobre federal+estadual).
     $user = User::factory()->create();
     $part = Participante::create([

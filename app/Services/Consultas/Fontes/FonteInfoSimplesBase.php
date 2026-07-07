@@ -5,7 +5,7 @@ namespace App\Services\Consultas\Fontes;
 use App\Services\Consultas\Contracts\Fonte;
 
 /**
- * Base comum a TODA fonte InfoSimples (certidões e não-certidões: sintegra, sanções...).
+ * Base comum a TODA fonte InfoSimples (certidões e não-certidões: sintegra...).
  * Centraliza provider, gate de cutover (pronta), params padrão, bloco e mensagem.
  * Cada fonte implementa `normalizar()` conforme seu shape.
  */

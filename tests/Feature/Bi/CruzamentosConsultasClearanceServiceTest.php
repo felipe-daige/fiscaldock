@@ -16,7 +16,7 @@ uses(RefreshDatabase::class);
 /**
  * Cenário: 3 fornecedores consultados —
  *  A: CND Federal Positiva (irregular) com R$ 1.500 em compras
- *  B: sanção CEIS (cgu_cnc) com R$ 2.000 em compras
+ *  B: CND Federal Negativa (regular) com R$ 2.000 em compras
  *  C: CND Federal Negativa (regular, controle) com R$ 300 em compras
  */
 function montarCenarioCruzamento(): array
@@ -31,7 +31,7 @@ function montarCenarioCruzamento(): array
     ]);
 
     $A = Participante::create(['user_id' => $user->id, 'cliente_id' => $cliente->id, 'documento' => '11111111000111', 'razao_social' => 'Fornecedor A Irregular']);
-    $B = Participante::create(['user_id' => $user->id, 'cliente_id' => $cliente->id, 'documento' => '22222222000122', 'razao_social' => 'Fornecedor B Sancionado']);
+    $B = Participante::create(['user_id' => $user->id, 'cliente_id' => $cliente->id, 'documento' => '22222222000122', 'razao_social' => 'Fornecedor B Regular']);
     $C = Participante::create(['user_id' => $user->id, 'cliente_id' => $cliente->id, 'documento' => '33333333000133', 'razao_social' => 'Fornecedor C Regular']);
 
     $lote = ConsultaLote::create([
@@ -44,7 +44,7 @@ function montarCenarioCruzamento(): array
     $risk = app(RiskScoreService::class);
     $dadosPorParticipante = [
         [$A, ['cnd_federal' => ['status' => 'Positiva']]],
-        [$B, ['cgu_cnc' => ['possui_sancao' => true, 'bases_com_registro' => ['CEIS']]]],
+        [$B, ['cnd_federal' => ['status' => 'Negativa']]],
         [$C, ['cnd_federal' => ['status' => 'Negativa']]],
     ];
     foreach ($dadosPorParticipante as [$participante, $dados]) {
@@ -81,27 +81,13 @@ it('cruza fornecedor irregular (CND positiva) × volume de compras', function ()
     expect(implode(' ', $a['motivos']))->toContain('Federal');
 });
 
-it('cruza fornecedor sancionado (CEIS/CGU) × volume de compras', function () {
-    $c = montarCenarioCruzamento();
-
-    $linhas = (new CruzamentosConsultasClearanceService)->fornecedoresSancionadosComCompras($c['user']->id);
-
-    expect($linhas)->toHaveCount(1);
-    $b = $linhas->first();
-    expect($b['participante_id'])->toBe($c['B']->id);
-    expect($b['valor_comprado'])->toBe(2000.00);
-    expect($b['bases'])->toContain('CEIS');
-});
-
 it('não inclui fornecedor regular nos cruzamentos de risco', function () {
     $c = montarCenarioCruzamento();
     $service = new CruzamentosConsultasClearanceService;
 
     $irregulares = $service->fornecedoresIrregularesComCompras($c['user']->id);
-    $sancionados = $service->fornecedoresSancionadosComCompras($c['user']->id);
 
     expect($irregulares->pluck('participante_id'))->not->toContain($c['C']->id);
-    expect($sancionados->pluck('participante_id'))->not->toContain($c['C']->id);
 });
 
 it('resume os KPIs dos cruzamentos', function () {
@@ -111,8 +97,6 @@ it('resume os KPIs dos cruzamentos', function () {
 
     expect($resumo['irregulares_qtd'])->toBe(1);
     expect($resumo['irregulares_valor'])->toBe(1500.00);
-    expect($resumo['sancionados_qtd'])->toBe(1);
-    expect($resumo['sancionados_valor'])->toBe(2000.00);
 });
 
 it('diagnostico conta consultados, fornecedores de entrada e o overlap', function () {

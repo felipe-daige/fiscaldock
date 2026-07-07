@@ -10,11 +10,11 @@ use App\Support\MensagemPublica;
 /**
  * Transforma o `resultado_dados` (jsonb por fonte) de um ConsultaResultado em blocos
  * exibíveis no detalhe expansível por CNPJ. Cada fonte vira um card com badge, itens
- * (label/valor/tooltip), listas (CNAEs, QSA, bases de sanção...), mensagem oficial e
+ * (label/valor/tooltip), listas (CNAEs, QSA...), mensagem oficial e
  * link de comprovante quando houver.
  *
  * Objetivo: exibir TUDO que a consulta trouxe — inclusive fontes que a tabela resumida
- * não mostra (CND Estadual/Municipal, SINTEGRA, sanções CGU, improbidade CNJ).
+ * não mostra (CND Estadual/Municipal, SINTEGRA).
  *
  * Bloco:
  *   ['chave','titulo','badge'(array|null),'itens'[],'listas'[],'mensagem'(?string),'comprovante_url'(?string)]
@@ -29,8 +29,6 @@ class ResultadoDetalhePresenter
         'crf_fgts',
         'cndt',
         'sintegra',
-        'cgu_cnc',
-        'cnj_improbidade',
     ];
 
     /** Fontes de regularidade exibidas no strip agrupado da tabela (sigla compacta). */
@@ -52,8 +50,6 @@ class ResultadoDetalhePresenter
         'cndt' => 'O Tribunal Superior do Trabalho (TST)',
         'crf_fgts' => 'A Caixa Econômica Federal',
         'sintegra' => 'O SINTEGRA (SEFAZ)',
-        'cgu_cnc' => 'A Controladoria-Geral da União (CGU)',
-        'cnj_improbidade' => 'O Conselho Nacional de Justiça (CNJ)',
     ];
 
     /**
@@ -123,8 +119,6 @@ class ResultadoDetalhePresenter
             }
 
             $bloco = match ($chave) {
-                'cgu_cnc' => $this->blocoSancoes($dados[$chave]),
-                'cnj_improbidade' => $this->blocoImprobidade($dados[$chave]),
                 'sintegra' => $this->blocoSintegra($dados[$chave], $ufFallback),
                 default => $this->blocoCertidao($chave, $dados[$chave], $ufFallback, $chave === 'cnd_federal' ? $notaFederal : null),
             };
@@ -306,7 +300,7 @@ class ResultadoDetalhePresenter
 
     /**
      * Resumo escrito (1 parágrafo) da situação de UM participante — leitura rápida do que a
-     * consulta apurou: situação cadastral, regularidade das certidões, sanções/condenações.
+     * consulta apurou: situação cadastral e regularidade das certidões.
      */
     public function resumoTextual(ConsultaResultado $resultado): ?string
     {
@@ -357,19 +351,6 @@ class ResultadoDetalhePresenter
             $frases[] = 'Sem emissão (indeterminada): '.implode(', ', $indeterminadas).'.';
         }
 
-        // Sanções (CGU) e improbidade (CNJ).
-        if (isset($dados['cgu_cnc']) && is_array($dados['cgu_cnc'])) {
-            $possui = (bool) ($dados['cgu_cnc']['possui_sancao'] ?? false);
-            $bases = array_values(array_filter((array) ($dados['cgu_cnc']['bases_com_registro'] ?? [])));
-            $frases[] = $possui
-                ? 'Possui sanção (CGU)'.($bases ? ' em '.implode(', ', $bases) : '').'.'
-                : 'Sem sanções na CGU.';
-        }
-        if (isset($dados['cnj_improbidade']) && is_array($dados['cnj_improbidade'])) {
-            $possui = (bool) ($dados['cnj_improbidade']['possui_condenacao'] ?? false);
-            $frases[] = $possui ? 'Possui condenação por improbidade (CNJ).' : 'Sem condenações por improbidade (CNJ).';
-        }
-
         $texto = trim(implode(' ', array_filter($frases)));
 
         return $texto !== '' ? $texto : null;
@@ -400,22 +381,19 @@ class ResultadoDetalhePresenter
             }
         }
 
-        $temSancao = (bool) ($dados['cgu_cnc']['possui_sancao'] ?? false)
-            || (bool) ($dados['cnj_improbidade']['possui_condenacao'] ?? false);
-
         // Situações cadastrais irregulares da Receita Federal (null/ATIVA não contam).
         $cadastral = strtoupper(trim((string) ($dados['situacao_cadastral'] ?? '')));
         $cadastralIrregular = in_array($cadastral, ['BAIXADA', 'INAPTA', 'SUSPENSA', 'NULA'], true);
 
         $situacaoGeral = match (true) {
-            $temPendencia || $temSancao || $cadastralIrregular => 'irregular',
+            $temPendencia || $cadastralIrregular => 'irregular',
             $temIndeterminada => 'atencao',
             default => 'regular',
         };
 
         return [
             'situacao_geral' => $situacaoGeral,
-            'tem_pendencias' => $temPendencia || $temSancao,
+            'tem_pendencias' => $temPendencia,
         ];
     }
 
@@ -815,67 +793,6 @@ class ResultadoDetalhePresenter
         $ieTxt = $ie !== '' ? " (IE {$ie})" : '';
 
         return "Contribuinte {$sit} no cadastro SINTEGRA{$ufTxt}{$ieTxt}.";
-    }
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // Sanções (CGU CNC)
-    // ──────────────────────────────────────────────────────────────────────────
-
-    private function blocoSancoes(array $d): array
-    {
-        $possui = (bool) ($d['possui_sancao'] ?? false);
-        $badge = $possui
-            ? ['label' => 'Com sanção', 'hex' => CertidaoBadge::HEX_IRREGULAR]
-            : ['label' => 'Regular', 'hex' => CertidaoBadge::HEX_REGULAR];
-
-        $comRegistro = array_values(array_filter((array) ($d['bases_com_registro'] ?? [])));
-
-        $itens = [
-            $this->item('Sanções encontradas', $possui ? ($comRegistro ? implode(', ', $comRegistro) : 'Sim') : 'Nenhuma'),
-            $this->item('Validade', $d['data_validade'] ?? null),
-        ];
-
-        $listas = [
-            $this->lista('Bases consultadas', array_map(function ($b) {
-                $nome = trim((string) ($b['nome'] ?? ''));
-                $sit = trim((string) ($b['situacao'] ?? ''));
-
-                return trim("{$nome} — {$sit}", ' —');
-            }, is_array($d['bases'] ?? null) ? $d['bases'] : [])),
-        ];
-
-        return $this->bloco('cgu_cnc', 'Sanções (CGU)', $badge, $itens, $listas, $d['mensagem'] ?? null, $d['comprovante'] ?? null);
-    }
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // Improbidade (CNJ)
-    // ──────────────────────────────────────────────────────────────────────────
-
-    private function blocoImprobidade(array $d): array
-    {
-        $possui = (bool) ($d['possui_condenacao'] ?? false);
-        $badge = $possui
-            ? ['label' => 'Com condenação', 'hex' => CertidaoBadge::HEX_IRREGULAR]
-            : ['label' => 'Regular', 'hex' => CertidaoBadge::HEX_REGULAR];
-
-        $itens = [
-            $this->item('Condenações', (string) ((int) ($d['total_condenacoes'] ?? 0))),
-        ];
-
-        $listas = [
-            $this->lista('Registros', array_map(function ($c) {
-                if (is_string($c)) {
-                    return $c;
-                }
-                if (is_array($c)) {
-                    return trim((string) ($c['titulo'] ?? $c['processo'] ?? json_encode($c, JSON_UNESCAPED_UNICODE)));
-                }
-
-                return (string) $c;
-            }, is_array($d['condenacoes'] ?? null) ? $d['condenacoes'] : [])),
-        ];
-
-        return $this->bloco('cnj_improbidade', 'Improbidade (CNJ)', $badge, $itens, $listas, $d['mensagem'] ?? null, $d['comprovante'] ?? null);
     }
 
     // ──────────────────────────────────────────────────────────────────────────

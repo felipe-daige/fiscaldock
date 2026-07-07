@@ -33,15 +33,6 @@ it('cnd_federal INDISPONIVEL/indeterminada e nao avaliado (null), nunca irregula
     expect($this->svc->calcularScores(['cnd_federal' => ['status' => 'Indeterminada']])['cnd_federal'])->toBeNull();
 });
 
-it('compliance: sancao CGU ou condenacao CNJ => 100; consultado e limpo => 0; so indisponivel => null', function () {
-    expect($this->svc->calcularScores(['cgu_cnc' => ['possui_sancao' => true]])['compliance'])->toBe(100);
-    expect($this->svc->calcularScores(['cnj_improbidade' => ['possui_condenacao' => true]])['compliance'])->toBe(100);
-    expect($this->svc->calcularScores([
-        'cgu_cnc' => ['possui_sancao' => false],
-        'cnj_improbidade' => ['possui_condenacao' => false],
-    ])['compliance'])->toBe(0);
-    expect($this->svc->calcularScores(['cgu_cnc' => ['status' => 'INDISPONIVEL']])['compliance'])->toBeNull();
-});
 
 it('fgts REGULAR com conseguiu_emitir=false pontua como regular (0)', function () {
     // bug real: o FGTS volta status REGULAR + conseguiu_emitir=false; não pode virar null.

@@ -30,8 +30,6 @@ final class PlanoConsultaLabels
             'cnd_estadual' => 'CND Estadual',
             'cnd_municipal' => 'CND Municipal',
             'sintegra' => 'SINTEGRA (inscrição estadual)',
-            'cgu_cnc' => 'Sanções e idoneidade (CGU)',
-            'cnj_improbidade' => 'Improbidade administrativa (CNJ)',
         ];
     }
 

@@ -31,7 +31,11 @@
             <p class="text-xs text-gray-500 mt-1">Apuração, divergências e o que recolher — por empresa e competência</p>
         </div>
         <div class="flex items-center gap-2 rf-actions">
-            <a id="rf-btn-exportar" href="#" class="px-3 py-2 border border-gray-300 rounded text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors">Exportar CSV</a>
+            <x-acoes-menu label="Exportar" align="right">
+                <x-acoes-item disabled badge="Em breve">Excel (XLSX)</x-acoes-item>
+                <x-acoes-item href="#" id="rf-btn-exportar">Excel (CSV)</x-acoes-item>
+                <x-acoes-item disabled badge="Em breve">PDF</x-acoes-item>
+            </x-acoes-menu>
             <button id="rf-btn-imprimir" type="button" class="px-3 py-2 border border-gray-300 rounded text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors">Imprimir</button>
         </div>
     </div>

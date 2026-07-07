@@ -7,13 +7,12 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * BI cross — cruza o resultado das consultas de CNPJ (regularidade/sanção por fornecedor)
+ * BI cross — cruza o resultado das consultas de CNPJ (regularidade por fornecedor)
  * com o acervo fiscal (volume de compras desse fornecedor nas notas).
  *
- * Fase 1 (2026-06-16): 3 cruzamentos acionáveis pro contador —
+ * Fase 1 (2026-06-16): 2 cruzamentos acionáveis pro contador —
  *  1. Fornecedor com certidão/situação irregular × volume de compras dele.
- *  2. Fornecedor sancionado (CEIS/CGU) × volume de compras dele.
- *  3. Nota cancelada na SEFAZ × situação do emitente consultado (esparso: depende de
+ *  2. Nota cancelada na SEFAZ × situação do emitente consultado (esparso: depende de
  *     nfe_consultas, snapshot do clearance em lote).
  *
  * Volume de compras = entradas do EFD ICMS/IPI (`origem_arquivo = 'fiscal'`, evita a
@@ -21,10 +20,10 @@ use Illuminate\Support\Facades\DB;
  *
  * FONTE ÚNICA (2026-07-04): lê a regularidade de `participante_scores` — a projeção canônica
  * de `consulta_resultados` (gravada no fecho do lote via RiskScoreService::atualizarScore).
- * É a MESMA fonte do Score de Risco e do alerta `certidao_positiva`, então as três telas não
+ * É a MESMA fonte do Score de Risco e do alerta `certidao_positiva`, então as telas não
  * divergem. Certidão irregular = subscore de certidão > 0 (classificação já feita pelo
- * CertidaoBadge dentro do RiskScoreService). Situação cadastral e sanção CGU vêm do
- * `dados_consultados` persistido junto ao score. Ver docs/alertas/README.md ("fonte única").
+ * CertidaoBadge dentro do RiskScoreService). Situação cadastral vem do `dados_consultados`
+ * persistido junto ao score. Ver docs/alertas/README.md ("fonte única").
  */
 class CruzamentosConsultasClearanceService
 {
@@ -45,36 +44,6 @@ class CruzamentosConsultasClearanceService
                 'motivos' => $this->motivosIrregularidade($s),
             ])
             ->filter(fn (array $linha) => $linha['motivos'] !== []);
-
-        return $this->anexarCompras($userId, $candidatos, $filtros);
-    }
-
-    /**
-     * @return Collection<int, array{participante_id:int, razao_social:string, documento:string, bases:array<int,string>, valor_comprado:float, qtd_notas:int}>
-     */
-    public function fornecedoresSancionadosComCompras(int $userId, array $filtros = []): Collection
-    {
-        $scores = $this->scoresPorParticipante($userId);
-
-        $candidatos = $scores
-            ->map(function (ParticipanteScore $s) {
-                $cgu = ($s->dados_consultados ?? [])['cgu_cnc'] ?? null;
-                $temSancao = is_array($cgu) && ($cgu['possui_sancao'] ?? false);
-
-                return [
-                    'participante_id' => $s->participante_id,
-                    'razao_social' => $s->participante?->razao_social ?? '—',
-                    'documento' => $s->participante?->documento ?? '—',
-                    'bases' => $temSancao ? array_values(array_filter((array) ($cgu['bases_com_registro'] ?? []))) : [],
-                    '_sancionado' => $temSancao,
-                ];
-            })
-            ->filter(fn (array $linha) => $linha['_sancionado'] === true)
-            ->map(function (array $linha) {
-                unset($linha['_sancionado']);
-
-                return $linha;
-            });
 
         return $this->anexarCompras($userId, $candidatos, $filtros);
     }
@@ -137,14 +106,11 @@ class CruzamentosConsultasClearanceService
     public function resumo(int $userId, array $filtros = []): array
     {
         $irregulares = $this->fornecedoresIrregularesComCompras($userId, $filtros);
-        $sancionados = $this->fornecedoresSancionadosComCompras($userId, $filtros);
         $canceladas = $this->notasCanceladasComEmitente($userId, $filtros);
 
         return [
             'irregulares_qtd' => $irregulares->count(),
             'irregulares_valor' => round((float) $irregulares->sum('valor_comprado'), 2),
-            'sancionados_qtd' => $sancionados->count(),
-            'sancionados_valor' => round((float) $sancionados->sum('valor_comprado'), 2),
             'canceladas_qtd' => $canceladas->count(),
         ];
     }

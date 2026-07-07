@@ -45,13 +45,6 @@ it('inclui CNDT, FGTS e certidões estaduais/municipais a partir do Compliance',
     expect($rotulos)->toContain('CND Municipal');
 });
 
-it('mostra sanções e improbidade no Due Diligence', function () {
-    $rotulos = rotulosDoPlano('due_diligence');
-
-    expect($rotulos)->toContain('Sanções e idoneidade (CGU)');
-    expect($rotulos)->toContain('Improbidade administrativa (CNJ)');
-});
-
 it('dobra sub-chaves redundantes sem duplicar rótulos', function () {
     $rotulos = PlanoConsultaLabels::paraConsultas([
         'situacao_cadastral', 'dados_cadastrais', 'endereco',

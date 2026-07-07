@@ -44,8 +44,6 @@ class DashboardController extends Controller
         'crf_fgts' => 'FGTS',
         'cndt' => 'CNDT',
         'sintegra' => 'Sintegra',
-        'cgu_cnc' => 'Sanções',
-        'cnj_improbidade' => 'Improbidade',
     ];
 
     private const AUTH_VIEW_PREFIX = 'autenticado.';
@@ -416,8 +414,8 @@ class DashboardController extends Controller
             }
 
             // Badge compacto de TODAS as fontes que a consulta trouxe (CND Federal/Estadual/
-            // Municipal, FGTS, CNDT, SINTEGRA, sanções CGU, improbidade CNJ). A cor reflete a
-            // regularidade, classificada pela fonte única (CertidaoBadge via ResultadoDetalhePresenter).
+            // Municipal, FGTS, CNDT, SINTEGRA). A cor reflete a regularidade, classificada
+            // pela fonte única (CertidaoBadge via ResultadoDetalhePresenter).
             $certidoesBadges = [];
             if ($ultimoResultado) {
                 foreach ($this->detalhePresenter->blocos($ultimoResultado) as $bloco) {

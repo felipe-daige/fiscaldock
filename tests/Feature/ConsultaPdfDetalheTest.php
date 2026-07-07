@@ -51,8 +51,6 @@ function pdfDetResultado(ConsultaLote $lote, User $user): ConsultaResultado
             'cnd_federal' => ['status' => 'Negativa', 'tipo' => 'Negativa', 'comprovante' => 'https://ex.com/cnd-federal.pdf'],
             'cndt' => ['status' => 'Negativa', 'comprovante' => 'https://ex.com/cndt.pdf'],
             'sintegra' => ['situacao' => 'Habilitado', 'comprovante' => 'https://ex.com/sintegra.pdf'],
-            'cgu_cnc' => ['possui_sancao' => false, 'comprovante' => 'https://ex.com/cgu.pdf'],
-            'cnj_improbidade' => ['possui_condenacao' => false, 'comprovante' => 'https://ex.com/cnj.pdf'],
         ],
         'consultado_em' => now(),
     ]);
@@ -72,9 +70,7 @@ it('getDetalhes traz blocos por fonte com link de comprovante de TODAS as fontes
 
     expect($urls)->toContain('https://ex.com/cnd-federal.pdf')
         ->toContain('https://ex.com/cndt.pdf')
-        ->toContain('https://ex.com/sintegra.pdf')
-        ->toContain('https://ex.com/cgu.pdf')
-        ->toContain('https://ex.com/cnj.pdf');
+        ->toContain('https://ex.com/sintegra.pdf');
 });
 
 it('PDF da consulta estende o layout-mestre e colore o risco', function () {

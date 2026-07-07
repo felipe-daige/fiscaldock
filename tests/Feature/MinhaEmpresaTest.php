@@ -237,7 +237,10 @@ test('dashboard usa score persistido no cliente quando participante nao tem', fu
     $response = $this->get('/app/minha-empresa');
 
     $response->assertOk();
-    $response->assertSee('87/100');
+    // Barra de risco: número do score + escala "/ 100" + badge da classificação.
+    $response->assertSee('87');
+    $response->assertSee('/ 100');
+    $response->assertSee('BAIXO');
     $response->assertDontSee('NÃO AVALIADO');
 });
 

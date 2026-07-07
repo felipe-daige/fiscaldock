@@ -499,16 +499,6 @@ class NotasFiscaisAlertService
                 'disponivel' => false,
             ],
             [
-                'id' => 'ceis',
-                'titulo' => 'Participantes no CEIS',
-                'severidade' => 'alta',
-                'descricao' => 'Verifique se seus parceiros comerciais constam no Cadastro de Empresas Inidôneas e Suspensas.',
-                'total_afetados' => 0,
-                'detalhes' => [],
-                'tipo' => 'paid',
-                'disponivel' => false,
-            ],
-            [
                 'id' => 'ie_irregular',
                 'titulo' => 'Inscricao Estadual irregular',
                 'severidade' => 'alta',

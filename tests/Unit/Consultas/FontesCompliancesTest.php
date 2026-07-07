@@ -1,8 +1,6 @@
 <?php
 
-use App\Services\Consultas\Fontes\CguCncFonte;
 use App\Services\Consultas\Fontes\CndEstadualFonte;
-use App\Services\Consultas\Fontes\CnjImprobidadeFonte;
 use App\Services\Consultas\Fontes\SintegraFonte;
 
 it('CND Estadual: metadados + uf no param + sucesso/611', function () {
@@ -52,31 +50,4 @@ it('SINTEGRA: cadastral (IE/situação)', function () {
     expect($ok['sintegra']['inscricao_estadual'])->toBe('111.111.111.111');
     expect($ok['sintegra']['situacao'])->toBe('Habilitado');
     expect($ok['consultas_realizadas'])->toContain('sintegra');
-});
-
-it('CGU CNC: certidão NADA CONSTA = sem sanção; base com registro = sanção', function () {
-    $f = new CguCncFonte();
-    // shape real: data[0] é a certidão, com conseguiu_emitir_certidao_negativa + bases
-    $nada = $f->normalizar(['data' => [[
-        'conseguiu_emitir_certidao_negativa' => true,
-        'bases_dados_consultas' => [['nome' => 'CEIS', 'situacao' => 'Nada Consta'], ['nome' => 'CNEP', 'situacao' => 'Nada Consta']],
-    ]]], 'sucesso');
-    expect($nada['cgu_cnc']['possui_sancao'])->toBeFalse();
-
-    $com = $f->normalizar(['data' => [[
-        'conseguiu_emitir_certidao_negativa' => false,
-        'bases_dados_consultas' => [['nome' => 'CEIS', 'situacao' => 'Consta 1 registro']],
-    ]]], 'sucesso');
-    expect($com['cgu_cnc']['possui_sancao'])->toBeTrue();
-    expect($com['cgu_cnc']['bases_com_registro'])->toContain('CEIS');
-});
-
-it('CNJ Improbidade: certidao_negativa = sem condenação; senão possui', function () {
-    $f = new CnjImprobidadeFonte();
-    $neg = $f->normalizar(['data' => [['certidao_negativa' => true, 'registros' => 0, 'registros_lista' => []]]], 'sucesso');
-    expect($neg['cnj_improbidade']['possui_condenacao'])->toBeFalse();
-
-    $com = $f->normalizar(['data' => [['certidao_negativa' => false, 'registros' => 2, 'registros_lista' => [['p' => 1]]]]], 'sucesso');
-    expect($com['cnj_improbidade']['possui_condenacao'])->toBeTrue();
-    expect($com['cnj_improbidade']['total_condenacoes'])->toBe(2);
 });

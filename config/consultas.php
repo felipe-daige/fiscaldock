@@ -41,8 +41,6 @@ return [
         'cnd_estadual' => 'certidoes_estaduais',
         'cnd_municipal' => 'certidoes_estaduais',
         'sintegra' => 'certidoes_estaduais',
-        'cgu_cnc' => 'sancoes',
-        'cnj_improbidade' => 'sancoes',
     ],
 
     // Nome amigável de cada fonte, usado na mensagem de progresso ("Consultando {nome} (i de N)").
@@ -56,8 +54,6 @@ return [
         'cnd_estadual' => 'CND Estadual (SEFAZ)',
         'cnd_municipal' => 'CND Municipal',
         'sintegra' => 'SINTEGRA',
-        'cgu_cnc' => 'sanções CGU',
-        'cnj_improbidade' => 'improbidade (CNJ)',
     ],
 
     // Atributos de consultas_incluidas que NÃO são fontes — renderizados inline a partir dos
@@ -201,8 +197,6 @@ return [
         // SINTEGRA: 2 créditos (R$0,40) cobre o custo InfoSimples R$0,27 com margem ~48%.
         // Antes 1 crédito (R$0,20) dava prejuízo de R$0,07/chamada.
         'sintegra' => (int) env('CONSULTA_CREDITOS_SINTEGRA', 2),
-        'cgu_cnc' => (int) env('CONSULTA_CREDITOS_CGU_CNC', 2),
-        'cnj_improbidade' => (int) env('CONSULTA_CREDITOS_CNJ_IMPROBIDADE', 2),
         'cnd_municipal' => (int) env('CONSULTA_CREDITOS_CND_MUNICIPAL', 2),
     ],
 

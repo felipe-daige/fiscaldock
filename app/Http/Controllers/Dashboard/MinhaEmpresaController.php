@@ -563,8 +563,6 @@ class MinhaEmpresaController extends Controller
             'crf_fgts' => 'CRF (FGTS)',
             'cndt' => 'CNDT',
             'sintegra' => 'SINTEGRA',
-            'cgu_cnc' => 'CGU/CNC',
-            'cnj_improbidade' => 'CNJ Improbidade',
         ];
 
         foreach ($fontesErro as $chave => $erro) {

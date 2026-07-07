@@ -434,13 +434,7 @@ it('exibe detalhe expansível com TODAS as fontes consultadas, inclusive as ause
                 'conseguiu_emitir' => true,
             ],
             'cnd_estadual' => ['status' => 'Negativa', 'certidao_codigo' => '573628/2026'],
-            'sintegra' => ['situacao' => 'HABILITADO', 'inscricao_estadual' => '28.368.441-0'],
-            'cgu_cnc' => [
-                'possui_sancao' => false,
-                'bases' => [['nome' => 'CEIS', 'situacao' => 'Nada Consta']],
-                'comprovante' => 'https://exemplo.test/cgu.pdf',
-            ],
-            'cnj_improbidade' => ['possui_condenacao' => false, 'comprovante' => 'https://exemplo.test/cnj.pdf'],
+            'sintegra' => ['situacao' => 'HABILITADO', 'inscricao_estadual' => '28.368.441-0', 'comprovante' => 'https://exemplo.test/sintegra.pdf'],
         ],
         'consultado_em' => now(),
     ]);
@@ -451,15 +445,13 @@ it('exibe detalhe expansível com TODAS as fontes consultadas, inclusive as ause
         // fontes que a tabela resumida NÃO mostra agora aparecem no detalhe
         ->assertSee('CND Estadual (SEFAZ)')
         ->assertSee('SINTEGRA')
-        ->assertSee('Sanções (CGU)')
-        ->assertSee('Improbidade (CNJ)')
         // detalhes ricos das certidões
         ->assertSee('A3E5.6BE2.FAB3')
         ->assertSee('573628/2026')
         ->assertSee('28.368.441-0')
         ->assertSee('CERTIDAO POSITIVA COM EFEITOS DE NEGATIVA DE DEBITOS')
         // comprovantes baixados
-        ->assertSee('https://exemplo.test/cgu.pdf', false)
+        ->assertSee('https://exemplo.test/sintegra.pdf', false)
         ->assertSee('Ver comprovante')
         // controles de expansão
         ->assertSee('data-detalhe-toggle="consulta-detalhe-d-0"', false)
@@ -467,7 +459,6 @@ it('exibe detalhe expansível com TODAS as fontes consultadas, inclusive as ause
         // resumo escrito por CNPJ
         ->assertSee('Parecer da análise')
         ->assertSee('Situação cadastral ATIVA')
-        ->assertSee('Sem sanções na CGU.')
         // análise agregada do lote (texto + tabela + gráfico)
         ->assertSee('Análise da Consulta')
         ->assertSee('Distribuição');

@@ -14,10 +14,8 @@ class RiskScoreService
     /**
      * Pesos por categoria. A soma NÃO precisa dar 1.0 — o total é renormalizado
      * dinamicamente sobre as categorias efetivamente avaliadas (ver calcularScoreTotal).
-     *
-     * Sanções/compliance (CGU/CNJ) não entram no peso: o subscore vinha sempre "não
-     * avaliado" e só poluía o detalhamento. Para reintroduzir uma categoria, basta
-     * adicionar o peso aqui (a renormalização cuida do resto).
+     * Para reintroduzir uma categoria, basta adicionar o peso aqui (a renormalização
+     * cuida do resto).
      */
     private array $pesos = [
         'cadastral' => 0.15,
@@ -79,10 +77,6 @@ class RiskScoreService
             'cnd_estadual' => $this->subscoreCertidao($dados['cnd_estadual'] ?? null, $this->penalidadeIrregular['cnd_estadual']),
             'fgts' => $this->subscoreCertidao($dados['crf_fgts'] ?? $dados['fgts'] ?? null, $this->penalidadeIrregular['fgts']),
             'trabalhista' => $this->subscoreCertidao($dados['cndt'] ?? null, $this->penalidadeIrregular['trabalhista']),
-            // 'compliance' (Sanções CGU/CNJ) ainda é computado e persistido (coluna score_compliance),
-            // mas NÃO entra no display nem no total ponderado: removido de $pesos porque a fonte saiu
-            // dos planos ativos (vinha sempre "não avaliado"). Reintroduzir em $pesos p/ voltar a exibir.
-            'compliance' => $this->scoreCompliance($dados),
         ];
     }
 
@@ -398,7 +392,6 @@ class RiskScoreService
                 'score_cnd_estadual' => $scores['cnd_estadual'],
                 'score_fgts' => $scores['fgts'],
                 'score_trabalhista' => $scores['trabalhista'],
-                'score_compliance' => $scores['compliance'],
                 'score_total' => $scoreTotal,
                 'score_credito_reforma' => $this->scoreCreditoReforma($dados, $alvo),
                 'classificacao' => $classificacao,
@@ -459,8 +452,6 @@ class RiskScoreService
             'cnd_estadual' => 'CND Estadual',
             'fgts' => 'FGTS/CRF',
             'trabalhista' => 'CNDT (Trabalhista)',
-            // 'compliance' (Sanções CGU/CNJ) fora: removido de $pesos e do detalhamento
-            // (fonte fora dos planos ativos). score_compliance segue persistido p/ uso futuro.
         ];
     }
 
@@ -557,30 +548,4 @@ class RiskScoreService
         };
     }
 
-    /**
-     * Sanções (CGU CNC: CEIS/CNEP/CEPIM) + improbidade (CNJ) → subscore.
-     * Sanção/condenação presente → 100; consultado e limpo → 0; só indisponível → null.
-     */
-    private function scoreCompliance(array $dados): ?int
-    {
-        $cgu = $dados['cgu_cnc'] ?? null;
-        $cnj = $dados['cnj_improbidade'] ?? null;
-
-        $temSancao = is_array($cgu) && (($cgu['possui_sancao'] ?? null) === true);
-        $temCondenacao = is_array($cnj) && (($cnj['possui_condenacao'] ?? null) === true);
-
-        if ($temSancao || $temCondenacao) {
-            return 100;
-        }
-
-        // Respondeu (chave de resultado presente) e nada encontrado → limpo.
-        $cguRespondeu = is_array($cgu) && array_key_exists('possui_sancao', $cgu);
-        $cnjRespondeu = is_array($cnj) && array_key_exists('possui_condenacao', $cnj);
-
-        if ($cguRespondeu || $cnjRespondeu) {
-            return 0;
-        }
-
-        return null; // não consultado ou só veio INDISPONIVEL
-    }
 }

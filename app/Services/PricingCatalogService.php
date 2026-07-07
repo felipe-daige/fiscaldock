@@ -226,20 +226,6 @@ class PricingCatalogService
                 'descricao_curta' => 'Certificado de Regularidade do FGTS.',
             ],
             [
-                'slug' => 'cgu_cnc',
-                'nome' => 'CGU CNC (CEIS+CNEP+CEPIM+ePAD)',
-                'categoria' => 'Sanções',
-                'status' => 'em_breve',
-                'descricao_curta' => 'Cadastro unificado de sanções a entes privados.',
-            ],
-            [
-                'slug' => 'cnj_improbidade',
-                'nome' => 'CNJ Improbidade',
-                'categoria' => 'Reputacional',
-                'status' => 'em_breve',
-                'descricao_curta' => 'Improbidade e inelegibilidade de sócios e administradores.',
-            ],
-            [
                 'slug' => 'sintegra',
                 'nome' => 'SINTEGRA unificada',
                 'categoria' => 'Cadastral estadual',

@@ -28,7 +28,7 @@ class PaletteRegistry
             ['label' => 'Clearance — Verificar Notas', 'href' => '/app/clearance/notas', 'grupo' => 'Inteligência', 'keywords' => ['validar', 'sefaz', 'situacao']],
             ['label' => 'BI Fiscal', 'href' => '/app/bi/dashboard', 'grupo' => 'Inteligência', 'keywords' => ['business intelligence', 'graficos', 'saldo']],
             ['label' => 'Catálogo de Itens (BI)', 'href' => '/app/bi/catalogo-itens', 'grupo' => 'Inteligência', 'keywords' => ['xml', 'efd', 'unificado', 'divergencia']],
-            ['label' => 'Cruzamentos', 'href' => '/app/bi/cruzamentos', 'grupo' => 'Inteligência', 'keywords' => ['fornecedor', 'irregular', 'sancionado']],
+            ['label' => 'Cruzamentos', 'href' => '/app/bi/cruzamentos', 'grupo' => 'Inteligência', 'keywords' => ['fornecedor', 'irregular', 'certidão']],
             ['label' => 'Resumo Fiscal', 'href' => '/app/resumo-fiscal', 'grupo' => 'Inteligência', 'keywords' => ['fechamento', 'apuracao', 'recolher']],
             ['label' => 'Nova consulta CNPJ', 'href' => '/app/consulta/painel', 'grupo' => 'Consultas', 'keywords' => ['cnd', 'certidao', 'compliance', 'consultar']],
             ['label' => 'Monitoramento', 'href' => '/app/monitoramento/painel', 'grupo' => 'Consultas', 'keywords' => ['monitorar', 'recorrente', 'automatico']],

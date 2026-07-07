@@ -164,7 +164,7 @@
                             <div class="relative pl-10">
                                 <span class="absolute left-0 top-0 w-7 h-7 rounded-full text-white text-xs font-bold flex items-center justify-center" style="background-color: #2563eb;">2</span>
                                 <p class="text-sm font-semibold text-gray-900">Escolher o produto</p>
-                                <p class="text-xs text-gray-600 mt-0.5">Cinco planos cobrindo desde dados cadastrais básicos até due diligence completa com sanções e CNJ.</p>
+                                <p class="text-xs text-gray-600 mt-0.5">Cinco planos cobrindo desde dados cadastrais básicos até due diligence completa com certidões federais, estaduais e municipais.</p>
                             </div>
                             <div class="relative pl-10">
                                 <span class="absolute left-0 top-0 w-7 h-7 rounded-full text-white text-xs font-bold flex items-center justify-center" style="background-color: #2563eb;">3</span>
@@ -263,7 +263,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div class="border border-gray-300 rounded p-3">
                                 <p class="text-sm font-semibold text-gray-900">Consultas feitas em fontes oficiais</p>
-                                <p class="text-[11px] text-gray-600 leading-relaxed mt-1">Receita Federal/PGFN (situação cadastral, QSA, regime tributário, CND Federal), TST (CNDT), Caixa (FGTS), SEFAZ (CND Estadual), prefeituras (CND Municipal) e SINTEGRA. Sanções (CGU) e improbidade (CNJ) em breve.</p>
+                                <p class="text-[11px] text-gray-600 leading-relaxed mt-1">Receita Federal/PGFN (situação cadastral, QSA, regime tributário, CND Federal), TST (CNDT), Caixa (FGTS), SEFAZ (CND Estadual), prefeituras (CND Municipal) e SINTEGRA.</p>
                             </div>
                             <div class="border border-gray-300 rounded p-3">
                                 <p class="text-sm font-semibold text-gray-900">Toda consulta no fornecedor é paga</p>

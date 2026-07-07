@@ -9,9 +9,9 @@
         </thead>
         <tbody>
             <tr><td><strong>Cadastral</strong></td><td>Situação na Receita, data de abertura, porte, atividade</td></tr>
-            <tr><td><strong>Fiscal</strong></td><td>Regime tributário, pendências, CNDs</td></tr>
-            <tr><td><strong>Restritiva</strong></td><td>CEIS, CNEP, listas sancionatórias</td></tr>
-            <tr><td><strong>Judicial</strong></td><td>Processos, execuções, falência</td></tr>
+            <tr><td><strong>Fiscal</strong></td><td>Regime tributário, pendências, CND Federal/Estadual/Municipal</td></tr>
+            <tr><td><strong>Trabalhista</strong></td><td>CNDT (débitos trabalhistas) e regularidade do FGTS</td></tr>
+            <tr><td><strong>Inscrição estadual</strong></td><td>SINTEGRA — situação no cadastro de contribuintes</td></tr>
             <tr><td><strong>Comportamental</strong></td><td>Histórico de operações e variações de volume</td></tr>
         </tbody>
     </table>

@@ -17,8 +17,7 @@ it('renderiza detalhamento web com headline, categorias, peso e legenda', functi
         ->and($html)->toContain('Regular')               // cadastral score 0 = regular (não fica barra vazia)
         ->and($html)->toContain('width: 100%')           // regular preenche 100% (verde), não 0%
         ->and($html)->toContain('Não avaliado')          // fgts null
-        ->and($html)->toContain('Categorias em breve')
-        ->and($html)->toContain('Legenda');
+        ->and($html)->toContain('Legenda');               // seção "Categorias em breve" removida com ESG/Protestos
 });
 
 it('sem headline (risk/show) não exibe o número grande do total', function () {

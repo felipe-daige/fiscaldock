@@ -49,13 +49,14 @@
     $consultasRealizadas = [];
     if ($ultimaConsulta) {
         foreach ($ultimaConsulta->getConsultasRealizadas() as $tipo) {
-            $consultasRealizadas[] = strtoupper(str_replace('_', ' ', ucfirst($tipo)));
+            $consultasRealizadas[] = ucwords(mb_strtolower(str_replace('_', ' ', $tipo)));
         }
     }
 
     $ultimaConsultaResumo = [
         'data' => $ultimaConsulta?->consultado_em ? $ultimaConsulta->consultado_em->format('d/m/Y H:i') : 'Nenhuma consulta registrada',
-        'tipos' => ! empty($consultasRealizadas) ? implode(' | ', $consultasRealizadas) : 'Sem consultas realizadas',
+        'qtd' => count($consultasRealizadas),
+        'lista' => implode(', ', $consultasRealizadas),
     ];
     $ultimaConsultaMensagem = $ultimaConsulta?->getMensagemExibivel();
 
@@ -117,12 +118,11 @@
         default => '',
     };
 
-    // Gauge do score: só preenche quando há valor numérico conclusivo. Arco semicircular
-    // de comprimento π·50 ≈ 157.08 (stroke-dasharray); o offset esvazia da direita p/ esquerda.
+    // Barra de risco: só posiciona o marcador quando há valor numérico conclusivo.
+    // Score é RISCO — 0 = melhor (baixo), 100 = pior (crítico); por isso um score saudável
+    // fica na ponta esquerda da barra (não some, ao contrário do gauge que ficava vazio em 0).
     $temScoreValor = $score && $score->classificacao !== 'inconclusivo' && is_numeric($score->score_total ?? null);
     $scorePct = $temScoreValor ? max(0, min(100, (int) $score->score_total)) : 0;
-    $scoreArco = 157.08;
-    $scoreOffset = $scoreArco * (1 - $scorePct / 100);
 @endphp
 
 <div class="min-h-screen bg-gray-100" id="minha-empresa-container">
@@ -149,68 +149,85 @@
                     </div>
                 </div>
 
-                <div class="flex flex-col items-start gap-3 lg:items-end shrink-0">
-                    @if($acaoPrimaria)
+                @if($acaoPrimaria)
+                    <div class="shrink-0">
                         <a href="{{ $acaoPrimaria['href'] }}" data-link class="bg-gray-800 text-white hover:bg-gray-700 inline-flex items-center justify-center rounded-md text-sm font-semibold px-5 py-2.5 transition-colors whitespace-nowrap w-full sm:w-auto">
                             {{ $acaoPrimaria['label'] }}
                         </a>
-                    @endif
-                    <div class="flex flex-wrap items-center gap-2 lg:justify-end">
-                        @foreach($linksSecundarios as $lnk)
-                            {{-- Downloads não levam data-link (o SPA faria fetch do arquivo pra dentro do #app). --}}
-                            <a href="{{ $lnk['href'] }}" @unless(!empty($lnk['download'])) data-link @endunless
-                               class="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-400 transition-colors whitespace-nowrap">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 shrink-0 text-gray-400" aria-hidden="true">{!! $icone($lnk['icon'] ?? null) !!}</svg>
-                                {{ $lnk['label'] }}
-                            </a>
-                        @endforeach
                     </div>
-                </div>
+                @endif
+            </div>
+
+            {{-- Ações secundárias em linha própria full-width: não empilham dentro da coluna
+                 estreita do CTA (era o que causava a quebra em duas linhas). --}}
+            <div class="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center gap-2">
+                @foreach($linksSecundarios as $lnk)
+                    {{-- Downloads não levam data-link (o SPA faria fetch do arquivo pra dentro do #app). --}}
+                    <a href="{{ $lnk['href'] }}" @unless(!empty($lnk['download'])) data-link @endunless
+                       class="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-400 transition-colors whitespace-nowrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 shrink-0 text-gray-400" aria-hidden="true">{!! $icone($lnk['icon'] ?? null) !!}</svg>
+                        {{ $lnk['label'] }}
+                    </a>
+                @endforeach
             </div>
         </div>
 
         {{-- KPIs — Resumo Fiscal em cards individuais --}}
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-            {{-- Score com gauge semicircular --}}
-            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4 sm:p-5 col-span-2 lg:col-span-1">
+            {{-- Score de Risco: barra em zonas (baixo→crítico) com marcador na posição do score.
+                 Legível mesmo em 0 — o marcador ancora na ponta "Baixo", não some como o gauge antigo. --}}
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4 sm:p-5 col-span-2 lg:col-span-1 flex flex-col"
+                 role="img" aria-label="Score de risco {{ $temScoreValor ? $score->score_total.' de 100, '.$scoreBadge['label'] : 'não avaliado' }}">
                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Score de Risco</p>
-                <div class="mt-2 flex items-center gap-4">
-                    <span class="sr-only">{{ $scoreBadge['valor'] }}</span>
-                    <svg viewBox="0 0 120 70" class="w-24 h-14 shrink-0" role="img" aria-label="Score {{ $temScoreValor ? $score->score_total.' de 100' : 'não avaliado' }}">
-                        <path d="M10 60 A50 50 0 0 1 110 60" fill="none" stroke="#e5e7eb" stroke-width="10" stroke-linecap="round"/>
-                        <path d="M10 60 A50 50 0 0 1 110 60" fill="none" stroke="{{ $scoreBadge['hex'] }}" stroke-width="10" stroke-linecap="round"
-                              stroke-dasharray="{{ $scoreArco }}" stroke-dashoffset="{{ $scoreOffset }}" style="transition: stroke-dashoffset .6s ease"/>
-                        <text x="60" y="54" text-anchor="middle" fill="#111827" style="font-size:24px;font-weight:700">{{ $temScoreValor ? $score->score_total : '—' }}</text>
-                    </svg>
-                    <div class="min-w-0">
-                        <span class="inline-block whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $scoreBadge['hex'] }}">{{ $scoreBadge['label'] }}</span>
-                        <p class="text-[10px] text-gray-400 mt-1">de 100 pontos</p>
+                <div class="mt-2 flex items-baseline gap-2">
+                    <span class="text-2xl sm:text-3xl font-bold leading-none" style="color: {{ $temScoreValor ? $scoreBadge['hex'] : '#9ca3af' }}">{{ $temScoreValor ? $score->score_total : '—' }}</span>
+                    <span class="text-[11px] text-gray-400">/ 100</span>
+                    <span class="ml-auto inline-block whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $scoreBadge['hex'] }}">{{ $scoreBadge['label'] }}</span>
+                </div>
+                {{-- Barra de zonas com marcador; as zonas (baixo→crítico) já são nomeadas pelo badge acima,
+                     então dispensamos a linha de rótulos — mantém o card na mesma altura dos demais KPIs. --}}
+                <div class="relative mt-auto pt-3">
+                    @if($temScoreValor)
+                        <div class="flex h-2 overflow-hidden rounded-full">
+                            <span class="h-2" style="width:20%;background-color:#047857"></span>
+                            <span class="h-2" style="width:30%;background-color:#d97706"></span>
+                            <span class="h-2" style="width:30%;background-color:#ea580c"></span>
+                            <span class="h-2" style="width:20%;background-color:#dc2626"></span>
+                        </div>
+                        <span class="absolute h-4 w-1.5 -translate-y-1/2 rounded-sm bg-gray-900 shadow ring-2 ring-white"
+                              style="top: calc(0.75rem + 4px); left: calc({{ $scorePct }}% - 3px)"></span>
+                    @else
+                        <div class="h-2 rounded-full bg-gray-200"></div>
+                    @endif
+                    <p class="text-[11px] text-gray-500 mt-2">
                         @if($score?->ultima_consulta_em)
-                            <p class="text-[11px] text-gray-500 mt-0.5">{{ $score->ultima_consulta_em->format('d/m/Y') }}</p>
+                            Avaliado em {{ $score->ultima_consulta_em->format('d/m/Y') }}
+                        @else
+                            Risco fiscal e trabalhista
                         @endif
-                    </div>
+                    </p>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4 sm:p-5">
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4 sm:p-5 flex flex-col">
                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Situação Cadastral</p>
                 <div class="mt-2 flex items-center gap-2">
                     <span class="inline-block w-2.5 h-2.5 rounded-full shrink-0" style="background-color: {{ $situacaoBadge['hex'] }}"></span>
                     <p class="text-lg sm:text-xl font-bold text-gray-900 truncate">{{ $situacaoBadge['label'] }}</p>
                 </div>
-                <p class="text-[11px] text-gray-500 mt-1">Receita Federal e cadastros correlatos</p>
+                <p class="text-[11px] text-gray-500 mt-auto pt-3">Receita Federal e cadastros correlatos</p>
             </div>
 
-            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4 sm:p-5">
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4 sm:p-5 flex flex-col">
                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Créditos</p>
-                <p class="text-lg sm:text-xl font-bold text-gray-900 mt-2">{{ number_format($userCredits, 0, ',', '.') }}</p>
-                <p class="text-[11px] text-gray-500 mt-1">Disponíveis para consultas</p>
+                <p class="text-2xl sm:text-3xl font-bold text-gray-900 leading-none mt-2">{{ number_format($userCredits, 0, ',', '.') }}</p>
+                <p class="text-[11px] text-gray-500 mt-auto pt-3">Disponíveis para consultas</p>
             </div>
 
-            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4 sm:p-5">
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4 sm:p-5 flex flex-col">
                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Base Monitorada</p>
-                <p class="text-lg sm:text-xl font-bold text-gray-900 mt-2">{{ number_format($totalParticipantes, 0, ',', '.') }}</p>
-                <p class="text-[11px] text-gray-500 mt-1">{{ number_format($totalNotas, 0, ',', '.') }} notas registradas</p>
+                <p class="text-2xl sm:text-3xl font-bold text-gray-900 leading-none mt-2">{{ number_format($totalParticipantes, 0, ',', '.') }}</p>
+                <p class="text-[11px] text-gray-500 mt-auto pt-3">{{ number_format($totalNotas, 0, ',', '.') }} notas registradas</p>
             </div>
         </div>
 
@@ -445,7 +462,10 @@
                 <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">Certidões</span>
                 <span class="text-[11px] text-gray-500">
                     Última consulta: {{ $ultimaConsultaResumo['data'] }}
-                    @if($ultimaConsultaResumo['tipos'] !== 'Sem consultas realizadas') · {{ $ultimaConsultaResumo['tipos'] }} @endif
+                    @if($ultimaConsultaResumo['qtd'] > 0)
+                        <span class="text-gray-300 mx-1">·</span>
+                        <span title="{{ $ultimaConsultaResumo['lista'] }}">{{ $ultimaConsultaResumo['qtd'] }} {{ $ultimaConsultaResumo['qtd'] === 1 ? 'fonte verificada' : 'fontes verificadas' }}</span>
+                    @endif
                 </span>
             </div>
             @if($ultimaConsultaMensagem)
@@ -496,6 +516,70 @@
             </div>
         </div>
 
+        {{-- Gestão reunida em um único painel; não cria duas caixas com alturas desconectadas.
+             Posicionada logo após Certidões: ações de setup (monitoramento + certificado A1)
+             ficam visíveis sem rolar até o fim da página. --}}
+        <div class="mb-4 sm:mb-6">
+            <section class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-3 border-b border-gray-100">
+                    <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">Gestão e Integrações</span>
+                </div>
+                <div class="grid grid-cols-1 xl:grid-cols-12">
+                    <div class="p-4 sm:p-5 xl:col-span-4">
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Monitoramento Contínuo</p>
+                        @if($monitoramento)
+                            <p class="text-sm text-gray-700">Empresa em monitoramento contínuo ({{ $monitoramento->frequencia }}). A regularidade é reconsultada automaticamente a cada ciclo.</p>
+                            <a href="/app/monitoramento/painel" data-link class="text-[12px] text-gray-600 hover:text-gray-900 hover:underline mt-2 inline-block">Gerenciar monitoramento</a>
+                        @else
+                            <p class="text-[12px] text-gray-500 mb-3">Acompanhe a regularidade da sua empresa automaticamente — CNDs, FGTS e cadastro reconsultados a cada ciclo, com alerta quando algo muda.</p>
+                            <a href="/app/monitoramento/painel" data-link class="bg-gray-800 text-white hover:bg-gray-700 inline-flex items-center justify-center rounded-md text-sm font-medium px-4 py-2 transition-colors">Monitorar minha empresa</a>
+                        @endif
+                    </div>
+
+                    <div class="p-4 sm:p-5 border-t border-gray-100 xl:col-span-8 xl:border-t-0 xl:border-l">
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Certificado Digital (A1)</p>
+                        @if(session('status'))
+                            <p class="text-[12px] text-green-700 mb-3">{{ session('status') }}</p>
+                        @endif
+                        @error('certificado')
+                            <p class="text-[12px] text-red-700 mb-3">{{ $message }}</p>
+                        @enderror
+
+                        @if($certificado ?? null)
+                            <div class="flex flex-wrap items-center gap-3">
+                                <span class="inline-block whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $certificado['badge_hex'] }}">
+                                    {{ $certificado['expirado'] ? 'Expirado' : 'Válido' }}
+                                </span>
+                                <span class="text-sm text-gray-700">Válido até <strong>{{ $certificado['validade']->format('d/m/Y') }}</strong></span>
+                                @if($certificado['cnpj'])<span class="text-[12px] text-gray-500">CNPJ {{ $certificado['cnpj'] }}</span>@endif
+                                @if($certificado['titular_nome'])<span class="text-[12px] text-gray-500">· {{ $certificado['titular_nome'] }}</span>@endif
+                            </div>
+                            <form method="POST" action="{{ route('app.minha-empresa.certificado.remover') }}" class="mt-3" onsubmit="return confirm('Remover o certificado digital?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-[12px] text-red-700 hover:underline">Remover certificado</button>
+                            </form>
+                        @else
+                            <p class="text-[12px] text-gray-500 mb-3">Cadastre o certificado A1 (.pfx/.p12) da empresa para habilitar o Clearance Full no futuro. <strong>A3 (token/cartão) não é suportado por upload.</strong></p>
+                            <form method="POST" action="{{ route('app.minha-empresa.certificado.salvar') }}" enctype="multipart/form-data" class="flex flex-col gap-3 xl:flex-row xl:items-end">
+                                @csrf
+                                <div class="min-w-0 flex-1">
+                                    <label class="block text-[11px] text-gray-500 mb-1">Arquivo (.pfx/.p12)</label>
+                                    <input type="file" name="certificado" accept=".pfx,.p12" required
+                                        class="block w-full max-w-full text-[13px] text-gray-600 file:mr-3 file:cursor-pointer file:rounded file:border-0 file:bg-gray-800 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-gray-700">
+                                </div>
+                                <div class="xl:w-48">
+                                    <label class="block text-[11px] text-gray-500 mb-1">Senha do certificado</label>
+                                    <input type="password" name="senha" required class="w-full border border-gray-300 rounded px-3 py-2.5 text-[13px] focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                                </div>
+                                <button type="submit" class="bg-gray-800 text-white hover:bg-gray-700 rounded-md text-sm font-medium px-4 py-2.5 transition-colors whitespace-nowrap">Cadastrar certificado</button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            </section>
+        </div>
+
         {{-- Panorama fiscal (movimentação + contrapartes/negociantes) da empresa própria. --}}
         <div class="mb-4 sm:mb-6">
             @include('autenticado.consulta.partials.relacionamento-fiscal', [
@@ -514,66 +598,6 @@
                 'entityId' => $empresa->id,
             ])
         </div>
-
-        {{-- Gestão reunida em um único painel; não cria duas caixas com alturas desconectadas. --}}
-        <section class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-            <div class="px-5 py-3 border-b border-gray-100">
-                <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">Gestão e Integrações</span>
-            </div>
-            <div class="grid grid-cols-1 xl:grid-cols-12">
-                <div class="p-4 sm:p-5 xl:col-span-4">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Monitoramento Contínuo</p>
-                    @if($monitoramento)
-                        <p class="text-sm text-gray-700">Empresa em monitoramento contínuo ({{ $monitoramento->frequencia }}). A regularidade é reconsultada automaticamente a cada ciclo.</p>
-                        <a href="/app/monitoramento/painel" data-link class="text-[12px] text-gray-600 hover:text-gray-900 hover:underline mt-2 inline-block">Gerenciar monitoramento</a>
-                    @else
-                        <p class="text-[12px] text-gray-500 mb-3">Acompanhe a regularidade da sua empresa automaticamente — CNDs, FGTS e cadastro reconsultados a cada ciclo, com alerta quando algo muda.</p>
-                        <a href="/app/monitoramento/painel" data-link class="bg-gray-800 text-white hover:bg-gray-700 inline-flex items-center justify-center rounded-md text-sm font-medium px-4 py-2 transition-colors">Monitorar minha empresa</a>
-                    @endif
-                </div>
-
-                <div class="p-4 sm:p-5 border-t border-gray-100 xl:col-span-8 xl:border-t-0 xl:border-l">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Certificado Digital (A1)</p>
-                    @if(session('status'))
-                        <p class="text-[12px] text-green-700 mb-3">{{ session('status') }}</p>
-                    @endif
-                    @error('certificado')
-                        <p class="text-[12px] text-red-700 mb-3">{{ $message }}</p>
-                    @enderror
-
-                    @if($certificado ?? null)
-                        <div class="flex flex-wrap items-center gap-3">
-                            <span class="inline-block whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $certificado['badge_hex'] }}">
-                                {{ $certificado['expirado'] ? 'Expirado' : 'Válido' }}
-                            </span>
-                            <span class="text-sm text-gray-700">Válido até <strong>{{ $certificado['validade']->format('d/m/Y') }}</strong></span>
-                            @if($certificado['cnpj'])<span class="text-[12px] text-gray-500">CNPJ {{ $certificado['cnpj'] }}</span>@endif
-                            @if($certificado['titular_nome'])<span class="text-[12px] text-gray-500">· {{ $certificado['titular_nome'] }}</span>@endif
-                        </div>
-                        <form method="POST" action="{{ route('app.minha-empresa.certificado.remover') }}" class="mt-3" onsubmit="return confirm('Remover o certificado digital?');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="text-[12px] text-red-700 hover:underline">Remover certificado</button>
-                        </form>
-                    @else
-                        <p class="text-[12px] text-gray-500 mb-3">Cadastre o certificado A1 (.pfx/.p12) da empresa para habilitar o Clearance Full no futuro. <strong>A3 (token/cartão) não é suportado por upload.</strong></p>
-                        <form method="POST" action="{{ route('app.minha-empresa.certificado.salvar') }}" enctype="multipart/form-data" class="flex flex-col gap-3 xl:flex-row xl:items-end">
-                            @csrf
-                            <div class="min-w-0 flex-1">
-                                <label class="block text-[11px] text-gray-500 mb-1">Arquivo (.pfx/.p12)</label>
-                                <input type="file" name="certificado" accept=".pfx,.p12" required
-                                    class="block w-full max-w-full text-[13px] text-gray-600 file:mr-3 file:cursor-pointer file:rounded file:border-0 file:bg-gray-800 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-gray-700">
-                            </div>
-                            <div class="xl:w-48">
-                                <label class="block text-[11px] text-gray-500 mb-1">Senha do certificado</label>
-                                <input type="password" name="senha" required class="w-full border border-gray-300 rounded px-3 py-2.5 text-[13px] focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
-                            </div>
-                            <button type="submit" class="bg-gray-800 text-white hover:bg-gray-700 rounded-md text-sm font-medium px-4 py-2.5 transition-colors whitespace-nowrap">Cadastrar certificado</button>
-                        </form>
-                    @endif
-                </div>
-            </div>
-        </section>
 
     </div>
 </div>
