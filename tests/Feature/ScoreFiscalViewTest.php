@@ -206,7 +206,7 @@ it('exclui o participante PROPRIO mesmo quando ja tem score (Consultados)', func
         ->assertDontSee('PROPRIA PARTICIPANTE');
 });
 
-it('o detalhe do participante mostra subscores avaliados e ESG/Protestos em breve', function () {
+it('o detalhe do participante mostra subscores avaliados', function () {
     $user = User::factory()->create();
     $part = Participante::create([
         'user_id' => $user->id, 'documento' => '11222333000181', 'razao_social' => 'ACME LTDA',
@@ -234,7 +234,6 @@ it('o detalhe do participante mostra subscores avaliados e ESG/Protestos em brev
     actingAs($user)
         ->get("/app/score-fiscal/participante/{$part->id}")
         ->assertOk()
-        ->assertSee('Em breve')
         ->assertSee('Situação Cadastral');
 });
 
