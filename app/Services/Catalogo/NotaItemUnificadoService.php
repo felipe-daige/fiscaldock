@@ -7,14 +7,23 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Visão unificada (movement-centric) dos itens de nota das duas fontes (EFD + XML),
- * keyed pelo codigo_item do contribuinte. Dedup EFD × XML por chave_acesso (EFD vence);
- * itens não duplicam entre fiscal/contribuicoes (disjuntos por chave), logo a metade EFD
- * soma efd_notas_itens direto. Procedência por item (efd/xml/ambas).
+ * keyed pelo codigo_item do contribuinte.
+ *
+ * A dedup EFD × XML por chave_acesso (EFD vence) existe para NÃO somar a mesma nota duas vezes.
+ * Esse objetivo só vale na visão canônica `fonte=ambas` — logo a dedup é um FILTER sobre os
+ * agregados de medida, não um WHERE que apaga a linha XML. Consequências:
+ *   - `fonte=efd|xml` é um recorte de DECLARANTE: mostra o que aquela fonte documenta, inteiro.
+ *     Os totais das três fontes não fecham entre si (a mesma nota está nas duas) — é esperado.
+ *   - a procedência (`fontes`: efd/xml/ambas) enxerga as duas metades, inclusive as duplicadas.
+ *   - só o item XML carrega NCM; o item EFD resolve NCM pelo catálogo 0200.
+ *
+ * Itens não duplicam entre fiscal/contribuicoes (disjuntos por chave), logo a metade EFD soma
+ * efd_notas_itens direto.
  */
 class NotaItemUnificadoService
 {
     /**
-     * @param  array{periodo_de?:string,periodo_ate?:string,cliente_id?:int,fonte?:string,cfops?:list<string>,csts?:list<string>}  $filtros
+     * @param  array{periodo_de?:string,periodo_ate?:string,cliente_id?:int,fonte?:string,cfops?:list<string>,csts?:list<string>,ncms?:list<string>,ncm_ausente?:bool}  $filtros
      * @return Collection<int,array<string,mixed>>
      */
     public function itensAgregados(int $userId, array $filtros = []): Collection
@@ -48,23 +57,53 @@ class NotaItemUnificadoService
             $xmlWhere .= " AND xi.cst_icms IN ({$cstPh})";
         }
 
+        // A dedup só entra na visão canônica `ambas`; com fonte explícita nada é descartado.
+        $dedup = $fonte === 'ambas' ? ' FILTER (WHERE NOT m.duplicada)' : '';
+        $aliqFiltro = $fonte === 'ambas'
+            ? 'FILTER (WHERE m.aliquota_icms > 0 AND NOT m.duplicada)'
+            : 'FILTER (WHERE m.aliquota_icms > 0)';
+
+        // NCM: item EFD não carrega NCM (vem do catálogo 0200), então o filtro é HAVING sobre o
+        // NCM RESOLVIDO (item XML ?: catálogo), normalizado a dígitos — igual ao que a tela mostra.
+        // `ncm_ausente` = resolvido vazio. As duas condições combinam por OR (mesmo campo).
+        $ncmNorm = "regexp_replace(COALESCE(MAX(m.ncm_item){$dedup}, cat.cod_ncm, ''), '[^0-9]', '', 'g')";
+        $ncmConds = [];
+        if (($ncmPh = $this->placeholders($filtros['ncms'] ?? [], 'ncm', $bind)) !== '') {
+            $ncmConds[] = "{$ncmNorm} IN ({$ncmPh})";
+        }
+        if (! empty($filtros['ncm_ausente'])) {
+            $ncmConds[] = "{$ncmNorm} = ''";
+        }
+
+        // Em `ambas`, um item que só aparece em linha XML duplicada tem todas as medidas filtradas
+        // (a nota gêmea EFD pode não escriturar o item — saída só com C190). Sem esta guarda ele
+        // entraria na tabela com valor zero; antes ficava fora. Mantém o conjunto de linhas.
+        $havingConds = [];
+        if ($fonte === 'ambas') {
+            $havingConds[] = 'COUNT(*) FILTER (WHERE NOT m.duplicada) > 0';
+        }
+        if ($ncmConds !== []) {
+            $havingConds[] = '('.implode(' OR ', $ncmConds).')';
+        }
+        $having = $havingConds !== [] ? ' HAVING '.implode(' AND ', $havingConds) : '';
+
         $efdSelect = "
             SELECT ni.codigo_item, ni.descricao, ni.quantidade, ni.valor_total, ni.cfop::text AS cfop,
-                   ni.cst_icms, ni.aliquota_icms, NULL::text AS ncm_item, 'efd' AS fonte
+                   ni.cst_icms, ni.aliquota_icms, NULL::text AS ncm_item, 'efd' AS fonte, false AS duplicada
             FROM efd_notas_itens ni
             JOIN efd_notas n ON n.id = ni.efd_nota_id AND n.cancelada = false
             WHERE ni.user_id = :uid{$efdWhere}";
 
         $xmlSelect = "
             SELECT xi.codigo_item, xi.descricao, xi.quantidade, xi.valor_total, xi.cfop::text AS cfop,
-                   xi.cst_icms, xi.aliquota_icms, xi.ncm AS ncm_item, 'xml' AS fonte
+                   xi.cst_icms, xi.aliquota_icms, xi.ncm AS ncm_item, 'xml' AS fonte,
+                   EXISTS (
+                       SELECT 1 FROM efd_notas en
+                       WHERE en.user_id = :uid AND en.chave_acesso = xn.chave_acesso
+                   ) AS duplicada
             FROM xml_notas_itens xi
             JOIN xml_notas xn ON xn.id = xi.xml_nota_id
-            WHERE xi.user_id = :uid
-              AND NOT EXISTS (
-                  SELECT 1 FROM efd_notas en
-                  WHERE en.user_id = :uid AND en.chave_acesso = xn.chave_acesso
-              ){$xmlWhere}";
+            WHERE xi.user_id = :uid{$xmlWhere}";
 
         if ($fonte === 'efd') {
             $movimento = $efdSelect;
@@ -77,14 +116,14 @@ class NotaItemUnificadoService
         $sql = "
             WITH movimento AS ({$movimento})
             SELECT m.codigo_item,
-                   MAX(m.descricao) AS descricao,
-                   COUNT(*) AS ocorrencias,
-                   COALESCE(SUM(m.quantidade), 0) AS quantidade,
-                   COALESCE(SUM(m.valor_total), 0) AS valor_total,
-                   string_agg(DISTINCT m.cfop, ',') AS cfops,
-                   string_agg(DISTINCT m.cst_icms, ',') AS csts,
-                   AVG(m.aliquota_icms) FILTER (WHERE m.aliquota_icms > 0) AS aliquota_media,
-                   MAX(m.ncm_item) AS ncm_item,
+                   MAX(m.descricao){$dedup} AS descricao,
+                   COUNT(*){$dedup} AS ocorrencias,
+                   COALESCE(SUM(m.quantidade){$dedup}, 0) AS quantidade,
+                   COALESCE(SUM(m.valor_total){$dedup}, 0) AS valor_total,
+                   string_agg(DISTINCT m.cfop, ','){$dedup} AS cfops,
+                   string_agg(DISTINCT m.cst_icms, ','){$dedup} AS csts,
+                   AVG(m.aliquota_icms) {$aliqFiltro} AS aliquota_media,
+                   MAX(m.ncm_item){$dedup} AS ncm_item,
                    string_agg(DISTINCT m.fonte, ',') AS fontes_raw,
                    cat.cod_item AS cat_cod_item, cat.descr_item AS cat_descr, cat.cod_ncm AS cat_ncm, cat.aliq_icms AS cat_aliq
             FROM movimento m
@@ -94,7 +133,7 @@ class NotaItemUnificadoService
                 WHERE user_id = :uid
                 ORDER BY cod_item, id DESC
             ) cat ON cat.cod_item = m.codigo_item
-            GROUP BY m.codigo_item, cat.cod_item, cat.descr_item, cat.cod_ncm, cat.aliq_icms
+            GROUP BY m.codigo_item, cat.cod_item, cat.descr_item, cat.cod_ncm, cat.aliq_icms{$having}
             ORDER BY valor_total DESC";
 
         $importacoes = $this->importacoesPorItem($userId, $filtros);
@@ -123,7 +162,8 @@ class NotaItemUnificadoService
 
     /**
      * Importação(ões) de origem por codigo_item (para link ao documento de origem na tabela de itens).
-     * Mesma dedup EFD×XML por chave de itensAgregados; respeita os filtros cliente/período/fonte.
+     * Rastreabilidade, não medida: a nota documentada nas duas fontes lista as DUAS importações
+     * (não há dedup aqui). Respeita os filtros cliente/período/fonte.
      *
      * @param  array{periodo_de?:string,periodo_ate?:string,cliente_id?:int,fonte?:string,cfops?:list<string>,csts?:list<string>}  $filtros
      * @return array<string, array<int, array{fonte:string,id:int,label:string}>>
@@ -171,9 +211,7 @@ class NotaItemUnificadoService
             FROM xml_notas_itens xi
             JOIN xml_notas xn ON xn.id = xi.xml_nota_id
             LEFT JOIN xml_importacoes xim ON xim.id = xn.importacao_xml_id
-            WHERE xi.user_id = :uid AND xn.importacao_xml_id IS NOT NULL
-              AND NOT EXISTS (SELECT 1 FROM efd_notas en WHERE en.user_id = :uid AND en.chave_acesso = xn.chave_acesso)
-              {$xmlWhere}";
+            WHERE xi.user_id = :uid AND xn.importacao_xml_id IS NOT NULL{$xmlWhere}";
 
         $fonte = $filtros['fonte'] ?? 'ambas';
         $src = match ($fonte) {
@@ -264,8 +302,9 @@ class NotaItemUnificadoService
     }
 
     /**
-     * Itens movimentados em nota SEM cadastro no catálogo 0200 (EFD + XML, dedup EFD×XML por chave),
-     * com a referência da(s) importação(ões) de origem. Alimenta o painel acionável "Sem catálogo".
+     * Itens movimentados em nota SEM cadastro no catálogo 0200 (EFD + XML), com a referência da(s)
+     * importação(ões) de origem. Alimenta o painel acionável "Sem catálogo" — visão canônica,
+     * independente do filtro `fonte`: dedup EFD×XML nas medidas, procedência e importações inteiras.
      *
      * @param  array{periodo_de?:string,periodo_ate?:string,cliente_id?:int}  $filtros
      * @return Collection<int, array{codigo_item:string,descricao:?string,fontes:string,importacoes:?string,ocorrencias:int}>
@@ -295,7 +334,7 @@ class NotaItemUnificadoService
             WITH mov AS (
                 SELECT ni.codigo_item, ni.descricao,
                        trim(coalesce(ei.tipo_efd, 'EFD') || ' ' || coalesce(to_char(ei.periodo_inicio, 'MM/YYYY'), '')) AS imp_label,
-                       'efd' AS fonte
+                       'efd' AS fonte, false AS duplicada
                 FROM efd_notas_itens ni
                 JOIN efd_notas n ON n.id = ni.efd_nota_id AND n.cancelada = false
                 LEFT JOIN efd_importacoes ei ON ei.id = n.importacao_id
@@ -303,19 +342,18 @@ class NotaItemUnificadoService
                 UNION ALL
                 SELECT xi.codigo_item, xi.descricao,
                        coalesce(NULLIF(xim.filename, ''), 'XML #'||xim.id::text) AS imp_label,
-                       'xml' AS fonte
+                       'xml' AS fonte,
+                       EXISTS (SELECT 1 FROM efd_notas en WHERE en.user_id = :uid AND en.chave_acesso = xn.chave_acesso) AS duplicada
                 FROM xml_notas_itens xi
                 JOIN xml_notas xn ON xn.id = xi.xml_nota_id
                 LEFT JOIN xml_importacoes xim ON xim.id = xn.importacao_xml_id
-                WHERE xi.user_id = :uid
-                  AND NOT EXISTS (SELECT 1 FROM efd_notas en WHERE en.user_id = :uid AND en.chave_acesso = xn.chave_acesso)
-                  {$xmlWhere}
+                WHERE xi.user_id = :uid{$xmlWhere}
             )
             SELECT m.codigo_item,
-                   MAX(m.descricao) AS descricao,
+                   MAX(m.descricao) FILTER (WHERE NOT m.duplicada) AS descricao,
                    string_agg(DISTINCT m.fonte, ',') AS fontes_raw,
                    string_agg(DISTINCT m.imp_label, ' · ') FILTER (WHERE m.imp_label IS NOT NULL AND m.imp_label <> '') AS importacoes,
-                   COUNT(*) AS ocorrencias
+                   COUNT(*) FILTER (WHERE NOT m.duplicada) AS ocorrencias
             FROM mov m
             LEFT JOIN (
                 SELECT DISTINCT ON (cod_item) cod_item
@@ -325,6 +363,7 @@ class NotaItemUnificadoService
             ) cat ON cat.cod_item = m.codigo_item
             WHERE cat.cod_item IS NULL
             GROUP BY m.codigo_item
+            HAVING COUNT(*) FILTER (WHERE NOT m.duplicada) > 0
             ORDER BY m.codigo_item";
 
         return collect(DB::select($sql, $bind))->map(fn ($r) => [
@@ -337,11 +376,11 @@ class NotaItemUnificadoService
     }
 
     /**
-     * CFOPs e CSTs distintos no universo de movimento do usuário — opções para os filtros da UI.
-     * Respeita cliente/período/fonte (mas NÃO cfop/cst, para o conjunto de opções ficar completo).
+     * CFOPs, CSTs e NCMs distintos no universo de movimento do usuário — opções para os filtros da UI.
+     * Respeita cliente/período/fonte (mas NÃO cfop/cst/ncm, para o conjunto de opções ficar completo).
      *
      * @param  array{periodo_de?:string,periodo_ate?:string,cliente_id?:int,fonte?:string}  $filtros
-     * @return array{cfops: list<string>, csts: list<string>}
+     * @return array{cfops: list<string>, csts: list<string>, ncms: list<string>}
      */
     public function facetas(int $userId, array $filtros = []): array
     {
@@ -374,9 +413,7 @@ class NotaItemUnificadoService
             SELECT DISTINCT xi.cfop::text AS cfop, xi.cst_icms AS cst
             FROM xml_notas_itens xi
             JOIN xml_notas xn ON xn.id = xi.xml_nota_id
-            WHERE xi.user_id = :uid
-              AND NOT EXISTS (SELECT 1 FROM efd_notas en WHERE en.user_id = :uid AND en.chave_acesso = xn.chave_acesso)
-              {$xmlWhere}";
+            WHERE xi.user_id = :uid{$xmlWhere}";
 
         $fonte = $filtros['fonte'] ?? 'ambas';
         $src = match ($fonte) {
@@ -392,7 +429,22 @@ class NotaItemUnificadoService
             ->filter(fn ($v) => $v !== '')
             ->unique()->sort()->values()->all();
 
-        return ['cfops' => $pick('cfop'), 'csts' => $pick('cst')];
+        // NCM: universo = NCM do catálogo 0200 (cobre o lado EFD, que resolve NCM pelo cadastro)
+        // ∪ NCM de item XML (quando a fonte inclui XML). Dígitos-normalizado. Duas queries com binds
+        // exatos (catálogo = só :uid; XML = :uid + wheres de cliente/período) para não sobrar bind.
+        $ncmCatSel = "SELECT DISTINCT regexp_replace(cod_ncm, '[^0-9]', '', 'g') AS ncm
+            FROM efd_catalogo_itens WHERE user_id = :uid AND cod_ncm IS NOT NULL AND cod_ncm <> ''";
+        $ncms = collect(DB::select($ncmCatSel, ['uid' => $userId]))->pluck('ncm');
+        if ($fonte !== 'efd') {
+            $ncmXmlSel = "SELECT DISTINCT regexp_replace(xi.ncm, '[^0-9]', '', 'g') AS ncm
+                FROM xml_notas_itens xi
+                JOIN xml_notas xn ON xn.id = xi.xml_nota_id
+                WHERE xi.user_id = :uid AND xi.ncm IS NOT NULL AND xi.ncm <> ''{$xmlWhere}";
+            $ncms = $ncms->merge(collect(DB::select($ncmXmlSel, $bind))->pluck('ncm'));
+        }
+        $ncms = $ncms->map(fn ($v) => trim((string) $v))->filter()->unique()->sort()->values()->all();
+
+        return ['cfops' => $pick('cfop'), 'csts' => $pick('cst'), 'ncms' => $ncms];
     }
 
     /**

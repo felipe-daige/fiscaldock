@@ -112,7 +112,37 @@ it('mostra a faixa de reconciliação quando há nota XML documentada', function
     $html = actingAs($user)->get('/app/bi/catalogo-itens')->assertOk()->getContent();
 
     expect($html)->toContain('Reconciliação documento');
-    expect($html)->toContain('documentadas');
+    expect($html)->toContain('Documentadas (XML)');
+    expect($html)->toContain('reconciliado');   // headline da taxa
+});
+
+it('filtra a tabela por NCM específico', function () {
+    [$user, $clienteId] = seedBiUser();
+    biCatalogo($user->id, $clienteId, 'ITEMNCMX', '12345678');
+    biCatalogo($user->id, $clienteId, 'ITEMNCMY', '87654321');
+    biEfdItem($user->id, $clienteId, str_pad('X', 44, '0', STR_PAD_LEFT), 'ITEMNCMX', 100.0);
+    biEfdItem($user->id, $clienteId, str_pad('Y', 44, '0', STR_PAD_LEFT), 'ITEMNCMY', 50.0);
+
+    $url = '/app/bi/catalogo-itens?'.http_build_query(['ncms' => ['12345678']]);
+    $html = actingAs($user)->get($url)->assertOk()->getContent();
+
+    // codigo_item só aparece nas linhas da tabela (o dropdown lista NCMs, não códigos)
+    expect($html)->toContain('ITEMNCMX');
+    expect($html)->not->toContain('ITEMNCMY');
+});
+
+it('filtra por NCM ausente via sentinela __sem__', function () {
+    [$user, $clienteId] = seedBiUser();
+    biCatalogo($user->id, $clienteId, 'ITEMNCMX', '12345678'); // tem NCM
+    biCatalogo($user->id, $clienteId, 'ITEMSEMN', '');          // catálogo sem NCM → resolvido vazio (ausente)
+    biEfdItem($user->id, $clienteId, str_pad('X', 44, '0', STR_PAD_LEFT), 'ITEMNCMX', 100.0);
+    biEfdItem($user->id, $clienteId, str_pad('S', 44, '0', STR_PAD_LEFT), 'ITEMSEMN', 30.0);
+
+    $url = '/app/bi/catalogo-itens?'.http_build_query(['ncms' => ['__sem__']]);
+    $html = actingAs($user)->get($url)->assertOk()->getContent();
+
+    expect($html)->toContain('ITEMSEMN');
+    expect($html)->not->toContain('ITEMNCMX');
 });
 
 it('não mostra o painel de divergência quando não há divergência', function () {
@@ -340,4 +370,75 @@ it('mostra a coluna Arquivo de origem com link para a importação na tabela de 
 
     expect($html)->toContain('Arquivo de origem');
     expect($html)->toContain('/app/importacao/efd/'); // link para o documento de origem
+});
+
+/*
+ * Filtro `fonte` = recorte de DECLARANTE (não partição de valor). A dedup EFD×XML por chave só
+ * incide nas medidas de `fonte=ambas`; com fonte explícita nada é descartado. Regressão do bug em
+ * que a nota documentada nas duas fontes sumia inteira de `fonte=xml`.
+ */
+function biNotaNasDuasFontes(int $userId, int $clienteId, string $codItem, float $valor, string $ncmXml): string
+{
+    $chave = str_pad('F', 44, '0', STR_PAD_LEFT);
+    biEfdItem($userId, $clienteId, $chave, $codItem, $valor);
+    biXmlItem($userId, $clienteId, $chave, $codItem, $valor, $ncmXml);
+
+    return $chave;
+}
+
+it('fonte=xml mostra o item mesmo quando a mesma chave existe no EFD', function () {
+    [$user, $clienteId] = seedBiUser();
+    biCatalogo($user->id, $clienteId, 'DUAL', '11112222');
+    biNotaNasDuasFontes($user->id, $clienteId, 'DUAL', 100.0, '99998888');
+
+    $service = app(App\Services\Catalogo\NotaItemUnificadoService::class);
+    $xml = $service->itensAgregados($user->id, ['fonte' => 'xml']);
+
+    expect($xml)->toHaveCount(1);
+    expect($xml->first()['valor_total'])->toBe(100.0);
+    expect($xml->first()['fontes'])->toBe('xml');
+});
+
+it('fonte=ambas não soma a mesma nota duas vezes e marca a procedência como ambas', function () {
+    [$user, $clienteId] = seedBiUser();
+    biCatalogo($user->id, $clienteId, 'DUAL', '11112222');
+    biNotaNasDuasFontes($user->id, $clienteId, 'DUAL', 100.0, '99998888');
+
+    $item = app(App\Services\Catalogo\NotaItemUnificadoService::class)
+        ->itensAgregados($user->id, ['fonte' => 'ambas'])->first();
+
+    expect($item['valor_total'])->toBe(100.0);  // EFD vence; XML duplicado não soma
+    expect($item['ocorrencias'])->toBe(1);
+    expect($item['fontes'])->toBe('ambas');     // procedência enxerga as duas metades
+});
+
+it('fonte=xml resolve o NCM documentado; fonte=efd cai no catálogo', function () {
+    [$user, $clienteId] = seedBiUser();
+    biCatalogo($user->id, $clienteId, 'DUAL', '11112222');
+    biNotaNasDuasFontes($user->id, $clienteId, 'DUAL', 100.0, '99998888');
+
+    $service = app(App\Services\Catalogo\NotaItemUnificadoService::class);
+
+    expect($service->itensAgregados($user->id, ['fonte' => 'xml'])->first()['ncm'])->toBe('99998888');
+    expect($service->itensAgregados($user->id, ['fonte' => 'efd'])->first()['ncm'])->toBe('11112222');
+});
+
+it('rotula a coluna NCM conforme a fonte selecionada', function () {
+    [$user, $clienteId] = seedBiUser();
+    biCatalogo($user->id, $clienteId, 'DUAL', '11112222');
+    biNotaNasDuasFontes($user->id, $clienteId, 'DUAL', 100.0, '99998888');
+
+    expect(actingAs($user)->get('/app/bi/catalogo-itens?fonte=xml')->getContent())->toContain('NCM (documento)');
+    expect(actingAs($user)->get('/app/bi/catalogo-itens?fonte=efd')->getContent())->toContain('NCM (catálogo)');
+});
+
+it('fonte=xml oferece o CFOP e o NCM do item XML nas facetas do filtro', function () {
+    [$user, $clienteId] = seedBiUser();
+    biCatalogo($user->id, $clienteId, 'DUAL', '11112222');
+    biNotaNasDuasFontes($user->id, $clienteId, 'DUAL', 100.0, '99998888');
+
+    $facetas = app(App\Services\Catalogo\NotaItemUnificadoService::class)->facetas($user->id, ['fonte' => 'xml']);
+
+    expect($facetas['cfops'])->toContain('5102');
+    expect($facetas['ncms'])->toContain('99998888');
 });

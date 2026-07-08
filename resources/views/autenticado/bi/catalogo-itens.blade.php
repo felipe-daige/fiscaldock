@@ -30,6 +30,11 @@
 
     // Cor do badge de origem (efd/xml/ambas) — reutilizado na tabela, nos cards e nos alertas.
     $origemCor = fn (string $fonte) => ['efd' => '#1d4ed8', 'xml' => '#7c3aed', 'ambas' => '#047857'][$fonte] ?? '#334155';
+
+    // Só o item XML carrega NCM; o EFD resolve pelo catálogo 0200. Com fonte explícita o cabeçalho
+    // diz de onde veio o número — em `ambas` a coluna mistura (XML órfão traz o documentado).
+    $fonteSel = $filtros['fonte'] ?? null;
+    $ncmLabel = match ($fonteSel) { 'xml' => 'NCM (documento)', 'efd' => 'NCM (catálogo)', default => 'NCM' };
 @endphp
 <div class="min-h-screen bg-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -39,47 +44,152 @@
                 <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Catálogo × Itens de Nota</h1>
                 <p class="text-xs text-gray-500 mt-0.5">Itens movimentados nas notas (XML + EFD), cruzados com o catálogo do contribuinte.</p>
             </div>
-            <x-acoes-menu label="Exportar" align="right" size="lg">
-                <x-acoes-item href="{{ route('app.bi.catalogo-itens.exportar-xlsx', request()->query()) }}">Excel (XLSX)</x-acoes-item>
-                <x-acoes-item href="{{ route('app.bi.catalogo-itens.exportar', request()->query()) }}">Excel (CSV)</x-acoes-item>
-                <x-acoes-item href="{{ route('app.bi.catalogo-itens.exportar-pdf', request()->query()) }}">PDF</x-acoes-item>
-            </x-acoes-menu>
+            {{-- Botão único Exportar → modal de formato → overlay (preserva os filtros da URL). --}}
+            @php $qsCatalogo = http_build_query(request()->query()); @endphp
+            <x-export-menu id="modal-exportar-catalogo" titulo="Exportar catálogo × itens"
+                           descricao="O arquivo preserva os filtros aplicados na tela."
+                           overlay="download-overlay-catalogo">
+                <x-export-grupo label="Documento" />
+                <x-export-option format="pdf" modal-id="modal-exportar-catalogo" overlay="download-overlay-catalogo"
+                                 path="{{ route('app.bi.catalogo-itens.exportar-pdf') }}" query="{{ $qsCatalogo }}"
+                                 descricao="Itens movimentados, em uma folha." />
+                <x-export-grupo label="Planilhas" />
+                <x-export-option format="xlsx" modal-id="modal-exportar-catalogo" overlay="download-overlay-catalogo"
+                                 path="{{ route('app.bi.catalogo-itens.exportar-xlsx') }}" query="{{ $qsCatalogo }}"
+                                 descricao="Uma linha por item: NCM, CFOPs, CSTs, quantidade e valor." />
+                <x-export-option format="csv" modal-id="modal-exportar-catalogo" overlay="download-overlay-catalogo"
+                                 path="{{ route('app.bi.catalogo-itens.exportar') }}" query="{{ $qsCatalogo }}"
+                                 descricao="Mesmas colunas do XLSX, uma linha por item." />
+            </x-export-menu>
         </div>
 
-        {{-- KPIs --}}
-        <div class="grid grid-cols-2 lg:grid-cols-6 gap-3 mb-5">
-            {{-- $alerta: KPIs de problema pintam o número (e a borda) só quando > 0 — zero problemas fica
-                 mudo, então o olho vai direto pro que precisa de ação, sem 3 blocos âmbar idênticos. --}}
-            @foreach([
-                ['Itens movimentados', $kpis['total_itens'], '#1d4ed8', false],
-                ['Com catálogo', $kpis['com_catalogo'], '#047857', false],
-                ['Sem catálogo', $kpis['sem_catalogo'], '#b45309', true],
-                ['Sem NCM', $kpis['sem_ncm'], '#b45309', true],
-                ['NCM a revisar', $kpis['ncm_revisar'] ?? 0, '#b45309', true],
-            ] as [$label, $valor, $cor, $alerta])
-                @php $ativo = ! $alerta || $valor > 0; @endphp
-                <div class="bg-white rounded border border-gray-300 border-l-4 p-3" style="border-left-color: {{ $ativo ? $cor : '#d1d5db' }}">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{{ $label }}</p>
-                    <p class="text-lg font-bold" style="color: {{ $alerta && $valor > 0 ? $cor : ($ativo ? '#111827' : '#9ca3af') }}">{{ number_format($valor, 0, ',', '.') }}</p>
-                </div>
-            @endforeach
-            <div class="bg-white rounded border border-gray-300 border-l-4 p-3" style="border-left-color: #334155">
+        <x-download-overlay id="download-overlay-catalogo" texto="Gerando arquivo…" />
+
+        {{-- ── Resumo: herói (valor) + cobertura em % com barra ─────────────────
+             Antes eram 6 cards de mesmo peso (3 âmbar idênticos competindo). Agora o
+             valor movimentado é o número herói; "com catálogo/sem NCM" viram % de
+             COBERTURA (mais legível que contagem crua); e as 3 pendências foram
+             agrupadas num único painel abaixo. Tudo derivado de $kpis — sem tocar backend. --}}
+        @php
+            $tot         = (int) $kpis['total_itens'];
+            $totSafe     = max(1, $tot);
+            $comCatalogo = (int) $kpis['com_catalogo'];
+            $comNcm      = $tot - (int) $kpis['sem_ncm'];
+            $pctCatalogo = (int) round($comCatalogo / $totSafe * 100);
+            $pctNcm      = (int) round($comNcm / $totSafe * 100);
+            $pendencias  = (int) $kpis['sem_catalogo'] + (int) $kpis['sem_ncm'] + (int) ($kpis['ncm_revisar'] ?? 0);
+            // faixa de cobertura → cor: alta verde, média âmbar, baixa vermelha
+            $corPct = fn (int $p) => $p >= 90 ? '#047857' : ($p >= 60 ? '#b45309' : '#dc2626');
+        @endphp
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-3 mb-3">
+            {{-- HERO: valor movimentado --}}
+            <div class="bg-white rounded border border-gray-300 border-l-4 p-4 lg:col-span-2 flex flex-col justify-center" style="border-left-color:#334155">
                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Valor movimentado</p>
-                <p class="text-lg font-bold text-gray-900">{{ $fmtMoeda($kpis['valor_movimentado']) }}</p>
+                <p class="text-2xl sm:text-3xl font-bold text-gray-900 tabular-nums mt-1">{{ $fmtMoeda($kpis['valor_movimentado']) }}</p>
+                <p class="text-[11px] text-gray-500 mt-1">{{ number_format($tot, 0, ',', '.') }} item(ns) movimentado(s) no período/filtro</p>
+            </div>
+
+            {{-- Cobertura de catálogo (0200) --}}
+            <div class="bg-white rounded border border-gray-300 p-4 flex flex-col justify-center">
+                <div class="flex items-baseline justify-between gap-2">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Cobertura de catálogo</p>
+                    <p class="text-lg font-bold tabular-nums" style="color:{{ $corPct($pctCatalogo) }}">{{ $pctCatalogo }}%</p>
+                </div>
+                <div class="h-1.5 rounded-full mt-2 overflow-hidden" style="background-color:#f3f4f6">
+                    <div class="h-full rounded-full" style="width:{{ $pctCatalogo }}%;background-color:{{ $corPct($pctCatalogo) }}"></div>
+                </div>
+                <p class="text-[11px] text-gray-500 mt-1.5">{{ number_format($comCatalogo, 0, ',', '.') }} de {{ number_format($tot, 0, ',', '.') }} com registro 0200</p>
+            </div>
+
+            {{-- Cobertura de NCM --}}
+            <div class="bg-white rounded border border-gray-300 p-4 flex flex-col justify-center">
+                <div class="flex items-baseline justify-between gap-2">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Itens com NCM</p>
+                    <p class="text-lg font-bold tabular-nums" style="color:{{ $corPct($pctNcm) }}">{{ $pctNcm }}%</p>
+                </div>
+                <div class="h-1.5 rounded-full mt-2 overflow-hidden" style="background-color:#f3f4f6">
+                    <div class="h-full rounded-full" style="width:{{ $pctNcm }}%;background-color:{{ $corPct($pctNcm) }}"></div>
+                </div>
+                <p class="text-[11px] text-gray-500 mt-1.5">{{ number_format($comNcm, 0, ',', '.') }} de {{ number_format($tot, 0, ',', '.') }} com NCM preenchido</p>
+            </div>
+        </div>
+
+        {{-- Pendências agrupadas: um painel só (fim dos 3 blocos âmbar). Cada número
+             só ganha cor quando > 0; tudo-certo mostra selo verde. --}}
+        <div class="bg-white rounded border border-gray-300 p-3 mb-5">
+            <div class="flex items-center justify-between mb-2">
+                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Pendências de catálogo</p>
+                @if($pendencias === 0)
+                    <span class="text-[11px] font-semibold" style="color:#047857">✓ Nenhuma pendência</span>
+                @endif
+            </div>
+            <div class="grid grid-cols-3 divide-x divide-gray-100">
+                @foreach([
+                    ['Sem catálogo', $kpis['sem_catalogo']],
+                    ['Sem NCM', $kpis['sem_ncm']],
+                    ['NCM a revisar', $kpis['ncm_revisar'] ?? 0],
+                ] as [$label, $valor])
+                    <div class="px-3 first:pl-0">
+                        <p class="text-lg font-bold tabular-nums" style="color:{{ $valor > 0 ? '#b45309' : '#9ca3af' }}">{{ number_format($valor, 0, ',', '.') }}</p>
+                        <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ $label }}</p>
+                    </div>
+                @endforeach
             </div>
         </div>
 
         @if(($reconciliacao['documentadas'] ?? 0) > 0)
-            <div class="bg-white rounded border border-gray-300 p-3 mb-4">
-                <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Reconciliação documento × declarado (por chave)</p>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                    <div><span class="font-bold text-gray-900">{{ number_format($reconciliacao['documentadas'], 0, ',', '.') }}</span> <span class="text-gray-500 text-[11px]">documentadas (XML)</span></div>
-                    <div><span class="font-bold" style="color:#047857">{{ number_format($reconciliacao['reconciliadas'], 0, ',', '.') }}</span> <span class="text-gray-500 text-[11px]">reconciliadas</span></div>
-                    <div><span class="font-bold" style="color:#b45309">{{ number_format($reconciliacao['divergencia_total'], 0, ',', '.') }}</span> <span class="text-gray-500 text-[11px]">divergência de total</span></div>
-                    <div><span class="font-bold" style="color:#dc2626">{{ number_format($reconciliacao['nao_declaradas'], 0, ',', '.') }}</span> <span class="text-gray-500 text-[11px]">não declaradas</span></div>
+            {{-- Reconciliação XML×EFD por chave. As 3 categorias particionam `documentadas`
+                 (reconciliadas + divergência + não declaradas = total), então a barra empilhada
+                 é fiel. Headline = taxa de reconciliação; cada cor tem sublabel do critério. --}}
+            @php
+                $rDoc  = (int) $reconciliacao['documentadas'];
+                $rOk   = (int) $reconciliacao['reconciliadas'];
+                $rDiv  = (int) $reconciliacao['divergencia_total'];
+                $rNao  = (int) $reconciliacao['nao_declaradas'];
+                $rBase = max(1, $rDoc);
+                $pctOk = (int) round($rOk / $rBase * 100);
+                $corTaxa = $pctOk >= 90 ? '#047857' : ($pctOk >= 60 ? '#b45309' : '#dc2626');
+            @endphp
+            <div class="bg-white rounded border border-gray-300 p-4 mb-4">
+                <div class="flex items-center justify-between gap-3 mb-3">
+                    <div>
+                        <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Reconciliação documento × declarado</p>
+                        <p class="text-[10px] text-gray-400 mt-0.5">XML (contador) × EFD (SPED), por chave de acesso</p>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <p class="text-xl font-bold tabular-nums leading-none" style="color:{{ $corTaxa }}">{{ $pctOk }}%</p>
+                        <p class="text-[10px] text-gray-400 uppercase tracking-wide mt-1">reconciliado</p>
+                    </div>
                 </div>
+
+                {{-- barra empilhada: verde reconciliadas / âmbar divergência / vermelho não declaradas --}}
+                <div class="flex h-2.5 rounded-full overflow-hidden mb-4" style="background-color:#f3f4f6">
+                    @if($rOk > 0)<div style="width:{{ $rOk / $rBase * 100 }}%;background-color:#047857" title="Reconciliadas"></div>@endif
+                    @if($rDiv > 0)<div style="width:{{ $rDiv / $rBase * 100 }}%;background-color:#b45309" title="Divergência de total"></div>@endif
+                    @if($rNao > 0)<div style="width:{{ $rNao / $rBase * 100 }}%;background-color:#dc2626" title="Não declaradas"></div>@endif
+                </div>
+
+                {{-- legenda com contagem + critério --}}
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    @foreach([
+                        ['Documentadas (XML)', $rDoc, '#334155', 'base do cruzamento'],
+                        ['Reconciliadas', $rOk, '#047857', 'total XML = EFD'],
+                        ['Divergência de total', $rDiv, '#b45309', 'total XML ≠ EFD'],
+                        ['Não declaradas', $rNao, '#dc2626', 'XML sem EFD'],
+                    ] as [$lbl, $val, $cor, $sub])
+                        <div class="flex items-start gap-2">
+                            <span class="w-2 h-2 rounded-full mt-1.5 shrink-0" style="background-color:{{ $cor }}"></span>
+                            <div class="min-w-0">
+                                <p class="text-lg font-bold tabular-nums leading-none" style="color:{{ $cor }}">{{ number_format($val, 0, ',', '.') }}</p>
+                                <p class="text-[10px] text-gray-500 uppercase tracking-wide mt-1">{{ $lbl }}</p>
+                                <p class="text-[10px] text-gray-400">{{ $sub }}</p>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
                 @if(($reconciliacao['efd_sem_xml'] ?? 0) > 0)
-                    <p class="text-[11px] text-gray-400 mt-2">Cobertura: {{ number_format($reconciliacao['efd_sem_xml'], 0, ',', '.') }} nota(s) declarada(s) no EFD sem XML no acervo (informativo, não é alerta).</p>
+                    <p class="text-[11px] text-gray-400 mt-3 pt-3 border-t border-gray-100">Cobertura: {{ number_format($reconciliacao['efd_sem_xml'], 0, ',', '.') }} nota(s) declarada(s) no EFD sem XML no acervo (informativo, não é alerta).</p>
                 @endif
             </div>
         @endif
@@ -138,73 +248,125 @@
         @php
             $cfopsSel = $filtros['cfops'] ?? [];
             $cstsSel = $filtros['csts'] ?? [];
+            $ncmsSel = $filtros['ncms'] ?? [];
+            $ncmAusente = ! empty($filtros['ncm_ausente']);
+            // máscara NCM 4.2.2 só para exibição (o value do checkbox é o código cru de 8 dígitos)
+            $fmtNcm = function ($n) {
+                $d = preg_replace('/\D/', '', (string) $n);
+                return strlen($d) === 8 ? substr($d, 0, 4).'.'.substr($d, 4, 2).'.'.substr($d, 6, 2) : $d;
+            };
         @endphp
-        <form method="GET" class="bg-white rounded border border-gray-300 p-3 mb-4 space-y-3">
-            {{-- contexto + CFOP/CST (dropdowns multi-select, alinhados) --}}
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                <div>
-                    <label class="block text-[11px] text-gray-500 mb-1">Cliente</label>
-                    <select name="cliente_id" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
-                        <option value="">Todos</option>
-                        @foreach($clientes as $c)
-                            <option value="{{ $c->id }}" @selected(($filtros['cliente_id'] ?? null) == $c->id)>{{ $c->razao_social }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-[11px] text-gray-500 mb-1">Fonte</label>
-                    <select name="fonte" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
-                        <option value="">Ambas</option>
-                        <option value="efd" @selected(($filtros['fonte'] ?? null) === 'efd')>EFD</option>
-                        <option value="xml" @selected(($filtros['fonte'] ?? null) === 'xml')>XML</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-[11px] text-gray-500 mb-1">De</label>
-                    <input type="date" name="periodo_de" value="{{ $filtros['periodo_de'] ?? '' }}" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
-                </div>
-                <div>
-                    <label class="block text-[11px] text-gray-500 mb-1">Até</label>
-                    <input type="date" name="periodo_ate" value="{{ $filtros['periodo_ate'] ?? '' }}" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
-                </div>
-
-                {{-- CFOP --}}
-                <x-multi-select-pop grupo="cfop" label="CFOP" :selecionados="$cfopsSel" width="w-80"
-                    placeholder="buscar código ou descrição…" :temOpcoes="count($cfopOpcoes) > 0">
-                    @forelse($cfopOpcoes as $cf)
-                        <label data-row data-search="{{ strtolower($cf['codigo'].' '.$cf['descricao']) }}" class="flex items-center gap-2 px-2.5 py-1.5 text-[12px] cursor-pointer hover:bg-gray-50">
-                            <input type="checkbox" name="cfops[]" value="{{ $cf['codigo'] }}" onchange="catFiltro.contar('cfop')" @checked(in_array($cf['codigo'], $cfopsSel, true))>
-                            <span class="font-mono font-semibold text-gray-900">{{ $cf['codigo'] }}</span>
-                            @if($cf['tipo'] !== 'indefinido')
-                                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase text-white shrink-0" style="background-color: {{ $cf['tipo'] === 'entrada' ? '#1d4ed8' : '#047857' }}">{{ $cf['tipo'] }}</span>
-                            @endif
-                            <span class="text-gray-600 truncate" title="{{ $cf['descricao'] }}">{{ $cf['descricao'] ?: '—' }}</span>
-                        </label>
-                    @empty
-                        <span class="block px-2.5 py-2 text-[11px] text-gray-400">Sem dados no período/filtro.</span>
-                    @endforelse
-                </x-multi-select-pop>
-
-                {{-- CST --}}
-                <x-multi-select-pop grupo="cst" label="CST" :selecionados="$cstsSel" width="w-52"
-                    panelAlign="right-0 lg:left-0" :temOpcoes="count($facetas['csts'] ?? []) > 0">
-                    @forelse($facetas['csts'] ?? [] as $ct)
-                        <label data-row data-search="{{ strtolower($ct) }}" class="flex items-center gap-2 px-2.5 py-1.5 text-[12px] cursor-pointer hover:bg-gray-50">
-                            <input type="checkbox" name="csts[]" value="{{ $ct }}" onchange="catFiltro.contar('cst')" @checked(in_array($ct, $cstsSel, true))>
-                            <span class="font-mono font-semibold text-gray-900">{{ $ct }}</span>
-                        </label>
-                    @empty
-                        <span class="block px-2.5 py-2 text-[11px] text-gray-400">Sem dados.</span>
-                    @endforelse
-                </x-multi-select-pop>
+        @php
+            // Avançados = dimensões fiscais (CFOP/CST/NCM). Contagem p/ o badge do "Mais filtros";
+            // começa expandido se algum estiver ativo (igual /app/clientes).
+            $avancadosAtivos = (count($cfopsSel) > 0 ? 1 : 0) + (count($cstsSel) > 0 ? 1 : 0)
+                + ((count($ncmsSel) > 0 || $ncmAusente) ? 1 : 0);
+        @endphp
+        {{-- Sem overflow-hidden (ao contrário de /app/clientes): os dropdowns CFOP/CST/NCM abrem
+             painel absoluto que seria cortado. Header arredondado com rounded-t no lugar. --}}
+        <form method="GET" class="bg-white rounded border border-gray-300 mb-4">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 rounded-t">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
             </div>
+            <div class="p-4">
+                {{-- Básicos (sempre visíveis): contexto do cruzamento --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                    <div>
+                        <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Cliente</label>
+                        <select name="cliente_id" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <option value="">Todos</option>
+                            @foreach($clientes as $c)
+                                <option value="{{ $c->id }}" @selected(($filtros['cliente_id'] ?? null) == $c->id)>{{ $c->razao_social }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Fonte</label>
+                        <select name="fonte" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <option value="">Ambas</option>
+                            <option value="efd" @selected(($filtros['fonte'] ?? null) === 'efd')>EFD</option>
+                            <option value="xml" @selected(($filtros['fonte'] ?? null) === 'xml')>XML</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">De</label>
+                        <input type="date" name="periodo_de" value="{{ $filtros['periodo_de'] ?? '' }}" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Até</label>
+                        <input type="date" name="periodo_ate" value="{{ $filtros['periodo_ate'] ?? '' }}" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                    </div>
+                </div>
 
-            {{-- ações --}}
-            <div class="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200">
-                <button type="submit" class="bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium px-4 py-2">Filtrar</button>
-                @if(array_filter($filtros))
-                    <a href="/app/bi/catalogo-itens" data-link class="bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded text-sm font-medium px-4 py-2">Limpar</a>
-                @endif
+                {{-- Toggle "Mais filtros" --}}
+                <div class="mt-3">
+                    <button type="button" onclick="var a=document.getElementById('filtros-avancados-cat'); a.classList.toggle('hidden'); this.querySelector('svg').classList.toggle('rotate-180');"
+                        class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-gray-900 font-medium">
+                        <svg class="w-3.5 h-3.5 transition-transform {{ $avancadosAtivos > 0 ? 'rotate-180' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        Mais filtros
+                        @if($avancadosAtivos > 0)
+                            <span class="text-[10px] text-white rounded-full px-1.5 py-0.5" style="background-color:#374151;">{{ $avancadosAtivos }}</span>
+                        @endif
+                    </button>
+                </div>
+
+                {{-- Avançados (colapsável): dimensões fiscais CFOP/CST/NCM (multi-select) --}}
+                <div id="filtros-avancados-cat" class="{{ $avancadosAtivos > 0 ? '' : 'hidden' }} grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-3 pt-4 border-t border-gray-200">
+                    {{-- CFOP --}}
+                    <x-multi-select-pop grupo="cfop" label="CFOP" :selecionados="$cfopsSel" width="w-80"
+                        placeholder="buscar código ou descrição…" :temOpcoes="count($cfopOpcoes) > 0">
+                        @forelse($cfopOpcoes as $cf)
+                            <label data-row data-search="{{ strtolower($cf['codigo'].' '.$cf['descricao']) }}" class="flex items-center gap-2 px-2.5 py-1.5 text-[12px] cursor-pointer hover:bg-gray-50">
+                                <input type="checkbox" name="cfops[]" value="{{ $cf['codigo'] }}" onchange="catFiltro.contar('cfop')" @checked(in_array($cf['codigo'], $cfopsSel, true))>
+                                <span class="font-mono font-semibold text-gray-900">{{ $cf['codigo'] }}</span>
+                                @if($cf['tipo'] !== 'indefinido')
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase text-white shrink-0" style="background-color: {{ $cf['tipo'] === 'entrada' ? '#1d4ed8' : '#047857' }}">{{ $cf['tipo'] }}</span>
+                                @endif
+                                <span class="text-gray-600 truncate" title="{{ $cf['descricao'] }}">{{ $cf['descricao'] ?: '—' }}</span>
+                            </label>
+                        @empty
+                            <span class="block px-2.5 py-2 text-[11px] text-gray-400">Sem dados no período/filtro.</span>
+                        @endforelse
+                    </x-multi-select-pop>
+
+                    {{-- CST --}}
+                    <x-multi-select-pop grupo="cst" label="CST" :selecionados="$cstsSel" width="w-52"
+                        :temOpcoes="count($facetas['csts'] ?? []) > 0">
+                        @forelse($facetas['csts'] ?? [] as $ct)
+                            <label data-row data-search="{{ strtolower($ct) }}" class="flex items-center gap-2 px-2.5 py-1.5 text-[12px] cursor-pointer hover:bg-gray-50">
+                                <input type="checkbox" name="csts[]" value="{{ $ct }}" onchange="catFiltro.contar('cst')" @checked(in_array($ct, $cstsSel, true))>
+                                <span class="font-mono font-semibold text-gray-900">{{ $ct }}</span>
+                            </label>
+                        @empty
+                            <span class="block px-2.5 py-2 text-[11px] text-gray-400">Sem dados.</span>
+                        @endforelse
+                    </x-multi-select-pop>
+
+                    {{-- NCM (+ opção sentinela "Sem NCM (ausente)") --}}
+                    <x-multi-select-pop grupo="ncm" label="NCM" :selecionados="array_merge($ncmsSel, $ncmAusente ? ['__sem__'] : [])"
+                        width="w-72" placeholder="buscar NCM…" :temOpcoes="count($facetas['ncms'] ?? []) > 0">
+                        <label data-row data-search="sem ncm ausente vazio" class="flex items-center gap-2 px-2.5 py-1.5 text-[12px] cursor-pointer hover:bg-amber-50" style="background-color:#fffbeb">
+                            <input type="checkbox" name="ncms[]" value="__sem__" onchange="catFiltro.contar('ncm')" @checked($ncmAusente)>
+                            <span class="font-semibold" style="color:#b45309">Sem NCM (ausente)</span>
+                        </label>
+                        @forelse($facetas['ncms'] ?? [] as $ncm)
+                            <label data-row data-search="{{ $ncm.' '.$fmtNcm($ncm) }}" class="flex items-center gap-2 px-2.5 py-1.5 text-[12px] cursor-pointer hover:bg-gray-50">
+                                <input type="checkbox" name="ncms[]" value="{{ $ncm }}" onchange="catFiltro.contar('ncm')" @checked(in_array($ncm, $ncmsSel, true))>
+                                <span class="font-mono font-semibold text-gray-900">{{ $fmtNcm($ncm) }}</span>
+                            </label>
+                        @empty
+                            <span class="block px-2.5 py-2 text-[11px] text-gray-400">Sem dados.</span>
+                        @endforelse
+                    </x-multi-select-pop>
+                </div>
+
+                {{-- ações --}}
+                <div class="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200">
+                    <button type="submit" class="bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium px-4 py-2">Filtrar</button>
+                    @if(array_filter($filtros))
+                        <a href="/app/bi/catalogo-itens" data-link class="bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded text-sm font-medium px-4 py-2">Limpar</a>
+                    @endif
+                </div>
             </div>
         </form>
 
@@ -231,7 +393,7 @@
                         <th scope="col" class="text-left px-3 py-2.5" style="width:15%">Descrição</th>
                         <th scope="col" class="text-left px-3 py-2.5" style="width:5%">Origem</th>
                         <th scope="col" class="text-left px-3 py-2.5 hidden lg:table-cell" style="width:10%">Arquivo de origem</th>
-                        <th scope="col" class="text-left px-3 py-2.5 hidden sm:table-cell" style="width:7%">NCM</th>
+                        <th scope="col" class="text-left px-3 py-2.5 hidden sm:table-cell" style="width:7%">{{ $ncmLabel }}</th>
                         <th scope="col" class="text-left px-3 py-2.5 hidden md:table-cell" style="width:10%">CFOP</th>
                         <th scope="col" class="text-left px-3 py-2.5 hidden xl:table-cell" style="width:7%">CST</th>
                         <th scope="col" class="text-right px-3 py-2.5 hidden sm:table-cell" style="width:4%">Qtd</th>
@@ -411,6 +573,7 @@ window.catFiltro = window.catFiltro || (function () {
 })();
 catFiltro.contar('cfop');
 catFiltro.contar('cst');
+catFiltro.contar('ncm');
 
 // Dropdowns CFOP/CST: abre/fecha painel ancorado; fecha ao clicar fora/em outro. SPA-safe (cleanup).
 (function () {
