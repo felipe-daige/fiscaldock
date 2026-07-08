@@ -31,13 +31,27 @@
             <p class="text-xs text-gray-500 mt-1">Apuração, divergências e o que recolher — por empresa e competência</p>
         </div>
         <div class="flex items-center gap-2 rf-actions">
-            <x-acoes-menu label="Exportar" align="right" size="lg">
-                <x-acoes-item disabled badge="Em breve">Excel (XLSX)</x-acoes-item>
-                <x-acoes-item href="#" id="rf-btn-exportar">Excel (CSV)</x-acoes-item>
-                <x-acoes-item href="#" id="rf-btn-exportar-pdf">PDF</x-acoes-item>
-            </x-acoes-menu>
-            <button id="rf-btn-imprimir" type="button" class="px-3 py-2 border border-gray-300 rounded text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors">Imprimir</button>
+            {{-- Botão único Exportar → modal de formato → overlay. Lê cliente/competência dos
+                 selects rf-cliente/rf-competencia. PDF e XLSX trazem as 7 seções do fechamento;
+                 o CSV cobre só "A Recolher" (1 tabela) — ver spec das planilhas. --}}
+            @php $rfExtras = ['rf-cliente' => 'cliente_id', 'rf-competencia' => 'competencia']; @endphp
+            <x-export-menu id="modal-exportar-rf" titulo="Exportar fechamento"
+                           descricao="O arquivo segue o cliente e a competência selecionados."
+                           overlay="download-overlay-rf">
+                <x-export-grupo label="Documento" />
+                <x-export-option format="pdf" modal-id="modal-exportar-rf" overlay="download-overlay-rf"
+                                 path="/app/resumo-fiscal/exportar-pdf" :extras="$rfExtras"
+                                 descricao="As 7 seções do fechamento, na ordem da tela." />
+                <x-export-grupo label="Planilhas" />
+                <x-export-option format="xlsx" modal-id="modal-exportar-rf" overlay="download-overlay-rf"
+                                 path="/app/resumo-fiscal/exportar-xlsx" :extras="$rfExtras"
+                                 descricao="Fechamento completo: uma aba por seção." />
+                <x-export-option format="csv" modal-id="modal-exportar-rf" overlay="download-overlay-rf"
+                                 path="/app/resumo-fiscal/exportar" :extras="$rfExtras"
+                                 descricao="Apenas a seção A Recolher — o CSV não comporta várias seções." />
+            </x-export-menu>
         </div>
+        <x-download-overlay id="download-overlay-rf" texto="Gerando arquivo…" />
     </div>
 
     {{-- Cabeçalho de impressão (some na tela, aparece no print) --}}
@@ -816,15 +830,13 @@
         });
     });
 
-    // ── Ações (exportar / imprimir) refletem os filtros atuais ──
+    // ── Mantém o cabeçalho de impressão (Ctrl+P nativo) em sincronia com os filtros ──
 
     function atualizarAcoes() {
         var clienteSel = document.getElementById('rf-cliente');
         var compSel = document.getElementById('rf-competencia');
-        var exportar = document.getElementById('rf-btn-exportar');
-        if (exportar) exportar.setAttribute('href', '/app/resumo-fiscal/exportar?' + getParams());
-        var exportarPdf = document.getElementById('rf-btn-exportar-pdf');
-        if (exportarPdf) exportarPdf.setAttribute('href', '/app/resumo-fiscal/exportar-pdf?' + getParams());
+        // Exports vivem no modal Exportar (export-option lê rf-cliente/rf-competencia
+        // direto no clique); aqui só mantemos o cabeçalho de impressão em sincronia.
         var empresa = clienteSel ? (clienteSel.options[clienteSel.selectedIndex] || {}).text || '' : '';
         var comp = compSel ? (compSel.options[compSel.selectedIndex] || {}).text || '' : '';
         var pe = document.getElementById('rf-print-empresa');
@@ -832,10 +844,6 @@
         if (pe) pe.textContent = empresa.trim();
         if (pc) pc.textContent = comp.trim();
     }
-
-    document.getElementById('rf-btn-imprimir')?.addEventListener('click', function() {
-        window.print();
-    });
 
     // ── Competências dependem do cliente selecionado ──
 

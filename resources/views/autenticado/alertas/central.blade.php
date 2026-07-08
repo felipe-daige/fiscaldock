@@ -30,9 +30,23 @@
                         </svg>
                         Histórico
                     </a>
-                    <x-acoes-menu label="Exportar" align="right" size="lg">
-                        <x-acoes-item id="btn-exportar-alertas" onclick="document.getElementById('modal-export-alertas').classList.remove('hidden')">Exportar alertas…</x-acoes-item>
-                    </x-acoes-menu>
+                    {{-- Botão único Exportar → modal de formato → overlay. Respeita o filtro de
+                         cliente da página (clienteSelect=alerta-filtro-cliente). --}}
+                    <x-export-menu id="modal-exportar-alertas" titulo="Exportar alertas" size="lg"
+                                   descricao="O arquivo cobre os alertas ativos do cliente filtrado."
+                                   overlay="download-overlay-alertas">
+                        <x-export-grupo label="Documento" />
+                        <x-export-option format="pdf" modal-id="modal-exportar-alertas" overlay="download-overlay-alertas"
+                                         path="/app/alertas/exportar-pdf" cliente-select="alerta-filtro-cliente"
+                                         descricao="Materialidade (valor em risco) por classe e por alerta." />
+                        <x-export-grupo label="Planilhas" />
+                        <x-export-option format="xlsx" modal-id="modal-exportar-alertas" overlay="download-overlay-alertas"
+                                         path="/app/alertas/exportar-xlsx" cliente-select="alerta-filtro-cliente"
+                                         descricao="Duas abas: Resumo por classe e um alerta por linha." />
+                        <x-export-option format="csv" modal-id="modal-exportar-alertas" overlay="download-overlay-alertas"
+                                         path="/app/alertas/exportar-csv" cliente-select="alerta-filtro-cliente"
+                                         descricao="Um alerta por linha (sem a aba de resumo)." />
+                    </x-export-menu>
                     <button id="btn-recalcular" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium transition-colors">
                         <svg id="recalcular-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -261,42 +275,8 @@
     </div>
 </div>
 
-{{-- Export PDF — padrão do design system (download nativo + spinner via cookie) --}}
+{{-- Overlay "baixando documento" dos exports inline (PDF · XLSX · CSV no header) --}}
 <x-download-overlay id="download-overlay-alertas" texto="Gerando relatório…" />
-
-<x-modal id="modal-export-alertas" titulo="Exportar alertas">
-    <p class="text-[13px] text-gray-600 mb-3">Exporta os alertas ativos, com a materialidade (valor fiscal em risco) por classe e alerta. Escolha o escopo e o formato.</p>
-    <label class="block text-[11px] text-gray-500 mb-1">Cliente</label>
-    <select id="export-alertas-cliente" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded mb-4">
-        <option value="">Todos os clientes (carteira)</option>
-        @foreach($clientes ?? [] as $clienteOpt)
-            <option value="{{ $clienteOpt->id }}">{{ $clienteOpt->razao_social }}</option>
-        @endforeach
-    </select>
-    <div class="grid grid-cols-2 gap-2">
-        <x-download-button path="/app/alertas/exportar-xlsx" filename="alertas-{{ now()->format('Y-m-d') }}.xlsx"
-                           overlay="download-overlay-alertas"
-                           clienteSelect="export-alertas-cliente"
-                           extraOnDone="document.getElementById('modal-export-alertas').classList.add('hidden');"
-                           class="block w-full text-center px-4 py-3 rounded bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800">
-            Excel (XLSX)
-        </x-download-button>
-        <x-download-button path="/app/alertas/exportar-csv" filename="alertas-{{ now()->format('Y-m-d') }}.csv"
-                           overlay="download-overlay-alertas"
-                           clienteSelect="export-alertas-cliente"
-                           extraOnDone="document.getElementById('modal-export-alertas').classList.add('hidden');"
-                           class="block w-full text-center px-4 py-3 rounded border border-gray-300 text-gray-800 text-sm font-semibold hover:bg-gray-50">
-            CSV
-        </x-download-button>
-    </div>
-    <x-download-button path="/app/alertas/exportar-pdf" filename="alertas-{{ now()->format('Y-m-d') }}.pdf"
-                       overlay="download-overlay-alertas"
-                       clienteSelect="export-alertas-cliente"
-                       extraOnDone="document.getElementById('modal-export-alertas').classList.add('hidden');"
-                       class="block w-full text-center px-4 py-3 mt-2 rounded border border-gray-300 text-gray-800 text-sm font-semibold hover:bg-gray-50">
-        PDF
-    </x-download-button>
-</x-modal>
 
 <script src="/js/apexcharts.min.js"></script>
 <script>

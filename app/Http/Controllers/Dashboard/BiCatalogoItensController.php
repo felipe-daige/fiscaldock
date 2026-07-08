@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Concerns\RespondeAjax;
+use App\Http\Controllers\Concerns\SetsDownloadToken;
 use App\Http\Controllers\Controller;
 use App\Models\CatalogoAlertaDescarte;
 use App\Models\Cliente;
@@ -19,6 +20,7 @@ use Illuminate\Support\Facades\Auth;
 class BiCatalogoItensController extends Controller
 {
     use RespondeAjax;
+    use SetsDownloadToken;
 
     private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
 
@@ -127,7 +129,10 @@ class BiCatalogoItensController extends Controller
         $itens = $this->service->itensAgregados((int) Auth::id(), $this->montarFiltros($request));
         $filename = 'catalogo-itens-'.now()->format('Ymd-His').'.csv';
 
-        return CsvExport::download($filename, $this->colunasExport(), $this->linhasExport($itens));
+        return $this->comTokenDownload(
+            CsvExport::download($filename, $this->colunasExport(), $this->linhasExport($itens)),
+            $request
+        );
     }
 
     /**
@@ -144,10 +149,13 @@ class BiCatalogoItensController extends Controller
         $filtros = $this->montarFiltros($request);
         $itens = $this->service->itensAgregados($userId, $filtros);
 
-        return app(\App\Services\Bi\Export\CatalogoItensXlsxBuilder::class)->download(
-            $itens,
-            $this->resumoFiltros($userId, $filtros),
-            'catalogo-itens-'.now()->format('Ymd-His').'.xlsx'
+        return $this->comTokenDownload(
+            app(\App\Services\Bi\Export\CatalogoItensXlsxBuilder::class)->download(
+                $itens,
+                $this->resumoFiltros($userId, $filtros),
+                'catalogo-itens-'.now()->format('Ymd-His').'.xlsx'
+            ),
+            $request
         );
     }
 
@@ -174,7 +182,10 @@ class BiCatalogoItensController extends Controller
 
         $pdf = PdfReport::render('autenticado.bi.catalogo-itens-pdf', $dados, 'landscape');
 
-        return $pdf->download('catalogo-itens-'.now()->format('Ymd-His').'.pdf');
+        return $this->comTokenDownload(
+            $pdf->download('catalogo-itens-'.now()->format('Ymd-His').'.pdf'),
+            $request
+        );
     }
 
     /**
@@ -197,6 +208,16 @@ class BiCatalogoItensController extends Controller
         }
         if ($csts = $this->parseLista($request->input('csts'), '/[^0-9A-Za-z]/')) {
             $filtros['csts'] = $csts;
+        }
+
+        // NCM: multi-select de códigos + opção sentinela `__sem__` (NCM ausente). parseLista tira
+        // não-dígitos, então `__sem__` some da lista de códigos e vira só a flag booleana.
+        $ncmsRaw = is_array($request->input('ncms')) ? $request->input('ncms') : [];
+        if (in_array('__sem__', $ncmsRaw, true)) {
+            $filtros['ncm_ausente'] = true;
+        }
+        if ($ncms = $this->parseLista($ncmsRaw, '/\D/')) {
+            $filtros['ncms'] = $ncms;
         }
 
         return $filtros;
@@ -253,6 +274,13 @@ class BiCatalogoItensController extends Controller
         }
         if (! empty($filtros['csts'])) {
             $linhas[] = ['rotulo' => 'CST', 'valor' => implode(', ', $filtros['csts'])];
+        }
+        if (! empty($filtros['ncms']) || ! empty($filtros['ncm_ausente'])) {
+            $valores = $filtros['ncms'] ?? [];
+            if (! empty($filtros['ncm_ausente'])) {
+                $valores[] = 'Ausente';
+            }
+            $linhas[] = ['rotulo' => 'NCM', 'valor' => implode(', ', $valores)];
         }
 
         return $linhas;

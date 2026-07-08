@@ -205,11 +205,29 @@
                         <span class="text-sm font-medium text-gray-900"><span id="clientes-selecionados-label">clientes selecionados</span></span>
                     </div>
                     <div class="grid grid-cols-2 gap-2 sm:flex">
-                        <x-acoes-menu label="Exportar" align="left" size="lg">
-                            <x-acoes-item disabled badge="Em breve">Excel (XLSX)</x-acoes-item>
-                            <x-acoes-item disabled badge="Em breve">Excel (CSV)</x-acoes-item>
-                            <x-acoes-item disabled badge="Em breve">PDF</x-acoes-item>
-                        </x-acoes-menu>
+                        {{-- Botão único Exportar → modal de formato → overlay. Escopo = clientes
+                             SELECIONADOS (POST ids[] via window.exportClientesIds). --}}
+                        <x-export-menu id="modal-exportar-clientes" titulo="Exportar clientes"
+                                       descricao="O arquivo cobre os clientes selecionados na grade."
+                                       overlay="download-overlay-clientes">
+                            <x-export-grupo label="Documento" />
+                            <x-export-option format="pdf" modal-id="modal-exportar-clientes"
+                                             overlay="download-overlay-clientes"
+                                             post-path="/app/clientes/exportar-pdf" ids-fn="exportClientesIds"
+                                             vazio-msg="Selecione ao menos um cliente para exportar."
+                                             descricao="Panorama da carteira em uma folha." />
+                            <x-export-grupo label="Planilhas" />
+                            <x-export-option format="xlsx" modal-id="modal-exportar-clientes"
+                                             overlay="download-overlay-clientes"
+                                             post-path="/app/clientes/exportar-xlsx" ids-fn="exportClientesIds"
+                                             vazio-msg="Selecione ao menos um cliente para exportar."
+                                             descricao="Uma linha por cliente: movimentado, regularidade e última consulta." />
+                            <x-export-option format="csv" modal-id="modal-exportar-clientes"
+                                             overlay="download-overlay-clientes"
+                                             post-path="/app/clientes/exportar-csv" ids-fn="exportClientesIds"
+                                             vazio-msg="Selecione ao menos um cliente para exportar."
+                                             descricao="Mesmas colunas do XLSX, uma linha por cliente." />
+                        </x-export-menu>
                         <button type="button" id="btn-dossie-lote" class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-medium transition hover:bg-gray-50 sm:px-4">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -462,6 +480,9 @@
         </div>
     </div>
 </div>
+
+{{-- Overlay do download (spinner) — usado pelo modal Exportar (POST ids[] via iframe) --}}
+<x-download-overlay id="download-overlay-clientes" texto="Gerando arquivo…" />
 
 <div id="modal-dossie-lote" class="hidden fixed inset-0 z-50 overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
@@ -935,12 +956,11 @@
             });
         }
 
-        var btnExportar = document.getElementById('btn-exportar');
-        if (btnExportar) {
-            btnExportar.addEventListener('click', function() {
-                if (window.showToast) window.showToast('Exportação desta grade será implementada em etapa separada.', 'info');
-            });
-        }
+        // Escopo dos exports (PDF/XLSX/CSV): os clientes selecionados na grade. O componente
+        // export-option monta o POST ids[] num iframe oculto e cuida do overlay/cookie.
+        window.exportClientesIds = function() {
+            return Array.from(clientesSelecionados);
+        };
 
         var btnConsultarSelecionados = document.getElementById('btn-consultar-selecionados');
         if (btnConsultarSelecionados) {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Concerns\RespondeAjax;
+use App\Http\Controllers\Concerns\SetsDownloadToken;
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Services\Entitlements\EntitlementService;
@@ -15,6 +16,7 @@ use Illuminate\Validation\ValidationException;
 class ClienteController extends Controller
 {
     use RespondeAjax;
+    use SetsDownloadToken;
 
     public function __construct(private EntitlementService $entitlements = new EntitlementService) {}
 
@@ -564,5 +566,109 @@ class ClienteController extends Controller
 
         return \App\Support\PdfReport::render('reports.dossie.lote', $dados, 'portrait')
             ->download('dossies_clientes_'.now()->format('Ymd_Hi').'.pdf');
+    }
+
+    /**
+     * Payload da listagem dos clientes selecionados (escopo `user_id`). Base comum de
+     * PDF/XLSX/CSV. Devolve `null` quando a seleção não tem nenhum cliente válido.
+     */
+    private function listagemSelecionada(Request $request, \App\Services\Clientes\ClienteListagemBuilder $builder): ?array
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1|max:1000',
+            'ids.*' => 'integer',
+        ]);
+
+        return $builder->montar((int) Auth::id(), $validated['ids']);
+    }
+
+    private function listagemVaziaRedirect()
+    {
+        return redirect()
+            ->route('app.clientes')
+            ->with('export_erro', 'Nenhum cliente válido na seleção para exportar.');
+    }
+
+    /**
+     * PDF de listagem/carteira ("de uma folha") dos clientes selecionados. Panorama tabular
+     * (cadastral + volume movimentado + regularidade), complementar ao dossiê profundo.
+     */
+    public function exportarPdf(Request $request, \App\Services\Clientes\ClienteListagemBuilder $builder)
+    {
+        if (! Auth::user()) {
+            return redirect('/login');
+        }
+
+        $dados = $this->listagemSelecionada($request, $builder);
+
+        if ($dados === null) {
+            return $this->listagemVaziaRedirect();
+        }
+
+        return $this->comTokenDownload(
+            \App\Support\PdfReport::render('reports.clientes-listagem', $dados, 'landscape')
+                ->download('clientes_'.now()->format('Ymd_Hi').'.pdf'),
+            $request
+        );
+    }
+
+    /** XLSX da carteira selecionada (mesmas colunas do PDF; movimentado numérico). */
+    public function exportarXlsx(Request $request, \App\Services\Clientes\ClienteListagemBuilder $builder)
+    {
+        if (! Auth::user()) {
+            return redirect('/login');
+        }
+
+        if (! \App\Support\Reports\XlsxReport::disponivel()) {
+            abort(503, 'Exportação XLSX indisponível.');
+        }
+
+        $dados = $this->listagemSelecionada($request, $builder);
+
+        if ($dados === null) {
+            return $this->listagemVaziaRedirect();
+        }
+
+        return $this->comTokenDownload(
+            (new \App\Services\Clientes\Export\ClienteListagemXlsxBuilder)
+                ->download($dados, 'clientes_'.now()->format('Ymd_Hi').'.xlsx'),
+            $request
+        );
+    }
+
+    /** CSV da carteira selecionada (padrão canônico CsvExport: BOM + ";"). */
+    public function exportarCsv(Request $request, \App\Services\Clientes\ClienteListagemBuilder $builder)
+    {
+        if (! Auth::user()) {
+            return redirect('/login');
+        }
+
+        $dados = $this->listagemSelecionada($request, $builder);
+
+        if ($dados === null) {
+            return $this->listagemVaziaRedirect();
+        }
+
+        $fmtRs = fn ($v) => number_format((float) $v, 2, ',', '.');
+        $limpa = fn ($v) => ($v === null || $v === '—') ? '' : $v;
+
+        $colunas = ['Cliente', 'Documento', 'Tipo', 'UF', 'Situação', 'Regime', 'Movimentado (R$)', 'Regularidade', 'Últ. consulta'];
+        $linhas = array_map(fn (array $c) => [
+            $c['nome'],
+            $c['documento'],
+            $limpa($c['tipo']),
+            $limpa($c['uf']),
+            $limpa($c['situacao']),
+            $limpa($c['regime']),
+            $fmtRs($c['movimentado']),
+            $c['regularidade'],
+            $limpa($c['ultima_consulta']),
+        ], $dados['clientes']);
+        $linhas[] = ['Total', '', '', '', '', '', $fmtRs($dados['total_movimentado']), '', ''];
+
+        return $this->comTokenDownload(
+            \App\Support\CsvExport::download('clientes_'.now()->format('Ymd_Hi').'.csv', $colunas, $linhas),
+            $request
+        );
     }
 }

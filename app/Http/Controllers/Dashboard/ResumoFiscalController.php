@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Concerns\RespondeAjax;
+use App\Http\Controllers\Concerns\SetsDownloadToken;
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Models\EfdNota;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 class ResumoFiscalController extends Controller
 {
     use RespondeAjax;
+    use SetsDownloadToken;
 
     private const VIEW = 'autenticado.resumo-fiscal.index';
 
@@ -141,10 +143,16 @@ class ResumoFiscalController extends Controller
 
         $filename = 'fechamento-a-recolher-'.$competencia.'.csv';
 
-        return CsvExport::download($filename, $colunas, $linhas);
+        return $this->comTokenDownload(CsvExport::download($filename, $colunas, $linhas), $request);
     }
 
-    public function exportarPdf(Request $request)
+    /**
+     * Payload completo do fechamento (as 7 seções da tela). Base comum do PDF e do XLSX —
+     * ambos leem os MESMOS métodos do service, então os números batem entre si e com a tela.
+     *
+     * @return array{0:array<string,mixed>,1:string} [$dados, $nomeBase]
+     */
+    private function payloadFechamento(Request $request): array
     {
         [$userId, $clienteId, $competencia] = $this->validarParams($request);
         $cliente = Cliente::where('user_id', $userId)->where('id', $clienteId)->firstOrFail();
@@ -165,9 +173,37 @@ class ResumoFiscalController extends Controller
         ];
 
         $doc = preg_replace('/\D/', '', (string) ($cliente->documento ?? ''));
-        $nome = 'fechamento-fiscal-'.($doc !== '' ? $doc.'-' : '').$competencia.'.pdf';
+        $nomeBase = 'fechamento-fiscal-'.($doc !== '' ? $doc.'-' : '').$competencia;
 
-        return \App\Support\PdfReport::render('reports.resumo-fiscal', $dados, 'portrait')->download($nome);
+        return [$dados, $nomeBase];
+    }
+
+    public function exportarPdf(Request $request)
+    {
+        [$dados, $nomeBase] = $this->payloadFechamento($request);
+
+        return $this->comTokenDownload(
+            \App\Support\PdfReport::render('reports.resumo-fiscal', $dados, 'portrait')->download($nomeBase.'.pdf'),
+            $request
+        );
+    }
+
+    /**
+     * XLSX do fechamento: 1 aba por seção (export COMPLETO). O CSV (`exportar`) segue
+     * cobrindo só "A Recolher" — assimetria registrada no spec das planilhas.
+     */
+    public function exportarXlsx(Request $request)
+    {
+        if (! \App\Support\Reports\XlsxReport::disponivel()) {
+            abort(503, 'Exportação XLSX indisponível.');
+        }
+
+        [$dados, $nomeBase] = $this->payloadFechamento($request);
+
+        return $this->comTokenDownload(
+            (new \App\Services\ResumoFiscal\Export\ResumoFiscalXlsxBuilder)->download($dados, $nomeBase.'.xlsx'),
+            $request
+        );
     }
 
     public function cruzamentos(Request $request)

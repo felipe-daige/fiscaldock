@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Concerns\RespondeAjax;
+use App\Http\Controllers\Concerns\SetsDownloadToken;
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Models\ConsultaLote;
@@ -30,6 +31,7 @@ use Symfony\Component\HttpFoundation\Response;
 class ParticipanteController extends Controller
 {
     use RespondeAjax;
+    use SetsDownloadToken;
 
     private const AUTH_VIEW_PREFIX = 'autenticado.monitoramento.';
 
@@ -1476,6 +1478,111 @@ class ParticipanteController extends Controller
             'truncado' => $truncado,
             'gerado_em' => now()->format('d/m/Y H:i'),
         ], 'portrait')->download('dossies_participantes_'.now()->format('Ymd_Hi').'.pdf');
+    }
+
+    /**
+     * Payload da listagem dos participantes selecionados (escopo `user_id`). Base comum de
+     * PDF/XLSX/CSV. Devolve `null` quando a seleção não tem nenhum participante válido.
+     */
+    private function listagemSelecionada(Request $request, \App\Services\Participantes\ParticipanteListagemBuilder $builder): ?array
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1|max:1000',
+            'ids.*' => 'integer',
+        ]);
+
+        return $builder->montar((int) Auth::id(), $validated['ids']);
+    }
+
+    private function listagemVaziaRedirect()
+    {
+        return redirect()
+            ->route('app.participantes')
+            ->with('export_erro', 'Nenhum participante válido na seleção para exportar.');
+    }
+
+    /**
+     * PDF de listagem ("de uma folha") dos participantes selecionados. Panorama tabular
+     * (cadastral + papel + volume movimentado + regularidade), complementar ao dossiê.
+     */
+    public function exportarPdf(Request $request, \App\Services\Participantes\ParticipanteListagemBuilder $builder)
+    {
+        if (! Auth::user()) {
+            return redirect('/login');
+        }
+
+        $dados = $this->listagemSelecionada($request, $builder);
+
+        if ($dados === null) {
+            return $this->listagemVaziaRedirect();
+        }
+
+        return $this->comTokenDownload(
+            \App\Support\PdfReport::render('reports.participantes-listagem', $dados, 'landscape')
+                ->download('participantes_'.now()->format('Ymd_Hi').'.pdf'),
+            $request
+        );
+    }
+
+    /** XLSX da listagem selecionada (mesmas colunas do PDF; movimentado/notas numéricos). */
+    public function exportarXlsx(Request $request, \App\Services\Participantes\ParticipanteListagemBuilder $builder)
+    {
+        if (! Auth::user()) {
+            return redirect('/login');
+        }
+
+        if (! \App\Support\Reports\XlsxReport::disponivel()) {
+            abort(503, 'Exportação XLSX indisponível.');
+        }
+
+        $dados = $this->listagemSelecionada($request, $builder);
+
+        if ($dados === null) {
+            return $this->listagemVaziaRedirect();
+        }
+
+        return $this->comTokenDownload(
+            (new \App\Services\Participantes\Export\ParticipanteListagemXlsxBuilder)
+                ->download($dados, 'participantes_'.now()->format('Ymd_Hi').'.xlsx'),
+            $request
+        );
+    }
+
+    /** CSV da listagem selecionada (padrão canônico CsvExport: BOM + ";"). */
+    public function exportarCsv(Request $request, \App\Services\Participantes\ParticipanteListagemBuilder $builder)
+    {
+        if (! Auth::user()) {
+            return redirect('/login');
+        }
+
+        $dados = $this->listagemSelecionada($request, $builder);
+
+        if ($dados === null) {
+            return $this->listagemVaziaRedirect();
+        }
+
+        $fmtRs = fn ($v) => number_format((float) $v, 2, ',', '.');
+        $limpa = fn ($v) => ($v === null || $v === '—') ? '' : $v;
+
+        $colunas = ['Participante', 'Documento', 'UF', 'Situação', 'Regime', 'Papel', 'Notas', 'Movimentado (R$)', 'Regularidade', 'Últ. consulta'];
+        $linhas = array_map(fn (array $p) => [
+            $p['nome'],
+            $p['documento'],
+            $limpa($p['uf']),
+            $limpa($p['situacao']),
+            $limpa($p['regime']),
+            $p['papel'],
+            (int) $p['notas'],
+            $fmtRs($p['movimentado']),
+            $p['regularidade'],
+            $limpa($p['ultima_consulta']),
+        ], $dados['participantes']);
+        $linhas[] = ['Total', '', '', '', '', '', '', $fmtRs($dados['total_movimentado']), '', ''];
+
+        return $this->comTokenDownload(
+            \App\Support\CsvExport::download('participantes_'.now()->format('Ymd_Hi').'.csv', $colunas, $linhas),
+            $request
+        );
     }
 
     /**
