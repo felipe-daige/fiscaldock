@@ -159,12 +159,18 @@ class DashboardDataService
         $volNotas = $this->efd->notasDedup($userId, null, $dataInicio, $dataFim, $clienteId)->count();
         $volValor = (float) $this->efd->notasDedup($userId, null, $dataInicio, $dataFim, $clienteId)->sum('n.valor_total');
 
-        $alertasAlta = (int) ($this->alertaCentralService->obterResumo($userId)['por_severidade']['alta'] ?? 0);
+        // "Saúde da carteira" espelha a Central de Alertas (o card linka pra /app/alertas):
+        // o número tem que bater com o total de alertas ativos de lá. Não somar `risco`
+        // (participantes) aqui — inflava o KPI (ex.: 19 alta + 8 risco = 27) contra os 23
+        // alertas ativos reais. `alertas_alta`/`risco` seguem como recorte informativo.
+        $resumoAlertas = $this->alertaCentralService->obterResumo($userId);
+        $alertasTotal = (int) ($resumoAlertas['total_ativos'] ?? 0);
+        $alertasAlta = (int) ($resumoAlertas['por_severidade']['alta'] ?? 0);
         $risco = $this->contarRisco($userId, $clienteId);
 
         return [
             'volume' => ['notas' => $volNotas, 'valor' => $volValor],
-            'saude' => ['total' => $alertasAlta + $risco, 'alertas_alta' => $alertasAlta, 'risco' => $risco],
+            'saude' => ['total' => $alertasTotal, 'alertas_alta' => $alertasAlta, 'risco' => $risco],
             'creditos' => ['saldo' => $this->creditService->getBalance($user), 'usados_mes' => $this->creditosUsadosMes($userId)],
         ];
     }
