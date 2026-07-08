@@ -265,12 +265,23 @@ class PricingCatalogService
     }
 
     /**
-     * Custo em créditos para executar um produto de consulta para o dado plano.
-     * Override admin opcional via comercial_parametros; default = custo_creditos do plano.
+     * Preço em reais para exibir um produto de consulta.
+     * Override admin opcional via comercial_parametros; default = custo_creditos convertido.
+     */
+    public function getProductPriceByPlan(MonitoramentoPlano $plan): float
+    {
+        $defaultPrice = $this->creditsToCurrency((float) $plan->custo_creditos);
+
+        return round((float) $this->comercial->valor('preco_'.$plan->codigo, $defaultPrice), 2);
+    }
+
+    /**
+     * Custo na unidade interna do ledger para executar um produto de consulta.
+     * O admin edita o preço em R$; aqui convertemos para a unidade cobrada hoje.
      */
     public function getProductCreditsByPlan(MonitoramentoPlano $plan, User $user): int
     {
-        return (int) ($this->comercial->valor('preco_'.$plan->codigo, $plan->custo_creditos));
+        return $this->currencyToCredits($this->getProductPriceByPlan($plan));
     }
 
     public function getPaidCreditsForUser(User $user): int
@@ -302,8 +313,7 @@ class PricingCatalogService
 
         $products = array_map(function (array $product) {
             $plano = MonitoramentoPlano::where('codigo', $product['slug'])->first();
-            $credits = $plano ? (int) $plano->custo_creditos : 0;
-            $price = $this->creditsToCurrency($credits);
+            $price = $plano ? $this->getProductPriceByPlan($plano) : 0.0;
 
             return [
                 'slug' => $product['slug'],
@@ -335,8 +345,7 @@ class PricingCatalogService
 
         $products = array_map(function (array $product) use ($user) {
             $plano = MonitoramentoPlano::where('codigo', $product['slug'])->first();
-            $credits = $plano ? $this->getProductCreditsByPlan($plano, $user) : 0;
-            $price = $this->creditsToCurrency($credits);
+            $price = $plano ? $this->getProductPriceByPlan($plano) : 0.0;
 
             return [
                 'slug' => $product['slug'],
@@ -383,8 +392,19 @@ class PricingCatalogService
         return round((float) $amount, 2);
     }
 
-    public function creditsToCurrency(int $credits): float
+    public function creditsToCurrency(int|float $credits): float
     {
         return round($credits * $this->creditUnitPrice(), 2);
+    }
+
+    public function currencyToCredits(int|float $amount): int
+    {
+        $unit = $this->creditUnitPrice();
+
+        if ($unit <= 0) {
+            return (int) round((float) $amount);
+        }
+
+        return (int) round(((float) $amount) / $unit);
     }
 }

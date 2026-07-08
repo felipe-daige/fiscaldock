@@ -254,11 +254,29 @@
                     <span class="text-sm font-medium text-gray-900"><span id="participantes-selecionados-label">participantes selecionados</span></span>
                 </div>
                 <div class="grid grid-cols-2 gap-2 sm:flex">
-                    <x-acoes-menu label="Exportar" align="left" size="lg">
-                        <x-acoes-item disabled badge="Em breve">Excel (XLSX)</x-acoes-item>
-                        <x-acoes-item disabled badge="Em breve">Excel (CSV)</x-acoes-item>
-                        <x-acoes-item disabled badge="Em breve">PDF</x-acoes-item>
-                    </x-acoes-menu>
+                    {{-- Botão único Exportar → modal de formato → overlay. Escopo = participantes
+                         SELECIONADOS (POST ids[] via window.exportParticipantesIds). --}}
+                    <x-export-menu id="modal-exportar-participantes" titulo="Exportar participantes"
+                                   descricao="O arquivo cobre os participantes selecionados na grade."
+                                   overlay="download-overlay-participantes">
+                        <x-export-grupo label="Documento" />
+                        <x-export-option format="pdf" modal-id="modal-exportar-participantes"
+                                         overlay="download-overlay-participantes"
+                                         post-path="/app/participantes/exportar-pdf" ids-fn="exportParticipantesIds"
+                                         vazio-msg="Selecione ao menos um participante para exportar."
+                                         descricao="Panorama da listagem em uma folha." />
+                        <x-export-grupo label="Planilhas" />
+                        <x-export-option format="xlsx" modal-id="modal-exportar-participantes"
+                                         overlay="download-overlay-participantes"
+                                         post-path="/app/participantes/exportar-xlsx" ids-fn="exportParticipantesIds"
+                                         vazio-msg="Selecione ao menos um participante para exportar."
+                                         descricao="Uma linha por participante: papel, notas, movimentado e regularidade." />
+                        <x-export-option format="csv" modal-id="modal-exportar-participantes"
+                                         overlay="download-overlay-participantes"
+                                         post-path="/app/participantes/exportar-csv" ids-fn="exportParticipantesIds"
+                                         vazio-msg="Selecione ao menos um participante para exportar."
+                                         descricao="Mesmas colunas do XLSX, uma linha por participante." />
+                    </x-export-menu>
                     <button type="button" id="btn-dossie-lote" class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-medium transition hover:bg-gray-50 sm:px-4">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -541,6 +559,9 @@
 </div>
 
 {{-- Modal de dossiê em lote (espelha o de /app/clientes) --}}
+{{-- Overlay do download (spinner) — usado pelo modal Exportar (POST ids[] via iframe) --}}
+<x-download-overlay id="download-overlay-participantes" texto="Gerando arquivo…" />
+
 <div id="modal-dossie-lote" class="hidden fixed inset-0 z-50 overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
         <div class="fixed inset-0 bg-black/50 transition-opacity" id="modal-dossie-lote-overlay"></div>
@@ -580,7 +601,6 @@
         var countSelecionados = document.getElementById('count-selecionados');
         var btnLimparSelecao = document.getElementById('btn-limpar-selecao');
         var btnMonitorar = document.getElementById('btn-monitorar-selecionados');
-        var btnExportar = document.getElementById('btn-exportar');
         var btnBulkDelete = document.getElementById('btn-bulk-delete');
         var btnSelecionarTodosFiltro = document.getElementById('btn-selecionar-todos-filtro');
         var btnLimparSelecaoGeral = document.getElementById('btn-limpar-selecao-geral');
@@ -828,14 +848,12 @@
             });
         }
 
-        // Botao exportar (placeholder)
-        if (btnExportar) {
-            btnExportar.addEventListener('click', function() {
-                if (window.showToast) {
-                    window.showToast('Funcionalidade de exportacao em desenvolvimento', 'info');
-                }
-            });
-        }
+        // Escopo dos exports (PDF/XLSX/CSV): os participantes selecionados na grade. O componente
+        // export-option monta o POST ids[] num iframe oculto e cuida do overlay/cookie.
+        window.exportParticipantesIds = function() {
+            return getIdsSelecionados();
+        };
+        });
 
         // Botao consultar selecionados
         if (btnMonitorar) {

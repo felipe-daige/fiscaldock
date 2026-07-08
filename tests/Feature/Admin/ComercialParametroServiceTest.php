@@ -6,18 +6,18 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('sem faixas, com preco por plano e peg mantido', function () {
+it('sem faixas, com preco por plano em reais e peg legado mantido', function () {
     expect(ComercialParametroService::DEFAULTS)->not->toHaveKeys(['faixa_x_min', 'faixa_y_min', 'faixa_z_min']);
     expect(ComercialParametroService::DEFAULTS)->toHaveKeys(['credit_unit_price', 'minimum_deposit']);
     $s = new ComercialParametroService;
-    expect($s->valor('preco_compliance'))->toBe(50);
+    expect($s->valor('preco_compliance'))->toBe(5.00);
 });
 
 it('retorna o default quando não há override', function () {
     $service = new ComercialParametroService;
 
     expect($service->valor('credit_unit_price'))->toBe(0.20);
-    expect($service->valor('preco_validacao'))->toBe(10);
+    expect($service->valor('preco_validacao'))->toBe(3.00);
 });
 
 it('os defaults do registro batem com as constantes do PricingCatalogService (anti-drift)', function () {
@@ -42,12 +42,12 @@ it('persiste e lê um override com tipagem correta', function () {
     $this->assertDatabaseHas('comercial_parametros', ['chave' => 'credit_unit_price', 'valor' => '0.25']);
 });
 
-it('faz cast de int para parâmetros inteiros', function () {
+it('faz cast monetario para parâmetros de preço', function () {
     $service = new ComercialParametroService;
 
-    $service->definir('preco_licitacao', '60', null);
+    $service->definir('preco_licitacao', '4.50', null);
 
-    expect($service->valor('preco_licitacao'))->toBe(60);
+    expect($service->valor('preco_licitacao'))->toBe(4.50);
 });
 
 it('resetar remove o override e volta ao default', function () {

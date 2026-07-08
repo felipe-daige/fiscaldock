@@ -11,6 +11,7 @@ it('preco do plano sem faixa', function () {
     $user = User::factory()->create();
     $plano = MonitoramentoPlano::where('codigo', 'compliance')->first();
     expect(app(PricingCatalogService::class)->getProductCreditsByPlan($plano, $user))->toBe(25);
+    expect(app(PricingCatalogService::class)->getProductPriceByPlan($plano))->toBe(5.0);
 });
 
 it('faixas removidas', function () {

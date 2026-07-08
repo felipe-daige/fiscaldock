@@ -24,8 +24,9 @@ class IntegracaoStatusSeeder extends Seeder
             ['chave' => 'sintegra', 'nome' => 'SINTEGRA', 'grupo' => 'consultas', 'ordem' => 7],
             // grupo plataforma
             ['chave' => 'pagamento', 'nome' => 'Pagamento (Mercado Pago)', 'grupo' => 'plataforma', 'ordem' => 1],
-            ['chave' => 'whatsapp', 'nome' => 'WhatsApp (Evolution)', 'grupo' => 'plataforma', 'ordem' => 2],
+            ['chave' => 'whatsapp', 'nome' => 'WhatsApp', 'grupo' => 'plataforma', 'ordem' => 2],
             ['chave' => 'importacao_efd', 'nome' => 'Importação EFD', 'grupo' => 'plataforma', 'ordem' => 3],
+            ['chave' => 'mensageria_email', 'nome' => 'Mensageria / E-mail', 'grupo' => 'plataforma', 'ordem' => 4],
         ];
 
         foreach ($catalogo as $item) {

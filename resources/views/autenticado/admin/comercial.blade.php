@@ -1,15 +1,19 @@
 @php
     $fmtVal = function ($tipo, $v) {
         if ($v === null) return '—';
-        return $tipo === 'float' ? number_format((float) $v, 2, ',', '.') : number_format((int) $v, 0, ',', '.');
+        return $tipo === 'float' ? 'R$ '.number_format((float) $v, 2, ',', '.') : number_format((int) $v, 0, ',', '.');
+    };
+    $inputVal = function ($tipo, $v) {
+        if ($v === null) return '';
+        return $tipo === 'float' ? number_format((float) $v, 2, '.', '') : (string) (int) $v;
     };
 @endphp
 <div class="min-h-screen bg-gray-100">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
 
         <div class="mb-4 sm:mb-6">
             <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Admin — Parâmetros comerciais</h1>
-            <p class="text-xs text-gray-500 mt-0.5">Override dos números globais do catálogo. Sem override, vale o padrão do sistema. Cliente nunca vê esta tela.</p>
+            <p class="text-xs text-gray-500 mt-0.5">Valores em reais. Sem override, vale o padrão do sistema. Ao salvar, cobrança e telas de preço que leem o catálogo passam a usar o valor efetivo.</p>
         </div>
 
         @include('autenticado.admin.partials.nav', ['tab' => 'comercial'])
@@ -57,9 +61,9 @@
                             <form method="POST" action="{{ route('app.admin.comercial.update', $chave) }}" class="flex items-end gap-2 flex-1">
                                 @csrf
                                 <div class="flex-1">
-                                    <label class="block text-[11px] text-gray-500 mb-1">Novo valor</label>
+                                    <label class="block text-[11px] text-gray-500 mb-1">Novo valor{{ $p['tipo'] === 'float' ? ' (R$)' : '' }}</label>
                                     <input type="number" step="{{ $p['tipo'] === 'float' ? '0.01' : '1' }}" min="0" name="valor"
-                                           value="{{ $p['efetivo'] }}"
+                                           value="{{ $inputVal($p['tipo'], $p['efetivo']) }}"
                                            class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
                                 </div>
                                 <button type="submit" class="px-4 py-2.5 rounded text-[12px] font-bold uppercase tracking-wide text-white hover:opacity-90" style="background-color: #0b1f3a">Salvar</button>

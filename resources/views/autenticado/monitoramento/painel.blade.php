@@ -17,21 +17,24 @@
     $pctConsumo = $capEfetivo > 0 ? min(100, (int) round($consumoCiclo * 100 / $capEfetivo)) : 0;
     $corBarra = $pctConsumo >= 100 ? '#dc2626' : ($pctConsumo >= 80 ? '#d97706' : '#1f2937');
 @endphp
-<div class="p-4 lg:p-6 space-y-4">
-    <div class="flex items-center justify-between flex-wrap gap-2">
+<div class="min-h-screen bg-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-4 sm:space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-            <h1 class="text-lg font-bold text-gray-900">Monitoramento</h1>
-            <p class="text-xs text-gray-500">Consulta contínua de participantes, clientes e grupos — na frequência e plano que você escolher.</p>
+            <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Monitoramento</h1>
+            <p class="mt-1 text-xs text-gray-500">Consulta contínua de participantes, clientes e grupos — na frequência e plano que você escolher.</p>
         </div>
         <div class="flex items-center gap-2">
             <a href="/app/monitoramento/historico" data-link
-                class="inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                class="inline-flex items-center justify-center gap-1.5 rounded border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-50 sm:gap-2 sm:px-4 sm:text-sm">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 Histórico
             </a>
             <button type="button" onclick="document.getElementById('modal-monitorar').classList.remove('hidden')"
-                class="text-[11px] font-semibold px-3 py-1.5 rounded text-white" style="background-color: #047857">
-                + Novo monitorado
+                class="inline-flex items-center justify-center gap-1.5 rounded px-3 py-2 text-xs font-medium text-white transition hover:opacity-90 sm:gap-2 sm:px-4 sm:text-sm" style="background-color: #047857">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                <span class="truncate sm:hidden">Novo</span>
+                <span class="hidden sm:inline">Novo monitorado</span>
             </button>
         </div>
     </div>
@@ -883,4 +886,5 @@
     })();
     </script>
     @endif
+    </div>
 </div>

@@ -25,7 +25,8 @@ it('permite acesso ao admin e lista os parâmetros', function () {
         ->get('/app/admin/comercial')
         ->assertOk()
         ->assertSee('Parâmetros comerciais')
-        ->assertSee('Preço por crédito');
+        ->assertSee('Valor de 1 unidade de saldo')
+        ->assertSee('Preço Compliance (R$)');
 });
 
 it('admin grava override e o PricingCatalogService passa a lê-lo', function () {
@@ -37,6 +38,20 @@ it('admin grava override e o PricingCatalogService passa a lê-lo', function () 
 
     $this->assertDatabaseHas('comercial_parametros', ['chave' => 'credit_unit_price', 'valor' => '0.25']);
     expect((new PricingCatalogService)->creditUnitPrice())->toBe(0.25);
+});
+
+it('admin grava preço de produto em reais e o catálogo converte para cobrança', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    actingAs($admin)
+        ->post('/app/admin/comercial/preco_compliance', ['valor' => '6.00'])
+        ->assertRedirect();
+
+    $plano = \App\Models\MonitoramentoPlano::where('codigo', 'compliance')->firstOrFail();
+
+    $this->assertDatabaseHas('comercial_parametros', ['chave' => 'preco_compliance', 'valor' => '6']);
+    expect((new PricingCatalogService)->getProductPriceByPlan($plano))->toBe(6.00);
+    expect((new PricingCatalogService)->getProductCreditsByPlan($plano, User::factory()->create()))->toBe(30);
 });
 
 it('admin reseta o override e volta ao padrão', function () {

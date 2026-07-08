@@ -1,0 +1,713 @@
+<?php
+
+namespace App\Services\Notas;
+
+use App\Helpers\CfopHelper;
+use App\Helpers\CstIcmsHelper;
+use App\Models\EfdNota;
+use App\Models\Participante;
+use App\Services\BiService;
+use App\Services\NotasFiscaisAlertService;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * Fonte única dos payloads do Dashboard de Notas Fiscais (`/app/notas/dashboard`).
+ *
+ * A tela (6 endpoints JSON) e os 3 exports (PDF/XLSX/CSV) leem daqui — sem isso o
+ * relatório divergiria da tela na primeira regra de dedup/base comercial que mudasse.
+ * Extraído de `DashboardNotasFiscaisController` em 2026-07-08 sem alterar semântica.
+ */
+class DashboardNotasService
+{
+    public function __construct(
+        private BiService $biService,
+        private NotasFiscaisAlertService $alertService,
+    ) {}
+
+    /** Limite de linhas do ranking de contrapartes na Visão Geral. */
+    private const TOP_PARTICIPANTES = 10;
+
+    public function visaoGeral(int $userId, array $filtros): array
+    {
+        $base = EfdNota::where('user_id', $userId);
+        $this->aplicarFiltros($base, $filtros);
+        $this->aplicarDedupOrigem($base, $userId, $filtros);
+
+        // Base COMERCIAL (= /app/bi/dashboard): exclui notas de CFOP fora-faturamento
+        // (devolução/conserto/uso-consumo). Vale p/ VALOR/CONTAGEM (faturamento,
+        // evolução, modelos, ranking). Sem isto a visão geral mostrava movimento
+        // bruto e divergia ~45% dos KPIs do BI.
+        $baseComercial = clone $base;
+        $this->aplicarBaseComercial($baseComercial);
+
+        // KPIs de valor/contagem na base comercial.
+        $kpis = (clone $baseComercial)
+            ->selectRaw("
+                COUNT(*) as total_notas,
+                SUM(CASE WHEN tipo_operacao = 'entrada' THEN valor_total ELSE 0 END) as valor_entradas,
+                SUM(CASE WHEN tipo_operacao = 'saida' THEN valor_total ELSE 0 END) as valor_saidas
+            ")
+            ->first();
+
+        // KPIs financeiros do topo = resumo canônico (fonte única do BI/PDF),
+        // escopado por cliente+período. getResumoGeral soma XML+EFD, então o saldo
+        // reconcilia com Faturamento−Aquisições exibidos em todas as telas. Os
+        // filtros finos (tipo_efd/importacao_id/participante_id) NÃO entram aqui —
+        // movem só os breakdowns abaixo (drill-down), não o headline financeiro.
+        //
+        // Período chega como 'YYYY-MM' (inputs type="month"). getResumoGeral compara
+        // data_emissao com `>=`/`<=` literal, então normalizamos pros mesmos limites
+        // que aplicarFiltros usa nos breakdowns (início = dia 1; fim = fim do mês),
+        // senão o `<= 'YYYY-MM'` cortaria o mês inteiro e o KPI divergiria da tabela.
+        [$periodoInicio, $periodoFim] = $this->limitesPeriodo($filtros);
+
+        $resumoCanonico = $this->biService->getResumoGeral(
+            $userId,
+            $filtros['cliente_id'] ?? null,
+            $periodoInicio,
+            $periodoFim,
+        );
+
+        // Participantes únicos é HEADCOUNT, não faturamento: conta sobre a base
+        // sem o filtro comercial (devolvi mercadoria a um fornecedor → ele ainda é
+        // participante). Mantém paridade com "Participantes ativos" do BI.
+        $participantesUnicos = (int) (clone $base)->distinct()->count('participante_id');
+
+        // Evolução temporal por mês
+        $evolucao = (clone $baseComercial)
+            ->selectRaw("
+                TO_CHAR(data_emissao, 'YYYY-MM') as mes,
+                SUM(CASE WHEN tipo_operacao = 'entrada' THEN valor_total ELSE 0 END) as entradas,
+                SUM(CASE WHEN tipo_operacao = 'saida' THEN valor_total ELSE 0 END) as saidas
+            ")
+            ->groupByRaw("TO_CHAR(data_emissao, 'YYYY-MM')")
+            ->orderByRaw("TO_CHAR(data_emissao, 'YYYY-MM')")
+            ->get();
+
+        // Breakdown por modelo de documento (com entradas/saidas)
+        $porModeloRaw = (clone $baseComercial)
+            ->selectRaw('modelo, tipo_operacao, COUNT(*) as quantidade, SUM(valor_total) as valor_total')
+            ->groupBy('modelo', 'tipo_operacao')
+            ->get();
+
+        $totalGeral = (float) $porModeloRaw->sum('valor_total');
+
+        $porModelo = $porModeloRaw
+            ->groupBy('modelo')
+            ->map(function ($rows, $modelo) use ($totalGeral) {
+                $entradas = $rows->firstWhere('tipo_operacao', 'entrada');
+                $saidas = $rows->firstWhere('tipo_operacao', 'saida');
+
+                $qtdEnt = $entradas ? (int) $entradas->quantidade : 0;
+                $qtdSai = $saidas ? (int) $saidas->quantidade : 0;
+                $valEnt = $entradas ? (float) $entradas->valor_total : 0;
+                $valSai = $saidas ? (float) $saidas->valor_total : 0;
+                $valTot = $valEnt + $valSai;
+
+                return [
+                    'modelo' => $modelo,
+                    'label' => EfdNota::make(['modelo' => $modelo])->modelo_doc_formatado,
+                    'quantidade' => $qtdEnt + $qtdSai,
+                    'valor_total' => $valTot,
+                    'entradas' => ['quantidade' => $qtdEnt, 'valor' => $valEnt],
+                    'saidas' => ['quantidade' => $qtdSai, 'valor' => $valSai],
+                    'percentual' => $totalGeral > 0 ? round(($valTot / $totalGeral) * 100, 1) : 0,
+                ];
+            })
+            ->sortByDesc('valor_total')
+            ->values();
+
+        // Top 10 participantes por volume
+        $topParticipantes = (clone $baseComercial)
+            ->whereNotNull('participante_id')
+            ->selectRaw("
+                participante_id,
+                COUNT(*) as total_notas,
+                SUM(valor_total) as valor_total,
+                SUM(CASE WHEN tipo_operacao = 'entrada' THEN 1 ELSE 0 END) as qtd_entradas,
+                SUM(CASE WHEN tipo_operacao = 'saida' THEN 1 ELSE 0 END) as qtd_saidas
+            ")
+            ->groupBy('participante_id')
+            ->orderByDesc('valor_total')
+            ->limit(self::TOP_PARTICIPANTES)
+            ->get();
+
+        $partIds = $topParticipantes->pluck('participante_id');
+        $participantes = Participante::whereIn('id', $partIds)
+            ->get(['id', 'razao_social', 'documento as cnpj'])
+            ->keyBy('id');
+
+        $topPart = $topParticipantes->map(function ($r) use ($participantes) {
+            // entrada = compra (participante emitiu p/ nós) => fornecedor;
+            // saida = venda (participante é destinatário) => cliente.
+            $ent = (int) $r->qtd_entradas;
+            $sai = (int) $r->qtd_saidas;
+            $papel = $ent > 0 && $sai > 0 ? 'ambos' : ($ent > 0 ? 'fornecedor' : 'cliente');
+
+            return [
+                'participante_id' => $r->participante_id,
+                'razao_social' => $participantes[$r->participante_id]?->razao_social ?? 'N/A',
+                'cnpj' => $participantes[$r->participante_id]?->cnpj_formatado ?? '',
+                'total_notas' => (int) $r->total_notas,
+                'valor_total' => (float) $r->valor_total,
+                'papel' => $papel,
+            ];
+        });
+
+        return [
+            'kpis' => [
+                // total_notas / participantes_unicos seguem como contagem própria
+                // (headcount da base do dashboard). Só os 3 valores financeiros vêm
+                // da fonte única (getResumoGeral) p/ bater com BI/PDF (XML+EFD).
+                'total_notas' => (int) $kpis->total_notas,
+                'valor_entradas' => (float) ($resumoCanonico['total_compras'] ?? 0),
+                'valor_saidas' => (float) ($resumoCanonico['total_vendas'] ?? 0),
+                // Saldo Líquido canônico = Faturamento − Aquisições (mesma base XML+EFD
+                // do BI screen e do PDF). Fonte única: BiService::getResumoGeral.
+                'saldo' => (float) ($resumoCanonico['saldo_liquido'] ?? 0),
+                'participantes_unicos' => $participantesUnicos,
+            ],
+            'evolucao' => $evolucao,
+            'por_modelo' => $porModelo,
+            'top_participantes' => $topPart,
+        ];
+    }
+
+    public function cfop(int $userId, array $filtros): array
+    {
+        $baseNotas = EfdNota::where('user_id', $userId);
+        $this->aplicarFiltros($baseNotas, $filtros);
+        $notaIds = (clone $baseNotas)->select('id');
+
+        // CFOP vem do C190/D190 (consolidado fiscal): é a fonte autoritativa de
+        // CFOP × valor por operação. Os itens (C170) são esparsos no perfil B e
+        // perdem CFOPs inteiros (ex.: 5916), além de não dobrar por origem (C190
+        // só existe no fiscal). `qtd_itens` = nº de linhas de consolidado. Ver F3/P2.
+        $baseItens = DB::table('efd_notas_consolidados')
+            ->whereIn('efd_nota_id', $notaIds)
+            ->whereNotNull('cfop');
+
+        $totalGeral = (clone $baseItens)->count();
+
+        $rows = (clone $baseItens)
+            ->selectRaw('cfop, COUNT(*) as qtd_itens, SUM(COALESCE(valor_operacao, 0)) as valor_total')
+            ->groupBy('cfop')
+            ->orderByDesc('valor_total')
+            ->get();
+
+        $valorGeral = (float) $rows->sum('valor_total');
+
+        $cfops = $rows->map(fn ($r) => [
+            'cfop' => (int) $r->cfop,
+            'descricao' => CfopHelper::descricao($r->cfop),
+            'qtd_itens' => (int) $r->qtd_itens,
+            'valor_total' => (float) $r->valor_total,
+            'percentual' => $valorGeral > 0 ? round(((float) $r->valor_total / $valorGeral) * 100, 1) : 0,
+            'tipo' => CfopHelper::tipo($r->cfop),
+            'natureza' => CfopHelper::natureza($r->cfop),
+        ]);
+
+        $entradas = $cfops->where('tipo', 'entrada');
+        $saidas = $cfops->where('tipo', 'saida');
+
+        return [
+            'resumo' => [
+                'entradas' => [
+                    'qtd_cfops' => $entradas->count(),
+                    'qtd_itens' => (int) $entradas->sum('qtd_itens'),
+                    'valor_total' => (float) $entradas->sum('valor_total'),
+                ],
+                'saidas' => [
+                    'qtd_cfops' => $saidas->count(),
+                    'qtd_itens' => (int) $saidas->sum('qtd_itens'),
+                    'valor_total' => (float) $saidas->sum('valor_total'),
+                ],
+                'total_itens' => $totalGeral,
+            ],
+            'cfops' => $cfops->values(),
+        ];
+    }
+
+    public function participantes(
+        int $userId,
+        array $filtros,
+        string $tipoFiltro = 'todos',
+        ?string $busca = null,
+        int $page = 1,
+        int $perPage = 15,
+    ): array {
+        $subQuery = $this->subQueryParticipantes($userId, $filtros, $tipoFiltro, $busca);
+
+        $todosAgregados = (clone $subQuery)->get();
+        $resumo = $this->resumoParticipantes($todosAgregados);
+
+        $total = $resumo['total_participantes'];
+        $lastPage = max(1, (int) ceil($total / $perPage));
+        $page = min(max(1, $page), $lastPage);
+
+        $paginados = (clone $subQuery)
+            ->orderByDesc('valor_total')
+            ->offset(($page - 1) * $perPage)
+            ->limit($perPage)
+            ->get();
+
+        return [
+            'resumo' => $resumo,
+            'participantes' => [
+                'current_page' => $page,
+                'last_page' => $lastPage,
+                'per_page' => $perPage,
+                'total' => $total,
+                'data' => $this->hidratarParticipantes($paginados),
+            ],
+        ];
+    }
+
+    /**
+     * Mesma agregação da aba, SEM paginação — o export leva a carteira inteira do recorte.
+     *
+     * @return array{resumo:array<string,mixed>,participantes:\Illuminate\Support\Collection}
+     */
+    public function participantesCompleto(int $userId, array $filtros): array
+    {
+        $todosAgregados = $this->subQueryParticipantes($userId, $filtros)
+            ->orderByDesc('valor_total')
+            ->get();
+
+        return [
+            'resumo' => $this->resumoParticipantes($todosAgregados),
+            'participantes' => $this->hidratarParticipantes($todosAgregados),
+        ];
+    }
+
+    public function tributario(int $userId, array $filtros): array
+    {
+        $baseNotas = EfdNota::where('user_id', $userId);
+        $this->aplicarFiltros($baseNotas, $filtros);
+        $notaIdsSub = (clone $baseNotas)->select('id');
+
+        // Fonte canônica do tributo (ver F1/F3):
+        //  ICMS débito/crédito = C190 (consolidado fiscal) — NÃO os itens (perfil B
+        //    tem ICMS≈0 no item fiscal, P2).
+        //  PIS/COFINS débito/crédito = itens da origem 'contribuicoes' — os itens
+        //    FISCAIS carregam PIS/COFINS irrelevante (inflava o crédito ~200×, P8).
+        $icmsRaw = DB::table('efd_notas_consolidados as c')
+            ->join('efd_notas as n', 'n.id', '=', 'c.efd_nota_id')
+            ->whereIn('c.efd_nota_id', $notaIdsSub)
+            ->selectRaw('n.tipo_operacao, COALESCE(SUM(c.valor_icms), 0) as total_icms')
+            ->groupBy('n.tipo_operacao')
+            ->get()
+            ->keyBy('tipo_operacao');
+
+        $pcRaw = DB::table('efd_notas_itens as i')
+            ->join('efd_notas as n', 'n.id', '=', 'i.efd_nota_id')
+            ->whereIn('i.efd_nota_id', $notaIdsSub)
+            ->where('n.origem_arquivo', 'contribuicoes')
+            ->selectRaw('
+                n.tipo_operacao,
+                COALESCE(SUM(i.valor_pis), 0) as total_pis,
+                COALESCE(SUM(i.valor_cofins), 0) as total_cofins,
+                COUNT(*) as total_itens,
+                SUM(CASE WHEN i.valor_pis IS NULL OR i.valor_pis = 0 THEN 1 ELSE 0 END) as pis_vazios,
+                SUM(CASE WHEN i.valor_cofins IS NULL OR i.valor_cofins = 0 THEN 1 ELSE 0 END) as cofins_vazios
+            ')
+            ->groupBy('n.tipo_operacao')
+            ->get()
+            ->keyBy('tipo_operacao');
+
+        $icmsDebito = (float) ($icmsRaw['saida']->total_icms ?? 0);
+        $icmsCredito = (float) ($icmsRaw['entrada']->total_icms ?? 0);
+        $pisDebito = (float) ($pcRaw['saida']->total_pis ?? 0);
+        $pisCredito = (float) ($pcRaw['entrada']->total_pis ?? 0);
+        $cofinsDebito = (float) ($pcRaw['saida']->total_cofins ?? 0);
+        $cofinsCredito = (float) ($pcRaw['entrada']->total_cofins ?? 0);
+
+        // PIS/COFINS incompleto: avaliado só nos itens de contribuicoes (onde o
+        // tributo vive). Antes incluía itens fiscais (PIS/COFINS sempre 0) e dava
+        // falso-positivo ao filtrar a EFD ICMS/IPI. Ver F3/P8.
+        $totalItens = (int) ($pcRaw['entrada']->total_itens ?? 0) + (int) ($pcRaw['saida']->total_itens ?? 0);
+        $pisVazios = (int) ($pcRaw['entrada']->pis_vazios ?? 0) + (int) ($pcRaw['saida']->pis_vazios ?? 0);
+        $cofinsVazios = (int) ($pcRaw['entrada']->cofins_vazios ?? 0) + (int) ($pcRaw['saida']->cofins_vazios ?? 0);
+        $alertaPisCofins = $totalItens > 0 && (($pisVazios / $totalItens) > 0.7 || ($cofinsVazios / $totalItens) > 0.7);
+
+        // Evolução mensal: ICMS do C190, PIS/COFINS dos itens contribuicoes.
+        $icmsMensal = DB::table('efd_notas_consolidados as c')
+            ->join('efd_notas as n', 'n.id', '=', 'c.efd_nota_id')
+            ->whereIn('c.efd_nota_id', $notaIdsSub)
+            ->selectRaw("
+                TO_CHAR(n.data_emissao, 'YYYY-MM') as mes,
+                SUM(CASE WHEN n.tipo_operacao = 'saida' THEN COALESCE(c.valor_icms, 0) ELSE 0 END) as icms_debito,
+                SUM(CASE WHEN n.tipo_operacao = 'entrada' THEN COALESCE(c.valor_icms, 0) ELSE 0 END) as icms_credito
+            ")
+            ->groupByRaw("TO_CHAR(n.data_emissao, 'YYYY-MM')")
+            ->get()
+            ->keyBy('mes');
+
+        $pcMensal = DB::table('efd_notas_itens as i')
+            ->join('efd_notas as n', 'n.id', '=', 'i.efd_nota_id')
+            ->whereIn('i.efd_nota_id', $notaIdsSub)
+            ->where('n.origem_arquivo', 'contribuicoes')
+            ->selectRaw("
+                TO_CHAR(n.data_emissao, 'YYYY-MM') as mes,
+                SUM(CASE WHEN n.tipo_operacao = 'saida' THEN COALESCE(i.valor_pis, 0) ELSE 0 END) as pis_debito,
+                SUM(CASE WHEN n.tipo_operacao = 'entrada' THEN COALESCE(i.valor_pis, 0) ELSE 0 END) as pis_credito,
+                SUM(CASE WHEN n.tipo_operacao = 'saida' THEN COALESCE(i.valor_cofins, 0) ELSE 0 END) as cofins_debito,
+                SUM(CASE WHEN n.tipo_operacao = 'entrada' THEN COALESCE(i.valor_cofins, 0) ELSE 0 END) as cofins_credito
+            ")
+            ->groupByRaw("TO_CHAR(n.data_emissao, 'YYYY-MM')")
+            ->get()
+            ->keyBy('mes');
+
+        $evolucao = collect($icmsMensal->keys()->merge($pcMensal->keys())->unique()->sort()->values())
+            ->map(function ($mes) use ($icmsMensal, $pcMensal) {
+                $i = $icmsMensal->get($mes);
+                $p = $pcMensal->get($mes);
+
+                return (object) [
+                    'mes' => $mes,
+                    'icms_debito' => (float) ($i->icms_debito ?? 0),
+                    'icms_credito' => (float) ($i->icms_credito ?? 0),
+                    'pis_debito' => (float) ($p->pis_debito ?? 0),
+                    'pis_credito' => (float) ($p->pis_credito ?? 0),
+                    'cofins_debito' => (float) ($p->cofins_debito ?? 0),
+                    'cofins_credito' => (float) ($p->cofins_credito ?? 0),
+                ];
+            });
+
+        // Tabela consolidada por período (reusar evolução)
+        $porPeriodo = $evolucao->map(fn ($e) => [
+            'mes' => $e->mes,
+            'icms_debito' => (float) $e->icms_debito,
+            'icms_credito' => (float) $e->icms_credito,
+            'saldo_icms' => (float) $e->icms_debito - (float) $e->icms_credito,
+            'pis_debito' => (float) $e->pis_debito,
+            'pis_credito' => (float) $e->pis_credito,
+            'saldo_pis' => (float) $e->pis_debito - (float) $e->pis_credito,
+            'cofins_debito' => (float) $e->cofins_debito,
+            'cofins_credito' => (float) $e->cofins_credito,
+            'saldo_cofins' => (float) $e->cofins_debito - (float) $e->cofins_credito,
+        ]);
+
+        // Análise por CST ICMS — do C190 (consolidado fiscal), onde o perfil B
+        // detalha CST/valor; os itens fiscais (C170) são esparsos. Ver F3/P2.
+        $csts = DB::table('efd_notas_consolidados as c')
+            ->whereIn('c.efd_nota_id', $notaIdsSub)
+            ->selectRaw('c.cst_icms as cst, COUNT(*) as qtd_itens, COALESCE(SUM(c.valor_operacao), 0) as valor_total')
+            ->groupBy('c.cst_icms')
+            ->orderByDesc('valor_total')
+            ->get()
+            ->map(fn ($r) => [
+                'cst' => $r->cst,
+                'descricao' => CstIcmsHelper::descricao($r->cst),
+                'qtd_itens' => (int) $r->qtd_itens,
+                'valor_total' => (float) $r->valor_total,
+            ]);
+
+        return [
+            'saldos' => [
+                'icms' => ['debito' => $icmsDebito, 'credito' => $icmsCredito, 'saldo' => $icmsDebito - $icmsCredito],
+                'pis' => ['debito' => $pisDebito, 'credito' => $pisCredito, 'saldo' => $pisDebito - $pisCredito],
+                'cofins' => ['debito' => $cofinsDebito, 'credito' => $cofinsCredito, 'saldo' => $cofinsDebito - $cofinsCredito],
+            ],
+            'alerta_pis_cofins' => $alertaPisCofins,
+            'evolucao' => $evolucao,
+            'por_periodo' => $porPeriodo,
+            'csts' => $csts,
+        ];
+    }
+
+    public function alertas(int $userId, array $filtros): array
+    {
+        return $this->alertService->detectar($userId, $filtros);
+    }
+
+    public function compliance(int $userId, array $filtros): array
+    {
+        $baseNotas = EfdNota::where('user_id', $userId);
+        $this->aplicarFiltros($baseNotas, $filtros);
+        $this->aplicarDedupOrigem($baseNotas, $userId, $filtros);
+
+        $participanteIds = (clone $baseNotas)
+            ->whereNotNull('participante_id')
+            ->distinct()
+            ->pluck('participante_id');
+
+        if ($participanteIds->isEmpty()) {
+            return [
+                'kpis' => [
+                    'total' => 0,
+                    'consultados' => 0,
+                    'consultados_pct' => 0,
+                    'regulares' => 0,
+                    'regulares_pct' => 0,
+                    'irregulares' => 0,
+                    'exposicao' => 0,
+                    'nao_consultados' => 0,
+                ],
+                'participantes' => [],
+            ];
+        }
+
+        $volumes = (clone $baseNotas)
+            ->whereNotNull('participante_id')
+            ->selectRaw('participante_id, SUM(valor_total) as volume, COUNT(*) as total_notas')
+            ->groupBy('participante_id')
+            ->get()
+            ->keyBy('participante_id');
+
+        $participantes = Participante::whereIn('id', $participanteIds)
+            ->select('id', 'documento as cnpj', 'razao_social', 'situacao_cadastral', 'regime_tributario', 'uf', 'ultima_consulta_em')
+            ->get()
+            ->map(function ($p) use ($volumes) {
+                $vol = $volumes->get($p->id);
+                $volume = $vol ? (float) $vol->volume : 0;
+                $totalNotas = $vol ? (int) $vol->total_notas : 0;
+                $situacao = $p->situacao_cadastral;
+                $irregular = $situacao && $situacao !== 'ATIVA';
+
+                return [
+                    'id' => $p->id,
+                    'cnpj' => $p->documento,
+                    'razao_social' => $p->razao_social ?? 'Não informado',
+                    'situacao_cadastral' => $situacao,
+                    'regime_tributario' => $p->regime_tributario,
+                    'uf' => $p->uf,
+                    'ultima_consulta_em' => $p->ultima_consulta_em?->format('d/m/Y'),
+                    'volume' => $volume,
+                    'total_notas' => $totalNotas,
+                    'irregular' => $irregular,
+                    'exposicao' => $irregular ? $volume : 0,
+                ];
+            })
+            ->sortByDesc('volume')
+            ->values();
+
+        $total = $participantes->count();
+        $consultados = $participantes->where('ultima_consulta_em', '!=', null)->count();
+        $regulares = $participantes->where('situacao_cadastral', 'ATIVA')->count();
+        $irregulares = $participantes->filter(fn ($p) => $p['irregular'])->count();
+        $exposicao = $participantes->sum('exposicao');
+        $naoConsultados = $participantes->whereNull('ultima_consulta_em')->count();
+
+        return [
+            'kpis' => [
+                'total' => $total,
+                'consultados' => $consultados,
+                'consultados_pct' => $total > 0 ? round(($consultados / $total) * 100, 1) : 0,
+                'regulares' => $regulares,
+                'regulares_pct' => $consultados > 0 ? round(($regulares / $consultados) * 100, 1) : 0,
+                'irregulares' => $irregulares,
+                'exposicao' => $exposicao,
+                'nao_consultados' => $naoConsultados,
+            ],
+            'participantes' => $participantes,
+        ];
+    }
+
+    /**
+     * Limites reais do período (`YYYY-MM` → primeiro/último dia), como `aplicarFiltros` usa.
+     *
+     * @return array{0:?string,1:?string}
+     */
+    public function limitesPeriodo(array $filtros): array
+    {
+        return [
+            ! empty($filtros['periodo_inicio']) ? $filtros['periodo_inicio'].'-01' : null,
+            ! empty($filtros['periodo_fim'])
+                ? Carbon::parse($filtros['periodo_fim'].'-01')->endOfMonth()->format('Y-m-d')
+                : null,
+        ];
+    }
+
+    /** Agregado por participante, já filtrado por papel/busca — base da aba e do export. */
+    private function subQueryParticipantes(
+        int $userId,
+        array $filtros,
+        string $tipoFiltro = 'todos',
+        ?string $busca = null,
+    ) {
+        $baseNotas = EfdNota::where('user_id', $userId)->whereNotNull('participante_id');
+        $this->aplicarFiltros($baseNotas, $filtros);
+        $this->aplicarDedupOrigem($baseNotas, $userId, $filtros);
+
+        $agregado = (clone $baseNotas)
+            ->selectRaw("
+                participante_id,
+                COUNT(*) as total_notas,
+                SUM(CASE WHEN tipo_operacao = 'entrada' THEN valor_total ELSE 0 END) as valor_entradas,
+                SUM(CASE WHEN tipo_operacao = 'saida' THEN valor_total ELSE 0 END) as valor_saidas,
+                SUM(valor_total) as valor_total,
+                MIN(data_emissao) as primeira_nota,
+                MAX(data_emissao) as ultima_nota,
+                bool_or(tipo_operacao = 'entrada') as tem_entradas,
+                bool_or(tipo_operacao = 'saida') as tem_saidas
+            ")
+            ->groupBy('participante_id');
+
+        $subQuery = DB::query()->fromSub($agregado, 'agg');
+
+        if ($tipoFiltro === 'fornecedor') {
+            $subQuery->where('tem_entradas', true);
+        } elseif ($tipoFiltro === 'cliente') {
+            $subQuery->where('tem_saidas', true);
+        }
+
+        if (! empty($busca)) {
+            $buscaTerm = '%'.$busca.'%';
+            $subQuery->join('participantes', 'participantes.id', '=', 'agg.participante_id')
+                ->where(function ($q) use ($buscaTerm) {
+                    $q->whereRaw('LOWER(participantes.razao_social) LIKE LOWER(?)', [$buscaTerm])
+                        ->orWhere('participantes.documento', 'like', $buscaTerm);
+                });
+        }
+
+        return $subQuery;
+    }
+
+    private function resumoParticipantes($todosAgregados): array
+    {
+        return [
+            'total_participantes' => $todosAgregados->count(),
+            'total_fornecedores' => $todosAgregados->where('tem_entradas', true)->count(),
+            'total_clientes' => $todosAgregados->where('tem_saidas', true)->count(),
+            'concentracao' => $this->calcularConcentracao($todosAgregados),
+        ];
+    }
+
+    /** Hidrata as linhas agregadas com o cadastro do participante (1 query). */
+    private function hidratarParticipantes($rows)
+    {
+        $participantesMap = Participante::whereIn('id', $rows->pluck('participante_id'))
+            ->get(['id', 'razao_social', 'documento as cnpj', 'uf', 'situacao_cadastral', 'regime_tributario', 'ultima_consulta_em'])
+            ->keyBy('id');
+
+        return $rows->map(function ($r) use ($participantesMap) {
+            $p = $participantesMap[$r->participante_id] ?? null;
+            $papel = 'ambos';
+            if ($r->tem_entradas && ! $r->tem_saidas) {
+                $papel = 'fornecedor';
+            } elseif (! $r->tem_entradas && $r->tem_saidas) {
+                $papel = 'cliente';
+            }
+
+            return [
+                'participante_id' => $r->participante_id,
+                'razao_social' => $p?->razao_social ?? 'N/A',
+                'cnpj' => $p?->cnpj_formatado ?? '',
+                'uf' => $p?->uf ?? '',
+                'total_notas' => (int) $r->total_notas,
+                'valor_entradas' => (float) $r->valor_entradas,
+                'valor_saidas' => (float) $r->valor_saidas,
+                'valor_total' => (float) $r->valor_total,
+                'primeira_nota' => $r->primeira_nota,
+                'ultima_nota' => $r->ultima_nota,
+                'papel' => $papel,
+                'situacao_cadastral' => $p?->situacao_cadastral,
+                'regime_tributario' => $p?->regime_tributario,
+                'ultima_consulta_em' => $p?->ultima_consulta_em?->toIso8601String(),
+            ];
+        });
+    }
+
+    private function calcularConcentracao($agregados): array
+    {
+        $totalEntradas = (float) $agregados->sum('valor_entradas');
+        $totalSaidas = (float) $agregados->sum('valor_saidas');
+
+        $sortedEntradas = $agregados->sortByDesc('valor_entradas')->values();
+        $top5Entradas = (float) $sortedEntradas->take(5)->sum('valor_entradas');
+        $top10Entradas = (float) $sortedEntradas->take(10)->sum('valor_entradas');
+
+        $sortedSaidas = $agregados->sortByDesc('valor_saidas')->values();
+        $top5Saidas = (float) $sortedSaidas->take(5)->sum('valor_saidas');
+        $top10Saidas = (float) $sortedSaidas->take(10)->sum('valor_saidas');
+
+        return [
+            'top5_entradas_pct' => $totalEntradas > 0 ? round(($top5Entradas / $totalEntradas) * 100, 1) : 0,
+            'top5_saidas_pct' => $totalSaidas > 0 ? round(($top5Saidas / $totalSaidas) * 100, 1) : 0,
+            'top10_entradas_pct' => $totalEntradas > 0 ? round(($top10Entradas / $totalEntradas) * 100, 1) : 0,
+            'top10_saidas_pct' => $totalSaidas > 0 ? round(($top10Saidas / $totalSaidas) * 100, 1) : 0,
+        ];
+    }
+
+    public function aplicarFiltros($query, array $filtros): void
+    {
+        // Canceladas (cod_sit 02/03/04/05) nunca contam no acervo. Ver F3/P4.
+        $query->where('cancelada', false);
+
+        if (! empty($filtros['periodo_inicio'])) {
+            $query->where('data_emissao', '>=', $filtros['periodo_inicio'].'-01');
+        }
+        if (! empty($filtros['periodo_fim'])) {
+            $fim = Carbon::parse($filtros['periodo_fim'].'-01')->endOfMonth();
+            $query->where('data_emissao', '<=', $fim);
+        }
+        if (! empty($filtros['tipo_efd']) && $filtros['tipo_efd'] !== 'todos') {
+            $origemMap = [
+                'EFD ICMS/IPI' => 'fiscal',
+                'EFD PIS/COFINS' => 'contribuicoes',
+            ];
+            if (isset($origemMap[$filtros['tipo_efd']])) {
+                $query->where('origem_arquivo', $origemMap[$filtros['tipo_efd']]);
+            }
+        }
+        if (! empty($filtros['importacao_id'])) {
+            $query->where('importacao_id', $filtros['importacao_id']);
+        }
+        if (! empty($filtros['cliente_id'])) {
+            $query->where('cliente_id', $filtros['cliente_id']);
+        }
+        if (! empty($filtros['participante_id'])) {
+            $query->where('participante_id', $filtros['participante_id']);
+        }
+    }
+
+    /**
+     * Deduplica a coexistência fiscal × contribuicoes (P1) para agregações de
+     * VALOR/CONTAGEM de nota. Aplicar SOMENTE quando o filtro de origem é "todos"
+     * (sem tipo_efd): a mesma NF-e existe nas 2 escriturações e dobraria.
+     * Com tipo_efd específico a origem já restringe → não deduplicar.
+     *
+     * NÃO usar nas abas que leem `efd_notas_itens`/C190 por imposto (Tributário,
+     * CFOP): lá o lado fiscal e o contribuicoes carregam tributos diferentes da
+     * MESMA nota; deduplicar perderia o lado certo. Ver F3 / docs.
+     */
+    private function aplicarDedupOrigem($query, int $userId, array $filtros): void
+    {
+        $tipo = $filtros['tipo_efd'] ?? null;
+        if (! empty($tipo) && $tipo !== 'todos') {
+            return;
+        }
+
+        $query->where(function ($q) use ($userId) {
+            $q->where('origem_arquivo', 'fiscal')
+                ->orWhereRaw('NOT EXISTS (SELECT 1 FROM efd_notas f WHERE f.user_id = ? AND f.origem_arquivo = ? AND f.chave_acesso IS NOT NULL AND f.chave_acesso = efd_notas.chave_acesso)', [$userId, 'fiscal']);
+        });
+    }
+
+    /**
+     * Base COMERCIAL: exclui INTEIRAS as notas que carregam, em qualquer item
+     * (C170) ou consolidado (C190), um CFOP que não compõe faturamento
+     * (remessa/retorno de conserto, devolução, uso/consumo). Espelha
+     * EfdAgregadorService::semCfopsForaFaturamento — fonte única da decisão do
+     * contador (2026-06-23) — para manter a visão geral em sincronia com o BI.
+     */
+    private function aplicarBaseComercial($query): void
+    {
+        $cfops = (array) config('efd.cfops_fora_faturamento', []);
+        if (empty($cfops)) {
+            return;
+        }
+
+        $query
+            ->whereNotExists(fn ($s) => $s->selectRaw('1')
+                ->from('efd_notas_consolidados as cfx')
+                ->whereColumn('cfx.efd_nota_id', 'efd_notas.id')
+                ->whereIn('cfx.cfop', $cfops))
+            ->whereNotExists(fn ($s) => $s->selectRaw('1')
+                ->from('efd_notas_itens as ifx')
+                ->whereColumn('ifx.efd_nota_id', 'efd_notas.id')
+                ->whereIn('ifx.cfop', $cfops));
+    }
+}

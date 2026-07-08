@@ -9,6 +9,9 @@ window.initPlanos = function () {
         : null;
     var bricks = mp ? mp.bricks() : null;
     var controller = null;
+    var cancelModal = document.getElementById('assinatura-cancel-modal');
+    var cancelConfirmBtn = document.getElementById('assinatura-cancel-confirmar');
+    var cancelDefaultText = cancelConfirmBtn ? cancelConfirmBtn.textContent : '';
 
     var teto = parseInt(window.__MP_TETO_CENTAVOS, 10) || 400000;
 
@@ -51,10 +54,49 @@ window.initPlanos = function () {
         el.classList.remove('hidden');
     }
 
+    function mostrarErroCancelamento(msg) {
+        var el = document.getElementById('assinatura-cancel-erro');
+        if (!el) return;
+        el.textContent = msg;
+        el.classList.remove('hidden');
+    }
+
+    function limparErroCancelamento() {
+        var el = document.getElementById('assinatura-cancel-erro');
+        if (el) {
+            el.textContent = '';
+            el.classList.add('hidden');
+        }
+    }
+
     function fechar() {
         root.classList.add('hidden');
         root.classList.remove('flex');
         if (controller && controller.unmount) { try { controller.unmount(); } catch (e) {} controller = null; }
+    }
+
+    function abrirCancelamento() {
+        if (!cancelModal) return;
+        limparErroCancelamento();
+        setCancelando(false);
+        cancelModal.classList.remove('hidden');
+        cancelModal.classList.add('flex');
+    }
+
+    function fecharCancelamento() {
+        if (!cancelModal) return;
+        cancelModal.classList.add('hidden');
+        cancelModal.classList.remove('flex');
+        limparErroCancelamento();
+        setCancelando(false);
+    }
+
+    function setCancelando(cancelando) {
+        if (!cancelConfirmBtn) return;
+        cancelConfirmBtn.disabled = cancelando;
+        cancelConfirmBtn.textContent = cancelando ? 'Cancelando...' : cancelDefaultText;
+        cancelConfirmBtn.classList.toggle('opacity-70', cancelando);
+        cancelConfirmBtn.classList.toggle('cursor-wait', cancelando);
     }
 
     function abrir(plano, valorReais) {
@@ -109,11 +151,46 @@ window.initPlanos = function () {
     var cancelarBtn = document.getElementById('assinatura-cancelar');
     if (cancelarBtn) {
         cancelarBtn.addEventListener('click', function () {
-            if (!confirm('Cancelar a assinatura? Você mantém o saldo até o fim do ciclo.')) return;
+            abrirCancelamento();
+        });
+    }
+
+    var cancelFecharBtn = document.getElementById('assinatura-cancel-fechar');
+    if (cancelFecharBtn) cancelFecharBtn.addEventListener('click', fecharCancelamento);
+
+    var cancelVoltarBtn = document.getElementById('assinatura-cancel-voltar');
+    if (cancelVoltarBtn) cancelVoltarBtn.addEventListener('click', fecharCancelamento);
+
+    if (cancelModal) {
+        cancelModal.addEventListener('click', function (event) {
+            if (event.target === cancelModal) fecharCancelamento();
+        });
+    }
+
+    if (cancelConfirmBtn) {
+        cancelConfirmBtn.addEventListener('click', function () {
+            limparErroCancelamento();
+            setCancelando(true);
+
             fetch(window.__CANCELAR_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.__CSRF, 'Accept': 'application/json' },
-            }).then(function () { window.location.reload(); });
+            })
+                .then(function (r) {
+                    return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, j: j }; });
+                })
+                .then(function (res) {
+                    if (!res.ok) {
+                        mostrarErroCancelamento(res.j.error || 'Não foi possível cancelar a assinatura agora.');
+                        setCancelando(false);
+                        return;
+                    }
+                    window.location.reload();
+                })
+                .catch(function () {
+                    mostrarErroCancelamento('Falha de rede. Tente novamente em alguns instantes.');
+                    setCancelando(false);
+                });
         });
     }
 

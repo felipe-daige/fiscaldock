@@ -95,6 +95,7 @@
                 $trialCaps = $trialCaps ?? [];
                 $planosDetalhados = [];
                 $planosAtivos = $planos->where('is_active', true)->where('codigo', '!=', 'enterprise')->values();
+                $pricingCatalog = app(\App\Services\PricingCatalogService::class);
                 foreach ($planosAtivos as $p) {
                     $meta = $planoMeta[$p->codigo] ?? ['cor' => 'gray', 'icone' => 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'casos_uso' => []];
                     $trialCap = $trialCaps[$p->codigo] ?? null;
@@ -111,7 +112,7 @@
                     $planosDetalhados[] = [
                         'codigo' => $p->codigo,
                         'nome' => $p->nome,
-                        'creditos' => $p->custo_creditos,
+                        'creditos' => $pricingCatalog->getProductCreditsByPlan($p, auth()->user()),
                         'descricao' => $p->descricao,
                         'cor' => $meta['cor'],
                         'icone' => $meta['icone'],

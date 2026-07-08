@@ -29,49 +29,34 @@
                         <option value="3">Últimos 3 meses</option>
                         <option value="1">Este mês</option>
                     </select>
-                    {{-- Exports — dropdown único (modais de planilha/PDF permanecem idênticos) --}}
+                    {{-- Botão único Exportar → modal de formato. PDF ENCADEIA no modal de escopo
+                         (carteira × cliente + dossiês); XLSX/CSV baixam direto com dossiê padrão
+                         (top 20), respeitando os filtros de cliente/período. --}}
                     @php $dataArq = now()->format('Ymd'); @endphp
-                    <x-acoes-menu label="Exportar" align="right" size="lg">
-                        <x-acoes-item onclick="document.getElementById('modal-export-bi').classList.remove('hidden')">Excel (XLSX)</x-acoes-item>
-                        <x-acoes-item onclick="document.getElementById('modal-export-bi').classList.remove('hidden')">Excel (CSV)</x-acoes-item>
-                        <x-acoes-item onclick="document.getElementById('modal-export-bi-pdf').classList.remove('hidden')">PDF</x-acoes-item>
-                    </x-acoes-menu>
+                    <x-export-menu id="modal-exportar-bi" titulo="Exportar BI Fiscal"
+                                   descricao="O arquivo segue os filtros de cliente e período."
+                                   overlay="download-overlay-bi">
+                        <x-export-grupo label="Documento" />
+                        <x-export-option format="pdf" modal-id="modal-exportar-bi"
+                                         opens-modal="modal-export-bi-pdf"
+                                         descricao="Na próxima etapa você escolhe o escopo e os dossiês."
+                                         diferenca="Relatório executivo para ler, imprimir e enviar ao cliente." />
+                        <x-export-grupo label="Planilhas" />
+                        <x-export-option format="xlsx" modal-id="modal-exportar-bi" overlay="download-overlay-bi"
+                                         path="/app/bi/exportar-xlsx" query="dossies=20"
+                                         descricao="Uma aba por seção + dossiê dos top 20 participantes." />
+                        {{-- CSV do BI é ZIP (N seções), então a frase padrão "uma tabela só" não vale. --}}
+                        <x-export-option format="csv" modal-id="modal-exportar-bi" overlay="download-overlay-bi"
+                                         path="/app/bi/exportar-csv-zip" query="dossies=20"
+                                         descricao="Um arquivo .csv por seção, empacotados num .zip."
+                                         diferenca="Texto puro, sem formatação nem abas. Universal: abre em qualquer sistema." />
+                    </x-export-menu>
                 </div>
             </div>
         </div>
 
         {{-- Overlay de download (spinner) — compartilhado pelos botões de export --}}
         <x-download-overlay id="download-overlay-bi" texto="Gerando relatório…" />
-
-        {{-- Modal de export de planilha (XLSX completo ou CSV por seção em ZIP) --}}
-        <x-modal id="modal-export-bi" titulo="Exportar planilha">
-            <p class="text-[13px] text-gray-600 mb-3">Escolha o formato. O período e o cliente seguem os filtros selecionados.</p>
-            <label class="block text-[11px] text-gray-500 mb-1">Dossiês de participantes</label>
-            <select id="export-planilha-dossies" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded mb-4">
-                <option value="">Sem dossiês (mais rápido)</option>
-                <option value="10">Top 10 por volume</option>
-                <option value="20" selected>Top 20 por volume</option>
-                <option value="50">Todos (máx. 50 por volume)</option>
-            </select>
-            <div class="space-y-2">
-                <x-download-button path="/app/bi/exportar-xlsx" filename="bi-fiscal-{{ $dataArq }}.xlsx"
-                                   overlay="download-overlay-bi"
-                                   :extras="['export-planilha-dossies' => 'dossies']"
-                                   extraOnDone="document.getElementById('modal-export-bi').classList.add('hidden');"
-                                   class="block w-full text-left px-4 py-3 rounded border border-gray-300 hover:bg-gray-50">
-                    <span class="block text-sm font-semibold text-gray-900">Excel (XLSX)</span>
-                    <span class="block text-[12px] text-gray-500">Relatório completo, uma aba por seção (Resumo, Cobertura, Faturamento, Tributos, Declarado×Computado, CFOP) + dossiê dos top participantes.</span>
-                </x-download-button>
-                <x-download-button path="/app/bi/exportar-csv-zip" filename="bi-fiscal-{{ $dataArq }}.csv.zip"
-                                   overlay="download-overlay-bi"
-                                   :extras="['export-planilha-dossies' => 'dossies']"
-                                   extraOnDone="document.getElementById('modal-export-bi').classList.add('hidden');"
-                                   class="block w-full text-left px-4 py-3 rounded border border-gray-300 hover:bg-gray-50">
-                    <span class="block text-sm font-semibold text-gray-900">CSV (ZIP)</span>
-                    <span class="block text-[12px] text-gray-500">Um arquivo .csv por seção (incluindo o dossiê dos top participantes), empacotados num .zip.</span>
-                </x-download-button>
-            </div>
-        </x-modal>
 
         {{-- Modal de escopo do PDF: carteira inteira ou 1 cliente (empresa própria no topo) --}}
         <x-modal id="modal-export-bi-pdf" titulo="Gerar relatório PDF">
@@ -241,7 +226,7 @@
                 <div class="bg-white rounded border border-gray-300 lg:col-span-2">
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
                         <h3 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Faturamento Mensal</h3>
-                        <button data-export="faturamento" class="text-[11px] font-medium text-gray-600 hover:text-gray-900 border border-gray-300 rounded px-2 py-1">Exportar CSV</button>
+                        <button data-export="faturamento" class="inline-flex items-center gap-1 rounded border border-gray-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-50 transition-colors"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>CSV</button>
                     </div>
                     <div class="p-4 sm:p-5">
                         <div id="chart-faturamento" class="h-56 sm:h-72 lg:h-80"></div>
@@ -312,7 +297,7 @@
                 <div class="bg-white rounded border border-gray-300 lg:col-span-2">
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
                         <h3 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Carga Tributária Mensal</h3>
-                        <button data-export="tributos" class="text-[11px] font-medium text-gray-600 hover:text-gray-900 border border-gray-300 rounded px-2 py-1">Exportar CSV</button>
+                        <button data-export="tributos" class="inline-flex items-center gap-1 rounded border border-gray-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-50 transition-colors"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>CSV</button>
                     </div>
                     <div class="p-4 sm:p-5">
                         <div id="chart-carga-tributaria" class="h-56 sm:h-72 lg:h-80"></div>
@@ -643,7 +628,7 @@
             <div class="bg-white rounded border border-gray-300 mb-6">
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
                     <h3 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Declarado vs Computado por Mês</h3>
-                    <button data-export="apuracao-notas" class="text-[11px] font-medium text-gray-600 hover:text-gray-900 border border-gray-300 rounded px-2 py-1">Exportar CSV</button>
+                    <button data-export="apuracao-notas" class="inline-flex items-center gap-1 rounded border border-gray-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-50 transition-colors"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>CSV</button>
                 </div>
                 <div class="p-4 sm:p-5"><div id="chart-apn-mensal" class="h-56 sm:h-72 lg:h-80"></div></div>
             </div>
@@ -722,7 +707,7 @@
             <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
                     <h3 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Ranking por CFOP</h3>
-                    <button data-export="cfop" class="text-[11px] font-medium text-gray-600 hover:text-gray-900 border border-gray-300 rounded px-2 py-1">Exportar CSV</button>
+                    <button data-export="cfop" class="inline-flex items-center gap-1 rounded border border-gray-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-50 transition-colors"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>CSV</button>
                 </div>
                 <div id="tabela-cfop-container" class="overflow-x-auto scroll-fade-right-white"></div>
                 <div id="cfop-paginacao" class="hidden border-t border-gray-200 px-4 py-3 flex items-center justify-between gap-3"></div>

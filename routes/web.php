@@ -151,6 +151,9 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     Route::get('/app/clientes/todos-ids', [ClienteController::class, 'todosIds'])->name('app.clientes.todos-ids');
     Route::delete('/app/clientes/bulk-delete', [ClienteController::class, 'bulkDestroy'])->name('app.clientes.bulk-delete');
     Route::post('/app/clientes/dossie-lote', [ClienteController::class, 'dossieLote'])->name('app.clientes.dossie-lote');
+    Route::post('/app/clientes/exportar-pdf', [ClienteController::class, 'exportarPdf'])->name('app.clientes.exportar-pdf');
+    Route::post('/app/clientes/exportar-xlsx', [ClienteController::class, 'exportarXlsx'])->name('app.clientes.exportar-xlsx');
+    Route::post('/app/clientes/exportar-csv', [ClienteController::class, 'exportarCsv'])->name('app.clientes.exportar-csv');
     Route::get('/app/cliente/{id}/editar', [ClienteController::class, 'edit'])->name('app.cliente.edit');
     Route::put('/app/cliente/{id}', [ClienteController::class, 'update'])->name('app.cliente.update');
     Route::delete('/app/cliente/{id}', [ClienteController::class, 'destroy'])->name('app.cliente.destroy');
@@ -166,6 +169,9 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         Route::get('/participantes/todos-ids', [ParticipanteController::class, 'todosIds'])->name('participantes.todos-ids');
         Route::delete('/participantes/bulk-delete', [ParticipanteController::class, 'bulkExcluir'])->name('participantes.bulk-delete');
         Route::post('/participantes/dossie-lote', [ParticipanteController::class, 'dossieLote'])->name('participantes.dossie-lote');
+        Route::post('/participantes/exportar-pdf', [ParticipanteController::class, 'exportarPdf'])->name('participantes.exportar-pdf');
+        Route::post('/participantes/exportar-xlsx', [ParticipanteController::class, 'exportarXlsx'])->name('participantes.exportar-xlsx');
+        Route::post('/participantes/exportar-csv', [ParticipanteController::class, 'exportarCsv'])->name('participantes.exportar-csv');
         Route::post('/participantes/associar-grupo', [ParticipanteGrupoController::class, 'associar'])->name('participantes.associar-grupo');
         Route::get('/participantes/por-importacao/{id}', [ParticipanteController::class, 'porImportacao'])->name('participantes.por-importacao');
         Route::post('/participantes/por-ids', [ParticipanteController::class, 'porIds'])->name('participantes.por-ids');
@@ -279,6 +285,8 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         ->middleware(RequiresEntitlement::class.':export')->name('app.resumo-fiscal.exportar');
     Route::get('app/resumo-fiscal/exportar-pdf', [ResumoFiscalController::class, 'exportarPdf'])
         ->middleware(RequiresEntitlement::class.':export')->name('app.resumo-fiscal.exportar-pdf');
+    Route::get('app/resumo-fiscal/exportar-xlsx', [ResumoFiscalController::class, 'exportarXlsx'])
+        ->middleware(RequiresEntitlement::class.':export')->name('app.resumo-fiscal.exportar-xlsx');
     Route::get('app/resumo-fiscal/apuracao-icms', [ResumoFiscalController::class, 'apuracaoIcms'])->name('app.resumo-fiscal.apuracao-icms');
     Route::get('app/resumo-fiscal/apuracao-pis-cofins', [ResumoFiscalController::class, 'apuracaoPisCofins'])->name('app.resumo-fiscal.apuracao-pis-cofins');
     Route::get('app/resumo-fiscal/retencoes', [ResumoFiscalController::class, 'retencoesFonte'])->name('app.resumo-fiscal.retencoes');

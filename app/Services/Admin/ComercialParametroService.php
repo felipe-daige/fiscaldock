@@ -10,9 +10,8 @@ use Illuminate\Support\Facades\DB;
  *
  * A tabela `comercial_parametros` começa VAZIA → `valor()` cai no default hardcoded do registro
  * abaixo. Um admin que grava um override passa a vencer. **Garante zero mudança de preço em prod
- * até alguém editar.** Escopo MVP: peg global (credit_unit_price/minimum_deposit) + preços por
- * plano (preco_validacao/licitacao/compliance). Os defaults espelham as constantes/valores atuais —
- * o teste anti-drift trava qualquer divergência.
+ * até alguém editar.** A UI do admin trabalha em reais; internamente os preços por produto seguem
+ * na unidade legada do ledger para não reinterpretar overrides antigos.
  */
 class ComercialParametroService
 {
@@ -23,10 +22,10 @@ class ComercialParametroService
      */
     public const DEFAULTS = [
         'credit_unit_price' => [
-            'rotulo' => 'Preço por crédito (R$)',
+            'rotulo' => 'Valor de 1 unidade de saldo (R$)',
             'tipo' => 'float',
             'default' => PricingCatalogService::CREDIT_UNIT_PRICE, // 0.20
-            'dica' => 'Base de toda a precificação. 1 crédito = este valor.',
+            'dica' => 'Parâmetro legado de conversão. Os preços comerciais abaixo são preenchidos em reais.',
         ],
         'minimum_deposit' => [
             'rotulo' => 'Depósito mínimo (R$)',
@@ -35,19 +34,22 @@ class ComercialParametroService
             'dica' => 'Valor mínimo de recarga avulsa.',
         ],
         'preco_validacao' => [
-            'rotulo' => 'Preço Validação (créditos)',
+            'rotulo' => 'Preço Validação (R$)',
             'tipo' => 'int',
-            'default' => 10,
+            'default' => 15,
+            'dica' => 'Preço por CNPJ exibido e cobrado para o produto Validação.',
         ],
         'preco_licitacao' => [
-            'rotulo' => 'Preço Licitação (créditos)',
+            'rotulo' => 'Preço Licitação (R$)',
             'tipo' => 'int',
-            'default' => 25,
+            'default' => 20,
+            'dica' => 'Preço por CNPJ exibido e cobrado para o produto Licitação.',
         ],
         'preco_compliance' => [
-            'rotulo' => 'Preço Compliance (créditos)',
+            'rotulo' => 'Preço Compliance (R$)',
             'tipo' => 'int',
-            'default' => 50,
+            'default' => 25,
+            'dica' => 'Preço por CNPJ exibido e cobrado para o produto Compliance.',
         ],
     ];
 

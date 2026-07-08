@@ -81,12 +81,12 @@
                 <div class="bg-white rounded border {{ $isRecomendado ? 'border-gray-900' : 'border-gray-300' }} overflow-hidden flex flex-col {{ $isRecomendado ? 'xl:-mt-2 xl:mb-2' : '' }}">
                     {{-- Header --}}
                     <div class="px-4 py-4 border-b border-gray-100">
-                        <div class="flex items-center justify-between mb-2 min-h-[20px]">
-                            <span class="text-sm font-bold text-gray-900 uppercase tracking-wide">{{ $plano->nome }}</span>
+                        <div class="flex items-start justify-between gap-2 flex-wrap mb-2 min-h-[20px]">
+                            <span class="min-w-0 text-sm font-bold text-gray-900 uppercase tracking-wide break-words">{{ $plano->nome }}</span>
                             @if($isAtual)
-                                <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Plano atual</span>
+                                <span class="shrink-0 whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Plano atual</span>
                             @elseif($isRecomendado)
-                                <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #0f766e">Recomendado</span>
+                                <span class="shrink-0 whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #0f766e">Recomendado</span>
                             @endif
                         </div>
                         @if($isFree)
@@ -163,6 +163,52 @@
             <p id="assinatura-erro" class="hidden mt-3 text-xs" style="color: #dc2626"></p>
         </div>
     </div>
+
+    @if($assinaturaAtual && in_array($assinaturaAtual->status, ['ativa', 'inadimplente']))
+        <div id="assinatura-cancel-modal" class="hidden fixed inset-0 z-50 items-center justify-center px-4" style="background-color: rgba(17,24,39,.62)">
+            <div class="bg-white rounded w-full max-w-lg border border-gray-200 shadow-xl overflow-hidden">
+                <div class="px-5 py-4 border-b border-gray-200 flex items-start justify-between gap-4">
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-gray-400">Cancelamento</p>
+                        <h3 class="text-base font-bold text-gray-900 mt-0.5">Cancelar assinatura?</h3>
+                        <p class="text-xs text-gray-500 mt-1">Plano {{ $assinaturaAtual->plan->nome ?? 'atual' }} · ciclo {{ $assinaturaAtual->ciclo }}</p>
+                    </div>
+                    <button type="button" id="assinatura-cancel-fechar" class="text-gray-400 text-xl leading-none hover:text-gray-700">&times;</button>
+                </div>
+
+                <div class="px-5 py-4 space-y-3">
+                    <div class="rounded border border-amber-200 p-3" style="background-color: #fffbeb">
+                        <p class="text-sm font-semibold text-gray-900">Você mantém o saldo já concedido até o fim do ciclo.</p>
+                        <p class="text-xs text-gray-600 mt-1">O cancelamento interrompe novas cobranças e novas liberações automáticas de saldo do plano.</p>
+                    </div>
+
+                    <div class="space-y-2 text-sm text-gray-700">
+                        <div class="flex items-start gap-2">
+                            <span class="mt-1 h-1.5 w-1.5 rounded-full shrink-0" style="background-color: #047857"></span>
+                            <span>Seus dados, relatórios e histórico permanecem na conta.</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="mt-1 h-1.5 w-1.5 rounded-full shrink-0" style="background-color: #047857"></span>
+                            <span>Você pode assinar outro plano depois, se precisar.</span>
+                        </div>
+                        @if($assinaturaAtual->renova_em)
+                            <div class="flex items-start gap-2">
+                                <span class="mt-1 h-1.5 w-1.5 rounded-full shrink-0" style="background-color: #b45309"></span>
+                                <span>Próxima cobrança prevista: {{ $assinaturaAtual->renova_em->format('d/m/Y') }}.</span>
+                            </div>
+                        @endif
+                    </div>
+
+                    <p id="assinatura-cancel-erro" class="hidden text-xs rounded border border-red-200 px-3 py-2" style="color: #991b1b; background-color: #fef2f2"></p>
+                </div>
+
+                <div class="px-5 py-4 border-t border-gray-200 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2">
+                    <button type="button" id="assinatura-cancel-voltar" class="px-4 py-2 text-xs font-semibold uppercase tracking-wide rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Manter assinatura</button>
+                    <button type="button" id="assinatura-cancel-confirmar" class="px-4 py-2 text-xs font-bold uppercase tracking-wide text-white rounded hover:opacity-90" style="background-color: #b91c1c">Confirmar cancelamento</button>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
