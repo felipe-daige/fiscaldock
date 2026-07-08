@@ -32,12 +32,30 @@
                 <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Catálogo de Produtos</h1>
                 <p class="text-xs text-gray-500 mt-0.5">Registro 0200 do SPED &mdash; painel fiscal consolidado</p>
             </div>
-            <a href="/app/notas/dashboard" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline hidden sm:inline-flex items-center gap-1">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                Dashboard
-            </a>
+            <div class="flex items-center gap-3">
+                {{-- Exporta o catálogo respeitando os filtros ATUAIS da tela. Como o form de filtros
+                     é GET (recarrega a página), window.location.search já carrega tudo — inclusive
+                     cfops[]/csts[] multi-select. Os 3 formatos leem o mesmo CatalogoReportBuilder. --}}
+                <x-export-menu id="modal-exportar-catalogo" titulo="Exportar catálogo"
+                               descricao="O arquivo segue os filtros aplicados nesta tela."
+                               overlay="download-overlay-catalogo">
+                    <x-export-grupo label="Documento" />
+                    <x-catalogo-export-option format="pdf" path="/app/catalogo/exportar-pdf"
+                        descricao="Resumo fiscal, itens (cadastro × movimentação), Top CFOPs/CSTs e drift — com gráficos." />
+                    <x-export-grupo label="Planilhas" />
+                    <x-catalogo-export-option format="xlsx" path="/app/catalogo/exportar-xlsx"
+                        descricao="Uma aba por seção, sem corte de linhas." />
+                    <x-catalogo-export-option format="csv" path="/app/catalogo/exportar-csv-zip"
+                        descricao="ZIP com um CSV por seção." />
+                </x-export-menu>
+                <a href="/app/notas/dashboard" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline hidden sm:inline-flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    Dashboard
+                </a>
+            </div>
         </div>
     </div>
+    <x-download-overlay id="download-overlay-catalogo" texto="Gerando arquivo…" />
 
     {{-- ═══ BLOCO 1: Resumo Fiscal ═══ --}}
     <div class="border border-gray-300 rounded overflow-hidden mb-4">

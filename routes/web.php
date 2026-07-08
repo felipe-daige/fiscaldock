@@ -275,6 +275,12 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     Route::get('app/notas/dashboard/tributario', [DashboardNotasFiscaisController::class, 'tributario'])->name('app.notas.dashboard.tributario');
     Route::get('app/notas/dashboard/alertas', [DashboardNotasFiscaisController::class, 'alertas'])->name('app.notas.dashboard.alertas');
     Route::get('app/notas/dashboard/compliance', [DashboardNotasFiscaisController::class, 'compliance'])->name('app.notas.dashboard.compliance');
+    Route::get('app/notas/dashboard/exportar-pdf', [DashboardNotasFiscaisController::class, 'exportarPdf'])
+        ->middleware(RequiresEntitlement::class.':export')->name('app.notas.dashboard.exportar-pdf');
+    Route::get('app/notas/dashboard/exportar-xlsx', [DashboardNotasFiscaisController::class, 'exportarXlsx'])
+        ->middleware(RequiresEntitlement::class.':export')->name('app.notas.dashboard.exportar-xlsx');
+    Route::get('app/notas/dashboard/exportar-csv-zip', [DashboardNotasFiscaisController::class, 'exportarCsvZip'])
+        ->middleware(RequiresEntitlement::class.':export')->name('app.notas.dashboard.exportar-csv-zip');
 
     // Painel Fiscal por Competência
     Route::get('app/resumo-fiscal', [ResumoFiscalController::class, 'index'])->name('app.resumo-fiscal');
@@ -361,6 +367,12 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
 
     // Catálogo de Produtos/Serviços
     Route::get('app/catalogo', [CatalogoController::class, 'index'])->name('app.catalogo.index');
+    Route::get('app/catalogo/exportar-pdf', [CatalogoController::class, 'exportarPdf'])
+        ->middleware(RequiresEntitlement::class.':export')->name('app.catalogo.exportar-pdf');
+    Route::get('app/catalogo/exportar-xlsx', [CatalogoController::class, 'exportarXlsx'])
+        ->middleware(RequiresEntitlement::class.':export')->name('app.catalogo.exportar-xlsx');
+    Route::get('app/catalogo/exportar-csv-zip', [CatalogoController::class, 'exportarCsvZip'])
+        ->middleware(RequiresEntitlement::class.':export')->name('app.catalogo.exportar-csv-zip');
     Route::get('app/catalogo/historico/{codItem}', [CatalogoController::class, 'historico'])
         ->where('codItem', '.*')->name('app.catalogo.historico');
 

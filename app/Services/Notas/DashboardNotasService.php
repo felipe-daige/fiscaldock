@@ -457,7 +457,7 @@ class DashboardNotasService
             ->keyBy('participante_id');
 
         $participantes = Participante::whereIn('id', $participanteIds)
-            ->select('id', 'documento as cnpj', 'razao_social', 'situacao_cadastral', 'regime_tributario', 'uf', 'ultima_consulta_em')
+            ->select('id', 'documento', 'razao_social', 'situacao_cadastral', 'regime_tributario', 'uf', 'ultima_consulta_em')
             ->get()
             ->map(function ($p) use ($volumes) {
                 $vol = $volumes->get($p->id);

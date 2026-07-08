@@ -18,6 +18,7 @@ final class ParticipanteListagemXlsxBuilder
         'irregular' => ReportTheme::IRREGULAR,
         'indeterminada' => ReportTheme::ALERTA,
         'nao_consultado' => ReportTheme::NEUTRO,
+        'cpf' => ReportTheme::OUTRO, // CPF: neutro-escuro, não "sem dado"
     ];
 
     /** Papel fiscal — tinta neutra (informativo, não é juízo de risco). Igual ao PDF. */

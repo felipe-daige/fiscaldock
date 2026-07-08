@@ -19,6 +19,7 @@ final class ClienteListagemXlsxBuilder
         'irregular' => ReportTheme::IRREGULAR,
         'indeterminada' => ReportTheme::ALERTA,
         'nao_consultado' => ReportTheme::NEUTRO,
+        'cpf' => ReportTheme::OUTRO, // CPF: neutro-escuro, não "sem dado"
     ];
 
     /**

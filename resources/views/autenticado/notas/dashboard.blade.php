@@ -22,6 +22,38 @@
                     <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Dashboard de Notas Fiscais</h1>
                     <p class="mt-0.5 text-xs text-gray-500">Análise consolidada das notas fiscais importadas</p>
                 </div>
+
+                {{-- Exportações do "Raio-X do acervo": só as seções que os outros relatórios
+                     (BI executivo, Fechamento Fiscal) NÃO cobrem. Os 3 formatos leem o mesmo
+                     payload (DashboardNotasReportBuilder) e respeitam os filtros da tela.
+                     Ver docs/dashboard-notas/exportacoes.md --}}
+                @php
+                    $dnfExtras = [
+                        'dnf-periodo-inicio' => 'periodo_inicio',
+                        'dnf-periodo-fim' => 'periodo_fim',
+                        'dnf-participante' => 'participante_id',
+                        'dnf-tipo-efd' => 'tipo_efd',
+                        'dnf-importacao' => 'importacao_id',
+                    ];
+                @endphp
+                <div class="flex items-center gap-2">
+                    <x-export-menu id="modal-exportar-dnf" titulo="Exportar raio-X do acervo"
+                                   descricao="O arquivo segue os filtros aplicados nesta tela."
+                                   overlay="download-overlay-dnf">
+                        <x-export-grupo label="Documento" />
+                        <x-export-option format="pdf" modal-id="modal-exportar-dnf" overlay="download-overlay-dnf"
+                                         path="/app/notas/dashboard/exportar-pdf" cliente-select="dnf-cliente" :extras="$dnfExtras"
+                                         descricao="Mix por modelo, concentração de contrapartes, perfil de CST, saldo mensal por tributo, alertas e exposição — com gráficos." />
+                        <x-export-grupo label="Planilhas" />
+                        <x-export-option format="xlsx" modal-id="modal-exportar-dnf" overlay="download-overlay-dnf"
+                                         path="/app/notas/dashboard/exportar-xlsx" cliente-select="dnf-cliente" :extras="$dnfExtras"
+                                         descricao="Uma aba por seção, sem corte de linhas." />
+                        <x-export-option format="csv" modal-id="modal-exportar-dnf" overlay="download-overlay-dnf"
+                                         path="/app/notas/dashboard/exportar-csv-zip" cliente-select="dnf-cliente" :extras="$dnfExtras"
+                                         descricao="ZIP com um CSV por seção — o CSV não comporta várias tabelas num arquivo só." />
+                    </x-export-menu>
+                </div>
+                <x-download-overlay id="download-overlay-dnf" texto="Gerando arquivo…" />
             </div>
         </div>
 
@@ -2144,8 +2176,13 @@
         let html = '';
         filtered.forEach((p, i) => {
             const rowBg = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+            // CPF (11 dígitos) não tem situação cadastral consultável como PJ — marcar "CPF",
+            // não "Não consultado" (que sugeriria pendência de consulta).
+            const ehCpf = (p.cnpj || '').replace(/\D/g, '').length === 11;
             let badgeSituacao;
-            if (!p.situacao_cadastral) {
+            if (!p.situacao_cadastral && ehCpf) {
+                badgeSituacao = '<span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded text-white" style="background-color:#374151">CPF (pessoa física)</span>';
+            } else if (!p.situacao_cadastral) {
                 badgeSituacao = '<span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded text-white" style="background-color:#9ca3af">Não consultado</span>';
             } else if (p.situacao_cadastral === 'ATIVA') {
                 badgeSituacao = '<span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded text-white" style="background-color:#047857">ATIVA</span>';

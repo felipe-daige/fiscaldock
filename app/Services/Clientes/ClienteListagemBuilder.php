@@ -77,8 +77,11 @@ final class ClienteListagemBuilder
                 'regime' => $c->regime_tributario ?: '—',
                 'movimentado' => (float) ($mov->valor ?? 0),
                 'ultima_nota' => $mov?->ultima ? Carbon::parse($mov->ultima)->format('m/Y') : null,
-                'regularidade' => $classe ? (self::REGULARIDADE_LABEL[$classe] ?? ucfirst($classe)) : 'Não consultado',
-                'regularidade_classe' => $classe ?? 'nao_consultado',
+                // CPF não é consultável como PJ → não é "não consultado", é pessoa física.
+                'regularidade' => $classe
+                    ? (self::REGULARIDADE_LABEL[$classe] ?? ucfirst($classe))
+                    : \App\Support\Documento::rotuloSemConsulta($c->documento, 'Não consultado'),
+                'regularidade_classe' => $classe ?? (\App\Support\Documento::ehCpf($c->documento) ? \App\Support\Documento::CLASSE_CPF : 'nao_consultado'),
                 'ultima_consulta' => $ultimaConsulta ? Carbon::parse($ultimaConsulta)->format('d/m/Y') : null,
             ];
         })->all();

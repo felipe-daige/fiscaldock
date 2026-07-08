@@ -92,24 +92,22 @@
                     {{ $statusMeta['label'] }}
                 </span>
                 @if($statusLote === 'finalizado' && empty($aguardaPersistencia))
-                    <a href="{{ route('app.clearance.notas.resultado-pdf', ['consultaLoteId' => $lote->id]) }}"
-                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide text-white hover:opacity-90"
-                       style="background-color: #0b1f3a"
-                       title="Baixar relatório executivo em PDF para entrega ao cliente">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        Exportar PDF
-                    </a>
-                    <a href="{{ route('app.clearance.notas.resultado-xlsx', ['consultaLoteId' => $lote->id]) }}"
-                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide text-white hover:opacity-90"
-                       style="background-color: #047857"
-                       title="Baixar planilha (XLSX) com o mesmo conteúdo do relatório executivo">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        Exportar Planilha
-                    </a>
+                    <x-export-menu id="modal-exportar-clearance-resultado" titulo="Exportar resultado"
+                                   descricao="Relatório executivo do lote — mesmo conteúdo em ambos os formatos."
+                                   overlay="download-overlay-clearance-resultado">
+                        <x-export-grupo label="Documento" />
+                        <x-export-option format="pdf"
+                            :path="route('app.clearance.notas.resultado-pdf', ['consultaLoteId' => $lote->id])"
+                            modalId="modal-exportar-clearance-resultado"
+                            overlay="download-overlay-clearance-resultado"
+                            descricao="Relatório executivo pronto para entrega ao cliente." />
+                        <x-export-grupo label="Planilhas" />
+                        <x-export-option format="xlsx"
+                            :path="route('app.clearance.notas.resultado-xlsx', ['consultaLoteId' => $lote->id])"
+                            modalId="modal-exportar-clearance-resultado"
+                            overlay="download-overlay-clearance-resultado"
+                            descricao="Mesmo conteúdo do relatório, em abas de planilha." />
+                    </x-export-menu>
                 @endif
             </div>
         </div>
@@ -314,7 +312,7 @@
         @endif
 
         @if($statusLote === 'finalizado' && ($divergencia['sem_divergencia']->isNotEmpty() || $divergencia['ruido']->isNotEmpty()))
-            <details class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
+            <details open class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
                 <summary class="cursor-pointer px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center justify-between">
                     <span>
                         <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Sem divergência</span>
@@ -398,6 +396,8 @@
         @endif
     </div>
 </div>
+
+<x-download-overlay id="download-overlay-clearance-resultado" texto="Gerando arquivo…" />
 
 <script src="{{ asset('js/progresso-automacao.js') }}?v={{ @filemtime(public_path('js/progresso-automacao.js')) ?: time() }}"></script>
 <script src="{{ asset('js/clearance-resultado.js') }}?v={{ @filemtime(public_path('js/clearance-resultado.js')) ?: time() }}" defer></script>

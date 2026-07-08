@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Concerns\RespondeAjax;
+use App\Http\Controllers\Concerns\SetsDownloadToken;
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Models\ConsultaLote;
@@ -32,6 +33,7 @@ use Symfony\Component\HttpFoundation\Response;
 class ClearanceController extends Controller
 {
     use RespondeAjax;
+    use SetsDownloadToken;
 
     public const CLEARANCE_NFE_AVULSA_CUSTO = 14;
 
@@ -953,7 +955,7 @@ class ClearanceController extends Controller
 
         $pdf = PdfReport::render('autenticado.clearance.pdf.relatorio', ['r' => $relatorio], 'portrait');
 
-        return $pdf->download("clearance-lote-{$lote->id}.pdf");
+        return $this->comTokenDownload($pdf->download("clearance-lote-{$lote->id}.pdf"), $request);
     }
 
     /**
@@ -969,8 +971,11 @@ class ClearanceController extends Controller
 
         [$lote, $relatorio] = $this->montarRelatorioExecutivo($request, $consultaLoteId, 'xlsx');
 
-        return app(\App\Services\Clearance\Export\ClearanceXlsxBuilder::class)
-            ->download($relatorio, "clearance-lote-{$lote->id}.xlsx");
+        return $this->comTokenDownload(
+            app(\App\Services\Clearance\Export\ClearanceXlsxBuilder::class)
+                ->download($relatorio, "clearance-lote-{$lote->id}.xlsx"),
+            $request
+        );
     }
 
     /**

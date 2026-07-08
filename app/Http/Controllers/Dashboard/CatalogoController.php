@@ -3,12 +3,19 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Concerns\RespondeAjax;
+use App\Http\Controllers\Concerns\SetsDownloadToken;
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Models\EfdCatalogoItem;
 use App\Models\EfdImportacao;
+use App\Services\Catalogo\CatalogoDadosService;
+use App\Services\Catalogo\Export\CatalogoCsvZipBuilder;
+use App\Services\Catalogo\Export\CatalogoReportBuilder;
+use App\Services\Catalogo\Export\CatalogoXlsxBuilder;
 use App\Services\CatalogoHistoricoService;
 use App\Support\Cfop;
+use App\Support\PdfReport;
+use App\Support\Reports\XlsxReport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -16,10 +23,14 @@ use Illuminate\Support\Facades\DB;
 class CatalogoController extends Controller
 {
     use RespondeAjax;
+    use SetsDownloadToken;
 
     private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
 
-    public function __construct(private CatalogoHistoricoService $historicoService) {}
+    public function __construct(
+        private CatalogoHistoricoService $historicoService,
+        private CatalogoDadosService $dados,
+    ) {}
 
     public function index(Request $request)
     {
@@ -35,124 +46,15 @@ class CatalogoController extends Controller
 
         $userId = (int) Auth::id();
 
-        $filtros = $request->only(['cliente_id', 'tipo_item', 'ncm', 'importacao_id', 'busca']);
-
-        // CFOP/CST: multi-select (1+) — filtram o catálogo pela movimentação (efd_notas_itens).
-        if ($cfopsSel = $this->parseLista($request->input('cfops'), '/\D/')) {
-            $filtros['cfops'] = $cfopsSel;
-        }
-        if ($cstsSel = $this->parseLista($request->input('csts'), '/[^0-9A-Za-z]/')) {
-            $filtros['csts'] = $cstsSel;
-        }
+        $filtros = $this->parseFiltros($request);
 
         $perPage = 25;
         $page = max(1, (int) $request->get('page', 1));
 
-        $baseQuery = EfdCatalogoItem::where('user_id', $userId);
+        $kpis = $this->dados->kpis($userId, $filtros);
 
-        if (! empty($filtros['cliente_id'])) {
-            $baseQuery->where('cliente_id', $filtros['cliente_id']);
-        }
-        if (! empty($filtros['importacao_id'])) {
-            $baseQuery->where('importacao_id', $filtros['importacao_id']);
-        }
-
-        // KPIs
-        $totalProdutos = (clone $baseQuery)->distinct('cod_item')->count('cod_item');
-        // "NCM faltando" = só mercadoria/produto (tipo 00–06) sem NCM — gap fiscal real.
-        // Itens que não exigem NCM (07–10/99) não entram, senão o número engana (medido: 10 sem
-        // NCM na massa, mas só 2 são problema). Mesma regra do badge no detalhe da nota.
-        $ncmFaltando = (clone $baseQuery)
-            ->whereIn('tipo_item', EfdCatalogoItem::TIPOS_EXIGEM_NCM)
-            ->where(fn ($q) => $q->whereNull('cod_ncm')->orWhere('cod_ncm', ''))
-            ->distinct('cod_item')->count('cod_item');
-
-        // Cross-reference with efd_notas_itens.
-        // P4: notas canceladas (cod_sit 02/03/04/05) não movimentam — join a efd_notas para filtrar.
-        // P1: itens fiscais (C170) e de contribuicoes são DISJUNTOS por chave (a mesma NF-e nunca
-        //     detalha C170 nas duas origens), logo somar as duas origens NÃO dobra — não deduplicar aqui.
-        $clienteFilter = ! empty($filtros['cliente_id']) ? ' AND ci.cliente_id = '.((int) $filtros['cliente_id']) : '';
-        $clienteFilter .= ! empty($filtros['importacao_id']) ? ' AND ci.importacao_id = '.((int) $filtros['importacao_id']) : '';
-
-        $comMovimentacao = DB::selectOne("
-            SELECT COUNT(DISTINCT ci.cod_item) as total
-            FROM efd_catalogo_itens ci
-            INNER JOIN efd_notas_itens ni ON ni.codigo_item = ci.cod_item AND ni.user_id = ci.user_id
-            INNER JOIN efd_notas n ON n.id = ni.efd_nota_id AND n.cancelada = false
-            WHERE ci.user_id = ?{$clienteFilter}
-        ", [$userId]);
-
-        $valorMovimentado = DB::selectOne("
-            SELECT COALESCE(SUM(ni.valor_total), 0) as total
-            FROM efd_notas_itens ni
-            INNER JOIN efd_notas n ON n.id = ni.efd_nota_id AND n.cancelada = false
-            INNER JOIN efd_catalogo_itens ci ON ci.cod_item = ni.codigo_item AND ci.user_id = ni.user_id
-            WHERE ci.user_id = ?{$clienteFilter}
-        ", [$userId]);
-
-        // P2: no perfil comercial o C170 fiscal NÃO carrega alíquota de ICMS (vem 0); o valor real
-        // está no C190/contribuicoes. Comparar o catálogo contra esses zeros gera divergência falsa
-        // (medido: 819 de 1.223 falsos-positivos na massa). Só comparar itens efetivamente tributados
-        // (aliquota_icms > 0). Exoneração legítima é divergência de CST/operação, não de alíquota.
-        $aliqDivergente = DB::selectOne("
-            SELECT COUNT(DISTINCT ci.cod_item) as total
-            FROM efd_catalogo_itens ci
-            INNER JOIN efd_notas_itens ni ON ni.codigo_item = ci.cod_item AND ni.user_id = ci.user_id
-            INNER JOIN efd_notas n ON n.id = ni.efd_nota_id AND n.cancelada = false
-            WHERE ci.user_id = ?
-            AND ci.aliq_icms IS NOT NULL AND ni.aliquota_icms > 0
-            AND ABS(ci.aliq_icms - ni.aliquota_icms) > 0.01{$clienteFilter}
-        ", [$userId]);
-
-        $kpis = [
-            'total_produtos' => $totalProdutos,
-            'com_movimentacao' => (int) ($comMovimentacao->total ?? 0),
-            'sem_movimentacao' => $totalProdutos - (int) ($comMovimentacao->total ?? 0),
-            'valor_movimentado' => (float) ($valorMovimentado->total ?? 0),
-            'aliq_divergente' => (int) ($aliqDivergente->total ?? 0),
-            'ncm_faltando' => $ncmFaltando,
-        ];
-
-        // Tabela consolidada — registro mais recente por cod_item
-        $latestIds = (clone $baseQuery)
-            ->select(DB::raw('MAX(id) as id'))
-            ->groupBy('cod_item');
-
-        // Subqueries por item: cancelada fora (P4); alíquota média só de itens tributados (P2 — zeros
-        // do C170 fiscal no perfil B distorcem a média e disparam badge "Divergente" falso na view).
-        $itensQuery = EfdCatalogoItem::whereIn('id', $latestIds)
-            ->select('efd_catalogo_itens.*')
-            ->addSelect(DB::raw("(SELECT COUNT(*) FROM efd_notas_itens ni JOIN efd_notas n ON n.id = ni.efd_nota_id AND n.cancelada = false WHERE ni.codigo_item = efd_catalogo_itens.cod_item AND ni.user_id = {$userId}) as total_movimentacoes"))
-            ->addSelect(DB::raw("(SELECT COALESCE(SUM(ni.valor_total), 0) FROM efd_notas_itens ni JOIN efd_notas n ON n.id = ni.efd_nota_id AND n.cancelada = false WHERE ni.codigo_item = efd_catalogo_itens.cod_item AND ni.user_id = {$userId}) as valor_movimentado"))
-            ->addSelect(DB::raw("(SELECT AVG(ni.aliquota_icms) FROM efd_notas_itens ni JOIN efd_notas n ON n.id = ni.efd_nota_id AND n.cancelada = false WHERE ni.codigo_item = efd_catalogo_itens.cod_item AND ni.user_id = {$userId} AND ni.aliquota_icms > 0) as aliq_icms_media_notas"));
-
-        // Filtros
-        if (! empty($filtros['tipo_item'])) {
-            $itensQuery->where('tipo_item', $filtros['tipo_item']);
-        }
-        if (! empty($filtros['ncm'])) {
-            $itensQuery->where('cod_ncm', 'ilike', '%'.$filtros['ncm'].'%');
-        }
-        if (! empty($filtros['busca'])) {
-            $busca = $filtros['busca'];
-            $itensQuery->where(function ($q) use ($busca) {
-                $q->where('cod_item', 'ilike', "%{$busca}%")
-                    ->orWhere('descr_item', 'ilike', "%{$busca}%")
-                    ->orWhere('cod_ncm', 'ilike', "%{$busca}%");
-            });
-        }
-
-        // CFOP/CST: produto entra se TEM movimentação (nota não cancelada) casando. cfop=integer no SPED.
-        if (! empty($filtros['cfops'])) {
-            $cfops = array_map('intval', $filtros['cfops']);
-            $itensQuery->whereExists(fn ($s) => $this->movimentoExists($s, $userId)->whereIn('ni.cfop', $cfops));
-        }
-        if (! empty($filtros['csts'])) {
-            $csts = $filtros['csts'];
-            $itensQuery->whereExists(fn ($s) => $this->movimentoExists($s, $userId)->whereIn('ni.cst_icms', $csts));
-        }
-
-        $totalItens = $itensQuery->count();
+        $itensQuery = $this->dados->itensQuery($userId, $filtros);
+        $totalItens = (clone $itensQuery)->count();
         $itens = (clone $itensQuery)
             ->orderBy('cod_item')
             ->offset(($page - 1) * $perPage)
@@ -168,41 +70,14 @@ class CatalogoController extends Controller
             ->orderByDesc('created_at')
             ->get(['id', 'filename', 'tipo_efd', 'created_at']);
 
-        // Chart data — Top 10 CFOPs (P4: exclui cancelada)
-        $cfops = DB::select("
-            SELECT ni.cfop, COUNT(*) as total, SUM(ni.valor_total) as valor
-            FROM efd_notas_itens ni
-            INNER JOIN efd_notas n ON n.id = ni.efd_nota_id AND n.cancelada = false
-            INNER JOIN efd_catalogo_itens ci ON ci.cod_item = ni.codigo_item AND ci.user_id = ni.user_id
-            WHERE ci.user_id = ? AND ni.cfop IS NOT NULL{$clienteFilter}
-            GROUP BY ni.cfop
-            ORDER BY total DESC
-            LIMIT 10
-        ", [$userId]);
-
-        // Chart data — Top 10 CSTs ICMS (P4: exclui cancelada)
-        $cstsIcms = DB::select("
-            SELECT ni.cst_icms, COUNT(*) as total
-            FROM efd_notas_itens ni
-            INNER JOIN efd_notas n ON n.id = ni.efd_nota_id AND n.cancelada = false
-            INNER JOIN efd_catalogo_itens ci ON ci.cod_item = ni.codigo_item AND ci.user_id = ni.user_id
-            WHERE ci.user_id = ? AND ni.cst_icms IS NOT NULL AND ni.cst_icms != ''{$clienteFilter}
-            GROUP BY ni.cst_icms
-            ORDER BY total DESC
-            LIMIT 10
-        ", [$userId]);
+        $cfops = $this->dados->cfopsTop($userId, $filtros);
+        $cstsIcms = $this->dados->cstsTop($userId, $filtros);
 
         // Drift de cadastro: mudanças de NCM/alíquota/unidade/descrição entre importações.
         $drift = $this->historicoService->resumoMudancas($userId);
 
         // Opções dos filtros CFOP/CST: universo de movimentação do catálogo (respeita cliente/importação).
-        $facetaRows = DB::select("
-            SELECT DISTINCT ni.cfop::text AS cfop, ni.cst_icms AS cst
-            FROM efd_notas_itens ni
-            INNER JOIN efd_notas n ON n.id = ni.efd_nota_id AND n.cancelada = false
-            INNER JOIN efd_catalogo_itens ci ON ci.cod_item = ni.codigo_item AND ci.user_id = ni.user_id
-            WHERE ci.user_id = ?{$clienteFilter}
-        ", [$userId]);
+        $facetaRows = $this->dados->facetaRows($userId, $filtros);
         $pick = fn (string $f) => collect($facetaRows)->pluck($f)
             ->map(fn ($v) => $v !== null ? trim((string) $v) : '')
             ->filter(fn ($v) => $v !== '')->unique()->sort()->values()->all();
@@ -236,16 +111,61 @@ class CatalogoController extends Controller
     }
 
     /**
-     * Subquery base de movimentação (efd_notas_itens, nota não cancelada) ligada ao item do
-     * catálogo da linha externa. Chamador encadeia o whereIn de cfop/cst.
+     * Filtros normalizados da tela (compartilhados por index e exports). CFOP/CST são
+     * multi-select (1+) e filtram o catálogo pela movimentação (efd_notas_itens).
+     *
+     * @return array{cliente_id?:mixed,tipo_item?:mixed,ncm?:mixed,importacao_id?:mixed,busca?:mixed,cfops?:list<string>,csts?:list<string>}
      */
-    private function movimentoExists($sub, int $userId)
+    private function parseFiltros(Request $request): array
     {
-        return $sub->selectRaw('1')
-            ->from('efd_notas_itens as ni')
-            ->join('efd_notas as n', fn ($j) => $j->on('n.id', '=', 'ni.efd_nota_id')->where('n.cancelada', false))
-            ->whereColumn('ni.codigo_item', 'efd_catalogo_itens.cod_item')
-            ->where('ni.user_id', $userId);
+        $filtros = $request->only(['cliente_id', 'tipo_item', 'ncm', 'importacao_id', 'busca']);
+
+        if ($cfopsSel = $this->parseLista($request->input('cfops'), '/\D/')) {
+            $filtros['cfops'] = $cfopsSel;
+        }
+        if ($cstsSel = $this->parseLista($request->input('csts'), '/[^0-9A-Za-z]/')) {
+            $filtros['csts'] = $cstsSel;
+        }
+
+        return $filtros;
+    }
+
+    public function exportarPdf(Request $request, CatalogoReportBuilder $builder)
+    {
+        $relatorio = $builder->montar((int) Auth::id(), $this->parseFiltros($request));
+
+        return $this->comTokenDownload(
+            PdfReport::render('reports.catalogo', ['relatorio' => $relatorio], 'landscape')
+                ->download($this->nomeBase($request).'.pdf'),
+            $request
+        );
+    }
+
+    public function exportarXlsx(Request $request, CatalogoReportBuilder $builder, CatalogoXlsxBuilder $xlsx)
+    {
+        if (! XlsxReport::disponivel()) {
+            abort(503, 'Exportação XLSX indisponível.');
+        }
+
+        $relatorio = $builder->montar((int) Auth::id(), $this->parseFiltros($request));
+
+        return $this->comTokenDownload($xlsx->download($relatorio, $this->nomeBase($request).'.xlsx'), $request);
+    }
+
+    /** CSV é uma tabela; o relatório tem N seções → ZIP com 1 CSV por seção (padrão do BI). */
+    public function exportarCsvZip(Request $request, CatalogoReportBuilder $builder, CatalogoCsvZipBuilder $zip)
+    {
+        $relatorio = $builder->montar((int) Auth::id(), $this->parseFiltros($request));
+
+        return $this->comTokenDownload($zip->download($relatorio, $this->nomeBase($request).'-csv.zip'), $request);
+    }
+
+    private function nomeBase(Request $request): string
+    {
+        $clienteId = $request->query('cliente_id');
+        $sufixo = $clienteId ? '-cliente'.((int) $clienteId) : '';
+
+        return 'catalogo-produtos'.$sufixo;
     }
 
     /**

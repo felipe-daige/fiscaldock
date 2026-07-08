@@ -69,8 +69,11 @@ final class ParticipanteListagemBuilder
                 'papel_classe' => $papel ?? 'sem_movimentacao',
                 'movimentado' => (float) ($mov['valor'] ?? 0),
                 'notas' => (int) ($mov['qtd'] ?? 0),
-                'regularidade' => $classe ? (self::REGULARIDADE_LABEL[$classe] ?? ucfirst($classe)) : 'Não consultado',
-                'regularidade_classe' => $classe ?? 'nao_consultado',
+                // CPF não é consultável como PJ → não é "não consultado", é pessoa física.
+                'regularidade' => $classe
+                    ? (self::REGULARIDADE_LABEL[$classe] ?? ucfirst($classe))
+                    : \App\Support\Documento::rotuloSemConsulta($p->documento, 'Não consultado'),
+                'regularidade_classe' => $classe ?? ($p->is_cpf ? \App\Support\Documento::CLASSE_CPF : 'nao_consultado'),
                 'ultima_consulta' => $p->ultima_consulta_em ? Carbon::parse($p->ultima_consulta_em)->format('d/m/Y') : null,
             ];
         })->all();

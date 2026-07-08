@@ -118,6 +118,9 @@
                                         <td class="center">
                                             @if ($it['classificacao'])
                                                 <span class="badge" style="background-color:{{ $hex }}">{{ $it['classificacao'] === 'inconclusivo' ? 'não conclusivo' : $it['classificacao'].($it['score_total'] !== null ? ' '.$it['score_total'] : '') }}</span>
+                                            @elseif (\App\Support\Documento::ehCpf($it['cnpj']))
+                                                {{-- CPF não é consultável como PJ → marcar pessoa física, não "nunca consultado". --}}
+                                                <span class="badge" style="background-color:{{ \App\Support\Reports\ReportTheme::OUTRO }}">CPF</span>
                                             @else
                                                 <span class="badge" style="background-color:#9ca3af">nunca consultado</span>
                                             @endif
