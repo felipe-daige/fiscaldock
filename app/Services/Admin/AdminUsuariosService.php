@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -75,6 +76,85 @@ class AdminUsuariosService
     }
 
     /**
+     * Agregados do detalhe operacional do usuário.
+     *
+     * @return array<string, mixed>
+     */
+    public function detalhe(User $usuario): array
+    {
+        $userId = (int) $usuario->id;
+        $desde30 = now()->subDays(30)->toDateTimeString();
+
+        $consultasPorStatus = $this->contagemPorStatus('consulta_lotes', $userId);
+        $importacoesPorStatus = $this->somarContagens(
+            $this->contagemPorStatus('efd_importacoes', $userId),
+            $this->contagemPorStatus('xml_importacoes', $userId),
+        );
+        $clearancePorStatus = $this->somarContagens(
+            $this->contagemPorStatus('nfe_consultas', $userId),
+            $this->contagemPorStatus('cte_consultas', $userId),
+        );
+
+        $ultimaCompra = DB::table('mercado_pago_payments')
+            ->where('user_id', $userId)
+            ->where('status', 'approved')
+            ->orderByDesc('created_at')
+            ->first();
+
+        $trialExpiraEm = $usuario->trial_expires_at;
+        $trialAtivo = $usuario->hasActiveTrial();
+        $trialExpirado = $usuario->isTrialExpired();
+
+        return [
+            'conta' => [
+                'bloqueado' => $usuario->bloqueado_em !== null,
+                'admin' => (bool) $usuario->is_admin,
+                'lgpd_solicitada' => $usuario->deletion_requested_at !== null,
+                'tem_compra_confirmada' => DB::table('credit_transactions')
+                    ->where('user_id', $userId)->where('type', 'purchase')->where('amount', '>', 0)->exists(),
+                'trial_usado' => (bool) $usuario->trial_used,
+                'trial_ativo' => $trialAtivo,
+                'trial_expirado' => $trialExpirado,
+                'trial_status' => $trialAtivo ? 'Trial ativo' : ($trialExpirado ? 'Trial expirado' : ($usuario->trial_used ? 'Trial usado' : 'Sem trial')),
+                'trial_expira_em' => $trialExpiraEm,
+                'trial_dias_restantes' => $trialAtivo && $trialExpiraEm ? now()->diffInDays($trialExpiraEm, false) : null,
+            ],
+            'financeiro' => [
+                'total_pago' => (float) DB::table('mercado_pago_payments')
+                    ->where('user_id', $userId)->where('status', 'approved')->sum('valor'),
+                'compras_aprovadas' => DB::table('mercado_pago_payments')
+                    ->where('user_id', $userId)->where('status', 'approved')->count(),
+                'ultima_compra_em' => $ultimaCompra?->created_at,
+                'ultima_compra_valor' => $ultimaCompra ? (float) $ultimaCompra->valor : null,
+                'creditos_consumidos' => abs((float) DB::table('credit_transactions')
+                    ->where('user_id', $userId)->where('amount', '<', 0)->sum('amount')),
+                'movimentos_recentes' => DB::table('credit_transactions')
+                    ->where('user_id', $userId)
+                    ->orderByDesc('created_at')
+                    ->limit(8)
+                    ->get(['type', 'amount', 'balance_after', 'description', 'created_at']),
+                'pagamentos_por_status' => $this->contagemPorStatus('mercado_pago_payments', $userId),
+            ],
+            'uso' => [
+                'clientes_total' => DB::table('clientes')->where('user_id', $userId)->count(),
+                'clientes_ativos' => DB::table('clientes')->where('user_id', $userId)->where('ativo', true)->count(),
+                'participantes_total' => DB::table('participantes')->where('user_id', $userId)->count(),
+                'monitoramentos_ativos' => DB::table('monitoramento_assinaturas')->where('user_id', $userId)->where('status', 'ativo')->count(),
+                'consultas_30d' => $this->contarDesde('consulta_lotes', $userId, $desde30),
+                'importacoes_30d' => $this->contarDesde('efd_importacoes', $userId, $desde30)
+                    + $this->contarDesde('xml_importacoes', $userId, $desde30),
+                'clearance_30d' => $this->contarDesde('nfe_consultas', $userId, $desde30)
+                    + $this->contarDesde('cte_consultas', $userId, $desde30),
+                'consultas_por_status' => $consultasPorStatus,
+                'importacoes_por_status' => $importacoesPorStatus,
+                'clearance_por_status' => $clearancePorStatus,
+                'efd_notas' => DB::table('efd_notas')->where('user_id', $userId)->count(),
+                'xml_notas' => DB::table('xml_notas')->where('user_id', $userId)->count(),
+            ],
+        ];
+    }
+
+    /**
      * Atividade derivada (timeline) — UNION das fontes, desc por data.
      *
      * @return Collection<int, array{tipo:string,data:?string,titulo:string,detalhe:?string}>
@@ -101,5 +181,47 @@ class AdminUsuariosService
             'titulo' => $r->titulo,
             'detalhe' => $r->detalhe,
         ]);
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private function contagemPorStatus(string $tabela, int $userId): array
+    {
+        return DB::table($tabela)
+            ->where('user_id', $userId)
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->orderBy('status')
+            ->pluck('total', 'status')
+            ->map(fn ($total) => (int) $total)
+            ->all();
+    }
+
+    private function contarDesde(string $tabela, int $userId, string $desde): int
+    {
+        return DB::table($tabela)
+            ->where('user_id', $userId)
+            ->where('created_at', '>=', $desde)
+            ->count();
+    }
+
+    /**
+     * @param  array<string, int>  ...$contagens
+     * @return array<string, int>
+     */
+    private function somarContagens(array ...$contagens): array
+    {
+        $resultado = [];
+
+        foreach ($contagens as $grupo) {
+            foreach ($grupo as $status => $total) {
+                $resultado[$status] = ($resultado[$status] ?? 0) + (int) $total;
+            }
+        }
+
+        ksort($resultado);
+
+        return $resultado;
     }
 }

@@ -22,3 +22,13 @@ it('show mostra os cards de ação e a trilha do alvo', function () {
         ->assertSee('Trilha administrativa')
         ->assertSee('log do alvo');
 });
+
+it('show sinaliza ações bloqueadas quando o alvo é o próprio admin', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    actingAs($admin)->get("/app/admin/usuarios/{$admin->id}")
+        ->assertOk()
+        ->assertSee('Operador não pode bloquear a própria conta')
+        ->assertSee('Operador não pode rebaixar a própria conta')
+        ->assertSee('Não é possível impersonar a própria conta');
+});

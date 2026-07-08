@@ -44,6 +44,7 @@ class AdminUsuariosController extends Controller
         $data = [
             'usuario' => $usuario,
             'kpis' => $this->usuarios->kpis($id),
+            'detalheAdmin' => $this->usuarios->detalhe($usuario),
             'assinatura' => $this->usuarios->assinaturaAtiva($id),
             'sessao' => $this->usuarios->ultimaSessao($id),
             'timeline' => $this->usuarios->timeline($id),

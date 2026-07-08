@@ -24,7 +24,10 @@ it('mostra o detalhe de um usuário com KPIs', function () {
     actingAs($admin)->get('/app/admin/usuarios/'.$alvo->id)
         ->assertOk()
         ->assertSee('Fulano')
-        ->assertSee('Atividade');
+        ->assertSee('Conta e acesso')
+        ->assertSee('Uso do produto')
+        ->assertSee('Financeiro')
+        ->assertSee('Atividade recente');
 });
 
 it('detalhe de usuário inexistente dá 404', function () {
