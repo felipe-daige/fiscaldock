@@ -330,3 +330,36 @@ it('exportar-pdf com cliente_id só inclui alertas daquele cliente', function ()
 it('exportar-pdf sem alertas ativos retorna 404', function () {
     $this->get('/app/alertas/exportar-pdf')->assertNotFound();
 });
+
+it('exportar-csv gera CSV (BOM + delimitador ;) e seta o cookie de download', function () {
+    Alerta::create(['user_id' => $this->user->id, 'tipo' => 'notas_duplicadas', 'categoria' => 'notas_fiscais', 'severidade' => 'media', 'titulo' => 'Dup CSV', 'descricao' => 'x', 'status' => 'ativo', 'valor_risco' => 1234.56, 'hash' => hash('sha256', 'csv1')]);
+
+    $response = $this->get('/app/alertas/exportar-csv?download_token=c1');
+
+    $response->assertOk();
+    expect($response->headers->get('content-type'))->toContain('text/csv');
+    $response->assertCookie('bi_download', 'c1');
+
+    $conteudo = $response->streamedContent();
+    expect($conteudo)->toStartWith("\xEF\xBB\xBF"); // BOM UTF-8
+    expect($conteudo)->toContain('Dup CSV');
+    expect($conteudo)->toContain('1.234,56');
+});
+
+it('exportar-csv sem alertas ativos retorna 404', function () {
+    $this->get('/app/alertas/exportar-csv')->assertNotFound();
+});
+
+it('exportar-xlsx gera planilha e seta o cookie de download', function () {
+    Alerta::create(['user_id' => $this->user->id, 'tipo' => 'notas_duplicadas', 'categoria' => 'notas_fiscais', 'severidade' => 'media', 'titulo' => 'Dup XLSX', 'descricao' => 'x', 'status' => 'ativo', 'valor_risco' => 500, 'hash' => hash('sha256', 'xlsx1')]);
+
+    $response = $this->get('/app/alertas/exportar-xlsx?download_token=x1');
+
+    $response->assertOk();
+    expect($response->headers->get('content-type'))->toContain('spreadsheetml');
+    $response->assertCookie('bi_download', 'x1');
+});
+
+it('exportar-xlsx sem alertas ativos retorna 404', function () {
+    $this->get('/app/alertas/exportar-xlsx')->assertNotFound();
+});

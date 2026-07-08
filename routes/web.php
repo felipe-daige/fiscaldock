@@ -102,6 +102,8 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     Route::post('/app/alertas/status-lote', [DashboardController::class, 'alertasMarcarStatusLote'])->name('app.alertas.status-lote');
     Route::post('/app/alertas/recalcular', [DashboardController::class, 'alertasRecalcular'])->name('app.alertas.recalcular');
     Route::get('/app/alertas/exportar-pdf', [DashboardController::class, 'alertasExportarPdf'])->name('app.alertas.exportar');
+    Route::get('/app/alertas/exportar-csv', [DashboardController::class, 'alertasExportarCsv'])->name('app.alertas.exportar-csv');
+    Route::get('/app/alertas/exportar-xlsx', [DashboardController::class, 'alertasExportarXlsx'])->name('app.alertas.exportar-xlsx');
     Route::get('/app/alertas/historico', [DashboardController::class, 'alertasHistorico'])->name('app.alertas.historico');
     Route::get('/app/alertas/{id}', [DashboardController::class, 'alertaDetalhes'])->whereNumber('id')->name('app.alertas.show');
 

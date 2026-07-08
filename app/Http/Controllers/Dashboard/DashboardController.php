@@ -990,6 +990,97 @@ class DashboardController extends Controller
     }
 
     /**
+     * Resolve o `cliente_id` opcional e devolve os grupos de alertas ativos do recorte,
+     * abortando 404 quando não há nada para exportar. Base comum de CSV/XLSX/PDF.
+     *
+     * @return array<int,array{key:string,label:string,cor:string,alertas:\Illuminate\Support\Collection}>
+     */
+    private function alertasGruposParaExport(Request $request): array
+    {
+        $clienteParam = $request->query('cliente_id');
+        $clienteId = ($clienteParam !== null && ctype_digit((string) $clienteParam)) ? (int) $clienteParam : null;
+
+        $grupos = $this->alertaCentralService->alertasAtivosAgrupados(Auth::id(), null, $clienteId);
+
+        $total = array_sum(array_map(fn ($g) => $g['alertas']->count(), $grupos));
+        abort_if($total === 0, 404, 'Nenhum alerta ativo para exportar.');
+
+        return $grupos;
+    }
+
+    /**
+     * Central de Alertas em CSV (padrão canônico CsvExport: BOM + delimitador ";").
+     * Uma linha por alerta ativo; escopo por cliente opcional (`cliente_id`).
+     */
+    public function alertasExportarCsv(Request $request)
+    {
+        if (! Auth::check()) {
+            return redirect('/login');
+        }
+
+        $grupos = $this->alertasGruposParaExport($request);
+
+        $sevLabel = ['alta' => 'Alta', 'media' => 'Média', 'baixa' => 'Baixa'];
+        $fmtRs = fn ($v) => number_format((float) $v, 2, ',', '.');
+
+        $linhas = [];
+        foreach ($grupos as $g) {
+            foreach ($g['alertas'] as $a) {
+                $sev = (string) $a->severidade;
+                $linhas[] = [
+                    $g['label'],
+                    $sevLabel[$sev] ?? ucfirst($sev),
+                    (string) $a->titulo,
+                    (string) $a->descricao,
+                    $a->cliente?->razao_social ?? '',
+                    $a->participante?->razao_social ?? '',
+                    $a->participante?->documento ?? '',
+                    (int) $a->total_afetados,
+                    $fmtRs($a->valor_risco),
+                    $a->vence_em?->format('d/m/Y') ?? '',
+                    $a->created_at?->format('d/m/Y') ?? '',
+                ];
+            }
+        }
+
+        $colunas = [
+            'Classe', 'Severidade', 'Alerta', 'Descrição', 'Cliente',
+            'Participante', 'Documento', 'Afetados', 'Em risco (R$)', 'Vence em', 'Criado em',
+        ];
+
+        $arquivo = 'alertas-'.now()->format('Y-m-d').'.csv';
+
+        return $this->comTokenDownload(
+            \App\Support\CsvExport::download($arquivo, $colunas, $linhas),
+            $request
+        );
+    }
+
+    /**
+     * Central de Alertas em XLSX (Resumo por classe + Alertas). Escopo por cliente
+     * opcional (`cliente_id`). Espelha as colunas do PDF, com valor em risco numérico.
+     */
+    public function alertasExportarXlsx(Request $request)
+    {
+        if (! Auth::check()) {
+            return redirect('/login');
+        }
+
+        if (! \App\Support\Reports\XlsxReport::disponivel()) {
+            abort(503, 'Exportação XLSX indisponível.');
+        }
+
+        $grupos = $this->alertasGruposParaExport($request);
+
+        $arquivo = 'alertas-'.now()->format('Y-m-d').'.xlsx';
+
+        return $this->comTokenDownload(
+            (new \App\Services\Alertas\Export\AlertaXlsxBuilder)->download($grupos, $arquivo),
+            $request
+        );
+    }
+
+    /**
      * Anexa o cookie `bi_download=<token>` à resposta de download quando o request traz
      * `download_token` — o spinner do <x-download-button> faz poll da PRESENÇA do cookie
      * pra saber que o arquivo chegou (mesmo mecanismo do BI). httpOnly=false: o JS lê.
