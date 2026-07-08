@@ -91,10 +91,12 @@
         ];
     }
 
-    if ($ultimaConsulta && $ultimaConsulta->lote) {
+    // Dossiê completo da empresa própria (mesma pipeline dos clientes — a empresa própria
+    // é um Cliente). Não depende do lote: o DossieClienteBuilder monta a partir do cliente.
+    if ($ultimaConsulta) {
         $acoes[] = [
-            'label' => 'Baixar Relatório',
-            'href' => '/app/consulta/lote/' . $ultimaConsulta->lote->id . '/baixar',
+            'label' => 'Baixar Dossiê',
+            'href' => '/app/cliente/' . $empresa->id . '/dossie',
             'primary' => false,
             'download' => true,
             'icon' => 'download',

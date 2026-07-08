@@ -39,7 +39,7 @@
                 <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Catálogo × Itens de Nota</h1>
                 <p class="text-xs text-gray-500 mt-0.5">Itens movimentados nas notas (XML + EFD), cruzados com o catálogo do contribuinte.</p>
             </div>
-            <x-acoes-menu label="Exportar" align="right">
+            <x-acoes-menu label="Exportar" align="right" size="lg">
                 <x-acoes-item href="{{ route('app.bi.catalogo-itens.exportar-xlsx', request()->query()) }}">Excel (XLSX)</x-acoes-item>
                 <x-acoes-item href="{{ route('app.bi.catalogo-itens.exportar', request()->query()) }}">Excel (CSV)</x-acoes-item>
                 <x-acoes-item href="{{ route('app.bi.catalogo-itens.exportar-pdf', request()->query()) }}">PDF</x-acoes-item>

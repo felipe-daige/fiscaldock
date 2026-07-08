@@ -31,7 +31,7 @@
                     </select>
                     {{-- Exports — dropdown único (modais de planilha/PDF permanecem idênticos) --}}
                     @php $dataArq = now()->format('Ymd'); @endphp
-                    <x-acoes-menu label="Exportar" align="right">
+                    <x-acoes-menu label="Exportar" align="right" size="lg">
                         <x-acoes-item onclick="document.getElementById('modal-export-bi').classList.remove('hidden')">Excel (XLSX)</x-acoes-item>
                         <x-acoes-item onclick="document.getElementById('modal-export-bi').classList.remove('hidden')">Excel (CSV)</x-acoes-item>
                         <x-acoes-item onclick="document.getElementById('modal-export-bi-pdf').classList.remove('hidden')">PDF</x-acoes-item>

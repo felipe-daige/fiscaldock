@@ -205,7 +205,7 @@
                         <span class="text-sm font-medium text-gray-900"><span id="clientes-selecionados-label">clientes selecionados</span></span>
                     </div>
                     <div class="grid grid-cols-2 gap-2 sm:flex">
-                        <x-acoes-menu label="Exportar" align="left">
+                        <x-acoes-menu label="Exportar" align="left" size="lg">
                             <x-acoes-item disabled badge="Em breve">Excel (XLSX)</x-acoes-item>
                             <x-acoes-item disabled badge="Em breve">Excel (CSV)</x-acoes-item>
                             <x-acoes-item disabled badge="Em breve">PDF</x-acoes-item>

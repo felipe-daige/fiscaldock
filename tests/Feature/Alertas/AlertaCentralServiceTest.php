@@ -36,7 +36,7 @@ it('recalcular cria alertas de notas duplicadas', function () {
 
     $participante = Participante::create([
         'user_id' => $this->user->id,
-        'cnpj' => '12345678000190',
+        'documento' => '12345678000190',
         'razao_social' => 'Fornecedor Teste',
     ]);
 
@@ -153,7 +153,7 @@ it('compliance detector encontra participantes com situacao irregular', function
 
     $participante = Participante::create([
         'user_id' => $this->user->id,
-        'cnpj' => '99887766000155',
+        'documento' => '99887766000155',
         'razao_social' => 'Empresa Irregular',
         'situacao_cadastral' => 'CANCELADA',
     ]);
@@ -181,6 +181,53 @@ it('compliance detector encontra participantes com situacao irregular', function
     expect($alerta->severidade)->toBe('alta');
     expect($alerta->categoria)->toBe('compliance');
     expect($alerta->participante_id)->toBe($participante->id);
+});
+
+it('não cria alertas de compliance para participante com CPF (não consultável)', function () {
+    $cliente = Cliente::create([
+        'user_id' => $this->user->id,
+        'documento' => '22333444000199',
+        'razao_social' => 'Teste Ltda',
+        'is_empresa_propria' => true,
+    ]);
+
+    $importacao = EfdImportacao::create([
+        'user_id' => $this->user->id,
+        'cliente_id' => $cliente->id,
+        'tipo_efd' => 'EFD ICMS/IPI',
+        'status' => 'concluido',
+    ]);
+
+    // Participante pessoa física (CPF, 11 dígitos) irregular e nunca consultado.
+    $pf = Participante::create([
+        'user_id' => $this->user->id,
+        'cliente_id' => $cliente->id,
+        'documento' => '12345678901',
+        'razao_social' => 'Pessoa Fisica',
+        'situacao_cadastral' => 'CANCELADA',
+    ]);
+
+    EfdNota::create([
+        'user_id' => $this->user->id,
+        'cliente_id' => $cliente->id,
+        'importacao_id' => $importacao->id,
+        'participante_id' => $pf->id,
+        'numero' => 4242,
+        'serie' => '1',
+        'modelo' => '55',
+        'data_emissao' => '2026-01-15',
+        'tipo_operacao' => 'entrada',
+        'valor_total' => 500.00,
+    ]);
+
+    $this->service->recalcular($this->user->id);
+
+    $alertasCompliance = Alerta::where('user_id', $this->user->id)
+        ->where('categoria', 'compliance')
+        ->where('participante_id', $pf->id)
+        ->count();
+
+    expect($alertasCompliance)->toBe(0);
 });
 
 it('marcar status atualiza timestamps', function () {

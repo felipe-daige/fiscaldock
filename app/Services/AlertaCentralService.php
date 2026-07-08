@@ -696,6 +696,7 @@ class AlertaCentralService
             ->whereNotNull('situacao_cadastral')
             ->whereRaw("UPPER(situacao_cadastral) NOT IN ('', '02', 'ATIVA')")
             ->whereHas('efdNotas')
+            ->somenteCnpj() // CPF não é consultável na Receita/InfoSimples — alerta cobre só CNPJ.
             ->get(['id', 'razao_social', 'documento as documento', 'situacao_cadastral', 'cliente_id']);
     }
 
@@ -708,6 +709,7 @@ class AlertaCentralService
             ->whereNotNull('ultima_consulta_em')
             ->where('ultima_consulta_em', '<', now()->subDays(90))
             ->whereHas('efdNotas')
+            ->somenteCnpj() // CPF não é consultável na Receita/InfoSimples — alerta cobre só CNPJ.
             ->get(['id', 'razao_social', 'documento as documento', 'ultima_consulta_em', 'cliente_id']);
     }
 
@@ -720,6 +722,7 @@ class AlertaCentralService
             ->whereNull('ultima_consulta_em')
             ->whereHas('efdNotas')
             ->excludingEmpresaPropria()
+            ->somenteCnpj() // CPF não é consultável na Receita/InfoSimples — alerta cobre só CNPJ.
             ->get(['id', 'razao_social', 'documento as documento', 'cliente_id']);
     }
 
@@ -793,6 +796,8 @@ class AlertaCentralService
             ->whereRaw("(n.origem_arquivo = 'fiscal' OR NOT EXISTS (SELECT 1 FROM efd_notas f WHERE f.user_id = n.user_id AND f.origem_arquivo = 'fiscal' AND f.chave_acesso IS NOT NULL AND f.chave_acesso = n.chave_acesso))")
             ->whereNotNull('p.situacao_cadastral')
             ->whereRaw("UPPER(p.situacao_cadastral) NOT IN ('02', 'ATIVA')")
+            // CPF não é consultável na Receita/InfoSimples — alerta cobre só CNPJ.
+            ->whereRaw("length(regexp_replace(coalesce(p.documento, ''), '[^0-9]', '', 'g')) = 14")
             ->select([
                 'p.id as participante_id',
                 'p.cliente_id',

@@ -31,10 +31,10 @@
             <p class="text-xs text-gray-500 mt-1">Apuração, divergências e o que recolher — por empresa e competência</p>
         </div>
         <div class="flex items-center gap-2 rf-actions">
-            <x-acoes-menu label="Exportar" align="right">
+            <x-acoes-menu label="Exportar" align="right" size="lg">
                 <x-acoes-item disabled badge="Em breve">Excel (XLSX)</x-acoes-item>
                 <x-acoes-item href="#" id="rf-btn-exportar">Excel (CSV)</x-acoes-item>
-                <x-acoes-item disabled badge="Em breve">PDF</x-acoes-item>
+                <x-acoes-item href="#" id="rf-btn-exportar-pdf">PDF</x-acoes-item>
             </x-acoes-menu>
             <button id="rf-btn-imprimir" type="button" class="px-3 py-2 border border-gray-300 rounded text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors">Imprimir</button>
         </div>
@@ -823,6 +823,8 @@
         var compSel = document.getElementById('rf-competencia');
         var exportar = document.getElementById('rf-btn-exportar');
         if (exportar) exportar.setAttribute('href', '/app/resumo-fiscal/exportar?' + getParams());
+        var exportarPdf = document.getElementById('rf-btn-exportar-pdf');
+        if (exportarPdf) exportarPdf.setAttribute('href', '/app/resumo-fiscal/exportar-pdf?' + getParams());
         var empresa = clienteSel ? (clienteSel.options[clienteSel.selectedIndex] || {}).text || '' : '';
         var comp = compSel ? (compSel.options[compSel.selectedIndex] || {}).text || '' : '';
         var pe = document.getElementById('rf-print-empresa');

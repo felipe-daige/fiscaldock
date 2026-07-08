@@ -277,6 +277,8 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     Route::get('app/resumo-fiscal/a-recolher', [ResumoFiscalController::class, 'aRecolher'])->name('app.resumo-fiscal.a-recolher');
     Route::get('app/resumo-fiscal/exportar', [ResumoFiscalController::class, 'exportar'])
         ->middleware(RequiresEntitlement::class.':export')->name('app.resumo-fiscal.exportar');
+    Route::get('app/resumo-fiscal/exportar-pdf', [ResumoFiscalController::class, 'exportarPdf'])
+        ->middleware(RequiresEntitlement::class.':export')->name('app.resumo-fiscal.exportar-pdf');
     Route::get('app/resumo-fiscal/apuracao-icms', [ResumoFiscalController::class, 'apuracaoIcms'])->name('app.resumo-fiscal.apuracao-icms');
     Route::get('app/resumo-fiscal/apuracao-pis-cofins', [ResumoFiscalController::class, 'apuracaoPisCofins'])->name('app.resumo-fiscal.apuracao-pis-cofins');
     Route::get('app/resumo-fiscal/retencoes', [ResumoFiscalController::class, 'retencoesFonte'])->name('app.resumo-fiscal.retencoes');

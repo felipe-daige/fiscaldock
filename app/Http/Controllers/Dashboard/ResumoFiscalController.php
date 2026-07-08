@@ -144,6 +144,32 @@ class ResumoFiscalController extends Controller
         return CsvExport::download($filename, $colunas, $linhas);
     }
 
+    public function exportarPdf(Request $request)
+    {
+        [$userId, $clienteId, $competencia] = $this->validarParams($request);
+        $cliente = Cliente::where('user_id', $userId)->where('id', $clienteId)->firstOrFail();
+
+        $dados = [
+            'cliente' => $cliente,
+            'competencia' => $competencia,
+            'competenciaLabel' => \Carbon\Carbon::parse($competencia.'-01')->translatedFormat('F/Y'),
+            'geradoEm' => now(),
+            'resumo' => $this->service->getResumoExecutivo($userId, $clienteId, $competencia),
+            'aRecolher' => $this->service->getARecolherData($userId, $clienteId, $competencia),
+            'cruzamentos' => $this->service->getCruzamentosData($userId, $clienteId, $competencia),
+            'alertas' => $this->service->getAlertasFiscaisData($userId, $clienteId, $competencia),
+            'icms' => $this->service->getApuracaoIcmsData($userId, $clienteId, $competencia),
+            'pisCofins' => $this->service->getApuracaoPisCofinsData($userId, $clienteId, $competencia),
+            'retencoes' => $this->service->getRetencoesData($userId, $clienteId, $competencia),
+            'hashDoc' => \App\Support\PdfReport::hashDocumento($userId, 'resumo-fiscal', $clienteId, $competencia),
+        ];
+
+        $doc = preg_replace('/\D/', '', (string) ($cliente->documento ?? ''));
+        $nome = 'fechamento-fiscal-'.($doc !== '' ? $doc.'-' : '').$competencia.'.pdf';
+
+        return \App\Support\PdfReport::render('reports.resumo-fiscal', $dados, 'portrait')->download($nome);
+    }
+
     public function cruzamentos(Request $request)
     {
         [$userId, $clienteId, $competencia] = $this->validarParams($request);

@@ -30,7 +30,7 @@
                         </svg>
                         Histórico
                     </a>
-                    <x-acoes-menu label="Exportar" align="right">
+                    <x-acoes-menu label="Exportar" align="right" size="lg">
                         <x-acoes-item id="btn-exportar-alertas" onclick="document.getElementById('modal-export-alertas').classList.remove('hidden')">Exportar alertas…</x-acoes-item>
                     </x-acoes-menu>
                     <button id="btn-recalcular" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium transition-colors">

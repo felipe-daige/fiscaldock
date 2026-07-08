@@ -2,7 +2,14 @@
     'label' => 'Ações',
     'align' => 'right',
     'trigger' => 'default', // default = botão "Ações ▾" | kebab = ícone ⋮ (tabelas densas)
+    'size' => 'sm',         // sm = compacto (tabelas) | lg = header (igual botão Histórico)
 ])
+
+@php
+    $triggerSize = $size === 'lg'
+        ? 'px-4 py-2 text-sm font-medium text-gray-800'
+        : 'px-2.5 py-1.5 text-[13px] font-medium text-gray-700';
+@endphp
 
 <div class="inline-block" data-acoes-menu data-acoes-align="{{ $align }}">
     @if ($trigger === 'kebab')
@@ -14,7 +21,7 @@
         </button>
     @else
         <button type="button" data-acoes-trigger aria-haspopup="menu" aria-expanded="false"
-            class="inline-flex items-center gap-1 rounded border border-gray-300 px-2.5 py-1.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50">
+            class="inline-flex items-center gap-1.5 rounded border border-gray-300 bg-white {{ $triggerSize }} transition-colors hover:bg-gray-50">
             {{ $label }}
             <svg class="h-3.5 w-3.5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.085l3.71-3.855a.75.75 0 111.08 1.04l-4.25 4.41a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
