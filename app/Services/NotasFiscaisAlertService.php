@@ -116,7 +116,7 @@ class NotasFiscaisAlertService
             'id' => 'notas_duplicadas',
             'titulo' => 'Notas duplicadas',
             'severidade' => 'alta',
-            'descricao' => $totalAfetados.' grupo(s) de notas com mesma combinacao de numero, serie, participante e modelo.',
+            'descricao' => $totalAfetados.' grupo(s) de notas com mesma combinação de número, série, participante e modelo.',
             'total_afetados' => $totalAfetados,
             'detalhes' => $detalhes,
             'tipo' => 'free',
@@ -170,7 +170,7 @@ class NotasFiscaisAlertService
             'id' => 'notas_valor_zerado',
             'titulo' => 'Notas com valor zerado',
             'severidade' => 'media',
-            'descricao' => $totalAfetados.' nota(s) com valor total igual a zero ou nao informado.',
+            'descricao' => $totalAfetados.' nota(s) com valor total igual a zero ou não informado.',
             'total_afetados' => $totalAfetados,
             'detalhes' => $detalhes,
             'tipo' => 'free',
@@ -282,9 +282,9 @@ class NotasFiscaisAlertService
 
         return [
             'id' => 'cfops_inconsistentes',
-            'titulo' => 'CFOPs inconsistentes com operacao',
+            'titulo' => 'CFOPs inconsistentes com operação',
             'severidade' => 'media',
-            'descricao' => $totalAfetados.' nota(s) com CFOP incompativel com o tipo de operacao (entrada/saida).',
+            'descricao' => $totalAfetados.' nota(s) com CFOP incompatível com o tipo de operação (entrada/saída).',
             'total_afetados' => (int) $totalAfetados,
             'detalhes' => $detalhes,
             'tipo' => 'free',
@@ -337,7 +337,7 @@ class NotasFiscaisAlertService
             'id' => 'notas_sem_itens',
             'titulo' => 'Notas sem itens',
             'severidade' => 'baixa',
-            'descricao' => $totalAfetados.' nota(s) sem nenhum item registrado. Pode indicar importacao incompleta.',
+            'descricao' => $totalAfetados.' nota(s) sem nenhum item registrado. Pode indicar importação incompleta.',
             'total_afetados' => $totalAfetados,
             'detalhes' => $detalhes,
             'tipo' => 'free',
@@ -373,7 +373,7 @@ class NotasFiscaisAlertService
             'id' => 'gap_temporal',
             'titulo' => 'Lacunas temporais',
             'severidade' => 'media',
-            'descricao' => count($gaps).' mes(es) sem nenhuma nota no periodo. Pode indicar importacao incompleta.',
+            'descricao' => count($gaps).' mês(es) sem nenhuma nota no período. Pode indicar importação incompleta.',
             'total_afetados' => count($gaps),
             'detalhes' => $gaps,
             'tipo' => 'free',
@@ -425,7 +425,7 @@ class NotasFiscaisAlertService
             'id' => 'ncm_faltando',
             'titulo' => 'NCM faltando em mercadoria/produto',
             'severidade' => 'media',
-            'descricao' => $totalAfetados.' item(ns) de mercadoria/produto sem NCM no cadastro (0200). NCM ausente compromete a classificacao fiscal (aliquota, ST, IPI).',
+            'descricao' => $totalAfetados.' item(ns) de mercadoria/produto sem NCM no cadastro (0200). NCM ausente compromete a classificação fiscal (alíquota, ST, IPI).',
             'total_afetados' => $totalAfetados,
             'detalhes' => $detalhes,
             'tipo' => 'free',
@@ -459,7 +459,7 @@ class NotasFiscaisAlertService
             'id' => 'pis_cofins_incompleto',
             'titulo' => 'Dados PIS/COFINS incompletos',
             'severidade' => 'media',
-            'descricao' => $percentual.'% dos itens de notas EFD PIS/COFINS estao sem valores de PIS e COFINS. '
+            'descricao' => $percentual.'% dos itens de notas EFD PIS/COFINS estão sem valores de PIS e COFINS. '
                 .'Isso pode ser causado por um deslocamento de campos no registro C170 do arquivo SPED.',
             'total_afetados' => (int) $stats->sem_tributo,
             'detalhes' => [
@@ -488,11 +488,11 @@ class NotasFiscaisAlertService
         return [
             [
                 'id' => 'situacao_cadastral_irregular',
-                'titulo' => 'Participantes com situacao cadastral irregular',
+                'titulo' => 'Participantes com situação cadastral irregular',
                 'severidade' => 'alta',
                 'descricao' => $totalIrregulares > 0
-                    ? $totalIrregulares.' participante(s) com situacao cadastral diferente de ATIVA.'
-                    : 'Verifique a situacao cadastral dos seus parceiros comerciais.',
+                    ? $totalIrregulares.' participante(s) com situação cadastral diferente de ATIVA.'
+                    : 'Verifique a situação cadastral dos seus parceiros comerciais.',
                 'total_afetados' => $totalIrregulares,
                 'detalhes' => [],
                 'tipo' => 'paid',
@@ -500,9 +500,9 @@ class NotasFiscaisAlertService
             ],
             [
                 'id' => 'ie_irregular',
-                'titulo' => 'Inscricao Estadual irregular',
+                'titulo' => 'Inscrição Estadual irregular',
                 'severidade' => 'alta',
-                'descricao' => 'Verifique a regularidade da Inscricao Estadual dos participantes via SINTEGRA.',
+                'descricao' => 'Verifique a regularidade da Inscrição Estadual dos participantes via SINTEGRA.',
                 'total_afetados' => 0,
                 'detalhes' => [],
                 'tipo' => 'paid',
