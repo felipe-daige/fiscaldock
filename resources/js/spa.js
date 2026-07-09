@@ -338,8 +338,85 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
+    // 1.2. PREFETCH + CACHE DE PÁGINAS (esconde o ping BR→servidor)
+    // Guarda o HTML de views /app/* buscadas no hover. TTL curto porque views
+    // podem embutir dados; dashboards buscam via AJAX próprio, então o shell é seguro.
+    const _prefetchCache = new Map();       // urlAbs -> { html, ts }
+    const _prefetchInFlight = new Map();    // urlAbs -> Promise (dedup)
+    const _PREFETCH_TTL = 20000;            // 20s
+
+    function _cacheGet(urlAbs) {
+        const hit = _prefetchCache.get(urlAbs);
+        if (!hit) return null;
+        if (Date.now() - hit.ts > _PREFETCH_TTL) {
+            _prefetchCache.delete(urlAbs);
+            return null;
+        }
+        return hit.html;
+    }
+
+    async function prefetch(href) {
+        let abs;
+        try {
+            abs = new URL(href, window.location.origin);
+        } catch (e) {
+            return;
+        }
+        if (!abs.pathname.startsWith('/app/')) return;
+        const key = abs.toString();
+        if (_cacheGet(key) || _prefetchInFlight.has(key)) return;
+
+        const p = (async () => {
+            try {
+                const resposta = await fetch(key, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+                    },
+                    credentials: 'same-origin'
+                });
+                if (!resposta.ok) return;
+                const ct = resposta.headers.get('content-type') || '';
+                if (ct.includes('application/json')) return; // redirect/erro — não cachear
+                const html = await resposta.text();
+                _prefetchCache.set(key, { html, ts: Date.now() });
+            } catch (e) {
+                // best-effort — silencioso
+            } finally {
+                _prefetchInFlight.delete(key);
+            }
+        })();
+        _prefetchInFlight.set(key, p);
+    }
+
+    // Dispara prefetch no hover/foco do link. mouseover borbulha (mouseenter não);
+    // prefetch é idempotente (cache + inFlight), então a repetição é barata.
+    function _talvezPrefetch(e) {
+        const alvo = e.target;
+        if (!alvo || !alvo.closest) return;
+        const link = alvo.closest('[data-link]');
+        if (!link || !link.href) return;
+        const url = new URL(link.href, window.location.origin);
+        if (!url.pathname.startsWith('/app/')) return;
+        // Paginação de lista usa swap parcial (navegarLista) — não cachear a página inteira
+        if (url.searchParams.has('page') && link.closest('[data-spa-list]')) return;
+        prefetch(link.href);
+    }
+    document.body.addEventListener('mouseover', _talvezPrefetch);
+    document.body.addEventListener('focusin', _talvezPrefetch);
+
     // 2. FUNÇÃO PRINCIPAL DE NAVEGAÇÃO
+    // Token de sequência: com ping alto (BR→servidor), o usuário clica um 2º link
+    // enquanto o 1º ainda busca. Sem guard, as duas navegações renderizam por cima
+    // uma da outra (DOM/URL/scripts errados). Cada navegar() captura seu token; ao
+    // voltar de um await, se o token mudou, uma navegação mais nova assumiu → aborta.
+    let _navToken = 0;
+    // Caminho do que está RENDERIZADO no #app. Não usar window.location.pathname pra
+    // comparar contexto: no popstate o location já mudou pro destino antes do handler,
+    // então a comparação daria sempre igual e o reload de troca de layout nunca ocorreria.
+    let _caminhoRenderizado = window.location.pathname;
     async function navegar(url, options = {}) {
+        const meuToken = ++_navToken;
         const targetUrl = new URL(url, window.location.origin);
         const browserUrl = `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
 
@@ -355,7 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // URLs autenticadas: /dashboard, /app/*
             // URLs não autenticadas: /inicio, /login, etc.
             const urlPath = targetUrl.pathname;
-            const currentPath = window.location.pathname;
+            const currentPath = _caminhoRenderizado;
             
             // Detectar se estamos navegando para/da área autenticada
             const isDashboardArea = (path) => path.startsWith('/app/');
@@ -375,16 +452,42 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Limpar recursos antes de navegar
             limparRecursos();
-            
+
+            // Cache hit de prefetch → renderiza instantâneo, sem round-trip ao servidor.
+            // Só HTML puro (200, não-JSON) é cacheado; consome ao usar pra não servir velho.
+            const chaveCache = targetUrl.toString();
+            const htmlCacheado = _cacheGet(chaveCache);
+            if (htmlCacheado !== null) {
+                _prefetchCache.delete(chaveCache);
+                renderizar(htmlCacheado);
+                return;
+            }
+
+            // Prefetch dessa URL ainda em voo (hover → clique rápido)? Aproveita em vez
+            // de disparar um 2º fetch idêntico ao servidor.
+            if (_prefetchInFlight.has(chaveCache)) {
+                try { await _prefetchInFlight.get(chaveCache); } catch (e) { /* segue pro fetch normal */ }
+                if (meuToken !== _navToken) return;
+                const htmlPre = _cacheGet(chaveCache);
+                if (htmlPre !== null) {
+                    _prefetchCache.delete(chaveCache);
+                    renderizar(htmlPre);
+                    return;
+                }
+            }
+
             // Buscar conteúdo da nova página
             const resposta = await fetch(targetUrl.toString(), {
-                headers: { 
+                headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
                 },
                 credentials: 'same-origin'
             });
-            
+
+            // Navegação mais nova assumiu enquanto buscávamos → descarta esta resposta.
+            if (meuToken !== _navToken) return;
+
             console.log('[SPA] Resposta recebida:', {
                 url,
                 status: resposta.status,
@@ -418,7 +521,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const contentType = resposta.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 const data = await resposta.json();
-                
+                if (meuToken !== _navToken) return;
+
                 // Só processar redirects se:
                 // 1. A URL solicitada não for uma rota de API (/api/*)
                 // 2. A resposta contém redirect E indica explicitamente que é um redirect de navegação
@@ -445,44 +549,47 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error('Resposta JSON inesperada');
             }
             
-            // Pegar HTML da resposta
+            // Pegar HTML da resposta e renderizar
             const html = await resposta.text();
+            if (meuToken !== _navToken) return;
+            renderizar(html);
 
-            // Se a navegação é na MESMA página (só mudou a query string — ex: paginação,
-            // ordenação ou filtros de uma lista), preservar a posição de scroll em vez de
-            // jogar a tela pro topo. Captura ANTES de trocar o conteúdo.
-            const mesmaPagina = urlPath === currentPath;
-            const scrollAnterior = window.scrollY;
+            // Renderiza o HTML no #app + pós-processamento (scripts, layout, scroll).
+            // Usado tanto pelo fetch normal quanto pelo cache de prefetch (função
+            // declarada = hoisted, então a chamada do cache-check acima também a acha).
+            function renderizar(htmlNovo) {
+                // Mesma página (paginação/filtros/ordenação) → preserva a posição de
+                // scroll em vez de jogar ao topo. Captura ANTES de trocar o conteúdo.
+                const mesmaPagina = urlPath === currentPath;
+                const scrollAnterior = window.scrollY;
 
-            // Trocar conteúdo
-            app.innerHTML = html;
+                app.innerHTML = htmlNovo;
 
-            // Atualizar URL do browser
-            if (updateHistory) {
-                history.pushState(null, '', browserUrl);
-            }
-
-            // Atualizar CSRF token após navegação SPA
-            atualizarCsrfToken();
-            
-            // Destacar link ativo
-            destacarLinkAtivo(targetUrl.toString());
-            
-            // Executar scripts da nova página
-            executarScripts();
-            
-            // Inicializar layout (menu mobile, etc.)
-            if (window.initLayout && typeof window.initLayout === 'function') {
-                try {
-                    window.initLayout();
-                } catch (error) {
-                    console.error('Erro ao inicializar layout:', error);
+                if (updateHistory) {
+                    history.pushState(null, '', browserUrl);
                 }
+
+                // Atualizar CSRF token após navegação SPA
+                atualizarCsrfToken();
+                // Destacar link ativo
+                destacarLinkAtivo(targetUrl.toString());
+                // Executar scripts da nova página
+                executarScripts();
+
+                // Inicializar layout (menu mobile, etc.)
+                if (window.initLayout && typeof window.initLayout === 'function') {
+                    try {
+                        window.initLayout();
+                    } catch (error) {
+                        console.error('Erro ao inicializar layout:', error);
+                    }
+                }
+
+                window.scrollTo(0, mesmaPagina ? scrollAnterior : 0);
+
+                // Marca o que está de fato renderizado (usado pela comparação de contexto).
+                _caminhoRenderizado = urlPath;
             }
-            
-            // Mesma página (paginação/filtros/ordenação) → mantém o scroll onde estava.
-            // Página diferente → volta ao topo.
-            window.scrollTo(0, mesmaPagina ? scrollAnterior : 0);
 
         } catch (erro) {
             // Log do erro para debug
@@ -808,10 +915,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 6. BOTÕES VOLTAR/AVANÇAR
     window.addEventListener('popstate', () => {
-        // Só navegar se não for a página inicial
-        if (location.pathname !== '/') {
-            navegar(window.location.href, { updateHistory: false });
+        // Cruzou a fronteira autenticado (/app/*) ↔ público? O layout/header muda, então
+        // recarrega a página inteira (o location já é o destino) em vez de fazer swap SPA.
+        const alvoIsApp = location.pathname.startsWith('/app/');
+        const renderIsApp = _caminhoRenderizado.startsWith('/app/');
+        if (alvoIsApp !== renderIsApp) {
+            window.location.reload();
+            return;
         }
+        navegar(window.location.href, { updateHistory: false });
     });
     
     // 7. INICIALIZAR
