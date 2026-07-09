@@ -462,8 +462,9 @@ class NotaFiscalService
         if (! empty($filtros['busca'])) {
             $q = $filtros['busca'];
             $query->where(function ($sub) use ($q) {
+                // numero é bigint — comparar como texto evita overflow quando $q é uma chave (44 dígitos).
                 $sub->where('chave_acesso', 'ilike', "%{$q}%")
-                    ->orWhere('numero', $q);
+                    ->orWhereRaw('numero::text = ?', [$q]);
             });
         }
 

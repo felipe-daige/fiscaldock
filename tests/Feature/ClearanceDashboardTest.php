@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\XmlImportacao;
 use App\Models\XmlNota;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 
 use function Pest\Laravel\actingAs;
 
@@ -16,6 +17,18 @@ uses(RefreshDatabase::class);
 function dashUser(): User
 {
     return User::factory()->create();
+}
+
+/**
+ * Situação SEFAZ vive no snapshot (nfe_consultas), não em validacao->>'situacao'.
+ * O clearance grava aqui via SnapshotPersister; o dashboard lê daqui por chave.
+ */
+function dashSnapshot(User $u, string $chave, string $status, string $consultadoEm): void
+{
+    DB::table('nfe_consultas')->updateOrInsert(
+        ['user_id' => $u->id, 'chave_acesso' => $chave],
+        ['tipo_documento' => 'NFE', 'status' => $status, 'consultado_em' => $consultadoEm, 'created_at' => now(), 'updated_at' => now()]
+    );
 }
 
 function dashClientePropria(User $u): Cliente
@@ -103,11 +116,9 @@ it('agrega XML+EFD deduplicando por chave de acesso', function () {
     $u = dashUser();
     $chave = str_repeat('1', 44);
 
-    dashMakeXmlNota($u, [
-        'chave_acesso' => $chave,
-        'validacao' => ['situacao' => 'AUTORIZADA', 'consultado_em' => '2026-04-17T10:00:00Z', 'fonte' => 'infosimples/receita-federal/nfe'],
-    ]);
+    dashMakeXmlNota($u, ['chave_acesso' => $chave]);
     dashMakeEfdNota($u, ['chave_acesso' => $chave]);
+    dashSnapshot($u, $chave, 'AUTORIZADA', '2026-04-17T10:00:00Z');
 
     $service = app(\App\Services\ValidacaoContabilService::class);
     $kpis = $service->getKpisStatusReceita($u->id);
@@ -120,14 +131,10 @@ it('agrega XML+EFD deduplicando por chave de acesso', function () {
 it('conta separadamente quando chaves diferem', function () {
     $u = dashUser();
 
-    dashMakeXmlNota($u, [
-        'chave_acesso' => str_repeat('1', 44),
-        'validacao' => ['situacao' => 'CANCELADA', 'consultado_em' => '2026-04-17T10:00:00Z'],
-    ]);
-    dashMakeEfdNota($u, [
-        'chave_acesso' => str_repeat('2', 44),
-        'validacao' => ['situacao' => 'AUTORIZADA', 'consultado_em' => '2026-04-17T11:00:00Z'],
-    ]);
+    dashMakeXmlNota($u, ['chave_acesso' => str_repeat('1', 44)]);
+    dashMakeEfdNota($u, ['chave_acesso' => str_repeat('2', 44)]);
+    dashSnapshot($u, str_repeat('1', 44), 'CANCELADA', '2026-04-17T10:00:00Z');
+    dashSnapshot($u, str_repeat('2', 44), 'AUTORIZADA', '2026-04-17T11:00:00Z');
 
     $service = app(\App\Services\ValidacaoContabilService::class);
     $kpis = $service->getKpisStatusReceita($u->id);
@@ -157,21 +164,12 @@ it('classifica como nao_verificadas notas sem situacao', function () {
 it('lista notas bloqueantes ordenadas por consultado_em desc', function () {
     $u = dashUser();
 
-    dashMakeXmlNota($u, [
-        'chave_acesso' => str_repeat('1', 44),
-        'numero_documento' => 1111,
-        'validacao' => ['situacao' => 'CANCELADA', 'consultado_em' => '2026-04-15T10:00:00Z'],
-    ]);
-    dashMakeXmlNota($u, [
-        'chave_acesso' => str_repeat('2', 44),
-        'numero_documento' => 2222,
-        'validacao' => ['situacao' => 'DENEGADA', 'consultado_em' => '2026-04-17T10:00:00Z'],
-    ]);
-    dashMakeXmlNota($u, [
-        'chave_acesso' => str_repeat('3', 44),
-        'numero_documento' => 3333,
-        'validacao' => ['situacao' => 'AUTORIZADA', 'consultado_em' => '2026-04-16T10:00:00Z'],
-    ]);
+    dashMakeXmlNota($u, ['chave_acesso' => str_repeat('1', 44), 'numero_documento' => 1111]);
+    dashMakeXmlNota($u, ['chave_acesso' => str_repeat('2', 44), 'numero_documento' => 2222]);
+    dashMakeXmlNota($u, ['chave_acesso' => str_repeat('3', 44), 'numero_documento' => 3333]);
+    dashSnapshot($u, str_repeat('1', 44), 'CANCELADA', '2026-04-15T10:00:00Z');
+    dashSnapshot($u, str_repeat('2', 44), 'DENEGADA', '2026-04-17T10:00:00Z');
+    dashSnapshot($u, str_repeat('3', 44), 'AUTORIZADA', '2026-04-16T10:00:00Z');
 
     $service = app(\App\Services\ValidacaoContabilService::class);
     $bloqueantes = $service->getNotasComSituacaoBloqueante($u->id, 5);
@@ -184,16 +182,10 @@ it('lista notas bloqueantes ordenadas por consultado_em desc', function () {
 it('filtra listagem por situacao_receita', function () {
     $u = dashUser();
 
-    dashMakeXmlNota($u, [
-        'chave_acesso' => str_repeat('1', 44),
-        'numero_documento' => 1111,
-        'validacao' => ['situacao' => 'CANCELADA', 'consultado_em' => '2026-04-15T10:00:00Z'],
-    ]);
-    dashMakeXmlNota($u, [
-        'chave_acesso' => str_repeat('2', 44),
-        'numero_documento' => 2222,
-        'validacao' => ['situacao' => 'AUTORIZADA', 'consultado_em' => '2026-04-16T10:00:00Z'],
-    ]);
+    dashMakeXmlNota($u, ['chave_acesso' => str_repeat('1', 44), 'numero_documento' => 1111]);
+    dashMakeXmlNota($u, ['chave_acesso' => str_repeat('2', 44), 'numero_documento' => 2222]);
+    dashSnapshot($u, str_repeat('1', 44), 'CANCELADA', '2026-04-15T10:00:00Z');
+    dashSnapshot($u, str_repeat('2', 44), 'AUTORIZADA', '2026-04-16T10:00:00Z');
 
     $response = actingAs($u)->get('/app/clearance/notas?situacao_receita=CANCELADA')->assertOk();
 
@@ -204,12 +196,9 @@ it('filtra listagem por situacao_receita', function () {
 it('filtra listagem por status_validacao=sem_situacao_receita', function () {
     $u = dashUser();
 
-    dashMakeXmlNota($u, ['chave_acesso' => str_repeat('1', 44), 'numero_documento' => 1111, 'validacao' => null]);
-    dashMakeXmlNota($u, [
-        'chave_acesso' => str_repeat('2', 44),
-        'numero_documento' => 2222,
-        'validacao' => ['situacao' => 'AUTORIZADA', 'consultado_em' => '2026-04-16T10:00:00Z'],
-    ]);
+    dashMakeXmlNota($u, ['chave_acesso' => str_repeat('1', 44), 'numero_documento' => 1111]);
+    dashMakeXmlNota($u, ['chave_acesso' => str_repeat('2', 44), 'numero_documento' => 2222]);
+    dashSnapshot($u, str_repeat('2', 44), 'AUTORIZADA', '2026-04-16T10:00:00Z');
 
     $response = actingAs($u)->get('/app/clearance/notas?status_validacao=sem_situacao_receita')->assertOk();
 

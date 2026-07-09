@@ -320,6 +320,16 @@ function atualizarCusto() {
             btnValidar.disabled = false;
         }
     }
+
+    const stickyCount = $('sticky-count');
+    if (stickyCount) stickyCount.textContent = String(n);
+    const stickyCusto = $('sticky-custo');
+    if (stickyCusto) stickyCusto.textContent = brl(total);
+    const btnValidarSticky = $('btn-validar-sticky');
+    if (btnValidarSticky) {
+        btnValidarSticky.disabled = n === 0 || insuficiente;
+        btnValidarSticky.textContent = insuficiente ? 'Saldo insuficiente' : 'Validar';
+    }
 }
 
 function atualizarSelecao() {
@@ -356,6 +366,11 @@ function atualizarSelecao() {
     const planosContainer = $('clearance-planos');
     if (planosContainer) {
         planosContainer.classList.toggle('hidden', n === 0);
+    }
+
+    const stickyBar = $('clearance-sticky-cta');
+    if (stickyBar) {
+        stickyBar.classList.toggle('hidden', n === 0);
     }
 
     atualizarCusto();
@@ -574,7 +589,7 @@ function onDocumentClick(e) {
         return;
     }
 
-    if (target.closest('#btn-validar')) {
+    if (target.closest('#btn-validar') || target.closest('#btn-validar-sticky')) {
         handleValidarClick();
         return;
     }

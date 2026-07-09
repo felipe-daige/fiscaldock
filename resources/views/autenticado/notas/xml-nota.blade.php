@@ -119,6 +119,8 @@
             @endif
         </div>
 
+        @include('autenticado.notas.partials._consulta-clearance', ['consulta' => $consulta ?? null, 'chaveConsulta' => $nota->chave_acesso, 'nota' => $nota, 'auditoria' => $auditoria ?? null])
+
         @php
             // Papel de cada lado: o DONO (perspectiva) é o seu cliente; o outro é o participante (contraparte).
             $papelBadge = function (string $lado) use ($nota) {

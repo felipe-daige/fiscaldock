@@ -48,10 +48,6 @@
                     <x-catalogo-export-option format="csv" path="/app/catalogo/exportar-csv-zip"
                         descricao="ZIP com um CSV por seção." />
                 </x-export-menu>
-                <a href="/app/notas/dashboard" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline hidden sm:inline-flex items-center gap-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                    Dashboard
-                </a>
             </div>
         </div>
     </div>

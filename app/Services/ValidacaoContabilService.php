@@ -217,13 +217,22 @@ class ValidacaoContabilService
     {
         $dedup = $this->efdOrigemDedupSql(); // P1 fiscal×contribuicoes — fragmento sem bind
         $row = DB::selectOne("
-            WITH xml AS (
-                SELECT chave_acesso AS chave, validacao->>'situacao' AS situacao
-                FROM xml_notas WHERE user_id = ?
+            WITH snap AS (
+                SELECT chave_acesso, status FROM nfe_consultas WHERE user_id = ?
+                UNION ALL
+                SELECT chave_acesso, status FROM cte_consultas WHERE user_id = ?
+            ),
+            xml AS (
+                SELECT xml_notas.chave_acesso AS chave, snap.status AS situacao
+                FROM xml_notas
+                LEFT JOIN snap ON snap.chave_acesso = xml_notas.chave_acesso
+                WHERE xml_notas.user_id = ?
             ),
             efd AS (
-                SELECT chave_acesso AS chave, validacao->>'situacao' AS situacao
-                FROM efd_notas WHERE user_id = ?
+                SELECT efd_notas.chave_acesso AS chave, snap.status AS situacao
+                FROM efd_notas
+                LEFT JOIN snap ON snap.chave_acesso = efd_notas.chave_acesso
+                WHERE efd_notas.user_id = ?
                   AND cancelada = false
                   AND {$dedup}
                   AND NOT EXISTS (
@@ -243,7 +252,7 @@ class ValidacaoContabilService
                 COUNT(*) FILTER (WHERE situacao = 'INDETERMINADO')          AS indeterminadas,
                 COUNT(*) FILTER (WHERE situacao IS NULL)                    AS nao_verificadas
             FROM u
-        ", [$userId, $userId, $userId]);
+        ", [$userId, $userId, $userId, $userId, $userId]);
 
         return [
             'total' => (int) ($row->total ?? 0),
@@ -292,7 +301,11 @@ class ValidacaoContabilService
      */
     private function queryNotasUnificadasComSituacao(int $userId): \Illuminate\Database\Query\Builder
     {
+        $situacaoJson = "CASE WHEN snap.status IS NULL THEN NULL
+            ELSE jsonb_build_object('situacao', snap.status, 'consultado_em', snap.consultado_em) END";
+
         $xml = DB::table('xml_notas')
+            ->leftJoinSub($this->snapshotSituacaoSub($userId), 'snap', 'snap.chave_acesso', '=', 'xml_notas.chave_acesso')
             ->selectRaw("
                 'xml'::text AS origem,
                 xml_notas.id AS id,
@@ -300,13 +313,14 @@ class ValidacaoContabilService
                 xml_notas.numero_documento::text AS numero,
                 xml_notas.serie::text AS serie,
                 xml_notas.emit_razao_social AS emit_razao_social,
-                xml_notas.validacao AS validacao
+                {$situacaoJson} AS validacao
             ")
-            ->where('user_id', $userId);
+            ->where('xml_notas.user_id', $userId);
 
         $efd = DB::table('efd_notas')
             ->leftJoin('participantes', 'participantes.id', '=', 'efd_notas.participante_id')
             ->leftJoin('clientes', 'clientes.id', '=', 'efd_notas.cliente_id')
+            ->leftJoinSub($this->snapshotSituacaoSub($userId), 'snap', 'snap.chave_acesso', '=', 'efd_notas.chave_acesso')
             ->selectRaw("
                 'efd'::text AS origem,
                 efd_notas.id AS id,
@@ -316,7 +330,7 @@ class ValidacaoContabilService
                 CASE WHEN efd_notas.tipo_operacao = 'entrada'
                      THEN participantes.razao_social
                      ELSE clientes.razao_social END AS emit_razao_social,
-                efd_notas.validacao AS validacao
+                {$situacaoJson} AS validacao
             ")
             ->where('efd_notas.user_id', $userId)
             ->where('efd_notas.cancelada', false)        // P4
@@ -329,6 +343,188 @@ class ValidacaoContabilService
             });
 
         return DB::query()->fromSub($xml->unionAll($efd), 'u');
+    }
+
+    /**
+     * Snapshot SEFAZ unificado (nfe_consultas + cte_consultas) por chave de acesso.
+     * Fonte real da situação do clearance — o campo validacao->>'situacao' nunca é escrito.
+     */
+    private function snapshotSituacaoSub(int $userId): \Illuminate\Database\Query\Builder
+    {
+        return DB::table('nfe_consultas')
+            ->select('chave_acesso', 'status', 'consultado_em')
+            ->where('user_id', $userId)
+            ->unionAll(
+                DB::table('cte_consultas')
+                    ->select('chave_acesso', 'status', 'consultado_em')
+                    ->where('user_id', $userId)
+            );
+    }
+
+    /**
+     * Dados agregados do Painel de Clearance para exportação (PDF/XLSX/CSV).
+     *
+     * Vai ALÉM do que a tela e os demais relatórios entregam: cruza cada nota do acervo
+     * (XML+EFD deduplicado por chave) com o snapshot SEFAZ (nfe/cte_consultas) e traz a
+     * dimensão de VALOR R$ por situação, a exposição financeira das notas bloqueantes
+     * (canceladas/denegadas/inutilizadas escrituradas) e a cobertura de verificação por
+     * cliente + backlog. O dashboard só conta documentos; nenhum outro export projeta
+     * R$-em-risco por status na Receita.
+     *
+     * @return array{
+     *   status_valor: array<int,array{situacao:string,quantidade:int,valor:float}>,
+     *   exposicao: array<int,array<string,mixed>>,
+     *   cobertura: array<int,array<string,mixed>>,
+     *   resumo: array<string,int|float>
+     * }
+     */
+    public function dadosPainelClearance(int $userId): array
+    {
+        $dedup = $this->efdOrigemDedupSql();
+
+        $rows = collect(DB::select("
+            WITH snap AS (
+                SELECT chave_acesso, status, consultado_em FROM nfe_consultas WHERE user_id = ?
+                UNION ALL
+                SELECT chave_acesso, status, consultado_em FROM cte_consultas WHERE user_id = ?
+            ),
+            xml AS (
+                SELECT 'xml'::text AS origem,
+                    xn.cliente_id AS cliente_id,
+                    cx.razao_social AS cliente_nome,
+                    xn.numero_documento::text AS numero,
+                    xn.chave_acesso AS chave,
+                    COALESCE(xn.valor_total, 0)::numeric AS valor,
+                    COALESCE(xn.emit_razao_social, xn.dest_razao_social) AS contraparte,
+                    snap.status AS situacao,
+                    snap.consultado_em AS consultado_em
+                FROM xml_notas xn
+                LEFT JOIN clientes cx ON cx.id = xn.cliente_id
+                LEFT JOIN snap ON snap.chave_acesso = xn.chave_acesso
+                WHERE xn.user_id = ?
+            ),
+            efd AS (
+                SELECT 'efd'::text AS origem,
+                    efd_notas.cliente_id AS cliente_id,
+                    ce.razao_social AS cliente_nome,
+                    efd_notas.numero::text AS numero,
+                    efd_notas.chave_acesso AS chave,
+                    COALESCE(efd_notas.valor_total, 0)::numeric AS valor,
+                    CASE WHEN efd_notas.tipo_operacao = 'entrada'
+                         THEN pe.razao_social ELSE ce.razao_social END AS contraparte,
+                    snap.status AS situacao,
+                    snap.consultado_em AS consultado_em
+                FROM efd_notas
+                LEFT JOIN clientes ce ON ce.id = efd_notas.cliente_id
+                LEFT JOIN participantes pe ON pe.id = efd_notas.participante_id
+                LEFT JOIN snap ON snap.chave_acesso = efd_notas.chave_acesso
+                WHERE efd_notas.user_id = ?
+                  AND efd_notas.cancelada = false
+                  AND {$dedup}
+                  AND NOT EXISTS (
+                    SELECT 1 FROM xml_notas xx
+                    WHERE xx.user_id = ? AND xx.chave_acesso = efd_notas.chave_acesso
+                  )
+            )
+            SELECT * FROM xml UNION ALL SELECT * FROM efd
+        ", [$userId, $userId, $userId, $userId, $userId]));
+
+        return [
+            'status_valor' => $this->agruparStatusValor($rows),
+            'exposicao' => $this->linhasExposicaoBloqueante($rows),
+            'cobertura' => $this->linhasCoberturaPorCliente($rows),
+            'resumo' => $this->resumoPainelClearance($rows),
+        ];
+    }
+
+    /** Situações canônicas do clearance, na ordem de leitura do relatório. */
+    private const SITUACOES_CLEARANCE = [
+        'AUTORIZADA', 'CANCELADA', 'DENEGADA', 'INUTILIZADA', 'NAO_ENCONTRADA', 'INDETERMINADO',
+    ];
+
+    private const SITUACOES_BLOQUEANTES = ['CANCELADA', 'DENEGADA', 'INUTILIZADA'];
+
+    /** @param \Illuminate\Support\Collection<int,object> $rows */
+    private function agruparStatusValor(\Illuminate\Support\Collection $rows): array
+    {
+        $porStatus = $rows->groupBy(fn ($r) => $r->situacao ?? 'NAO_VERIFICADA');
+
+        $ordem = array_merge(self::SITUACOES_CLEARANCE, ['NAO_VERIFICADA']);
+
+        return collect($ordem)
+            ->map(fn ($situacao) => [
+                'situacao' => $situacao,
+                'quantidade' => ($g = $porStatus->get($situacao)) ? $g->count() : 0,
+                'valor' => $g ? (float) $g->sum(fn ($r) => (float) $r->valor) : 0.0,
+            ])
+            ->filter(fn ($linha) => $linha['quantidade'] > 0)
+            ->values()
+            ->all();
+    }
+
+    /** @param \Illuminate\Support\Collection<int,object> $rows */
+    private function linhasExposicaoBloqueante(\Illuminate\Support\Collection $rows): array
+    {
+        return $rows
+            ->filter(fn ($r) => in_array($r->situacao, self::SITUACOES_BLOQUEANTES, true))
+            ->sortByDesc(fn ($r) => (float) $r->valor)
+            ->map(fn ($r) => [
+                'situacao' => $r->situacao,
+                'origem' => strtoupper((string) $r->origem),
+                'numero' => (string) ($r->numero ?: '—'),
+                'chave' => (string) $r->chave,
+                'cliente' => (string) ($r->cliente_nome ?: '—'),
+                'contraparte' => (string) ($r->contraparte ?: '—'),
+                'valor' => (float) $r->valor,
+                'consultado_em' => $r->consultado_em,
+            ])
+            ->values()
+            ->all();
+    }
+
+    /** @param \Illuminate\Support\Collection<int,object> $rows */
+    private function linhasCoberturaPorCliente(\Illuminate\Support\Collection $rows): array
+    {
+        return $rows
+            ->groupBy(fn ($r) => (string) ($r->cliente_nome ?: 'Sem cliente associado'))
+            ->map(function ($grupo, $cliente) {
+                $total = $grupo->count();
+                $verificadas = $grupo->filter(fn ($r) => $r->situacao !== null)->count();
+                $bloqueantes = $grupo->filter(fn ($r) => in_array($r->situacao, self::SITUACOES_BLOQUEANTES, true));
+
+                return [
+                    'cliente' => $cliente,
+                    'total' => $total,
+                    'verificadas' => $verificadas,
+                    'pendentes' => $total - $verificadas,
+                    'cobertura_pct' => $total > 0 ? round($verificadas / $total * 100, 1) : 0.0,
+                    'valor_pendente' => (float) $grupo->filter(fn ($r) => $r->situacao === null)->sum(fn ($r) => (float) $r->valor),
+                    'bloqueantes' => $bloqueantes->count(),
+                    'valor_bloqueante' => (float) $bloqueantes->sum(fn ($r) => (float) $r->valor),
+                ];
+            })
+            ->sortByDesc('valor_bloqueante')
+            ->values()
+            ->all();
+    }
+
+    /** @param \Illuminate\Support\Collection<int,object> $rows */
+    private function resumoPainelClearance(\Illuminate\Support\Collection $rows): array
+    {
+        $total = $rows->count();
+        $verificadas = $rows->filter(fn ($r) => $r->situacao !== null)->count();
+        $bloqueantes = $rows->filter(fn ($r) => in_array($r->situacao, self::SITUACOES_BLOQUEANTES, true));
+
+        return [
+            'total_notas' => $total,
+            'verificadas' => $verificadas,
+            'pendentes' => $total - $verificadas,
+            'cobertura_pct' => $total > 0 ? round($verificadas / $total * 100, 1) : 0.0,
+            'valor_total' => (float) $rows->sum(fn ($r) => (float) $r->valor),
+            'notas_bloqueantes' => $bloqueantes->count(),
+            'valor_bloqueante' => (float) $bloqueantes->sum(fn ($r) => (float) $r->valor),
+            'valor_pendente' => (float) $rows->filter(fn ($r) => $r->situacao === null)->sum(fn ($r) => (float) $r->valor),
+        ];
     }
 
     public function getPesos(): array

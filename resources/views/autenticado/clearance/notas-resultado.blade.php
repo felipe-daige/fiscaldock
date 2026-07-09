@@ -91,6 +91,16 @@
                 <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusMeta['hex'] }}">
                     {{ $statusMeta['label'] }}
                 </span>
+                @if($statusLote === 'finalizado' && empty($aguardaPersistencia) && config('consultas.infosimples_ativo'))
+                    <button type="button" id="btn-sintegra-lote"
+                        onclick="window.clearanceSintegra && window.clearanceSintegra.abrirLote()"
+                        class="inline-flex items-center gap-1.5 rounded border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50 hidden">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>Enriquecer IE (SINTEGRA)</span>
+                    </button>
+                @endif
                 @if($statusLote === 'finalizado' && empty($aguardaPersistencia))
                     <x-export-menu id="modal-exportar-clearance-resultado" titulo="Exportar resultado"
                                    descricao="Relatório executivo do lote — mesmo conteúdo em ambos os formatos."
@@ -294,6 +304,14 @@
                                         @endif
                                     </td>
                                 </tr>
+                                @if(!empty($linha->conferencias))
+                                    <tr class="border-b border-gray-100" style="background-color: #f9fafb">
+                                        <td colspan="7" class="px-3 pb-3 pt-0">
+                                            <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">Conferência Declarado × SEFAZ</p>
+                                            @include('autenticado.clearance.partials._conferencias', ['conferencias' => $linha->conferencias])
+                                        </td>
+                                    </tr>
+                                @endif
                             @endforeach
                         </tbody>
                     </table>
@@ -372,6 +390,14 @@
                                         @endif
                                     </td>
                                 </tr>
+                                @if(!empty($linha->conferencias))
+                                    <tr style="background-color: #f9fafb">
+                                        <td colspan="6" class="px-3 pb-3 pt-0">
+                                            <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">Conferência Declarado × SEFAZ</p>
+                                            @include('autenticado.clearance.partials._conferencias', ['conferencias' => $linha->conferencias])
+                                        </td>
+                                    </tr>
+                                @endif
                             @endforeach
                         </tbody>
                     </table>
@@ -398,6 +424,127 @@
 </div>
 
 <x-download-overlay id="download-overlay-clearance-resultado" texto="Gerando arquivo…" />
+
+@if(config('consultas.infosimples_ativo'))
+    <x-modal id="modal-sintegra-ie" titulo="Consultar SINTEGRA">
+        <div id="sintegra-modal-body">
+            <p class="text-sm text-gray-700">Buscando participantes elegíveis…</p>
+        </div>
+        <div class="mt-4 flex items-center justify-end gap-2">
+            <button type="button" onclick="document.getElementById('modal-sintegra-ie').classList.add('hidden')"
+                class="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
+            <button type="button" id="sintegra-confirmar" disabled
+                class="rounded px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-white disabled:opacity-40" style="background-color: #0b1f3a">Confirmar</button>
+        </div>
+    </x-modal>
+    <x-download-overlay id="overlay-sintegra" texto="Consultando SINTEGRA…" />
+
+    <script>
+    (function () {
+        var LOTE_ID = {{ (int) $lote->id }};
+        var CUSTO_UNIT = {{ (int) config('consultas.fontes.sintegra', 2) }};
+        var UNIT_PRICE = {{ (float) app(\App\Services\PricingCatalogService::class)->creditUnitPrice() }};
+        var csrf = document.querySelector('meta[name=csrf-token]');
+        csrf = csrf ? csrf.content : '';
+        var pendingIds = [];
+
+        function money(cred) { return 'R$ ' + (cred * UNIT_PRICE).toFixed(2).replace('.', ','); }
+        function post(url, body) {
+            return fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify(body || {})
+            }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); });
+        }
+
+        function abrir(previewBody) {
+            var modal = document.getElementById('modal-sintegra-ie');
+            var body = document.getElementById('sintegra-modal-body');
+            var btn = document.getElementById('sintegra-confirmar');
+            btn.disabled = true;
+            body.innerHTML = '<p class="text-sm text-gray-700">Buscando participantes elegíveis…</p>';
+            modal.classList.remove('hidden');
+
+            post('{{ route('app.clearance.sintegra.preview') }}', previewBody).then(function (res) {
+                var j = res.j;
+                if (!res.ok || !j.success) {
+                    body.innerHTML = '<p class="text-sm text-red-600">' + (j.error || 'Falha ao calcular custo.') + '</p>';
+                    return;
+                }
+                if (j.total === 0) {
+                    body.innerHTML = '<p class="text-sm text-gray-700">Nenhum participante sem Inscrição Estadual para consultar.</p>';
+                    return;
+                }
+                pendingIds = j.participante_ids;
+                var aviso = j.suficiente ? '' : '<p class="mt-2 text-[12px] font-semibold text-red-600">Saldo insuficiente (' + j.saldo + ' crédito(s)).</p>';
+                body.innerHTML =
+                    '<p class="text-sm text-gray-700">Consultar SINTEGRA de <strong>' + j.total + '</strong> participante(s) sem Inscrição Estadual.</p>' +
+                    '<p class="mt-2 text-sm text-gray-900">Custo: <strong>' + j.custo_creditos + ' crédito(s)</strong> (' + money(j.custo_creditos) + ')</p>' +
+                    '<p class="text-[11px] text-gray-400">Saldo atual: ' + j.saldo + ' crédito(s). Estorno automático em fontes que falharem.</p>' + aviso;
+                btn.disabled = !j.suficiente;
+            }).catch(function () {
+                body.innerHTML = '<p class="text-sm text-red-600">Erro de rede ao calcular custo.</p>';
+            });
+        }
+
+        function executar() {
+            var modal = document.getElementById('modal-sintegra-ie');
+            var overlay = document.getElementById('overlay-sintegra');
+            modal.classList.add('hidden');
+            overlay.classList.remove('hidden');
+
+            post('{{ route('app.clearance.sintegra.executar') }}', { participante_ids: pendingIds, lote_id: LOTE_ID }).then(function (res) {
+                var j = res.j;
+                if (!res.ok || !j.success) {
+                    overlay.classList.add('hidden');
+                    if (window.showToast) window.showToast(j.error || 'Falha ao iniciar consulta.', 'error');
+                    return;
+                }
+                pollStatus(j.participante_ids, overlay);
+            }).catch(function () {
+                overlay.classList.add('hidden');
+                if (window.showToast) window.showToast('Erro de rede.', 'error');
+            });
+        }
+
+        function pollStatus(ids, overlay) {
+            var n = 0;
+            var t = setInterval(function () {
+                n++;
+                post('{{ route('app.clearance.sintegra.status') }}', { participante_ids: ids }).then(function (res) {
+                    var j = res.j;
+                    if (j.success && j.pendentes === 0) {
+                        clearInterval(t);
+                        window.location.reload();
+                    } else if (n > 120) { // ~4min máx
+                        clearInterval(t);
+                        overlay.classList.add('hidden');
+                        if (window.showToast) window.showToast('Consulta em andamento — recarregue em instantes.', 'info');
+                    }
+                });
+            }, 2000);
+        }
+
+        document.getElementById('sintegra-confirmar').addEventListener('click', executar);
+
+        window.clearanceSintegra = {
+            abrirLote: function () { abrir({ lote_id: LOTE_ID }); },
+            abrirParticipante: function (pid) { abrir({ participante_ids: [pid] }); }
+        };
+
+        // Mostra o botão do topo só se houver ao menos 1 participante sem IE no lote.
+        var btnLote = document.getElementById('btn-sintegra-lote');
+        if (btnLote) {
+            post('{{ route('app.clearance.sintegra.preview') }}', { lote_id: LOTE_ID }).then(function (res) {
+                if (res.ok && res.j.success && res.j.total > 0) {
+                    btnLote.querySelector('span').textContent = 'Enriquecer IE (SINTEGRA) · ' + res.j.total;
+                    btnLote.classList.remove('hidden');
+                }
+            });
+        }
+    })();
+    </script>
+@endif
 
 <script src="{{ asset('js/progresso-automacao.js') }}?v={{ @filemtime(public_path('js/progresso-automacao.js')) ?: time() }}"></script>
 <script src="{{ asset('js/clearance-resultado.js') }}?v={{ @filemtime(public_path('js/clearance-resultado.js')) ?: time() }}" defer></script>

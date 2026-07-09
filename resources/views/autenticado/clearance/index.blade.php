@@ -8,6 +8,7 @@
     $ultimasVerificacoes = $ultimasVerificacoes ?? [];
     $saldoCreditos = $saldoCreditos ?? 0;
     $custoConsultaUnitaria = $custoConsultaUnitaria ?? 14;
+    $custosTiers = $custosTiers ?? ['basico' => 3, 'full' => 8];
 
     $statusReceita = [
         ['key' => 'autorizadas',     'label' => 'Autorizadas',     'hex' => '#047857', 'situacao' => 'AUTORIZADA',     'descricao' => 'Reconhecidas pela Receita Federal'],
@@ -60,6 +61,21 @@
                     <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Saldo</span>
                     <span class="font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $saldoCreditos))</span>
                 </span>
+                <x-export-menu id="modal-exportar-clr" titulo="Exportar panorama de clearance"
+                               descricao="Cobre todo o acervo (XML + EFD) com a dimensão de valor R$ que a tela não mostra."
+                               overlay="download-overlay-clr">
+                    <x-export-grupo label="Documento" />
+                    <x-export-option format="pdf" modal-id="modal-exportar-clr" overlay="download-overlay-clr"
+                                     path="/app/clearance/dashboard/exportar-pdf"
+                                     descricao="Valor R$ por status na Receita, exposição das notas bloqueantes escrituradas e cobertura de verificação por cliente." />
+                    <x-export-grupo label="Planilhas" />
+                    <x-export-option format="xlsx" modal-id="modal-exportar-clr" overlay="download-overlay-clr"
+                                     path="/app/clearance/dashboard/exportar-xlsx"
+                                     descricao="Uma aba por seção + Resumo com backlog e custo de verificação." />
+                    <x-export-option format="csv" modal-id="modal-exportar-clr" overlay="download-overlay-clr"
+                                     path="/app/clearance/dashboard/exportar-csv-zip"
+                                     descricao="ZIP com um CSV por seção." />
+                </x-export-menu>
                 <a href="/app/clearance/buscar" data-link class="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium self-start">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M16 10a6 6 0 11-12 0 6 6 0 0112 0z"></path>
@@ -68,6 +84,8 @@
                 </a>
             </div>
         </div>
+
+        <x-download-overlay id="download-overlay-clr" texto="Gerando arquivo…" />
 
         <div id="validacao-error-region" class="mb-6"></div>
 
@@ -169,7 +187,12 @@
                             <div class="px-4 py-3 hover:bg-gray-50/50 transition-colors">
                                 <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                     <div class="min-w-0">
-                                        <a href="/app/clearance/nota/{{ $nota['id'] }}?origem={{ $nota['origem'] }}" data-link class="text-sm text-gray-700 hover:text-gray-900 hover:underline">
+                                        @php
+                                            $notaUrl = ! empty($nota['chave'])
+                                                ? '/app/notas?busca='.$nota['chave'].'&expandir=1'
+                                                : '/app/clearance/nota/'.$nota['id'].'?origem='.$nota['origem'];
+                                        @endphp
+                                        <a href="{{ $notaUrl }}" data-link class="text-sm text-gray-700 hover:text-gray-900 hover:underline">
                                             NF {{ $nota['numero'] }} — {{ $nota['emit_razao_social'] ?: 'Emitente desconhecido' }}
                                         </a>
                                         <p class="text-[11px] text-gray-500 mt-1">{{ $formatarConsultadoEm($consultadoEm) }} · Origem {{ strtoupper($nota['origem']) }}</p>
@@ -202,11 +225,17 @@
                     </div>
                     <div>
                         <p class="font-semibold text-gray-900">2. Verificação por chave</p>
-                        <p class="text-[11px] text-gray-500 mt-1">Consulta direta à Receita Federal. Retorna situação oficial: autorizada, cancelada, denegada, inutilizada ou indeterminada.</p>
+                        <p class="text-[11px] text-gray-500 mt-1">Consulta à base oficial da Receita Federal/SEFAZ (via provedor InfoSimples). Retorna a situação do documento: autorizada, cancelada, denegada, inutilizada, não encontrada ou indeterminada.</p>
                     </div>
+                    @php
+                        $precos = app(\App\Services\PricingCatalogService::class);
+                        $custoLoteBasico = $precos->creditsToCurrency((int) ($custosTiers['basico'] ?? 3));
+                        $custoLoteFull = $precos->creditsToCurrency((int) ($custosTiers['full'] ?? 8));
+                        $custoAvulsa = $precos->creditsToCurrency((int) $custoConsultaUnitaria);
+                    @endphp
                     <div>
-                        <p class="font-semibold text-gray-900">3. Cobrança por consulta</p>
-                        <p class="text-[11px] text-gray-500 mt-1">Custo aproximado: <span class="font-semibold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $custoConsultaUnitaria)) por nota</span>. Consultas que falham antes de chegar na fonte oficial não são cobradas.</p>
+                        <p class="font-semibold text-gray-900">3. Cobrança por documento</p>
+                        <p class="text-[11px] text-gray-500 mt-1">Em lote, pela <a href="/app/clearance/notas" data-link class="text-gray-700 hover:text-gray-900 underline">Listagem de Notas</a>: <span class="font-semibold text-gray-900">@brl($custoLoteBasico)</span> (básico) a <span class="font-semibold text-gray-900">@brl($custoLoteFull)</span> (completo) por documento. Avulsa por chave (botão acima): <span class="font-semibold text-gray-900">@brl($custoAvulsa)</span>. Consultas que falham antes de chegar na fonte oficial não são cobradas.</p>
                     </div>
                 </div>
             </div>

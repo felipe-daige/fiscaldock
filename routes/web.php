@@ -345,6 +345,12 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     Route::prefix('app/clearance')->name('app.clearance.')->group(function () {
         Route::redirect('/', '/app/clearance/dashboard', 301);
         Route::get('/dashboard', [ClearanceController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/exportar-pdf', [ClearanceController::class, 'exportarDashboardPdf'])
+            ->middleware(RequiresEntitlement::class.':export')->name('dashboard.exportar-pdf');
+        Route::get('/dashboard/exportar-xlsx', [ClearanceController::class, 'exportarDashboardXlsx'])
+            ->middleware(RequiresEntitlement::class.':export')->name('dashboard.exportar-xlsx');
+        Route::get('/dashboard/exportar-csv-zip', [ClearanceController::class, 'exportarDashboardCsvZip'])
+            ->middleware(RequiresEntitlement::class.':export')->name('dashboard.exportar-csv-zip');
         Route::get('/notas', [ClearanceController::class, 'notas'])->name('notas');
         Route::get('/notas/todos-ids', [ClearanceController::class, 'todosIds'])->name('todos-ids');
         Route::post('/notas/validar', [ClearanceController::class, 'validarNotas'])
@@ -354,6 +360,9 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
             ->middleware(RequiresEntitlement::class.':export')->name('notas.resultado-pdf');
         Route::get('/notas/resultado/{consultaLoteId}/xlsx', [ClearanceController::class, 'resultadoXlsx'])
             ->middleware(RequiresEntitlement::class.':export')->name('notas.resultado-xlsx');
+        Route::post('/sintegra/preview', [ClearanceController::class, 'sintegraPreview'])->name('sintegra.preview');
+        Route::post('/sintegra/executar', [ClearanceController::class, 'sintegraExecutar'])->name('sintegra.executar');
+        Route::post('/sintegra/status', [ClearanceController::class, 'sintegraStatus'])->name('sintegra.status');
         Route::get('/buscar', [ClearanceController::class, 'buscarNfe'])->name('buscar');
         Route::post('/buscar/consultar', [ClearanceController::class, 'consultarNfe'])->name('buscar.consultar');
         Route::get('/buscar/resultado/{consultaLoteId}', [ClearanceController::class, 'resultadoUltimaConsulta'])->name('buscar.resultado');

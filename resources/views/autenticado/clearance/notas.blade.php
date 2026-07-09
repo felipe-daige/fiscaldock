@@ -61,6 +61,68 @@
         }
         return ['label' => 'Validada', 'hex' => '#047857'];
     };
+
+    $modeloLabels = ['55' => 'NF-e (55)', '65' => 'NFC-e (65)', '57' => 'CT-e (57/67)'];
+
+    // Situação oficial na Receita (snapshot SEFAZ) — dimensão-núcleo do clearance.
+    $situacaoReceitaLabels = [
+        'AUTORIZADA' => 'Autorizada',
+        'CANCELADA' => 'Cancelada',
+        'DENEGADA' => 'Denegada',
+        'INUTILIZADA' => 'Inutilizada',
+        'NAO_ENCONTRADA' => 'Não encontrada',
+        'INDETERMINADO' => 'Indeterminada',
+    ];
+
+    // Filtros que vivem na gaveta "avançados" — abre sozinha se algum estiver ativo.
+    $temAvancado = ! empty($filtros['periodo_de']) || ! empty($filtros['periodo_ate'])
+        || ! empty($filtros['participante_cnpj']) || ! empty($filtros['tipo_nota'])
+        || ! empty($filtros['modelo']) || (($filtros['status_validacao'] ?? 'todos') !== 'todos');
+
+    $clienteNome = null;
+    if (! empty($filtros['cliente_id'])) {
+        $clienteNome = optional($clientes->firstWhere('id', (int) $filtros['cliente_id']))->razao_social;
+    }
+
+    // URL preservando sort/dir e demais filtros, removendo/alterando os informados.
+    $mkFiltroUrl = function (array $overrides) use ($filtros, $sort, $dir) {
+        $base = array_merge($filtros, $overrides);
+        if (($base['status_validacao'] ?? 'todos') === 'todos') {
+            unset($base['status_validacao']);
+        }
+        $base['sort'] = $sort;
+        $base['dir'] = $dir;
+        $params = array_filter($base, fn ($v) => $v !== null && $v !== '');
+        return '/app/clearance/notas?'.http_build_query($params);
+    };
+
+    $chips = [];
+    if (! empty($filtros['busca'])) {
+        $chips[] = ['label' => 'Busca: "'.$filtros['busca'].'"', 'url' => $mkFiltroUrl(['busca' => null])];
+    }
+    if (! empty($filtros['periodo_de']) || ! empty($filtros['periodo_ate'])) {
+        $de = $filtros['periodo_de'] ?? '…';
+        $ate = $filtros['periodo_ate'] ?? '…';
+        $chips[] = ['label' => 'Período: '.$de.' → '.$ate, 'url' => $mkFiltroUrl(['periodo_de' => null, 'periodo_ate' => null])];
+    }
+    if (! empty($filtros['cliente_id'])) {
+        $chips[] = ['label' => 'Cliente: '.($clienteNome ?? $filtros['cliente_id']), 'url' => $mkFiltroUrl(['cliente_id' => null])];
+    }
+    if (! empty($filtros['participante_cnpj'])) {
+        $chips[] = ['label' => 'CNPJ: '.$filtros['participante_cnpj'], 'url' => $mkFiltroUrl(['participante_cnpj' => null])];
+    }
+    if (! empty($filtros['tipo_nota'])) {
+        $chips[] = ['label' => 'Tipo: '.ucfirst($filtros['tipo_nota']), 'url' => $mkFiltroUrl(['tipo_nota' => null])];
+    }
+    if (! empty($filtros['modelo'])) {
+        $chips[] = ['label' => $modeloLabels[$filtros['modelo']] ?? $filtros['modelo'], 'url' => $mkFiltroUrl(['modelo' => null])];
+    }
+    if (($filtros['status_validacao'] ?? 'todos') !== 'todos') {
+        $chips[] = ['label' => 'Verificação: '.($statusOptions[$filtros['status_validacao']] ?? $filtros['status_validacao']), 'url' => $mkFiltroUrl(['status_validacao' => 'todos'])];
+    }
+    if (! empty($filtros['situacao_receita'])) {
+        $chips[] = ['label' => 'Receita: '.($situacaoReceitaLabels[$filtros['situacao_receita']] ?? $filtros['situacao_receita']), 'url' => $mkFiltroUrl(['situacao_receita' => null])];
+    }
 @endphp
 
 <div class="min-h-screen bg-gray-100" id="validacao-notas-container"
@@ -237,50 +299,103 @@
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
             </div>
-            <div class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
-                <div>
-                    <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">De</label>
-                    <input type="date" name="periodo_de" value="{{ $filtros['periodo_de'] ?? '' }}" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+            <div class="p-4 space-y-3">
+                {{-- Filtros primários (sempre visíveis) --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="sm:col-span-2">
+                        <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Buscar (nº ou chave)</label>
+                        <div class="relative mt-1">
+                            <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            <input type="text" name="busca" value="{{ $filtros['busca'] ?? '' }}" placeholder="Número do documento ou chave de acesso" class="w-full border border-gray-300 rounded pl-9 pr-2 py-1.5 text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Cliente</label>
+                        <select name="cliente_id" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+                            <option value="">Todos</option>
+                            @foreach($clientes as $c)
+                                <option value="{{ $c->id }}" {{ ($filtros['cliente_id'] ?? '') == $c->id ? 'selected' : '' }}>{{ $c->razao_social }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Situação na Receita</label>
+                        <select name="situacao_receita" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+                            <option value="">Todas</option>
+                            @foreach($situacaoReceitaLabels as $sv => $sl)
+                                <option value="{{ $sv }}" {{ ($filtros['situacao_receita'] ?? '') === $sv ? 'selected' : '' }}>{{ $sl }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
-                <div>
-                    <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Até</label>
-                    <input type="date" name="periodo_ate" value="{{ $filtros['periodo_ate'] ?? '' }}" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
-                </div>
-                <div>
-                    <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Cliente</label>
-                    <select name="cliente_id" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
-                        <option value="">Todos</option>
-                        @foreach($clientes as $c)
-                            <option value="{{ $c->id }}" {{ ($filtros['cliente_id'] ?? '') == $c->id ? 'selected' : '' }}>{{ $c->razao_social }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">CNPJ Participante</label>
-                    <input type="text" name="participante_cnpj" value="{{ $filtros['participante_cnpj'] ?? '' }}" placeholder="00.000.000/0000-00" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
-                </div>
-                <div>
-                    <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Tipo</label>
-                    <select name="tipo_nota" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
-                        <option value="">Todos</option>
-                        <option value="entrada" {{ ($filtros['tipo_nota'] ?? '') === 'entrada' ? 'selected' : '' }}>Entrada</option>
-                        <option value="saida" {{ ($filtros['tipo_nota'] ?? '') === 'saida' ? 'selected' : '' }}>Saída</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Status</label>
-                    <select name="status_validacao" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
-                        @foreach($statusOptions as $value => $label)
-                            <option value="{{ $value }}" {{ ($filtros['status_validacao'] ?? 'todos') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
+
+                {{-- Filtros avançados (gaveta) — abre sozinha quando algum está ativo. `details`
+                     nativo mantém os inputs no DOM mesmo fechado, então o GET envia tudo. --}}
+                <details class="border-t border-gray-200 pt-3 group" {{ $temAvancado ? 'open' : '' }}>
+                    <summary class="cursor-pointer select-none inline-flex items-center gap-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700">
+                        <svg class="w-3.5 h-3.5 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        Filtros avançados
+                        @if($temAvancado)<span class="normal-case text-[9px] font-bold text-gray-600 bg-gray-200 rounded px-1.5 py-0.5 tracking-normal">ativos</span>@endif
+                    </summary>
+                    <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div>
+                            <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Emissão — De</label>
+                            <input type="date" name="periodo_de" value="{{ $filtros['periodo_de'] ?? '' }}" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Emissão — Até</label>
+                            <input type="date" name="periodo_ate" value="{{ $filtros['periodo_ate'] ?? '' }}" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">CNPJ Participante</label>
+                            <input type="text" name="participante_cnpj" value="{{ $filtros['participante_cnpj'] ?? '' }}" placeholder="00.000.000/0000-00" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Verificação</label>
+                            <select name="status_validacao" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+                                @foreach($statusOptions as $value => $label)
+                                    <option value="{{ $value }}" {{ ($filtros['status_validacao'] ?? 'todos') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Tipo</label>
+                            <select name="tipo_nota" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+                                <option value="">Todos</option>
+                                <option value="entrada" {{ ($filtros['tipo_nota'] ?? '') === 'entrada' ? 'selected' : '' }}>Entrada</option>
+                                <option value="saida" {{ ($filtros['tipo_nota'] ?? '') === 'saida' ? 'selected' : '' }}>Saída</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Modelo</label>
+                            <select name="modelo" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+                                <option value="">Todos</option>
+                                @foreach($modeloLabels as $mv => $ml)
+                                    <option value="{{ $mv }}" {{ ($filtros['modelo'] ?? '') === $mv ? 'selected' : '' }}>{{ $ml }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </details>
             </div>
             <div class="bg-gray-50 px-4 py-2 border-t border-gray-200 flex gap-2">
                 <button type="submit" class="px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Aplicar</button>
                 <a href="/app/clearance/notas" data-link class="px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide border border-gray-300 text-gray-700">Limpar</a>
             </div>
         </form>
+
+        @if(! empty($chips))
+            <div class="mb-4 flex flex-wrap items-center gap-2">
+                <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Filtros ativos</span>
+                @foreach($chips as $chip)
+                    <a href="{{ $chip['url'] }}" data-link class="inline-flex items-center gap-1.5 bg-white border border-gray-300 rounded-full pl-3 pr-2 py-1 text-[11px] font-medium text-gray-700 hover:bg-gray-50">
+                        {{ $chip['label'] }}
+                        <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </a>
+                @endforeach
+                <a href="/app/clearance/notas" data-link class="text-[11px] font-semibold text-gray-500 hover:text-gray-900 underline underline-offset-2">Limpar tudo</a>
+            </div>
+        @endif
 
         {{-- Status da seleção --}}
         <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
@@ -560,8 +675,21 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="11" class="px-3 py-8 text-center">
-                                    <p class="text-sm text-gray-500">Nenhuma nota encontrada com os filtros atuais.</p>
+                                <td colspan="11" class="px-3 py-12 text-center">
+                                    @if(($escopoNotas['total_unificado'] ?? 0) === 0)
+                                        <svg class="w-10 h-10 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        <p class="text-sm font-semibold text-gray-700 mt-3">Nenhuma nota no acervo ainda</p>
+                                        <p class="text-xs text-gray-500 mt-1">Importe documentos fiscais para começar a verificar.</p>
+                                        <div class="mt-4 flex items-center justify-center gap-2">
+                                            <a href="/app/importacao/efd" data-link class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Importar EFD</a>
+                                            <a href="/app/importacao/xml" data-link class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide border border-gray-300 text-gray-700">Importar XML</a>
+                                        </div>
+                                    @else
+                                        <svg class="w-10 h-10 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                        <p class="text-sm font-semibold text-gray-700 mt-3">Nenhuma nota bate com os filtros</p>
+                                        <p class="text-xs text-gray-500 mt-1">Ajuste ou limpe os filtros para ver mais resultados.</p>
+                                        <a href="/app/clearance/notas" data-link class="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide border border-gray-300 text-gray-700">Limpar filtros</a>
+                                    @endif
                                 </td>
                             </tr>
                         @endforelse
@@ -570,6 +698,19 @@
             </div>
             <div class="px-4 py-3 border-t border-gray-200 bg-gray-50">
                 {{ $notas->withQueryString()->links() }}
+            </div>
+        </div>
+    </div>
+
+    {{-- Barra fixa de ação: sempre visível enquanto há seleção --}}
+    <div id="clearance-sticky-cta" class="hidden fixed inset-x-0 bottom-0 z-40 pointer-events-none">
+        <div class="max-w-7xl mx-auto px-4 pb-4">
+            <div class="pointer-events-auto bg-white rounded border border-gray-300 shadow-lg px-4 py-3 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-white text-[11px] font-bold px-2 py-0.5 rounded" style="background-color: #1f2937"><span id="sticky-count">0</span> nota(s)</span>
+                    <span class="text-xs text-gray-600">Custo <span id="sticky-custo" class="font-semibold text-gray-900">R$ 0,00</span></span>
+                </div>
+                <button type="button" id="btn-validar-sticky" class="px-4 py-2 rounded text-[11px] font-bold uppercase tracking-wide text-white disabled:opacity-40" style="background-color: #047857" disabled>Validar</button>
             </div>
         </div>
     </div>

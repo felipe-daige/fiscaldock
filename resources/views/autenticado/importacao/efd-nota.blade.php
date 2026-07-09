@@ -104,6 +104,8 @@
             @endif
         </div>
 
+        @include('autenticado.notas.partials._consulta-clearance', ['consulta' => $consulta ?? null, 'chaveConsulta' => $nota->chave_acesso, 'nota' => $nota, 'auditoria' => $auditoria ?? null])
+
         <div class="grid grid-cols-1 {{ $nota->participante && $nota->cliente ? 'xl:grid-cols-3' : 'lg:grid-cols-2' }} gap-4 mb-4">
             @if($nota->participante)
                 @php
@@ -209,55 +211,133 @@
 
             @if($nota->cliente)
                 @php
-                    $clienteSituacaoHex = match (strtolower((string) ($nota->cliente->situacao_cadastral ?? ''))) {
+                    $c = $nota->cliente;
+                    $clienteSituacaoHex = match (strtolower((string) ($c->situacao_cadastral ?? ''))) {
                         'ativa' => '#047857',
                         '' => null,
                         default => '#dc2626',
                     };
-                    $clienteMunicipioUf = collect([$nota->cliente->municipio, $nota->cliente->uf])->filter()->implode(' / ');
+                    $ehPropria = (bool) $c->is_empresa_propria;
+                    $clienteMunicipioUf = collect([$c->municipio, $c->uf])->filter()->implode(' / ');
+                    $clienteEndereco = collect([$c->endereco, $c->numero, $c->complemento, $c->bairro])->filter()->implode(', ');
+                    $clienteCep = $c->cep ? preg_replace('/^(\d{5})(\d{3})$/', '$1-$2', preg_replace('/\D/', '', $c->cep)) : null;
+                    $clienteCnae = collect([$c->cnae_principal, $c->cnae_principal_descricao])->filter()->implode(' — ');
+                    $telefoneFmt = $c->telefone ? preg_replace(['/^(\d{2})(\d{5})(\d{4})$/', '/^(\d{2})(\d{4})(\d{4})$/'], ['($1) $2-$3', '($1) $2-$3'], preg_replace('/\D/', '', $c->telefone)) : null;
+                    $temContato = $telefoneFmt || $c->email;
+                    $temExtra = $clienteEndereco || $c->natureza_juridica || $c->capital_social || $c->data_inicio_atividade;
                 @endphp
                 <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-2">
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Cliente</span>
+                        @if($ehPropria)
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #1d4ed8">Empresa própria</span>
+                        @endif
                     </div>
                     <div class="p-4">
                         <div class="flex flex-wrap items-start justify-between gap-3">
                             <div class="min-w-0">
                                 <p class="text-sm font-semibold text-gray-900">
-                                    <a href="/app/cliente/{{ $nota->cliente->id }}" data-link class="text-gray-900 hover:text-gray-600 hover:underline">{{ $nota->cliente->razao_social ?? '—' }}</a>
+                                    <a href="/app/cliente/{{ $c->id }}" data-link class="text-gray-900 hover:text-gray-600 hover:underline">{{ $c->razao_social ?? $c->nome ?? '—' }}</a>
                                 </p>
-                                @if($nota->cliente->documento_formatado)
-                                    <p class="text-[11px] font-mono text-gray-500 mt-1">{{ $nota->cliente->documento_formatado }}</p>
+                                @if($c->nome_fantasia)
+                                    <p class="text-[11px] text-gray-500 mt-1">{{ $c->nome_fantasia }}</p>
                                 @endif
                             </div>
                             <div class="flex flex-wrap gap-2">
                                 @if($clienteSituacaoHex)
                                     <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $clienteSituacaoHex }}">
-                                        {{ strtoupper($nota->cliente->situacao_cadastral) }}
+                                        {{ strtoupper($c->situacao_cadastral) }}
                                     </span>
                                 @endif
-                                @if($nota->cliente->regime_tributario)
+                                @if($c->regime_tributario)
                                     <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #0f766e">
-                                        {{ strtoupper($nota->cliente->regime_tributario) }}
+                                        {{ strtoupper($c->regime_tributario) }}
+                                    </span>
+                                @endif
+                                @if($c->porte)
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #6b7280">
+                                        {{ strtoupper($c->porte) }}
                                     </span>
                                 @endif
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-3 mt-4">
+                            <div>
+                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">CNPJ / CPF</p>
+                                <p class="text-sm font-mono text-gray-700">{{ $c->documento_formatado ?: '—' }}</p>
+                            </div>
+                            @if($c->inscricao_estadual)
+                                <div>
+                                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Inscricao Estadual</p>
+                                    <p class="text-sm font-mono text-gray-700">{{ $c->inscricao_estadual }}</p>
+                                </div>
+                            @endif
                             @if($clienteMunicipioUf)
                                 <div>
                                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Municipio / UF</p>
                                     <p class="text-sm text-gray-700">{{ $clienteMunicipioUf }}</p>
                                 </div>
                             @endif
-                            @if($nota->cliente->email)
+                            @if($clienteCep)
                                 <div>
-                                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Email</p>
-                                    <p class="text-sm text-gray-700">{{ $nota->cliente->email }}</p>
+                                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">CEP</p>
+                                    <p class="text-sm font-mono text-gray-700">{{ $clienteCep }}</p>
+                                </div>
+                            @endif
+                            @if($clienteCnae)
+                                <div class="col-span-2">
+                                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">CNAE Principal</p>
+                                    <p class="text-sm text-gray-700">{{ $clienteCnae }}</p>
                                 </div>
                             @endif
                         </div>
+
+                        @if($temExtra)
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-3 mt-4 pt-4 border-t border-gray-200">
+                                @if($clienteEndereco)
+                                    <div class="col-span-2">
+                                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Endereco</p>
+                                        <p class="text-sm text-gray-700">{{ $clienteEndereco }}</p>
+                                    </div>
+                                @endif
+                                @if($c->natureza_juridica)
+                                    <div class="col-span-2">
+                                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Natureza Juridica</p>
+                                        <p class="text-sm text-gray-700">{{ $c->natureza_juridica }}</p>
+                                    </div>
+                                @endif
+                                @if($c->capital_social)
+                                    <div>
+                                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Capital Social</p>
+                                        <p class="text-sm text-gray-700">R$ {{ number_format((float) $c->capital_social, 2, ',', '.') }}</p>
+                                    </div>
+                                @endif
+                                @if($c->data_inicio_atividade)
+                                    <div>
+                                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Inicio de Atividade</p>
+                                        <p class="text-sm text-gray-700">{{ \Carbon\Carbon::parse($c->data_inicio_atividade)->format('d/m/Y') }}</p>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+
+                        @if($temContato)
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-3 mt-4 pt-4 border-t border-gray-200">
+                                @if($telefoneFmt)
+                                    <div>
+                                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Telefone</p>
+                                        <p class="text-sm text-gray-700">{{ $telefoneFmt }}</p>
+                                    </div>
+                                @endif
+                                @if($c->email)
+                                    <div class="{{ $telefoneFmt ? '' : 'col-span-2' }} min-w-0">
+                                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Email</p>
+                                        <p class="text-sm text-gray-700 break-all">{{ $c->email }}</p>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                 </div>
             @endif

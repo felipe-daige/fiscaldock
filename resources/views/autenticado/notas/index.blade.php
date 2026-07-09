@@ -123,7 +123,22 @@
                 </button>
 
                 <div id="nf-filtros-grid" class="hidden sm:block px-4 sm:px-5 py-4">
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                    @php
+                        $cfopsSel = $filtros['cfops'] ?? [];
+                        $cstsSel = $filtros['csts'] ?? [];
+                        $avancadosNfKeys = ['modelo', 'cliente_id', 'participante_id', 'importacao_id'];
+                        $avancadosNfAtivos = collect($avancadosNfKeys)->filter(fn ($k) => ! empty($filtros[$k] ?? null))->count()
+                            + (count($cfopsSel) ? 1 : 0) + (count($cstsSel) ? 1 : 0);
+                    @endphp
+
+                    {{-- Busca (sempre visível) --}}
+                    <div class="mb-3">
+                        <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Busca</label>
+                        <input type="text" name="busca" value="{{ $buscaFiltro }}" placeholder="Chave de acesso ou número da nota" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                    </div>
+
+                    {{-- Filtros básicos (sempre visíveis) --}}
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <div>
                             <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Origem</label>
                             <select name="origem" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400 bg-white">
@@ -148,6 +163,22 @@
                                 <option value="saida" {{ $tipoFiltro === 'saida' ? 'selected' : '' }}>Saída</option>
                             </select>
                         </div>
+                    </div>
+
+                    {{-- Toggle "Mais filtros" --}}
+                    <div class="mt-3">
+                        <button type="button" onclick="var a=document.getElementById('filtros-avancados-nf'); a.classList.toggle('hidden'); this.querySelector('svg').classList.toggle('rotate-180');"
+                            class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-gray-900 font-medium">
+                            <svg class="w-3.5 h-3.5 transition-transform {{ $avancadosNfAtivos > 0 ? 'rotate-180' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            Mais filtros
+                            @if($avancadosNfAtivos > 0)
+                                <span class="text-[10px] text-white rounded-full px-1.5 py-0.5" style="background-color:#374151;">{{ $avancadosNfAtivos }}</span>
+                            @endif
+                        </button>
+                    </div>
+
+                    {{-- Filtros avançados (colapsável) --}}
+                    <div id="filtros-avancados-nf" class="{{ $avancadosNfAtivos > 0 ? '' : 'hidden' }} grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3 pt-4 border-t border-gray-200">
                         <div>
                             <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Modelo</label>
                             <select name="modelo" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400 bg-white">
@@ -187,11 +218,6 @@
                         </div>
 
                         {{-- CFOP / CST: dropdowns multi-select (item-level), alinhados aos demais filtros --}}
-                        @php
-                            $cfopsSel = $filtros['cfops'] ?? [];
-                            $cstsSel = $filtros['csts'] ?? [];
-                        @endphp
-
                         {{-- CFOP --}}
                         <div class="relative" data-pop>
                             <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">CFOP</label>
@@ -257,11 +283,6 @@
                                 @endif
                             </div>
                         </div>
-                    </div>
-
-                    <div class="mt-3">
-                        <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Busca</label>
-                        <input type="text" name="busca" value="{{ $buscaFiltro }}" placeholder="Chave de acesso ou número da nota" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                     </div>
 
                     <div class="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200">
@@ -624,6 +645,18 @@ catFiltro.contar('cst');
     document.addEventListener('click', handleExpandClick);
     document.addEventListener('click', handlePopClick);
     if (form) form.addEventListener('submit', handleFormSubmit);
+
+    // Auto-expandir o detalhe da 1ª nota quando a URL pede (?expandir=1) —
+    // usado pelo link "Últimas Verificações" do clearance, que já filtra por chave.
+    function autoExpandInicial() {
+        var params = new URLSearchParams(window.location.search);
+        if (!params.get('expandir')) return;
+        var btns = Array.prototype.slice.call(document.querySelectorAll('.nf-expand-btn'));
+        if (!btns.length) return;
+        var alvo = btns.filter(function(b) { return b.offsetParent !== null; })[0] || btns[0];
+        toggleDetail(alvo.dataset.origem, alvo.dataset.id, alvo);
+    }
+    autoExpandInicial();
 
     if (!window._cleanupFunctions) window._cleanupFunctions = {};
     window._cleanupFunctions.notasFiscais = function() {

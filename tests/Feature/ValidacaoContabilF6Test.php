@@ -64,6 +64,13 @@ beforeEach(function () {
     $cContrib = ($this->mk)(['importacao_id' => $impContrib->id, 'chave_acesso' => $c, 'modelo' => '55', 'tipo_operacao' => 'saida', 'origem_arquivo' => 'contribuicoes', 'valor_total' => 300]);
     $cContrib->update(['validacao' => ['situacao' => 'DENEGADA', 'classificacao' => 'irregular', 'score_total' => 30, 'consultado_em' => '2024-02-03']]);
 
+    // Situação SEFAZ vive no snapshot (nfe_consultas), não em validacao->>'situacao'.
+    // A = AUTORIZADA, C = DENEGADA (uma linha por chave; dedup fiscal×contribuicoes é do lado das notas).
+    DB::table('nfe_consultas')->insert([
+        ['user_id' => $this->user->id, 'chave_acesso' => $a, 'tipo_documento' => 'NFE', 'status' => 'AUTORIZADA', 'consultado_em' => '2024-02-01', 'created_at' => now(), 'updated_at' => now()],
+        ['user_id' => $this->user->id, 'chave_acesso' => $c, 'tipo_documento' => 'NFE', 'status' => 'DENEGADA', 'consultado_em' => '2024-02-03', 'created_at' => now(), 'updated_at' => now()],
+    ]);
+
     $this->svc = new ValidacaoContabilService;
 });
 

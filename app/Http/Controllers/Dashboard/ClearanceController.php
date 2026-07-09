@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Concerns\RespondeAjax;
 use App\Http\Controllers\Concerns\SetsDownloadToken;
 use App\Http\Controllers\Controller;
+use App\Jobs\ProcessarConsultaJob;
 use App\Models\Cliente;
 use App\Models\ConsultaLote;
 use App\Models\EfdNota;
+use App\Models\Participante;
 use App\Models\XmlImportacao;
 use App\Models\XmlNota;
 use App\Services\Bi\CruzamentosConsultasClearanceService;
@@ -15,6 +17,7 @@ use App\Services\Catalogo\ReconciliacaoXmlEfdService;
 use App\Services\Clearance\ClearanceLoteService;
 use App\Services\Clearance\DivergenciaService;
 use App\Services\Clearance\RelatorioExecutivoService;
+use App\Services\Consultas\FecharLoteService;
 use App\Services\CreditService;
 use App\Services\NotaFiscalService;
 use App\Services\ValidacaoContabilService;
@@ -24,6 +27,7 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -67,7 +71,13 @@ class ClearanceController extends Controller
             'notasBloqueantes' => $this->validacaoService->getNotasComSituacaoBloqueante($userId, 5),
             'ultimasVerificacoes' => $this->validacaoService->getUltimasVerificacoes($userId, 10),
             'saldoCreditos' => $this->creditService->getBalance($user),
-            'custoConsultaUnitaria' => 14,
+            // Verificação em lote (na Listagem de Notas): básico/completo por documento.
+            // Verificação avulsa por chave (botão "Verificar nota"): custo próprio.
+            'custosTiers' => [
+                'basico' => ValidacaoContabilService::custoUnitarioPorTier('basico'),
+                'full' => ValidacaoContabilService::custoUnitarioPorTier('full'),
+            ],
+            'custoConsultaUnitaria' => self::CLEARANCE_NFE_AVULSA_CUSTO,
         ];
 
         return $this->render($request, 'index', $data);
@@ -181,7 +191,7 @@ class ClearanceController extends Controller
         } elseif ($status === 'nao_validadas') {
             $xml->whereNull('xml_notas.validacao');
         } elseif ($status === 'sem_situacao_receita') {
-            $xml->whereRaw("(xml_notas.validacao IS NULL OR xml_notas.validacao->>'situacao' IS NULL)");
+            $xml->whereRaw('NOT '.$this->snapshotExistsSql('xml_notas'));
         }
         $xmlIds = $xml->pluck('id')->map(fn ($v) => (int) $v)->values();
 
@@ -189,7 +199,7 @@ class ClearanceController extends Controller
         if (! in_array($status, ['validadas', 'com_alertas'], true)) {
             $efd = $this->efdSubquery($userId, $filtros);
             if ($status === 'sem_situacao_receita') {
-                $efd->whereRaw("(efd_notas.validacao IS NULL OR efd_notas.validacao->>'situacao' IS NULL)");
+                $efd->whereRaw('NOT '.$this->snapshotExistsSql('efd_notas'));
             }
             $efd->whereNotExists(function ($q) use ($userId) {
                 $q->select(DB::raw(1))
@@ -979,6 +989,270 @@ class ClearanceController extends Controller
     }
 
     /**
+     * PDF do Panorama de Clearance (dashboard) — valor R$ por status, exposição bloqueante
+     * e cobertura por cliente sobre o acervo inteiro. Fonte única: ClearanceDashboardReportBuilder.
+     * Gate: entitlement `export` (rota).
+     */
+    public function exportarDashboardPdf(Request $request, \App\Services\Clearance\Export\ClearanceDashboardReportBuilder $builder)
+    {
+        if (! Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        $relatorio = $builder->montar(Auth::id());
+
+        return $this->comTokenDownload(
+            PdfReport::render('reports.clearance-dashboard', ['relatorio' => $relatorio], 'landscape')
+                ->download('panorama-clearance.pdf'),
+            $request
+        );
+    }
+
+    /** XLSX do Panorama de Clearance — mesma fonte do PDF (abas por seção + Resumo). */
+    public function exportarDashboardXlsx(Request $request, \App\Services\Clearance\Export\ClearanceDashboardReportBuilder $builder, \App\Services\Clearance\Export\ClearanceDashboardXlsxBuilder $xlsx)
+    {
+        if (! Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        if (! \App\Support\Reports\XlsxReport::disponivel()) {
+            abort(503, 'Exportação XLSX indisponível.');
+        }
+
+        $relatorio = $builder->montar(Auth::id());
+
+        return $this->comTokenDownload($xlsx->download($relatorio, 'panorama-clearance.xlsx'), $request);
+    }
+
+    /** CSV/ZIP do Panorama de Clearance — 1 CSV por seção (mesma fonte do PDF e do XLSX). */
+    public function exportarDashboardCsvZip(Request $request, \App\Services\Clearance\Export\ClearanceDashboardReportBuilder $builder, \App\Services\Clearance\Export\ClearanceDashboardCsvZipBuilder $zip)
+    {
+        if (! Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        $relatorio = $builder->montar(Auth::id());
+
+        return $this->comTokenDownload($zip->download($relatorio, 'panorama-clearance-csv.zip'), $request);
+    }
+
+    /** Custo em créditos de UMA consulta SINTEGRA (fonte paga). */
+    private function custoSintegraUnitario(): int
+    {
+        return (int) config('consultas.fontes.sintegra', 2);
+    }
+
+    /**
+     * Resolve os participantes SEM Inscrição Estadual alvos do enriquecimento SINTEGRA.
+     * Aceita ids explícitos (botão por documento) e/ou um lote inteiro (botão do topo —
+     * varre as contrapartes das notas do lote). Filtra por dono, CNPJ e IE ausente.
+     */
+    private function resolverParticipantesSemIe(int $userId, array $ids, ?int $loteId): Collection
+    {
+        $idsAlvo = $ids;
+
+        if ($loteId !== null) {
+            $lote = ConsultaLote::where('id', $loteId)->where('user_id', $userId)->first();
+            if ($lote) {
+                $resultados = $this->listarConsultasDfePorLote($userId, $lote->id);
+                $chaves = $resultados->pluck('chave_acesso')->filter()->unique()->values()->all();
+                $declarado = app(DivergenciaService::class)->buscarDeclaradoPorChave($userId, $chaves);
+                foreach ($declarado as $d) {
+                    if (empty($d['contraparte_ie']) && ! empty($d['contraparte_participante_id'])) {
+                        $idsAlvo[] = $d['contraparte_participante_id'];
+                    }
+                }
+            }
+        }
+
+        $idsAlvo = array_values(array_unique(array_filter(array_map('intval', $idsAlvo))));
+        if ($idsAlvo === []) {
+            return collect();
+        }
+
+        return Participante::where('user_id', $userId)
+            ->somenteCnpj()
+            ->whereIn('id', $idsAlvo)
+            ->where(fn ($q) => $q->whereNull('inscricao_estadual')->orWhere('inscricao_estadual', ''))
+            ->get(['id', 'documento', 'razao_social', 'uf', 'crt']);
+    }
+
+    /**
+     * Preview do custo do enriquecimento SINTEGRA (para o modal de confirmação).
+     * Não cobra nada — só resolve os alvos e devolve custo × saldo.
+     */
+    public function sintegraPreview(Request $request)
+    {
+        if (! Auth::check()) {
+            return response()->json(['success' => false, 'error' => 'Não autenticado.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $validated = $request->validate([
+            'participante_ids' => 'nullable|array|max:1000',
+            'participante_ids.*' => 'integer',
+            'lote_id' => 'nullable|integer',
+        ]);
+
+        $userId = (int) Auth::id();
+        $participantes = $this->resolverParticipantesSemIe(
+            $userId,
+            $validated['participante_ids'] ?? [],
+            $validated['lote_id'] ?? null
+        );
+
+        $total = $participantes->count();
+        $custo = $total * $this->custoSintegraUnitario();
+        $saldo = $this->creditService->getBalance(Auth::user());
+
+        return response()->json([
+            'success' => true,
+            'total' => $total,
+            'participante_ids' => $participantes->pluck('id')->values()->all(),
+            'custo_creditos' => $custo,
+            'saldo' => $saldo,
+            'suficiente' => $saldo >= $custo,
+        ]);
+    }
+
+    /**
+     * Executa o enriquecimento SINTEGRA: debita, cria lote sintegra-only (plano_id null) e
+     * dispara ProcessarConsultaJob com somenteFontes=['sintegra']. O estorno em falha fatal é
+     * automático (FecharLoteService, por fonte). Persiste em participantes.inscricao_estadual.
+     */
+    public function sintegraExecutar(Request $request)
+    {
+        if (! Auth::check()) {
+            return response()->json(['success' => false, 'error' => 'Não autenticado.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $validated = $request->validate([
+            'participante_ids' => 'nullable|array|max:1000',
+            'participante_ids.*' => 'integer',
+            'lote_id' => 'nullable|integer',
+            'tab_id' => 'nullable|string|max:36',
+        ]);
+
+        $user = Auth::user();
+        $userId = (int) $user->id;
+
+        if (! (bool) config('consultas.infosimples_ativo', false)) {
+            return response()->json(['success' => false, 'error' => 'Consulta SINTEGRA indisponível no momento.'], Response::HTTP_SERVICE_UNAVAILABLE);
+        }
+
+        $participantes = $this->resolverParticipantesSemIe(
+            $userId,
+            $validated['participante_ids'] ?? [],
+            $validated['lote_id'] ?? null
+        );
+
+        if ($participantes->isEmpty()) {
+            return response()->json(['success' => false, 'error' => 'Nenhum participante elegível (sem IE) para consultar.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $total = $participantes->count();
+        $custoTotal = $total * $this->custoSintegraUnitario();
+
+        if (! $this->creditService->hasEnough($user, $custoTotal)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Créditos insuficientes.',
+                'creditos_necessarios' => $custoTotal,
+                'creditos_disponiveis' => $this->creditService->getBalance($user),
+            ], Response::HTTP_PAYMENT_REQUIRED);
+        }
+
+        $tabId = $validated['tab_id'] ?: (string) Str::uuid();
+
+        try {
+            if (! $this->creditService->deduct($user, $custoTotal, 'consulta_lote', "SINTEGRA IE — {$total} participante(s)")) {
+                return response()->json(['success' => false, 'error' => 'Falha ao debitar créditos.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            $lote = ConsultaLote::create([
+                'user_id' => $userId,
+                'plano_id' => null,
+                'status' => ConsultaLote::STATUS_PROCESSANDO,
+                'total_participantes' => $total,
+                'creditos_cobrados' => $custoTotal,
+                'tab_id' => $tabId,
+            ]);
+            $lote->participantes()->attach($participantes->pluck('id')->all());
+
+            $jobs = $participantes->values()->map(fn ($p, $i) => new ProcessarConsultaJob(
+                loteId: $lote->id,
+                alvoTipo: 'participante',
+                alvoId: (int) $p->id,
+                userId: $userId,
+                tabId: $tabId,
+                consultasIncluidas: ['sintegra'],
+                alvo: [
+                    'cnpj' => preg_replace('/\D/', '', (string) $p->documento),
+                    'uf' => $p->uf,
+                    'crt' => $p->crt,
+                ],
+                etapas: [],
+                alvoIndice: $i + 1,
+                totalAlvos: $total,
+                somenteFontes: ['sintegra'],
+            ))->all();
+
+            Bus::batch($jobs)
+                ->name("sintegra-ie-{$lote->id}")
+                ->then(fn () => app(FecharLoteService::class)->fechar($lote->id, resumo: ['engine' => 'laravel', 'origem' => 'clearance_ie']))
+                ->dispatch();
+
+            return response()->json([
+                'success' => true,
+                'lote_id' => $lote->id,
+                'total' => $total,
+                'participante_ids' => $participantes->pluck('id')->values()->all(),
+                'custo_creditos' => $custoTotal,
+                'novo_saldo' => $this->creditService->getBalance($user),
+            ]);
+        } catch (\Throwable $e) {
+            if (isset($lote)) {
+                $lote->update(['status' => ConsultaLote::STATUS_ERRO, 'error_code' => 'INTERNAL_ERROR', 'error_message' => $e->getMessage()]);
+                $this->creditService->add($user, $custoTotal, 'consulta_refund', "Estorno SINTEGRA IE lote #{$lote->id}");
+            }
+            Log::error('Clearance SINTEGRA IE: exceção', ['user_id' => $userId, 'error' => $e->getMessage()]);
+
+            return response()->json(['success' => false, 'error' => 'Erro interno ao iniciar consulta.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Poll do enriquecimento: quantos dos participantes pedidos já têm IE preenchida.
+     * O frontend recarrega a página quando pendentes chega a 0.
+     */
+    public function sintegraStatus(Request $request)
+    {
+        if (! Auth::check()) {
+            return response()->json(['success' => false, 'error' => 'Não autenticado.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $validated = $request->validate([
+            'participante_ids' => 'required|array|max:1000',
+            'participante_ids.*' => 'integer',
+        ]);
+
+        $userId = (int) Auth::id();
+        $ids = array_values(array_unique(array_map('intval', $validated['participante_ids'])));
+
+        $prontos = Participante::where('user_id', $userId)
+            ->whereIn('id', $ids)
+            ->whereNotNull('inscricao_estadual')
+            ->where('inscricao_estadual', '!=', '')
+            ->count();
+
+        return response()->json([
+            'success' => true,
+            'total' => count($ids),
+            'prontos' => $prontos,
+            'pendentes' => max(0, count($ids) - $prontos),
+        ]);
+    }
+
+    /**
      * Monta o relatório executivo do lote (fonte única do PDF e do XLSX).
      *
      * @return array{0: ConsultaLote, 1: array}
@@ -1065,10 +1339,28 @@ class ClearanceController extends Controller
             'cliente_id' => $request->input('cliente_id'),
             'participante_cnpj' => $request->input('participante_cnpj'),
             'tipo_nota' => $request->input('tipo_nota'),
+            'modelo' => $request->input('modelo'),
+            'busca' => trim((string) $request->input('busca')) ?: null,
             'status_validacao' => $request->input('status_validacao', 'todos'),
             'situacao_receita' => $request->input('situacao_receita'),
         ];
     }
+
+    /**
+     * Mapeia a escolha canônica de modelo (55/65/57) para os valores reais
+     * gravados em cada acervo. XML guarda string ('NFE'), EFD guarda código ('55').
+     */
+    private const MODELO_MAP_XML = [
+        '55' => ['NFE', 'NF-E', '55'],
+        '65' => ['NFCE', 'NFC-E', '65'],
+        '57' => ['CTE', 'CT-E', '57', '67'],
+    ];
+
+    private const MODELO_MAP_EFD = [
+        '55' => ['55'],
+        '65' => ['65'],
+        '57' => ['57', '67'],
+    ];
 
     private function queryListagem(int $userId, array $f): Builder
     {
@@ -1094,13 +1386,13 @@ class ClearanceController extends Controller
         }
 
         if ($status === 'sem_situacao_receita') {
-            $xml->whereRaw("(xml_notas.validacao IS NULL OR xml_notas.validacao->>'situacao' IS NULL)");
+            $xml->whereRaw('NOT '.$this->snapshotExistsSql('xml_notas'));
         }
 
         $efd = $this->efdSubquery($userId, $f);
 
         if ($status === 'sem_situacao_receita') {
-            $efd->whereRaw("(efd_notas.validacao IS NULL OR efd_notas.validacao->>'situacao' IS NULL)");
+            $efd->whereRaw('NOT '.$this->snapshotExistsSql('efd_notas'));
         }
 
         $efd->whereNotExists(function ($q) use ($userId) {
@@ -1221,7 +1513,20 @@ class ClearanceController extends Controller
         }
 
         if (! empty($f['situacao_receita'])) {
-            $q->whereRaw("xml_notas.validacao->>'situacao' = ?", [$f['situacao_receita']]);
+            $q->whereRaw($this->snapshotStatusExistsSql('xml_notas'), [$f['situacao_receita'], $f['situacao_receita']]);
+        }
+
+        if (! empty($f['modelo'])) {
+            $vals = self::MODELO_MAP_XML[$f['modelo']] ?? [$f['modelo']];
+            $q->whereIn(DB::raw("UPPER(COALESCE(xml_notas.tipo_documento, ''))"), array_map('strtoupper', $vals));
+        }
+
+        if (! empty($f['busca'])) {
+            $b = '%'.$f['busca'].'%';
+            $q->where(function ($sub) use ($b) {
+                $sub->whereRaw('xml_notas.numero_documento::text ILIKE ?', [$b])
+                    ->orWhere('xml_notas.chave_acesso', 'ILIKE', $b);
+            });
         }
     }
 
@@ -1251,8 +1556,39 @@ class ClearanceController extends Controller
         }
 
         if (! empty($f['situacao_receita'])) {
-            $q->whereRaw("efd_notas.validacao->>'situacao' = ?", [$f['situacao_receita']]);
+            $q->whereRaw($this->snapshotStatusExistsSql('efd_notas'), [$f['situacao_receita'], $f['situacao_receita']]);
         }
+
+        if (! empty($f['modelo'])) {
+            $vals = self::MODELO_MAP_EFD[$f['modelo']] ?? [$f['modelo']];
+            $q->whereIn('efd_notas.modelo', $vals);
+        }
+
+        if (! empty($f['busca'])) {
+            $b = '%'.$f['busca'].'%';
+            $q->where(function ($sub) use ($b) {
+                $sub->whereRaw('efd_notas.numero::text ILIKE ?', [$b])
+                    ->orWhere('efd_notas.chave_acesso', 'ILIKE', $b);
+            });
+        }
+    }
+
+    /**
+     * Fragmento EXISTS contra o snapshot SEFAZ (nfe_consultas/cte_consultas) por chave.
+     * O campo validacao->>'situacao' nunca é escrito — a situação real vive nas snapshots.
+     * $notaTable é constante interna ('xml_notas'|'efd_notas'), sem risco de injeção.
+     */
+    private function snapshotExistsSql(string $notaTable): string
+    {
+        return "EXISTS (SELECT 1 FROM nfe_consultas s WHERE s.user_id = {$notaTable}.user_id AND s.chave_acesso = {$notaTable}.chave_acesso
+            UNION ALL SELECT 1 FROM cte_consultas s WHERE s.user_id = {$notaTable}.user_id AND s.chave_acesso = {$notaTable}.chave_acesso)";
+    }
+
+    /** Idem, filtrando por status específico (2 binds: nfe e cte). */
+    private function snapshotStatusExistsSql(string $notaTable): string
+    {
+        return "EXISTS (SELECT 1 FROM nfe_consultas s WHERE s.user_id = {$notaTable}.user_id AND s.chave_acesso = {$notaTable}.chave_acesso AND s.status = ?
+            UNION ALL SELECT 1 FROM cte_consultas s WHERE s.user_id = {$notaTable}.user_id AND s.chave_acesso = {$notaTable}.chave_acesso AND s.status = ?)";
     }
 
     private function modeloBadge(?string $codigo): array
@@ -1435,7 +1771,7 @@ class ClearanceController extends Controller
                 ->where('user_id', $userId)
                 ->firstOrFail();
 
-            return redirect('/app/notas?chave='.$efdNota->chave_acesso);
+            return redirect('/app/notas?busca='.$efdNota->chave_acesso);
         }
 
         $nota = XmlNota::where('id', $id)
@@ -1728,8 +2064,11 @@ class ClearanceController extends Controller
                 consulta.data_emissao,
                 consulta.emit_nome,
                 consulta.emit_cnpj,
+                consulta.emit_uf,
+                consulta.emit_ie,
                 consulta.dest_nome,
                 consulta.dest_cnpj,
+                consulta.dest_uf,
                 NULL::varchar as tomador_nome,
                 NULL::varchar as tomador_cnpj,
                 consulta.natureza_operacao,
@@ -1759,8 +2098,11 @@ class ClearanceController extends Controller
                 consulta.data_emissao,
                 consulta.emit_nome,
                 consulta.emit_cnpj,
+                consulta.emit_uf,
+                consulta.emit_ie,
                 consulta.dest_nome,
                 consulta.dest_cnpj,
+                consulta.dest_uf,
                 consulta.tomador_nome,
                 consulta.tomador_cnpj,
                 consulta.natureza_operacao,

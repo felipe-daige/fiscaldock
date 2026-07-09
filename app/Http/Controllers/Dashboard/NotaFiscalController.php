@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Concerns\RespondeAjax;
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
+use App\Models\CteConsulta;
 use App\Models\EfdImportacao;
 use App\Models\EfdNota;
+use App\Models\NfeConsulta;
 use App\Models\Participante;
 use App\Models\XmlNota;
 use App\Services\NotaFiscalService;
@@ -103,6 +105,9 @@ class NotaFiscalController extends Controller
                 return response('Nota não encontrada', 404);
             }
 
+            $consulta = $this->consultaSnapshot($userId, $nota->chave_acesso);
+            $auditoria = $this->auditoriaSnapshot($userId, $consulta);
+
             if ($this->isAjaxRequest($request)) {
                 // Drill-down da listagem pede o card compacto (header X-Nota-Detalhe: inline).
                 // Navegação SPA (data-link) serve a página cheia, idêntica ao reload direto.
@@ -110,12 +115,14 @@ class NotaFiscalController extends Controller
                     ? 'autenticado.notas.partials.efd-inline'
                     : 'autenticado.importacao.efd-nota';
 
-                return view($view, compact('nota'));
+                return view($view, compact('nota', 'consulta', 'auditoria'));
             }
 
             return view(self::AUTH_LAYOUT_VIEW, [
                 'initialView' => 'autenticado.importacao.efd-nota',
                 'nota' => $nota,
+                'consulta' => $consulta,
+                'auditoria' => $auditoria,
             ]);
         }
 
@@ -129,17 +136,22 @@ class NotaFiscalController extends Controller
                 return response('Nota não encontrada', 404);
             }
 
+            $consulta = $this->consultaSnapshot($userId, $nota->chave_acesso);
+            $auditoria = $this->auditoriaSnapshot($userId, $consulta);
+
             if ($this->isAjaxRequest($request)) {
                 $view = $this->querDetalheInline($request)
                     ? 'autenticado.notas.partials.xml-inline'
                     : 'autenticado.notas.xml-nota';
 
-                return view($view, compact('nota'));
+                return view($view, compact('nota', 'consulta', 'auditoria'));
             }
 
             return view(self::AUTH_LAYOUT_VIEW, [
                 'initialView' => 'autenticado.notas.xml-nota',
                 'nota' => $nota,
+                'consulta' => $consulta,
+                'auditoria' => $auditoria,
             ]);
         }
 
@@ -153,6 +165,47 @@ class NotaFiscalController extends Controller
     private function querDetalheInline(Request $request): bool
     {
         return $request->header('X-Nota-Detalhe') === 'inline';
+    }
+
+    /**
+     * Snapshot da última consulta SEFAZ/Clearance daquela nota, por (user_id, chave_acesso).
+     * NF-e/NFC-e caem em nfe_consultas; CT-e em cte_consultas (UNIQUE por chave → no máx. 1).
+     */
+    private function consultaSnapshot(int $userId, ?string $chave): ?object
+    {
+        if (! $chave) {
+            return null;
+        }
+
+        $nfe = NfeConsulta::where('user_id', $userId)->where('chave_acesso', $chave)->first();
+        if ($nfe) {
+            $nfe->tipo_snapshot = 'nfe';
+
+            return $nfe;
+        }
+
+        $cte = CteConsulta::where('user_id', $userId)->where('chave_acesso', $chave)->first();
+        if ($cte) {
+            $cte->tipo_snapshot = 'cte';
+
+            return $cte;
+        }
+
+        return null;
+    }
+
+    /**
+     * Auditoria Declarado × SEFAZ do snapshot (mesma engine canônica do clearance em lote).
+     * Confronta a contraparte contra emit/dest do SEFAZ tolerando máscara — não emit=emit fixo.
+     */
+    private function auditoriaSnapshot(int $userId, ?object $consulta): ?array
+    {
+        if (! $consulta) {
+            return null;
+        }
+
+        return app(\App\Services\Clearance\DivergenciaService::class)
+            ->auditarUmDocumento($userId, $consulta);
     }
 
     /**
