@@ -7,10 +7,13 @@ use Barryvdh\DomPDF\PDF as DomPDF;
 
 final class PdfReport
 {
+    /**
+     * O parametro $orientacao fica por compatibilidade; a regra atual e todo PDF em A4 retrato.
+     */
     public static function render(string $view, array $dados = [], string $orientacao = 'portrait'): DomPDF
     {
         return Pdf::loadView($view, $dados)
-            ->setPaper('a4', $orientacao)
+            ->setPaper('a4', 'portrait')
             ->setOptions([
                 'isPhpEnabled' => true,          // habilita o script de numeração de página
                 'isHtml5ParserEnabled' => true,

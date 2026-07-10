@@ -1518,7 +1518,7 @@ class ParticipanteController extends Controller
         }
 
         return $this->comTokenDownload(
-            \App\Support\PdfReport::render('reports.participantes-listagem', $dados, 'landscape')
+            \App\Support\PdfReport::render('reports.participantes-listagem', $dados)
                 ->download('participantes_'.now()->format('Ymd_Hi').'.pdf'),
             $request
         );

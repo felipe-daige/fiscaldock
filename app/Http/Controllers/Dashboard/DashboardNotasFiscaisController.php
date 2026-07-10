@@ -133,7 +133,7 @@ class DashboardNotasFiscaisController extends Controller
         $relatorio = $builder->montar(Auth::id(), $this->parseFiltros($request));
 
         return $this->comTokenDownload(
-            PdfReport::render('reports.notas-dashboard', ['relatorio' => $relatorio], 'landscape')
+            PdfReport::render('reports.notas-dashboard', ['relatorio' => $relatorio])
                 ->download($this->nomeBase($relatorio).'.pdf'),
             $request
         );

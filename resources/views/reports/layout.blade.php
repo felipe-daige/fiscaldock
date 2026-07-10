@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>@yield('titulo', 'Relatório FiscalDock')</title>
     <style>
-        @page { margin: 88px 32px 52px 32px; }
+        @page { size: A4 portrait; margin: 88px 32px 52px 32px; }
         /* dompdf 3.x: resetar margin/padding em `*` OU em html/body ZERA a margem do @page
            (conteúdo full-bleed colide com o header fixo). Resetar só tags internas — nunca html/body. */
         * { box-sizing:border-box; }
@@ -32,10 +32,12 @@
         .right { text-align:right; }
         .center { text-align:center; }
         /* Tabela padrão: th claro com régua slate, td hairline, zebra leve */
-        .table th { background:#f9fafb; border-bottom:1.5px solid #1f2937; padding:6px 5px; text-align:left; font-size:7.5px; color:#6b7280; text-transform:uppercase; letter-spacing:.08em; }
+        .table { table-layout:fixed; }
+        .table th { background:#f9fafb; border-bottom:1.5px solid #1f2937; padding:5px 4px; text-align:left; font-size:7px; color:#6b7280; text-transform:uppercase; letter-spacing:.08em; word-wrap:break-word; overflow-wrap:anywhere; }
         .table th.right { text-align:right; }
         .table th.center { text-align:center; }
-        .table td { border-bottom:1px solid #f3f4f6; padding:5px; vertical-align:top; font-size:8px; color:#374151; }
+        .table td { border-bottom:1px solid #f3f4f6; padding:4px; vertical-align:top; font-size:7.5px; color:#374151; word-wrap:break-word; overflow-wrap:anywhere; }
+        .table .mono { word-break:break-all; }
         .table tbody tr:nth-child(even) td { background:#fbfbfc; }
         /* Card padrão: hairline + faixa-topo slate (sem caixa pesada) */
         .card-slate { border:1px solid #e5e7eb; border-top:2px solid #1f2937; padding:8px 10px; }

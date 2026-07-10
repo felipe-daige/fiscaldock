@@ -1002,7 +1002,7 @@ class ClearanceController extends Controller
         $relatorio = $builder->montar(Auth::id());
 
         return $this->comTokenDownload(
-            PdfReport::render('reports.clearance-dashboard', ['relatorio' => $relatorio], 'landscape')
+            PdfReport::render('reports.clearance-dashboard', ['relatorio' => $relatorio])
                 ->download('panorama-clearance.pdf'),
             $request
         );

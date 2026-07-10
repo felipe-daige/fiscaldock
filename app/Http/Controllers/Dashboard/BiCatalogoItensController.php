@@ -180,7 +180,7 @@ class BiCatalogoItensController extends Controller
             'geradoEm' => now(),
         ];
 
-        $pdf = PdfReport::render('autenticado.bi.catalogo-itens-pdf', $dados, 'landscape');
+        $pdf = PdfReport::render('autenticado.bi.catalogo-itens-pdf', $dados);
 
         return $this->comTokenDownload(
             $pdf->download('catalogo-itens-'.now()->format('Ymd-His').'.pdf'),

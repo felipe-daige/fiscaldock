@@ -135,7 +135,7 @@ class CatalogoController extends Controller
         $relatorio = $builder->montar((int) Auth::id(), $this->parseFiltros($request));
 
         return $this->comTokenDownload(
-            PdfReport::render('reports.catalogo', ['relatorio' => $relatorio], 'landscape')
+            PdfReport::render('reports.catalogo', ['relatorio' => $relatorio])
                 ->download($this->nomeBase($request).'.pdf'),
             $request
         );

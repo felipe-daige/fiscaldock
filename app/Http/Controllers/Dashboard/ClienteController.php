@@ -606,7 +606,7 @@ class ClienteController extends Controller
         }
 
         return $this->comTokenDownload(
-            \App\Support\PdfReport::render('reports.clientes-listagem', $dados, 'landscape')
+            \App\Support\PdfReport::render('reports.clientes-listagem', $dados)
                 ->download('clientes_'.now()->format('Ymd_Hi').'.pdf'),
             $request
         );
