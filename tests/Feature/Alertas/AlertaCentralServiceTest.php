@@ -9,7 +9,7 @@ use App\Models\User;
 use App\Services\AlertaCentralService;
 
 beforeEach(function () {
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->trialAtivo()->create();
     $this->actingAs($this->user);
     $this->service = app(AlertaCentralService::class);
 });

@@ -101,9 +101,9 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     Route::post('/app/alertas/{id}/status', [DashboardController::class, 'alertasMarcarStatus'])->name('app.alertas.status');
     Route::post('/app/alertas/status-lote', [DashboardController::class, 'alertasMarcarStatusLote'])->name('app.alertas.status-lote');
     Route::post('/app/alertas/recalcular', [DashboardController::class, 'alertasRecalcular'])->name('app.alertas.recalcular');
-    Route::get('/app/alertas/exportar-pdf', [DashboardController::class, 'alertasExportarPdf'])->name('app.alertas.exportar');
-    Route::get('/app/alertas/exportar-csv', [DashboardController::class, 'alertasExportarCsv'])->name('app.alertas.exportar-csv');
-    Route::get('/app/alertas/exportar-xlsx', [DashboardController::class, 'alertasExportarXlsx'])->name('app.alertas.exportar-xlsx');
+    Route::get('/app/alertas/exportar-pdf', [DashboardController::class, 'alertasExportarPdf'])->middleware(RequiresEntitlement::class.':export')->name('app.alertas.exportar');
+    Route::get('/app/alertas/exportar-csv', [DashboardController::class, 'alertasExportarCsv'])->middleware(RequiresEntitlement::class.':export,csv')->name('app.alertas.exportar-csv');
+    Route::get('/app/alertas/exportar-xlsx', [DashboardController::class, 'alertasExportarXlsx'])->middleware(RequiresEntitlement::class.':export,excel')->name('app.alertas.exportar-xlsx');
     Route::get('/app/alertas/historico', [DashboardController::class, 'alertasHistorico'])->name('app.alertas.historico');
     Route::get('/app/alertas/{id}', [DashboardController::class, 'alertaDetalhes'])->whereNumber('id')->name('app.alertas.show');
 
@@ -153,9 +153,9 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     Route::get('/app/clientes/todos-ids', [ClienteController::class, 'todosIds'])->name('app.clientes.todos-ids');
     Route::delete('/app/clientes/bulk-delete', [ClienteController::class, 'bulkDestroy'])->name('app.clientes.bulk-delete');
     Route::post('/app/clientes/dossie-lote', [ClienteController::class, 'dossieLote'])->name('app.clientes.dossie-lote');
-    Route::post('/app/clientes/exportar-pdf', [ClienteController::class, 'exportarPdf'])->name('app.clientes.exportar-pdf');
-    Route::post('/app/clientes/exportar-xlsx', [ClienteController::class, 'exportarXlsx'])->name('app.clientes.exportar-xlsx');
-    Route::post('/app/clientes/exportar-csv', [ClienteController::class, 'exportarCsv'])->name('app.clientes.exportar-csv');
+    Route::post('/app/clientes/exportar-pdf', [ClienteController::class, 'exportarPdf'])->middleware(RequiresEntitlement::class.':export')->name('app.clientes.exportar-pdf');
+    Route::post('/app/clientes/exportar-xlsx', [ClienteController::class, 'exportarXlsx'])->middleware(RequiresEntitlement::class.':export,excel')->name('app.clientes.exportar-xlsx');
+    Route::post('/app/clientes/exportar-csv', [ClienteController::class, 'exportarCsv'])->middleware(RequiresEntitlement::class.':export,csv')->name('app.clientes.exportar-csv');
     Route::get('/app/cliente/{id}/editar', [ClienteController::class, 'edit'])->name('app.cliente.edit');
     Route::put('/app/cliente/{id}', [ClienteController::class, 'update'])->name('app.cliente.update');
     Route::delete('/app/cliente/{id}', [ClienteController::class, 'destroy'])->name('app.cliente.destroy');
@@ -171,9 +171,9 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         Route::get('/participantes/todos-ids', [ParticipanteController::class, 'todosIds'])->name('participantes.todos-ids');
         Route::delete('/participantes/bulk-delete', [ParticipanteController::class, 'bulkExcluir'])->name('participantes.bulk-delete');
         Route::post('/participantes/dossie-lote', [ParticipanteController::class, 'dossieLote'])->name('participantes.dossie-lote');
-        Route::post('/participantes/exportar-pdf', [ParticipanteController::class, 'exportarPdf'])->name('participantes.exportar-pdf');
-        Route::post('/participantes/exportar-xlsx', [ParticipanteController::class, 'exportarXlsx'])->name('participantes.exportar-xlsx');
-        Route::post('/participantes/exportar-csv', [ParticipanteController::class, 'exportarCsv'])->name('participantes.exportar-csv');
+        Route::post('/participantes/exportar-pdf', [ParticipanteController::class, 'exportarPdf'])->middleware(RequiresEntitlement::class.':export')->name('participantes.exportar-pdf');
+        Route::post('/participantes/exportar-xlsx', [ParticipanteController::class, 'exportarXlsx'])->middleware(RequiresEntitlement::class.':export,excel')->name('participantes.exportar-xlsx');
+        Route::post('/participantes/exportar-csv', [ParticipanteController::class, 'exportarCsv'])->middleware(RequiresEntitlement::class.':export,csv')->name('participantes.exportar-csv');
         Route::post('/participantes/associar-grupo', [ParticipanteGrupoController::class, 'associar'])->name('participantes.associar-grupo');
         Route::get('/participantes/por-importacao/{id}', [ParticipanteController::class, 'porImportacao'])->name('participantes.por-importacao');
         Route::post('/participantes/por-ids', [ParticipanteController::class, 'porIds'])->name('participantes.por-ids');
@@ -217,6 +217,10 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         // Freio de consumo do auto-monitor (§6.2) — o contador define o teto de gasto por ciclo
         Route::post('/limite-consumo', [MonitoramentoController::class, 'definirLimiteConsumo'])->name('limite-consumo');
 
+        // Reconciliação de downgrade: usuário escolhe quais CNPJs manter quando o tier novo
+        // comporta menos monitorados que os ativos (excedente vira pausa automática).
+        Route::post('/reconciliar-limite', [MonitoramentoController::class, 'reconciliarLimite'])->name('reconciliar-limite');
+
         // Assinaturas
         Route::post('/assinatura', [MonitoramentoController::class, 'criarAssinatura'])->name('assinatura.criar');
         Route::post('/assinatura/{id}/pausar', [MonitoramentoController::class, 'pausarAssinatura'])->name('assinatura.pausar');
@@ -242,7 +246,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         Route::get('/efd/notas', [EfdImportacaoController::class, 'notasPorIds'])->name('efd.notas.por-ids');
         Route::get('/efd/notas-participante', [EfdImportacaoController::class, 'notasPorParticipante'])->name('efd.notas.por-participante');
         Route::get('/efd/{id}', [EfdImportacaoController::class, 'show'])->name('efd.detalhes');
-        Route::get('/efd/{id}/exportar', [EfdImportacaoController::class, 'exportar'])->name('efd.exportar');
+        Route::get('/efd/{id}/exportar', [EfdImportacaoController::class, 'exportar'])->middleware(RequiresEntitlement::class.':export,csv')->name('efd.exportar');
         Route::get('/efd/{id}/preview-exclusao', [EfdImportacaoController::class, 'previewExclusao'])->name('efd.preview-exclusao');
         Route::delete('/efd/{id}', [EfdImportacaoController::class, 'destroy'])->name('efd.destroy');
 
@@ -280,9 +284,9 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     Route::get('app/notas/dashboard/exportar-pdf', [DashboardNotasFiscaisController::class, 'exportarPdf'])
         ->middleware(RequiresEntitlement::class.':export')->name('app.notas.dashboard.exportar-pdf');
     Route::get('app/notas/dashboard/exportar-xlsx', [DashboardNotasFiscaisController::class, 'exportarXlsx'])
-        ->middleware(RequiresEntitlement::class.':export')->name('app.notas.dashboard.exportar-xlsx');
+        ->middleware(RequiresEntitlement::class.':export,excel')->name('app.notas.dashboard.exportar-xlsx');
     Route::get('app/notas/dashboard/exportar-csv-zip', [DashboardNotasFiscaisController::class, 'exportarCsvZip'])
-        ->middleware(RequiresEntitlement::class.':export')->name('app.notas.dashboard.exportar-csv-zip');
+        ->middleware(RequiresEntitlement::class.':export,csv')->name('app.notas.dashboard.exportar-csv-zip');
 
     // Painel Fiscal por Competência
     Route::get('app/resumo-fiscal', [ResumoFiscalController::class, 'index'])->name('app.resumo-fiscal');
@@ -290,11 +294,11 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     Route::get('app/resumo-fiscal/resumo-executivo', [ResumoFiscalController::class, 'resumoExecutivo'])->name('app.resumo-fiscal.resumo-executivo');
     Route::get('app/resumo-fiscal/a-recolher', [ResumoFiscalController::class, 'aRecolher'])->name('app.resumo-fiscal.a-recolher');
     Route::get('app/resumo-fiscal/exportar', [ResumoFiscalController::class, 'exportar'])
-        ->middleware(RequiresEntitlement::class.':export')->name('app.resumo-fiscal.exportar');
+        ->middleware(RequiresEntitlement::class.':export,csv')->name('app.resumo-fiscal.exportar');
     Route::get('app/resumo-fiscal/exportar-pdf', [ResumoFiscalController::class, 'exportarPdf'])
         ->middleware(RequiresEntitlement::class.':export')->name('app.resumo-fiscal.exportar-pdf');
     Route::get('app/resumo-fiscal/exportar-xlsx', [ResumoFiscalController::class, 'exportarXlsx'])
-        ->middleware(RequiresEntitlement::class.':export')->name('app.resumo-fiscal.exportar-xlsx');
+        ->middleware(RequiresEntitlement::class.':export,excel')->name('app.resumo-fiscal.exportar-xlsx');
     Route::get('app/resumo-fiscal/apuracao-icms', [ResumoFiscalController::class, 'apuracaoIcms'])->name('app.resumo-fiscal.apuracao-icms');
     Route::get('app/resumo-fiscal/apuracao-pis-cofins', [ResumoFiscalController::class, 'apuracaoPisCofins'])->name('app.resumo-fiscal.apuracao-pis-cofins');
     Route::get('app/resumo-fiscal/retencoes', [ResumoFiscalController::class, 'retencoesFonte'])->name('app.resumo-fiscal.retencoes');
@@ -306,33 +310,33 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     Route::prefix('app/bi')->name('app.bi.')->group(function () {
         Route::get('/faturamento', [BiController::class, 'faturamento'])->name('faturamento');
         Route::get('/compras', [BiController::class, 'compras'])->name('compras');
-        Route::get('/tributos', [BiController::class, 'tributos'])->name('tributos');
+        Route::get('/tributos', [BiController::class, 'tributos'])->middleware(RequiresEntitlement::class.':bi_completo')->name('tributos');
         Route::get('/resumo', [BiController::class, 'resumo'])->name('resumo');
         Route::get('/efd', [BiController::class, 'efd'])->name('efd');
         Route::get('/participantes', [BiController::class, 'participantes'])->name('participantes');
         Route::get('/participantes/{id}/ficha', [BiController::class, 'fichaParticipante'])->name('participantes.ficha');
-        Route::get('/riscos', [BiController::class, 'riscos'])->name('riscos');
-        Route::get('/tributario-efd', [BiController::class, 'tributarioEfd'])->name('tributario-efd');
-        Route::get('/apuracao-notas', [BiController::class, 'apuracaoNotas'])->name('apuracao-notas');
-        Route::get('/cfop', [BiController::class, 'cfop'])->name('cfop');
+        Route::get('/riscos', [BiController::class, 'riscos'])->middleware(RequiresEntitlement::class.':bi_completo')->name('riscos');
+        Route::get('/tributario-efd', [BiController::class, 'tributarioEfd'])->middleware(RequiresEntitlement::class.':bi_completo')->name('tributario-efd');
+        Route::get('/apuracao-notas', [BiController::class, 'apuracaoNotas'])->middleware(RequiresEntitlement::class.':bi_completo')->name('apuracao-notas');
+        Route::get('/cfop', [BiController::class, 'cfop'])->middleware(RequiresEntitlement::class.':bi_completo')->name('cfop');
         Route::get('/exportar', [BiController::class, 'exportar'])
-            ->middleware(RequiresEntitlement::class.':export')->name('exportar');
+            ->middleware(RequiresEntitlement::class.':export,csv')->name('exportar');
         Route::get('/exportar-xlsx', [BiController::class, 'exportarXlsx'])
-            ->middleware(RequiresEntitlement::class.':export')->name('exportar-xlsx');
+            ->middleware(RequiresEntitlement::class.':export,excel')->name('exportar-xlsx');
         Route::get('/exportar-pdf', [BiController::class, 'exportarPdf'])
             ->middleware(RequiresEntitlement::class.':export')->name('exportar-pdf');
         Route::get('/exportar-csv-zip', [BiController::class, 'exportarCsvZip'])
-            ->middleware(RequiresEntitlement::class.':export')->name('exportar-csv-zip');
-        Route::get('/catalogo-itens', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'index'])->name('catalogo-itens');
+            ->middleware(RequiresEntitlement::class.':export,csv')->name('exportar-csv-zip');
+        Route::get('/catalogo-itens', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'index'])->middleware(RequiresEntitlement::class.':bi_completo')->name('catalogo-itens');
         Route::get('/catalogo-itens/exportar', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'exportarCsv'])
-            ->middleware(RequiresEntitlement::class.':export')->name('catalogo-itens.exportar');
+            ->middleware(RequiresEntitlement::class.':export,csv')->name('catalogo-itens.exportar');
         Route::get('/catalogo-itens/exportar-pdf', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'exportarPdf'])
             ->middleware(RequiresEntitlement::class.':export')->name('catalogo-itens.exportar-pdf');
         Route::get('/catalogo-itens/exportar-xlsx', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'exportarXlsx'])
-            ->middleware(RequiresEntitlement::class.':export')->name('catalogo-itens.exportar-xlsx');
-        Route::post('/catalogo-itens/alerta/descartar', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'descartarAlerta'])->name('catalogo-itens.descartar');
-        Route::post('/catalogo-itens/alerta/restaurar', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'restaurarAlerta'])->name('catalogo-itens.restaurar');
-        Route::get('/cruzamentos', [\App\Http\Controllers\Dashboard\BiCruzamentosController::class, 'index'])->name('cruzamentos');
+            ->middleware(RequiresEntitlement::class.':export,excel')->name('catalogo-itens.exportar-xlsx');
+        Route::post('/catalogo-itens/alerta/descartar', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'descartarAlerta'])->middleware(RequiresEntitlement::class.':bi_completo')->name('catalogo-itens.descartar');
+        Route::post('/catalogo-itens/alerta/restaurar', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'restaurarAlerta'])->middleware(RequiresEntitlement::class.':bi_completo')->name('catalogo-itens.restaurar');
+        Route::get('/cruzamentos', [\App\Http\Controllers\Dashboard\BiCruzamentosController::class, 'index'])->middleware(RequiresEntitlement::class.':bi_completo')->name('cruzamentos');
     });
 
     // Score Fiscal (Score de Regularidade) — alimentado pelos scores persistidos a cada lote de consulta
@@ -350,9 +354,9 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         Route::get('/dashboard/exportar-pdf', [ClearanceController::class, 'exportarDashboardPdf'])
             ->middleware(RequiresEntitlement::class.':export')->name('dashboard.exportar-pdf');
         Route::get('/dashboard/exportar-xlsx', [ClearanceController::class, 'exportarDashboardXlsx'])
-            ->middleware(RequiresEntitlement::class.':export')->name('dashboard.exportar-xlsx');
+            ->middleware(RequiresEntitlement::class.':export,excel')->name('dashboard.exportar-xlsx');
         Route::get('/dashboard/exportar-csv-zip', [ClearanceController::class, 'exportarDashboardCsvZip'])
-            ->middleware(RequiresEntitlement::class.':export')->name('dashboard.exportar-csv-zip');
+            ->middleware(RequiresEntitlement::class.':export,csv')->name('dashboard.exportar-csv-zip');
         Route::get('/notas', [ClearanceController::class, 'notas'])->name('notas');
         Route::get('/notas/todos-ids', [ClearanceController::class, 'todosIds'])->name('todos-ids');
         Route::post('/notas/validar', [ClearanceController::class, 'validarNotas'])
@@ -361,7 +365,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         Route::get('/notas/resultado/{consultaLoteId}/pdf', [ClearanceController::class, 'resultadoPdf'])
             ->middleware(RequiresEntitlement::class.':export')->name('notas.resultado-pdf');
         Route::get('/notas/resultado/{consultaLoteId}/xlsx', [ClearanceController::class, 'resultadoXlsx'])
-            ->middleware(RequiresEntitlement::class.':export')->name('notas.resultado-xlsx');
+            ->middleware(RequiresEntitlement::class.':export,excel')->name('notas.resultado-xlsx');
         Route::post('/sintegra/preview', [ClearanceController::class, 'sintegraPreview'])->name('sintegra.preview');
         Route::post('/sintegra/executar', [ClearanceController::class, 'sintegraExecutar'])->name('sintegra.executar');
         Route::post('/sintegra/status', [ClearanceController::class, 'sintegraStatus'])->name('sintegra.status');
@@ -381,9 +385,9 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     Route::get('app/catalogo/exportar-pdf', [CatalogoController::class, 'exportarPdf'])
         ->middleware(RequiresEntitlement::class.':export')->name('app.catalogo.exportar-pdf');
     Route::get('app/catalogo/exportar-xlsx', [CatalogoController::class, 'exportarXlsx'])
-        ->middleware(RequiresEntitlement::class.':export')->name('app.catalogo.exportar-xlsx');
+        ->middleware(RequiresEntitlement::class.':export,excel')->name('app.catalogo.exportar-xlsx');
     Route::get('app/catalogo/exportar-csv-zip', [CatalogoController::class, 'exportarCsvZip'])
-        ->middleware(RequiresEntitlement::class.':export')->name('app.catalogo.exportar-csv-zip');
+        ->middleware(RequiresEntitlement::class.':export,csv')->name('app.catalogo.exportar-csv-zip');
     Route::get('app/catalogo/historico/{codItem}', [CatalogoController::class, 'historico'])
         ->where('codItem', '.*')->name('app.catalogo.historico');
 
@@ -421,6 +425,14 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
             Route::get('/', [\App\Http\Controllers\Dashboard\AdminComercialController::class, 'index'])->name('index');
             Route::post('/{chave}', [\App\Http\Controllers\Dashboard\AdminComercialController::class, 'update'])->name('update');
             Route::post('/{chave}/reset', [\App\Http\Controllers\Dashboard\AdminComercialController::class, 'reset'])->name('reset');
+        });
+
+    // Painel admin — CRUD dos planos de assinatura (subscription_plans, somente operador FiscalDock)
+    Route::prefix('app/admin/planos')->name('app.admin.planos.')
+        ->middleware(\App\Http\Middleware\EnsureAdmin::class)->group(function () {
+            Route::get('/', [\App\Http\Controllers\Dashboard\AdminPlanosController::class, 'index'])->name('index');
+            Route::get('/{id}/editar', [\App\Http\Controllers\Dashboard\AdminPlanosController::class, 'edit'])->name('edit')->where('id', '[0-9]+');
+            Route::post('/{id}', [\App\Http\Controllers\Dashboard\AdminPlanosController::class, 'update'])->name('update')->where('id', '[0-9]+');
         });
 
     // Impersonação — sair (fora do EnsureAdmin: sessão vira do alvo não-admin durante impersonação)

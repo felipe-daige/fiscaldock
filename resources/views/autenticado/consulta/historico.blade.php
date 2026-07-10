@@ -25,6 +25,12 @@
             </a>
         </div>
 
+        @if(($retencaoMeses ?? null) !== null)
+            <div class="bg-white rounded border border-gray-300 border-l-4 mb-4 p-3 text-xs text-gray-600" style="border-left-color: #b45309">
+                Seu plano exibe o histórico dos últimos <strong>{{ $retencaoMeses }} meses</strong>. Consultas mais antigas continuam guardadas e voltam a aparecer ao fazer upgrade. <a href="/app/plano" data-link class="font-semibold underline text-gray-700">Ver planos</a>
+            </div>
+        @endif
+
         <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo Operacional</span>

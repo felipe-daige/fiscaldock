@@ -306,6 +306,12 @@
                             </svg>
                             <span class="sidebar__item-label">Admin — Comercial</span>
                         </a>
+                        <a href="/app/admin/planos" data-link data-sidebar-user-link class="sidebar__user-menu-item">
+                            <svg class="sidebar__user-menu-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10M4 18h10"></path>
+                            </svg>
+                            <span class="sidebar__item-label">Admin — Planos</span>
+                        </a>
                     @endif
                 </div>
             </details>

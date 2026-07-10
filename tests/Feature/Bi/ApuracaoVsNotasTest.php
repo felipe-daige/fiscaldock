@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 it('soma declarado bruto por mes a partir das apuracoes', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->trialAtivo()->create();
     $userId = $user->id;
 
     $clienteId = \DB::table('clientes')->insertGetId([
@@ -37,7 +37,7 @@ it('soma declarado bruto por mes a partir das apuracoes', function () {
 });
 
 it('cruza declarado x computado por mes com delta e flag', function () {
-    $user = \App\Models\User::factory()->create();
+    $user = \App\Models\User::factory()->trialAtivo()->create();
     $userId = $user->id;
     $clienteId = \DB::table('clientes')->insertGetId([
         'user_id' => $userId, 'documento' => '00000000000191', 'razao_social' => 'Empresa Teste',
@@ -62,13 +62,13 @@ it('cruza declarado x computado por mes com delta e flag', function () {
 });
 
 it('endpoint apuracao-notas responde json autenticado', function () {
-    $user = \App\Models\User::factory()->create();
+    $user = \App\Models\User::factory()->trialAtivo()->create();
     $res = $this->actingAs($user)->getJson('/app/bi/apuracao-notas');
     $res->assertOk()->assertJsonStructure(['mensal', 'totais' => ['icms', 'pis', 'cofins']]);
 });
 
 it('marca PIS/COFINS como sem_dado no mes sem apuracao de contribuicoes', function () {
-    $user = \App\Models\User::factory()->create();
+    $user = \App\Models\User::factory()->trialAtivo()->create();
     $userId = $user->id;
     $clienteId = \DB::table('clientes')->insertGetId([
         'user_id' => $userId, 'documento' => '00000000000191', 'razao_social' => 'Empresa Teste',

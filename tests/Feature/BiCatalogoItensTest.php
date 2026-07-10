@@ -12,7 +12,7 @@ uses(RefreshDatabase::class);
 
 function seedBiUser(): array
 {
-    $user = User::factory()->create();
+    $user = User::factory()->trialAtivo()->create();
     $clienteId = DB::table('clientes')->insertGetId([
         'user_id' => $user->id, 'razao_social' => 'EMPRESA', 'documento' => '00000000000100',
         'is_empresa_propria' => true, 'created_at' => now(), 'updated_at' => now(),

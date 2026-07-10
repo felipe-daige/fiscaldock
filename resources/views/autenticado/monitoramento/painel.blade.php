@@ -39,6 +39,87 @@
         </div>
     </div>
 
+    @if(!empty($reconciliacaoDowngrade))
+        @php $_rec = $reconciliacaoDowngrade; @endphp
+        <div class="bg-white rounded border border-gray-300 border-l-4 p-4" style="border-left-color: #d97706">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h2 class="text-sm font-bold text-gray-900">Ajuste de plano necessário</h2>
+                    <p class="text-xs text-gray-600 mt-0.5">
+                        Seu plano atual permite monitorar até <span class="font-semibold">{{ $_rec['cap'] }}</span> CNPJ(s), mas você tem <span class="font-semibold">{{ $_rec['ocupados'] }}</span> ativos.
+                        Escolha quais manter — os demais ficam pausados (dados preservados) e podem ser reativados depois.
+                    </p>
+                </div>
+                <button type="button" onclick="document.getElementById('modal-reconciliar').classList.remove('hidden')"
+                    class="inline-flex items-center justify-center gap-2 rounded px-4 py-2 text-xs font-bold uppercase tracking-wide text-white transition hover:opacity-90 whitespace-nowrap" style="background-color: #b45309">
+                    Escolher CNPJs
+                </button>
+            </div>
+        </div>
+
+        <div id="modal-reconciliar" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div class="bg-white rounded border border-gray-300 w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-200">
+                    <h3 class="text-sm font-bold text-gray-900">Manter monitorados ativos</h3>
+                    <p class="text-[11px] text-gray-500 mt-0.5">Selecione até <span class="font-semibold">{{ $_rec['cap'] }}</span>. <span id="reconciliar-contador" class="font-semibold"></span></p>
+                </div>
+                <div class="p-2 overflow-y-auto divide-y divide-gray-100">
+                    @foreach($assinaturas as $a)
+                        @php $_downgrade = ($a['pausada_motivo'] ?? null) === \App\Models\MonitoramentoAssinatura::MOTIVO_DOWNGRADE; @endphp
+                        <label class="flex items-center gap-3 px-2 py-2.5 cursor-pointer hover:bg-gray-50">
+                            <input type="checkbox" name="reconciliar-item" value="{{ $a['id'] }}" data-reconciliar {{ $_downgrade ? '' : 'checked' }}
+                                class="h-4 w-4 rounded border-gray-300">
+                            <span class="flex-1 min-w-0">
+                                <span class="block text-[13px] font-medium text-gray-900 truncate">{{ $a['alvo_nome'] }}</span>
+                                <span class="block text-[11px] text-gray-500">{{ $a['alvo_doc'] ?? ($a['membros'] !== null ? $a['membros'].' membros' : '—') }}{{ $_downgrade ? ' · pausado por downgrade' : '' }}</span>
+                            </span>
+                            <span class="text-[10px] font-semibold uppercase tracking-wide" style="color: {{ $a['status'] === 'ativo' ? '#047857' : '#9ca3af' }}">{{ $a['status'] }}</span>
+                        </label>
+                    @endforeach
+                </div>
+                <div class="px-4 py-3 border-t border-gray-200 flex items-center justify-end gap-2">
+                    <button type="button" onclick="document.getElementById('modal-reconciliar').classList.add('hidden')"
+                        class="px-4 py-2 rounded text-[12px] font-bold uppercase tracking-wide text-white" style="background-color: #6b7280">Cancelar</button>
+                    <button type="button" id="reconciliar-salvar" data-cap="{{ $_rec['cap'] }}"
+                        class="px-4 py-2 rounded text-[12px] font-bold uppercase tracking-wide text-white hover:opacity-90" style="background-color: #0b1f3a">Salvar seleção</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+        (function () {
+            var cap = {{ (int) $_rec['cap'] }};
+            var boxes = function () { return Array.prototype.slice.call(document.querySelectorAll('[data-reconciliar]')); };
+            var contador = document.getElementById('reconciliar-contador');
+            var salvar = document.getElementById('reconciliar-salvar');
+            function marcados() { return boxes().filter(function (b) { return b.checked; }); }
+            function atualizar() {
+                var n = marcados().length;
+                if (contador) { contador.textContent = n + ' de ' + cap + ' selecionado(s)'; contador.style.color = n > cap ? '#dc2626' : '#374151'; }
+                if (salvar) { salvar.disabled = n > cap; salvar.style.opacity = n > cap ? '0.5' : '1'; }
+            }
+            boxes().forEach(function (b) { b.addEventListener('change', atualizar); });
+            atualizar();
+            if (salvar) {
+                salvar.addEventListener('click', function () {
+                    var ids = marcados().map(function (b) { return parseInt(b.value, 10); });
+                    salvar.disabled = true;
+                    var token = document.querySelector('meta[name="csrf-token"]');
+                    fetch('/app/monitoramento/reconciliar-limite', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token ? token.getAttribute('content') : '', 'Accept': 'application/json' },
+                        body: JSON.stringify({ manter: ids }),
+                    }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, j: j }; }); })
+                    .then(function (res) {
+                        if (res.ok && res.j.success) { window.location.reload(); }
+                        else { alert((res.j && res.j.error) || 'Não foi possível salvar. Tente novamente.'); salvar.disabled = false; }
+                    }).catch(function () { alert('Erro de rede.'); salvar.disabled = false; });
+                });
+            }
+        })();
+        </script>
+    @endif
+
     <div id="painel-monitorados" class="bg-white rounded border border-gray-300 overflow-hidden">
         <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-2 flex-wrap">
             <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Monitorados ({{ $assinaturas->count() }})</span>

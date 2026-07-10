@@ -13,6 +13,14 @@ class MonitoramentoAssinatura extends Model
 
     protected $table = 'monitoramento_assinaturas';
 
+    /**
+     * Motivo de pausa aplicado automaticamente na reconciliação de downgrade: o tier novo
+     * comporta menos CNPJs monitorados que os ativos. Diferente de 'manual'|'saldo'|'falhas':
+     * NÃO ocupa slot do cap (o usuário escolheu quais manter ativos), mas os dados ficam
+     * preservados pra reativação quando houver folga/upgrade.
+     */
+    public const MOTIVO_DOWNGRADE = 'downgrade_auto';
+
     protected $fillable = [
         'user_id',
         'participante_id',

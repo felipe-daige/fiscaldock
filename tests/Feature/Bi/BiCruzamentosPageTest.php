@@ -46,7 +46,7 @@ function seedFornecedorIrregularComCompra(User $user): void
 }
 
 it('renderiza a página de cruzamentos com o fornecedor irregular e suas compras', function () {
-    $user = User::factory()->create(['credits' => 100]);
+    $user = User::factory()->trialAtivo()->create(['credits' => 100]);
     seedFornecedorIrregularComCompra($user);
 
     actingAs($user)
@@ -63,7 +63,7 @@ it('redireciona visitante não autenticado da página de cruzamentos', function 
 });
 
 it('exibe o botão de aplicar filtro', function () {
-    $user = User::factory()->create(['credits' => 100]);
+    $user = User::factory()->trialAtivo()->create(['credits' => 100]);
 
     actingAs($user)->get('/app/bi/cruzamentos')
         ->assertOk()
@@ -71,7 +71,7 @@ it('exibe o botão de aplicar filtro', function () {
 });
 
 it('explica que a tela vazia é cobertura de dado, não bug (CNPJ consultado não é fornecedor)', function () {
-    $user = User::factory()->create(['credits' => 100]);
+    $user = User::factory()->trialAtivo()->create(['credits' => 100]);
     $cliente = Cliente::create([
         'user_id' => $user->id, 'is_empresa_propria' => true,
         'tipo_pessoa' => 'PJ', 'documento' => '00000000000191', 'razao_social' => 'Escritorio ME',
@@ -108,7 +108,7 @@ it('explica que a tela vazia é cobertura de dado, não bug (CNPJ consultado nã
 });
 
 it('mostra o card de risco de fornecedores na tela de alertas quando há risco', function () {
-    $user = User::factory()->create(['credits' => 100]);
+    $user = User::factory()->trialAtivo()->create(['credits' => 100]);
     seedFornecedorIrregularComCompra($user);
 
     actingAs($user)
@@ -119,7 +119,7 @@ it('mostra o card de risco de fornecedores na tela de alertas quando há risco',
 });
 
 it('não mostra o card de risco na tela de alertas quando não há risco', function () {
-    $user = User::factory()->create(['credits' => 100]);
+    $user = User::factory()->trialAtivo()->create(['credits' => 100]);
 
     actingAs($user)
         ->get('/app/clearance/alertas')

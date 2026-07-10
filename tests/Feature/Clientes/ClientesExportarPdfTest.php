@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->trialAtivo()->create();
     $this->clienteId = DB::table('clientes')->insertGetId([
         'user_id' => $this->user->id, 'razao_social' => 'ACME LISTAGEM LTDA', 'nome' => 'Acme',
         'documento' => '11222333000181', 'tipo_pessoa' => 'PJ', 'uf' => 'SP',
@@ -46,7 +46,7 @@ it('exige ids (validação falha sem seleção)', function () {
 });
 
 it('ignora ids de outro usuário e redireciona quando nada é válido', function () {
-    $outro = User::factory()->create();
+    $outro = User::factory()->trialAtivo()->create();
     $alheio = DB::table('clientes')->insertGetId([
         'user_id' => $outro->id, 'razao_social' => 'ALHEIO', 'documento' => '99888777000166',
         'tipo_pessoa' => 'PJ', 'is_empresa_propria' => false, 'ativo' => true,

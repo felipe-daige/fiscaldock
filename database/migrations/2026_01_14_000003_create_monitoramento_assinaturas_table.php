@@ -49,7 +49,19 @@ return new class extends Migration
                 $table->string('mp_preapproval_id')->nullable()->unique(); // id do preapproval (assinatura) no MP
                 $table->timestamp('proximo_grant_em')->nullable();         // quando o scheduler concede o próximo mês
                 $table->timestamp('ultimo_grant_em')->nullable();          // última concessão (guard de idempotência)
+                // Proration da troca de plano: fração do ciclo ainda não usada no momento da troca.
+                // Setado em TrocarPlanoMercadoPago, consumido/limpo por ConcederCreditosService na
+                // 1ª concessão do tier destino (expira antigo pro-rata + concede novo pro-rata).
+                $table->jsonb('proration_pendente')->nullable();
                 $table->timestamps();
+            });
+        }
+
+        // Coluna de proration (idempotente): cobre bancos onde account_subscriptions já existia.
+        if (Schema::hasTable('account_subscriptions')
+            && ! Schema::hasColumn('account_subscriptions', 'proration_pendente')) {
+            Schema::table('account_subscriptions', function (Blueprint $table) {
+                $table->jsonb('proration_pendente')->nullable()->after('ultimo_grant_em');
             });
         }
     }

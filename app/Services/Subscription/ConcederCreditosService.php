@@ -31,42 +31,99 @@ class ConcederCreditosService
             $user = User::find($sub->user_id);
 
             $mensal = (int) $plan->creditos_inclusos;
-            $capBancado = (int) floor(((float) $plan->rollover_cap_multiplicador) * $mensal);
 
-            // 1) Rollover cap: expira o excedente do bucket acima do cap, limitado ao
-            //    que ainda existe no saldo do usuário (ele pode já ter gastado).
-            $saldoBucket = (int) $sub->creditos_inclusos_saldo;
-            if ($saldoBucket > $capBancado) {
-                $excedente = $saldoBucket - $capBancado;
-                $expira = min($excedente, $this->credits->getBalance($user));
-                if ($expira > 0) {
-                    $this->credits->deduct(
+            // Proration da troca de plano (marker setado em TrocarPlanoMercadoPago): a 1ª concessão
+            // do tier destino reconcilia o ciclo em curso — expira o incluso antigo pro-rata e
+            // concede o novo pro-rata pelos dias restantes. Renovação normal NÃO tem marker e cai
+            // no rollover cap. Os dois eventos são mutuamente exclusivos.
+            $proration = $sub->proration_pendente;
+            $fracao = is_array($proration) ? (float) ($proration['fracao_restante'] ?? 0) : 0.0;
+
+            if ($fracao > 0) {
+                $this->concederComProration($sub, $plan, $user, $mensal, $fracao);
+            } else {
+                $capBancado = (int) floor(((float) $plan->rollover_cap_multiplicador) * $mensal);
+
+                // 1) Rollover cap: expira o excedente do bucket acima do cap, limitado ao
+                //    que ainda existe no saldo do usuário (ele pode já ter gastado).
+                $saldoBucket = (int) $sub->creditos_inclusos_saldo;
+                if ($saldoBucket > $capBancado) {
+                    $excedente = $saldoBucket - $capBancado;
+                    $expira = min($excedente, $this->credits->getBalance($user));
+                    if ($expira > 0) {
+                        $this->credits->deduct(
+                            $user,
+                            $expira,
+                            'subscription_expiration',
+                            "Expiração de créditos inclusos acima do limite de acúmulo ({$capBancado}).",
+                            $sub,
+                        );
+                    }
+                    $sub->creditos_inclusos_saldo = $saldoBucket - $excedente; // bucket cai pro cap
+                }
+
+                // 2) Concede o mês corrente.
+                if ($mensal > 0) {
+                    $this->credits->add(
                         $user,
-                        $expira,
-                        'subscription_expiration',
-                        "Expiração de créditos inclusos acima do limite de acúmulo ({$capBancado}).",
+                        $mensal,
+                        $primeiraComoCompra ? 'purchase' : 'subscription_credit',
+                        "Créditos inclusos do plano {$plan->nome} ({$mensal} créditos).",
                         $sub,
                     );
+                    $sub->creditos_inclusos_saldo = (int) $sub->creditos_inclusos_saldo + $mensal;
                 }
-                $sub->creditos_inclusos_saldo = $saldoBucket - $excedente; // bucket cai pro cap
             }
 
-            // 2) Concede o mês corrente.
-            if ($mensal > 0) {
-                $this->credits->add(
-                    $user,
-                    $mensal,
-                    $primeiraComoCompra ? 'purchase' : 'subscription_credit',
-                    "Créditos inclusos do plano {$plan->nome} ({$mensal} créditos).",
-                    $sub,
-                );
-                $sub->creditos_inclusos_saldo = (int) $sub->creditos_inclusos_saldo + $mensal;
-            }
-
-            // 3) Agenda a próxima concessão (cadência mensal pra mensal E anual).
+            // 3) Agenda a próxima concessão (cadência mensal pra mensal E anual) e limpa o marker.
             $sub->ultimo_grant_em = now();
             $sub->proximo_grant_em = now()->addMonthNoOverflow();
+            $sub->proration_pendente = null;
             $sub->save();
         });
+    }
+
+    /**
+     * Reconciliação pro-rata da troca de plano.
+     *
+     * `$fracao` = parte do ciclo antigo ainda não usada. O usuário mantém a parte já decorrida
+     * do incluso antigo (1-fração, já "ganha") e recebe a parte restante do incluso novo (fração):
+     *
+     *   expira = round(bucket_antigo × fração)            → devolve a alocação não usada do tier antigo
+     *   concede = round(creditos_inclusos_novo × fração)  → aloca o tier novo só pelos dias restantes
+     *
+     * A próxima renovação concede o mensal cheio do tier novo (rollover cap normal).
+     */
+    private function concederComProration(
+        AccountSubscription $sub,
+        \App\Models\SubscriptionPlan $plan,
+        User $user,
+        int $mensal,
+        float $fracao,
+    ): void {
+        $saldoBucket = (int) $sub->creditos_inclusos_saldo;
+        $expira = min((int) round($saldoBucket * $fracao), $this->credits->getBalance($user));
+        if ($expira > 0) {
+            $this->credits->deduct(
+                $user,
+                $expira,
+                'subscription_proration',
+                "Ajuste pro-rata da troca de plano: expira {$expira} créditos inclusos não usados do plano anterior.",
+                $sub,
+            );
+        }
+        $sub->creditos_inclusos_saldo = max(0, $saldoBucket - $expira);
+
+        $concede = (int) round($mensal * $fracao);
+        if ($concede > 0) {
+            $this->credits->add(
+                $user,
+                $concede,
+                'subscription_proration',
+                "Ajuste pro-rata da troca de plano: concede {$concede} créditos inclusos do plano {$plan->nome} pelos dias restantes do ciclo.",
+                $sub,
+            );
+            $sub->creditos_inclusos_saldo = (int) $sub->creditos_inclusos_saldo + $concede;
+        }
     }
 }

@@ -76,7 +76,7 @@ function lerZipDaResposta(string $body): array
 }
 
 it('baixa um zip com os csvs dos dados da importacao', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->trialAtivo()->create();
     $imp = efdImportacaoComNota($user);
 
     $response = actingAs($user)->get("/app/importacao/efd/{$imp->id}/exportar");
@@ -93,7 +93,7 @@ it('baixa um zip com os csvs dos dados da importacao', function () {
 });
 
 it('pula datasets vazios no zip', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->trialAtivo()->create();
     $imp = efdImportacaoComNota($user);
 
     $response = actingAs($user)->get("/app/importacao/efd/{$imp->id}/exportar");
@@ -109,7 +109,7 @@ it('pula datasets vazios no zip', function () {
 });
 
 it('mostra o botao exportar planilha no detalhe da importacao', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->trialAtivo()->create();
     $imp = efdImportacaoComNota($user);
 
     actingAs($user)
@@ -120,7 +120,7 @@ it('mostra o botao exportar planilha no detalhe da importacao', function () {
 });
 
 it('exporta um unico dataset como csv quando dataset e informado', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->trialAtivo()->create();
     $imp = efdImportacaoComNota($user);
 
     $response = actingAs($user)->get("/app/importacao/efd/{$imp->id}/exportar?dataset=notas");
@@ -134,7 +134,7 @@ it('exporta um unico dataset como csv quando dataset e informado', function () {
 });
 
 it('exporta dataset vazio como csv so com cabecalho', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->trialAtivo()->create();
     $imp = efdImportacaoComNota($user); // sem participantes
 
     $response = actingAs($user)->get("/app/importacao/efd/{$imp->id}/exportar?dataset=participantes");
@@ -145,7 +145,7 @@ it('exporta dataset vazio como csv so com cabecalho', function () {
 });
 
 it('rejeita dataset invalido', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->trialAtivo()->create();
     $imp = efdImportacaoComNota($user);
 
     actingAs($user)
@@ -154,7 +154,7 @@ it('rejeita dataset invalido', function () {
 });
 
 it('mostra o modal com a opcao de csv unico no detalhe', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->trialAtivo()->create();
     $imp = efdImportacaoComNota($user);
 
     actingAs($user)
@@ -165,8 +165,8 @@ it('mostra o modal com a opcao de csv unico no detalhe', function () {
 });
 
 it('nao deixa um usuario exportar importacao de outro', function () {
-    $dono = User::factory()->create();
-    $outro = User::factory()->create();
+    $dono = User::factory()->trialAtivo()->create();
+    $outro = User::factory()->trialAtivo()->create();
     $imp = efdImportacaoComNota($dono);
 
     actingAs($outro)

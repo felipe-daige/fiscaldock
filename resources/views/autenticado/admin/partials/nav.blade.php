@@ -6,6 +6,7 @@
         'visao' => ['Visão Geral', '/app/admin'],
         'usuarios' => ['Usuários', '/app/admin/usuarios'],
         'comercial' => ['Comercial', '/app/admin/comercial'],
+        'planos' => ['Planos', '/app/admin/planos'],
         'auditoria' => ['Auditoria', '/app/admin/auditoria'],
         'pendencias' => ['Pendências', '/app/admin/pendencias'],
         'integracoes' => ['Integrações', '/app/admin/integracoes'],

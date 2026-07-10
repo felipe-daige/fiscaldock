@@ -199,6 +199,9 @@ class MonitoramentoController extends Controller
             'gruposMonitorados' => $gruposMonitorados,
             'planos' => $planos,
             'credits' => $this->creditService->getBalance($user),
+            // null quando dentro do cap; senão { cap, ocupados, excedente } → dispara o modal
+            // de reconciliação (usuário escolhe quais manter ativos) após downgrade.
+            'reconciliacaoDowngrade' => $this->entitlements->excedeLimiteMonitoramento($user),
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -206,6 +209,60 @@ class MonitoramentoController extends Controller
         }
 
         return view(self::AUTH_LAYOUT_VIEW, array_merge(['initialView' => $painelView], $data));
+    }
+
+    /**
+     * Reconciliação de downgrade: o usuário escolhe quais CNPJs manter monitorados quando o tier
+     * novo comporta menos que os ativos. Os IDs em `manter` (limitados ao cap) ficam ativos; os
+     * demais viram pausa automática (MOTIVO_DOWNGRADE) — dados preservados, fora do cap, reativáveis
+     * quando houver folga/upgrade. Não apaga nada (guardrail do downgrade).
+     */
+    public function reconciliarLimite(Request $request)
+    {
+        $user = Auth::user();
+        if ($user === null) {
+            return response()->json(['success' => false, 'error' => 'Não autenticado.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $dados = $request->validate([
+            'manter' => ['present', 'array'],
+            'manter.*' => ['integer'],
+        ]);
+
+        $limite = $this->entitlements->limiteCnpjsMonitorados($user);
+        $manter = array_values(array_unique(array_map('intval', $dados['manter'])));
+
+        if ($limite !== null && count($manter) > $limite) {
+            return response()->json([
+                'success' => false,
+                'error' => "Seu plano permite manter até {$limite} CNPJ(s) monitorado(s). Selecione no máximo {$limite}.",
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        DB::transaction(function () use ($user, $manter) {
+            $assinaturas = MonitoramentoAssinatura::where('user_id', $user->id)
+                ->whereIn('status', ['ativo', 'pausado'])
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($assinaturas as $assinatura) {
+                if (in_array((int) $assinatura->id, $manter, true)) {
+                    // Mantidos: reativa se estavam pausados por downgrade; ativos ficam como estão.
+                    if ($assinatura->pausada_motivo === MonitoramentoAssinatura::MOTIVO_DOWNGRADE) {
+                        $assinatura->reativar();
+                    }
+                } else {
+                    // Excedente: pausa automática por downgrade (preserva dados, libera slot).
+                    $assinatura->pausar(MonitoramentoAssinatura::MOTIVO_DOWNGRADE);
+                }
+            }
+        });
+
+        return response()->json([
+            'success' => true,
+            'mensagem' => 'Monitoramentos reconciliados com o plano atual.',
+            'ocupados' => $this->entitlements->cnpjsMonitoradosOcupados($user),
+        ]);
     }
 
     /**
@@ -465,9 +522,7 @@ class MonitoramentoController extends Controller
         // Gating de tier (Fase 5): nº de CNPJs monitorados ativos não pode passar do teto do plano.
         // Trial libera (limite null). Nunca bloqueia cadastrar cliente — só o monitorar.
         $limiteCnpjs = $this->entitlements->limiteCnpjsMonitorados($user);
-        $ativos = MonitoramentoAssinatura::where('user_id', $user->id)
-            ->whereIn('status', ['ativo', 'pausado'])
-            ->count();
+        $ativos = $this->entitlements->cnpjsMonitoradosOcupados($user);
 
         if ($limiteCnpjs !== null && $ativos >= $limiteCnpjs) {
             return response()->json([

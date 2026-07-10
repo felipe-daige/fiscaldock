@@ -49,7 +49,40 @@ class EntitlementService
             return $this->exportFormats($user) !== [];
         }
 
+        if ($cap === 'bi_completo') {
+            return $this->capability($user, 'bi', 'basico') === 'completo';
+        }
+
         return $this->can($user, $cap);
+    }
+
+    /**
+     * Gate fino de export por formato (`csv`, `excel`, `api`) — a lista da capability
+     * `export` do plano manda. Trial libera qualquer formato (política "trial libera tudo").
+     */
+    public function permitsExportFormat(User $user, string $formato): bool
+    {
+        if ($user->hasActiveTrial()) {
+            return true;
+        }
+
+        return in_array($formato, $this->exportFormats($user), true);
+    }
+
+    /**
+     * Retenção de histórico do tier em meses. null = ilimitada (planos pagos e trial ativo).
+     * Aplica ao HISTÓRICO de consultas (listagem) — o dado nunca é apagado, só sai da
+     * listagem até upgrade (guardrail 3 da spec CFO).
+     */
+    public function retencaoMeses(User $user): ?int
+    {
+        if ($user->hasActiveTrial()) {
+            return null;
+        }
+
+        $meses = $this->capability($user, 'retencao_meses', null);
+
+        return $meses === null ? null : (int) $meses;
     }
 
     public function capability(User $user, string $key, mixed $default = null): mixed
@@ -154,6 +187,44 @@ class EntitlementService
         $limite = $this->limiteCnpjsMonitorados($user);
 
         return $limite === null || $ativos < $limite;
+    }
+
+    /**
+     * Nº de CNPJs que ocupam slot do cap: assinaturas ativas ou pausadas, EXCETO as pausadas
+     * automaticamente por downgrade (essas ficam preservadas mas fora do cap). Fonte única da
+     * contagem de monitorados — usada no gating e na detecção de excedente pós-downgrade.
+     */
+    public function cnpjsMonitoradosOcupados(User $user): int
+    {
+        return \App\Models\MonitoramentoAssinatura::where('user_id', $user->id)
+            ->whereIn('status', ['ativo', 'pausado'])
+            ->where(function ($q) {
+                $q->whereNull('pausada_motivo')
+                    ->orWhere('pausada_motivo', '!=', \App\Models\MonitoramentoAssinatura::MOTIVO_DOWNGRADE);
+            })
+            ->count();
+    }
+
+    /**
+     * O usuário está acima do teto de CNPJs monitorados do tier corrente? Dispara logo após um
+     * downgrade (ou quando o admin baixa o limite do plano) e persiste até ele reconciliar.
+     * Retorna null quando dentro do limite (ou ilimitado / trial). Senão: { cap, ocupados, excedente }.
+     *
+     * @return array{cap:int, ocupados:int, excedente:int}|null
+     */
+    public function excedeLimiteMonitoramento(User $user): ?array
+    {
+        $limite = $this->limiteCnpjsMonitorados($user);
+        if ($limite === null) {
+            return null;
+        }
+
+        $ocupados = $this->cnpjsMonitoradosOcupados($user);
+        if ($ocupados <= $limite) {
+            return null;
+        }
+
+        return ['cap' => $limite, 'ocupados' => $ocupados, 'excedente' => $ocupados - $limite];
     }
 
     /**

@@ -184,39 +184,36 @@
             $tabClassMobile = fn($tab) => $tab === $defaultTab
                 ? 'bi-tab active border-gray-800 text-gray-900 whitespace-nowrap py-3 sm:py-4 px-3 sm:px-1 border-b-2 font-medium text-sm'
                 : 'bi-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 sm:py-4 px-3 sm:px-1 border-b-2 font-medium text-sm';
+            // Gate BI completo: abas analíticas exigem plano pago (trial libera). O backend
+            // também bloqueia (middleware :bi_completo nas rotas) — aqui é só UI.
+            $biCompleto = $biCompleto ?? true;
+            $abasAvancadas = ['tributos', 'riscos', 'tributario-efd', 'apuracao-notas', 'cfop'];
+            $tabBloqueada = fn($tab) => ! $biCompleto && in_array($tab, $abasAvancadas, true);
+            $classBloqueada = 'border-transparent text-gray-400 cursor-not-allowed whitespace-nowrap py-3 sm:py-4 px-3 sm:px-1 border-b-2 font-medium text-sm';
+            $renderTab = function ($tab, $label) use ($tabClassMobile, $tabBloqueada, $classBloqueada) {
+                if ($tabBloqueada($tab)) {
+                    return '<button type="button" disabled title="Disponível nos planos pagos — faça upgrade em /app/plano" class="'.$classBloqueada.'">'.$label.' <span aria-hidden="true">&#128274;</span></button>';
+                }
+                return '<button data-tab="'.$tab.'" class="'.$tabClassMobile($tab).'">'.$label.'</button>';
+            };
         @endphp
         <div class="mb-4 sm:mb-6" data-default-tab="{{ $defaultTab }}">
             <div class="border-b border-gray-200 scroll-fade-right sm:after:hidden">
                 <nav class="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide tab-scroll-snap" aria-label="Tabs">
-                    <button data-tab="faturamento" class="{{ $tabClassMobile('faturamento') }}">
-                        Faturamento
-                    </button>
-                    <button data-tab="compras" class="{{ $tabClassMobile('compras') }}">
-                        Compras
-                    </button>
-                    <button data-tab="tributos" class="{{ $tabClassMobile('tributos') }}">
-                        Tributos
-                    </button>
-                    <button data-tab="efd" class="{{ $tabClassMobile('efd') }}">
-                        EFD
-                    </button>
-                    <button data-tab="participantes" class="{{ $tabClassMobile('participantes') }}">
-                        Participantes
-                    </button>
-                    <button data-tab="riscos" class="{{ $tabClassMobile('riscos') }}">
-                        &#9888; Riscos
-                    </button>
-                    <button data-tab="tributario-efd" class="{{ $tabClassMobile('tributario-efd') }}">
-                        Tributário EFD
-                    </button>
-                    <button data-tab="apuracao-notas" class="{{ $tabClassMobile('apuracao-notas') }}">
-                        Apuração × Notas
-                    </button>
-                    <button data-tab="cfop" class="{{ $tabClassMobile('cfop') }}">
-                        CFOP
-                    </button>
+                    {!! $renderTab('faturamento', 'Faturamento') !!}
+                    {!! $renderTab('compras', 'Compras') !!}
+                    {!! $renderTab('tributos', 'Tributos') !!}
+                    {!! $renderTab('efd', 'EFD') !!}
+                    {!! $renderTab('participantes', 'Participantes') !!}
+                    {!! $renderTab('riscos', '&#9888; Riscos') !!}
+                    {!! $renderTab('tributario-efd', 'Tributário EFD') !!}
+                    {!! $renderTab('apuracao-notas', 'Apuração × Notas') !!}
+                    {!! $renderTab('cfop', 'CFOP') !!}
                 </nav>
             </div>
+            @unless($biCompleto)
+                <p class="mt-2 text-[11px] text-gray-500">Abas analíticas (Tributos, Riscos, Tributário EFD, Apuração × Notas, CFOP) fazem parte do BI completo — disponível nos planos pagos. <a href="/app/plano" data-link class="font-semibold underline text-gray-700">Ver planos</a></p>
+            @endunless
         </div>
 
         {{-- Tab Faturamento --}}

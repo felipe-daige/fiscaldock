@@ -57,8 +57,21 @@ class TrocarPlanoMercadoPago
         }
 
         // Snapshot pra restaurar caso a criação da nova preapproval falhe.
-        $snapshot = $atual->only(['subscription_plan_id', 'status', 'ciclo', 'mp_preapproval_id']);
+        $snapshot = $atual->only(['subscription_plan_id', 'status', 'ciclo', 'mp_preapproval_id', 'proration_pendente']);
         $preapprovalAntigo = $atual->mp_preapproval_id;
+
+        // Proration (reconciliação em créditos): registra a fração do ciclo corrente ainda não
+        // consumida. A concessão do tier destino (no webhook de ativação) usa esse marker pra
+        // expirar o incluso antigo pro-rata e conceder o novo pro-rata. Sem risco de crédito
+        // prematuro — nada é debitado/creditado aqui, só o marker é persistido.
+        $fracaoRestante = $this->fracaoCicloRestante($atual);
+        if ($fracaoRestante > 0) {
+            $atual->update(['proration_pendente' => [
+                'fracao_restante' => $fracaoRestante,
+                'origem_plano_id' => $atual->subscription_plan_id,
+                'trocado_em' => now()->toIso8601String(),
+            ]]);
+        }
 
         try {
             $novo = $this->criar->execute($user, $codigoPlano, $ciclo, $cardToken);
@@ -79,5 +92,32 @@ class TrocarPlanoMercadoPago
         }
 
         return $novo;
+    }
+
+    /**
+     * Fração [0..1] do ciclo de concessão corrente ainda NÃO consumida no momento da troca.
+     * Janela = último grant → próximo grant (cadência mensal, mensal E anual). Clampa nas bordas.
+     */
+    private function fracaoCicloRestante(AccountSubscription $sub): float
+    {
+        $inicio = $sub->ultimo_grant_em ?? $sub->iniciada_em;
+        if ($inicio === null) {
+            return 0.0; // nunca concedido → não há incluso pra proratear
+        }
+
+        $inicio = \Illuminate\Support\Carbon::parse($inicio);
+        $fim = $sub->proximo_grant_em
+            ? \Illuminate\Support\Carbon::parse($sub->proximo_grant_em)
+            : $inicio->copy()->addMonthNoOverflow();
+
+        $total = $inicio->diffInSeconds($fim);
+        if ($total <= 0) {
+            return 0.0;
+        }
+
+        $restante = now()->diffInSeconds($fim, false); // negativo se já venceu
+        $fracao = $restante / $total;
+
+        return max(0.0, min(1.0, $fracao));
     }
 }

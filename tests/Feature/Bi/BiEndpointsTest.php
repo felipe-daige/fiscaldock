@@ -10,7 +10,7 @@ beforeEach(function () {
     // Bypass do middleware que cria empresa propria — evita writes em tabela clientes
     // com dados nulos de factories; os endpoints testados nao dependem desse middleware
     $this->withoutMiddleware(EnsureEmpresaPropriaExists::class);
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->trialAtivo()->create();
     $this->actingAs($this->user);
 });
 

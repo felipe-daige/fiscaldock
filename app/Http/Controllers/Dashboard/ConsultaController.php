@@ -37,7 +37,8 @@ class ConsultaController extends Controller
     public function __construct(
         protected CreditService $creditService,
         protected ConsultaReportService $reportService,
-        protected PricingCatalogService $pricingCatalogService
+        protected PricingCatalogService $pricingCatalogService,
+        protected \App\Services\Entitlements\EntitlementService $entitlements
     ) {}
 
     private function getViewPrefix(): string
@@ -1537,6 +1538,13 @@ class ConsultaController extends Controller
             ->whereDoesntHave('cliente', fn ($q) => $q->where('is_empresa_propria', true))
             ->with('plano');
 
+        // Retenção de histórico do tier (Free = 6 meses): lotes mais antigos saem da
+        // listagem/KPIs até upgrade — o dado nunca é apagado (guardrail 3 da spec CFO).
+        $retencaoMeses = $this->entitlements->retencaoMeses($user);
+        if ($retencaoMeses !== null) {
+            $baseQuery->where('consulta_lotes.created_at', '>=', now()->subMonths($retencaoMeses));
+        }
+
         if (! empty($validated['busca'])) {
             $busca = trim($validated['busca']);
 
@@ -1603,6 +1611,7 @@ class ConsultaController extends Controller
             'planosFiltro' => $planosFiltro,
             'relatoriosLegados' => collect([]), // Tabelas legadas removidas
             'credits' => $this->creditService->getBalance($user),
+            'retencaoMeses' => $retencaoMeses,
         ];
 
         if ($this->isAjaxRequest($request)) {

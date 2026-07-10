@@ -21,6 +21,7 @@ class BiController extends Controller
     public function __construct(
         protected BiService $biService,
         protected \App\Services\BiExportService $biExport,
+        protected \App\Services\Entitlements\EntitlementService $entitlements,
     ) {}
 
     /**
@@ -56,6 +57,7 @@ class BiController extends Controller
             'resumoEfd' => $resumoEfd,
             'cobertura' => $this->biService->getCoberturaResumo($userId, null, null, null),
             'defaultTab' => $defaultTab,
+            'biCompleto' => $this->entitlements->permits(Auth::user(), 'bi_completo'),
         ];
 
         return $this->render($request, 'index', $data);
