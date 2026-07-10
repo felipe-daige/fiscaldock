@@ -1467,6 +1467,7 @@ class DashboardController extends Controller
         $data = [
             'planos' => $planos,
             'planoAtualCodigo' => $planoAtual->codigo,
+            'planoAtualOrdem' => (int) $planoAtual->ordem,
             'assinaturaAtual' => $assinatura,
             'creditUnitPrice' => $this->pricingCatalogService->creditUnitPrice(),
             'mpPublicKey' => (string) config('services.mercadopago.public_key'),

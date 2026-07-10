@@ -125,6 +125,8 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     // Assinatura recorrente (preapproval Mercado Pago) — front envia o card_token do Brick.
     Route::post('/app/assinatura', [\App\Http\Controllers\Dashboard\AssinaturaController::class, 'criar'])
         ->name('app.assinatura.criar');
+    Route::post('/app/assinatura/trocar', [\App\Http\Controllers\Dashboard\AssinaturaController::class, 'trocar'])
+        ->name('app.assinatura.trocar');
     Route::post('/app/assinatura/cancelar', [\App\Http\Controllers\Dashboard\AssinaturaController::class, 'cancelar'])
         ->name('app.assinatura.cancelar');
 

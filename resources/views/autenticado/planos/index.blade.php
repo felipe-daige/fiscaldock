@@ -8,6 +8,7 @@
     $frequenciaMap = [1 => 'diária', 7 => 'semanal', 15 => 'quinzenal', 30 => 'mensal'];
     $exportMap = ['csv' => 'CSV', 'excel' => 'Excel', 'api' => 'API'];
     $biMap = ['basico' => 'BI básico', 'completo' => 'BI completo'];
+    $temAssinaturaAtiva = $assinaturaAtual && in_array($assinaturaAtual->status, ['ativa', 'inadimplente']);
 @endphp
 
 <div class="min-h-screen bg-gray-100">
@@ -124,14 +125,29 @@
                             <button type="button" disabled class="w-full inline-flex items-center justify-center px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500 rounded border border-gray-300 bg-gray-50 cursor-default">Plano atual</button>
                         @elseif($isEnterprise)
                             <a href="mailto:contato@fiscaldock.com.br?subject=Plano%20Enterprise" class="w-full inline-flex items-center justify-center px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-white rounded" style="background-color: #1f2937">Falar com vendas</a>
+                        @elseif($isFree)
+                            {{-- Free só vira CTA quando existe um plano pago vigente: downgrade pro Free = cancelar. --}}
+                            @if($temAssinaturaAtiva)
+                                <button type="button" data-cancelar class="w-full inline-flex items-center justify-center px-3 py-2 text-[11px] font-semibold uppercase tracking-wide rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Voltar para o Free</button>
+                            @else
+                                <button type="button" disabled class="w-full inline-flex items-center justify-center px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500 rounded border border-gray-300 bg-gray-50 cursor-default">Plano atual</button>
+                            @endif
                         @else
+                            @php
+                                $modo = $temAssinaturaAtiva ? 'trocar' : 'assinar';
+                                $labelBase = ! $temAssinaturaAtiva
+                                    ? 'Assinar'
+                                    : ($plano->ordem > $planoAtualOrdem ? 'Fazer upgrade' : 'Fazer downgrade');
+                            @endphp
                             <button type="button"
                                 data-assinar
+                                data-modo="{{ $modo }}"
+                                data-label-base="{{ $labelBase }}"
                                 data-plano="{{ $plano->codigo }}"
                                 data-nome="{{ $plano->nome }}"
                                 data-ciclo-mensal-centavos="{{ $plano->preco_mensal_centavos }}"
                                 data-ciclo-anual-centavos="{{ $plano->preco_anual_centavos }}"
-                                class="w-full inline-flex items-center justify-center px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-white rounded" style="background-color: #1f2937">Assinar</button>
+                                class="w-full inline-flex items-center justify-center px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-white rounded" style="background-color: #1f2937">{{ $labelBase }}</button>
                         @endif
                     </div>
                 </div>
@@ -215,6 +231,7 @@
 <script>
     window.__MP_PUBLIC_KEY = @json($mpPublicKey);
     window.__ASSINAR_URL = @json(route('app.assinatura.criar'));
+    window.__TROCAR_URL = @json(route('app.assinatura.trocar'));
     window.__CANCELAR_URL = @json(route('app.assinatura.cancelar'));
     window.__CSRF = @json(csrf_token());
     window.__MP_TETO_CENTAVOS = @json($mpTetoCentavos);

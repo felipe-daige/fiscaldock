@@ -288,7 +288,8 @@
         @apply min-w-0;
     }
     .sidebar__brand-text {
-        @apply block text-sm font-bold text-gray-900 uppercase tracking-wide leading-none;
+        @apply block text-sm font-bold uppercase tracking-wide leading-none;
+        color: #1e4679;
     }
     .sidebar__brand-subtitle {
         @apply block mt-1 text-[10px] font-semibold text-gray-400 uppercase tracking-widest leading-none;
@@ -534,7 +535,7 @@
         @apply font-medium text-sm truncate flex-1 text-gray-900;
     }
     .sidebar__user-role {
-        @apply text-[10px] font-semibold text-gray-400 uppercase tracking-widest;
+        @apply block truncate text-[10px] font-semibold text-gray-400 uppercase tracking-widest;
     }
     .sidebar__user-menu {
         @apply mt-2 space-y-1;

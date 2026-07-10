@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Actions\MercadoPago\CancelarAssinaturaMercadoPago;
 use App\Actions\MercadoPago\CriarAssinaturaMercadoPago;
+use App\Actions\MercadoPago\TrocarPlanoMercadoPago;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -30,6 +31,27 @@ class AssinaturaController extends Controller
             'status' => $sub->status,
             'assinatura_id' => $sub->id,
             'mensagem' => 'Assinatura criada. Aguardando confirmação do pagamento.',
+        ]);
+    }
+
+    public function trocar(Request $request, TrocarPlanoMercadoPago $action): JsonResponse
+    {
+        $dados = $request->validate([
+            'plano' => ['required', 'string'],
+            'ciclo' => ['required', 'in:mensal,anual'],
+            'token' => ['required', 'string'],
+        ]);
+
+        try {
+            $sub = $action->execute(Auth::user(), $dados['plano'], $dados['ciclo'], $dados['token']);
+        } catch (RuntimeException $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
+
+        return response()->json([
+            'status' => $sub->status,
+            'assinatura_id' => $sub->id,
+            'mensagem' => 'Troca de plano registrada. Aguardando confirmação do pagamento.',
         ]);
     }
 

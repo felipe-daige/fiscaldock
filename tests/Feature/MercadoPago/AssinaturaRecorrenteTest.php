@@ -378,3 +378,103 @@ it('a página /app/planos renderiza o gatilho de assinar com o SDK do MP e a pub
     expect($html)->toContain('__WHATSAPP_URL');
     expect($html)->toContain('5567999844366'); // número do WhatsApp (barras escapadas pelo @json)
 });
+
+it('trocar de plano cria a nova preapproval e cancela a antiga no MP (upgrade)', function () {
+    SubscriptionPlan::where('codigo', 'essencial')->update(['mp_preapproval_plan_id_mensal' => 'PLAN-ESS-MES']);
+    SubscriptionPlan::where('codigo', 'profissional')->update(['mp_preapproval_plan_id_mensal' => 'PLAN-PRO-MES']);
+
+    $essencial = SubscriptionPlan::where('codigo', 'essencial')->first();
+
+    $user = User::factory()->create();
+    $sub = AccountSubscription::create([
+        'user_id' => $user->id,
+        'subscription_plan_id' => $essencial->id,
+        'status' => AccountSubscription::STATUS_ATIVA,
+        'ciclo' => 'mensal',
+        'mp_preapproval_id' => 'PRE-OLD',
+        'creditos_inclusos_saldo' => 300,
+    ]);
+    actingAs($user);
+
+    Http::fake([
+        'api.mercadopago.com/preapproval/PRE-OLD' => Http::response(['id' => 'PRE-OLD', 'status' => 'cancelled'], 200),
+        'api.mercadopago.com/preapproval' => Http::response(['id' => 'PRE-NEW', 'status' => 'pending'], 201),
+    ]);
+
+    postJson(route('app.assinatura.trocar'), [
+        'plano' => 'profissional', 'ciclo' => 'mensal', 'token' => 'card-token-up',
+    ])->assertOk()->assertJsonPath('status', 'pendente');
+
+    // reusa a linha, agora apontando pro tier destino + nova preapproval
+    expect(AccountSubscription::where('user_id', $user->id)->count())->toBe(1);
+    $sub->refresh();
+    expect($sub->subscription_plan_id)->toBe(SubscriptionPlan::where('codigo', 'profissional')->first()->id);
+    expect($sub->mp_preapproval_id)->toBe('PRE-NEW');
+
+    // criou a nova (POST) e cancelou a antiga (PUT no id antigo)
+    Http::assertSent(fn ($req) => $req->url() === 'https://api.mercadopago.com/preapproval'
+        && $req['preapproval_plan_id'] === 'PLAN-PRO-MES');
+    Http::assertSent(fn ($req) => $req->method() === 'PUT'
+        && $req->url() === 'https://api.mercadopago.com/preapproval/PRE-OLD');
+});
+
+it('trocar pro mesmo plano e ciclo é recusado sem tocar no MP', function () {
+    SubscriptionPlan::where('codigo', 'essencial')->update(['mp_preapproval_plan_id_mensal' => 'PLAN-ESS-MES']);
+    $essencial = SubscriptionPlan::where('codigo', 'essencial')->first();
+
+    $user = User::factory()->create();
+    AccountSubscription::create([
+        'user_id' => $user->id,
+        'subscription_plan_id' => $essencial->id,
+        'status' => AccountSubscription::STATUS_ATIVA,
+        'ciclo' => 'mensal',
+        'mp_preapproval_id' => 'PRE-SAME',
+    ]);
+    actingAs($user);
+    Http::fake();
+
+    postJson(route('app.assinatura.trocar'), [
+        'plano' => 'essencial', 'ciclo' => 'mensal', 'token' => 't',
+    ])->assertStatus(422)->assertJsonPath('error', 'Você já está neste plano e ciclo.');
+
+    Http::assertNothingSent();
+});
+
+it('trocar sem assinatura viva age como assinatura nova', function () {
+    SubscriptionPlan::where('codigo', 'essencial')->update(['mp_preapproval_plan_id_mensal' => 'PLAN-ESS-MES']);
+
+    Http::fake(['api.mercadopago.com/preapproval' => Http::response(['id' => 'PRE-FIRST', 'status' => 'pending'], 201)]);
+
+    $user = User::factory()->create();
+    actingAs($user);
+
+    postJson(route('app.assinatura.trocar'), [
+        'plano' => 'essencial', 'ciclo' => 'mensal', 'token' => 't',
+    ])->assertOk();
+
+    expect(AccountSubscription::where('user_id', $user->id)->first()->mp_preapproval_id)->toBe('PRE-FIRST');
+    // nenhuma preapproval antiga pra cancelar → só o POST de criação
+    Http::assertSentCount(1);
+});
+
+it('a página /app/planos mostra CTAs de upgrade/downgrade e "Voltar pro Free" quando há assinatura ativa', function () {
+    $profissional = SubscriptionPlan::where('codigo', 'profissional')->first();
+
+    $user = User::factory()->create();
+    AccountSubscription::create([
+        'user_id' => $user->id,
+        'subscription_plan_id' => $profissional->id,
+        'status' => AccountSubscription::STATUS_ATIVA,
+        'ciclo' => 'mensal',
+        'mp_preapproval_id' => 'PRE-VIEW',
+    ]);
+    actingAs($user);
+
+    $html = get('/app/planos')->assertOk()->getContent();
+
+    expect($html)->toContain('data-modo="trocar"');
+    expect($html)->toContain('Fazer upgrade');    // escritório (ordem > profissional)
+    expect($html)->toContain('Fazer downgrade');  // essencial (ordem < profissional)
+    expect($html)->toContain('data-cancelar');    // Free vira "Voltar para o Free"
+    expect($html)->toContain('__TROCAR_URL');
+});

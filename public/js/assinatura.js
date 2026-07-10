@@ -28,11 +28,13 @@ window.initPlanos = function () {
     }
 
     // Cobrança acima do teto do MP não é self-service: o botão vira "Falar com atendente".
+    // Abaixo do teto usa o label base do botão (Assinar / Fazer upgrade / Fazer downgrade).
     function atualizarBotoes() {
         var ciclo = cicloAtual();
         document.querySelectorAll('[data-assinar]').forEach(function (btn) {
             var acimaDoTeto = centavosDoBotao(btn, ciclo) > teto;
-            btn.textContent = acimaDoTeto ? 'Falar com atendente' : 'Assinar';
+            var labelBase = btn.getAttribute('data-label-base') || 'Assinar';
+            btn.textContent = acimaDoTeto ? 'Falar com atendente' : labelBase;
             btn.style.backgroundColor = acimaDoTeto ? '#0f766e' : '#1f2937';
             btn.setAttribute('data-assistido', acimaDoTeto ? '1' : '0');
         });
@@ -99,7 +101,7 @@ window.initPlanos = function () {
         cancelConfirmBtn.classList.toggle('cursor-wait', cancelando);
     }
 
-    function abrir(plano, valorReais) {
+    function abrir(plano, valorReais, modo) {
         if (!bricks) { mostrarErro('Pagamento indisponível no momento.'); return; }
         root.classList.remove('hidden');
         root.classList.add('flex');
@@ -113,14 +115,15 @@ window.initPlanos = function () {
                 onReady: function () {},
                 onError: function () { mostrarErro('Erro ao carregar o cartão.'); },
                 onSubmit: function (formData) {
-                    return enviar(plano, cicloAtual(), formData.token);
+                    return enviar(plano, cicloAtual(), formData.token, modo);
                 },
             },
         }).then(function (c) { controller = c; });
     }
 
-    function enviar(plano, ciclo, token) {
-        return fetch(window.__ASSINAR_URL, {
+    function enviar(plano, ciclo, token, modo) {
+        var url = modo === 'trocar' ? window.__TROCAR_URL : window.__ASSINAR_URL;
+        return fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.__CSRF, 'Accept': 'application/json' },
             body: JSON.stringify({ plano: plano, ciclo: ciclo, token: token }),
@@ -136,8 +139,13 @@ window.initPlanos = function () {
             var ciclo = cicloAtual();
             var centavos = centavosDoBotao(btn, ciclo);
             if (centavos > teto) { abrirWhatsapp(btn, ciclo); return; } // checkout assistido
-            abrir(btn.getAttribute('data-plano'), centavos / 100);
+            abrir(btn.getAttribute('data-plano'), centavos / 100, btn.getAttribute('data-modo') || 'assinar');
         });
+    });
+
+    // Downgrade pro Free = cancelar a assinatura vigente (reusa o modal de cancelamento).
+    document.querySelectorAll('[data-cancelar]').forEach(function (btn) {
+        btn.addEventListener('click', abrirCancelamento);
     });
 
     document.querySelectorAll('input[name="ciclo"]').forEach(function (radio) {
