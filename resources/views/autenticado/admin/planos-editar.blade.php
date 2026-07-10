@@ -4,6 +4,9 @@
     $exportAtual = is_array($caps['export'] ?? null) ? $caps['export'] : [];
     $lblInput = 'block text-[11px] text-gray-500 mb-1';
     $inputCls = 'w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded';
+    $precos = app(\App\Services\PricingCatalogService::class);
+    $reais = fn ($centavos) => number_format(((int) $centavos) / 100, 2, '.', '');
+    $creditosEmReais = \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $plano->creditos_inclusos));
 @endphp
 <div class="min-h-screen bg-gray-100">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -38,16 +41,17 @@
                         <input type="number" name="ordem" value="{{ old('ordem', $plano->ordem) }}" class="{{ $inputCls }}">
                     </div>
                     <div>
-                        <label class="{{ $lblInput }}">Preço mensal (centavos)</label>
-                        <input type="number" min="0" name="preco_mensal_centavos" value="{{ old('preco_mensal_centavos', $plano->preco_mensal_centavos) }}" class="{{ $inputCls }}">
+                        <label class="{{ $lblInput }}">Preço mensal (R$)</label>
+                        <input type="number" step="0.01" min="0" name="preco_mensal_reais" value="{{ old('preco_mensal_reais', $reais($plano->preco_mensal_centavos)) }}" class="{{ $inputCls }}">
                     </div>
                     <div>
-                        <label class="{{ $lblInput }}">Preço anual (centavos)</label>
-                        <input type="number" min="0" name="preco_anual_centavos" value="{{ old('preco_anual_centavos', $plano->preco_anual_centavos) }}" class="{{ $inputCls }}">
+                        <label class="{{ $lblInput }}">Preço anual (R$)</label>
+                        <input type="number" step="0.01" min="0" name="preco_anual_reais" value="{{ old('preco_anual_reais', $reais($plano->preco_anual_centavos)) }}" class="{{ $inputCls }}">
                     </div>
                     <div>
-                        <label class="{{ $lblInput }}">Créditos inclusos / mês</label>
+                        <label class="{{ $lblInput }}">Créditos inclusos / mês <span class="text-gray-400">≈ {{ $creditosEmReais }}</span></label>
                         <input type="number" min="0" name="creditos_inclusos" value="{{ old('creditos_inclusos', $plano->creditos_inclusos) }}" class="{{ $inputCls }}">
+                        <p class="text-[10px] text-gray-400 mt-1">Quantidade de créditos (unidade interna). Valor em R$ = créditos × preço unitário do catálogo.</p>
                     </div>
                     <div>
                         <label class="{{ $lblInput }}">Faixa comercial (slug)</label>

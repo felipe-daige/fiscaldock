@@ -46,7 +46,10 @@
                                     <span class="block text-[11px] text-gray-400">{{ $p->codigo }}</span>
                                 </td>
                                 <td class="px-3 py-2.5 text-right text-gray-700">{{ $p->preco_mensal_centavos > 0 ? 'R$ '.number_format($p->preco_mensal_centavos / 100, 2, ',', '.') : '—' }}</td>
-                                <td class="px-3 py-2.5 text-right text-gray-700">{{ number_format((int) $p->creditos_inclusos, 0, ',', '.') }}</td>
+                                <td class="px-3 py-2.5 text-right text-gray-700">
+                                    {{ number_format((int) $p->creditos_inclusos, 0, ',', '.') }}
+                                    <span class="block text-[10px] text-gray-400">≈ {{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $p->creditos_inclusos)) }}</span>
+                                </td>
                                 <td class="px-3 py-2.5 text-right text-gray-700">{{ $fmtLim($p->limite_clientes) }}</td>
                                 <td class="px-3 py-2.5 text-right text-gray-700">{{ $fmtLim($p->limite_cnpjs_monitorados) }}</td>
                                 <td class="px-3 py-2.5 text-gray-700">{{ $p->profundidade_auto_monitor ?? '—' }}</td>

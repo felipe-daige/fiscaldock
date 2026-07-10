@@ -65,8 +65,9 @@ class AdminPlanosController extends Controller
 
         $dados = $request->validate([
             'nome' => ['required', 'string', 'max:120'],
-            'preco_mensal_centavos' => ['required', 'integer', 'min:0'],
-            'preco_anual_centavos' => ['required', 'integer', 'min:0'],
+            // Preços em R$ (padrão de exibição do projeto) — convertidos pra centavos ao salvar.
+            'preco_mensal_reais' => ['required', 'numeric', 'min:0'],
+            'preco_anual_reais' => ['required', 'numeric', 'min:0'],
             'creditos_inclusos' => ['required', 'integer', 'min:0'],
             'faixa_slug' => ['required', 'string', 'max:20'],
             'limite_clientes' => ['nullable', 'integer', 'min:0'],
@@ -115,8 +116,8 @@ class AdminPlanosController extends Controller
 
         $plano->update([
             'nome' => $dados['nome'],
-            'preco_mensal_centavos' => (int) $dados['preco_mensal_centavos'],
-            'preco_anual_centavos' => (int) $dados['preco_anual_centavos'],
+            'preco_mensal_centavos' => (int) round($dados['preco_mensal_reais'] * 100),
+            'preco_anual_centavos' => (int) round($dados['preco_anual_reais'] * 100),
             'creditos_inclusos' => (int) $dados['creditos_inclusos'],
             'faixa_slug' => $dados['faixa_slug'],
             // vazio = ilimitado (null)

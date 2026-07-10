@@ -29,8 +29,8 @@ it('admin edita limites e capabilities e persiste no catálogo', function () {
 
     actingAs($admin)->post(route('app.admin.planos.update', $ess->id), [
         'nome' => 'Essencial+',
-        'preco_mensal_centavos' => 12900,
-        'preco_anual_centavos' => 129000,
+        'preco_mensal_reais' => 129.00,
+        'preco_anual_reais' => 1290.00,
         'creditos_inclusos' => 400,
         'faixa_slug' => 'base',
         'limite_clientes' => 20,
@@ -54,6 +54,8 @@ it('admin edita limites e capabilities e persiste no catálogo', function () {
 
     $ess->refresh();
     expect($ess->nome)->toBe('Essencial+');
+    expect($ess->preco_mensal_centavos)->toBe(12900); // R$ 129,00 → centavos
+    expect($ess->preco_anual_centavos)->toBe(129000);
     expect($ess->creditos_inclusos)->toBe(400);
     expect($ess->limite_clientes)->toBe(20);
     expect($ess->limite_cnpjs_monitorados)->toBeNull(); // ilimitado
@@ -84,7 +86,7 @@ it('valida profundidade e bi inválidos', function () {
     $ess = SubscriptionPlan::where('codigo', 'essencial')->first();
 
     actingAs($admin)->post(route('app.admin.planos.update', $ess->id), [
-        'nome' => 'X', 'preco_mensal_centavos' => 100, 'preco_anual_centavos' => 100,
+        'nome' => 'X', 'preco_mensal_reais' => 1, 'preco_anual_reais' => 1,
         'creditos_inclusos' => 10, 'faixa_slug' => 'base',
         'frequencia_padrao_dias' => 30, 'profundidade_auto_monitor' => 'inexistente',
         'assentos_inclusos' => 1, 'rollover_cap_multiplicador' => 1, 'ordem' => 2,
@@ -97,8 +99,8 @@ it('desmarcar is_active desativa o plano', function () {
     $ess = SubscriptionPlan::where('codigo', 'essencial')->first();
 
     actingAs($admin)->post(route('app.admin.planos.update', $ess->id), [
-        'nome' => $ess->nome, 'preco_mensal_centavos' => $ess->preco_mensal_centavos,
-        'preco_anual_centavos' => $ess->preco_anual_centavos, 'creditos_inclusos' => $ess->creditos_inclusos,
+        'nome' => $ess->nome, 'preco_mensal_reais' => $ess->preco_mensal_centavos / 100,
+        'preco_anual_reais' => $ess->preco_anual_centavos / 100, 'creditos_inclusos' => $ess->creditos_inclusos,
         'faixa_slug' => $ess->faixa_slug, 'frequencia_padrao_dias' => 30,
         'profundidade_auto_monitor' => 'licitacao', 'assentos_inclusos' => 1,
         'rollover_cap_multiplicador' => 1, 'ordem' => 2,
@@ -118,7 +120,7 @@ it('mudar capability reflete no gate de entitlements de um usuário Free', funct
     expect($ent->can($user, 'pdf_executivo'))->toBeFalse();
 
     actingAs($admin)->post(route('app.admin.planos.update', $free->id), [
-        'nome' => $free->nome, 'preco_mensal_centavos' => 0, 'preco_anual_centavos' => 0,
+        'nome' => $free->nome, 'preco_mensal_reais' => 0, 'preco_anual_reais' => 0,
         'creditos_inclusos' => 0, 'faixa_slug' => 'base', 'limite_clientes' => 1,
         'limite_cnpjs_monitorados' => 1, 'frequencia_padrao_dias' => 30,
         'profundidade_auto_monitor' => 'cadastral', 'assentos_inclusos' => 1,
@@ -136,8 +138,8 @@ it('a edição do plano reflete no EntitlementService', function () {
     // baixa o limite de monitorados do Profissional pra 5
     actingAs($admin)->post(route('app.admin.planos.update', $prof->id), [
         'nome' => $prof->nome,
-        'preco_mensal_centavos' => $prof->preco_mensal_centavos,
-        'preco_anual_centavos' => $prof->preco_anual_centavos,
+        'preco_mensal_reais' => $prof->preco_mensal_centavos / 100,
+        'preco_anual_reais' => $prof->preco_anual_centavos / 100,
         'creditos_inclusos' => $prof->creditos_inclusos,
         'faixa_slug' => $prof->faixa_slug,
         'limite_clientes' => $prof->limite_clientes,
