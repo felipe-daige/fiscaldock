@@ -115,9 +115,12 @@ it('gera o CSV-ZIP do painel para o dono (200 zip)', function () {
     expect($response->headers->get('content-type'))->toContain('zip');
 });
 
-it('bloqueia export sem entitlement (sem trial/plano)', function () {
-    $user = User::factory()->create(); // sem trialAtivo → sem entitlement export
+it('Free puro: PDF do dashboard liberado com marca d\'água (sem trial/plano)', function () {
+    $user = User::factory()->create(); // sem trialAtivo → Free
     seedAcervoClearance($user);
 
-    actingAs($user)->get('/app/clearance/dashboard/exportar-pdf')->assertForbidden();
+    // PDF universal (marca d'água aplicada no layout); CSV/XLSX é que seguem gated.
+    $resp = actingAs($user)->get('/app/clearance/dashboard/exportar-pdf');
+    $resp->assertOk();
+    expect($resp->headers->get('content-type'))->toContain('pdf');
 });

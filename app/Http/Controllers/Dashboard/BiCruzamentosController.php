@@ -19,7 +19,28 @@ class BiCruzamentosController extends Controller
 
     private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
 
-    public function __construct(private CruzamentosConsultasClearanceService $service) {}
+    public function __construct(
+        private CruzamentosConsultasClearanceService $service,
+        private \App\Services\Entitlements\EntitlementService $entitlements,
+    ) {}
+
+    /** Free (sem bi_completo): tela abre em paywall — skeleton borrado + card, dados nem são computados. */
+    private function paywall(Request $request)
+    {
+        $view = 'autenticado.partials.paywall-page';
+        $data = [
+            'paginaTitulo' => 'Cruzamentos — Consultas × Notas',
+            'paginaSubtitulo' => 'Fornecedores irregulares × volume comprado e notas canceladas na SEFAZ.',
+            'paywallTitulo' => 'Cruzamentos são do BI completo',
+            'paywallDescricao' => 'O cruzamento de regularidade dos fornecedores com o seu volume de compras (e notas canceladas × emitente) faz parte do BI completo, disponível nos planos pagos.',
+        ];
+
+        if ($this->isAjaxRequest($request)) {
+            return response(view($view, $data)->render())->header('Content-Type', 'text/html');
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, array_merge(['initialView' => $view], $data));
+    }
 
     public function index(Request $request)
     {
@@ -31,6 +52,10 @@ class BiCruzamentosController extends Controller
             }
 
             return redirect()->route('login');
+        }
+
+        if (! $this->entitlements->permits(Auth::user(), 'bi_completo')) {
+            return $this->paywall($request);
         }
 
         $userId = (int) Auth::id();

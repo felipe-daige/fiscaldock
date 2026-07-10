@@ -102,6 +102,14 @@ it('Free puro recebe 403 nas abas analíticas do BI', function (string $rota) {
     '/app/bi/tributario-efd',
     '/app/bi/apuracao-notas',
     '/app/bi/cfop',
+]);
+
+it('Free puro vê paywall (não 403) nas telas dedicadas gateadas', function (string $rota) {
+    actingAs(User::factory()->create())->get($rota)
+        ->assertOk()
+        ->assertSee('BI completo', false)
+        ->assertSee('/app/planos', false);
+})->with([
     '/app/bi/catalogo-itens',
     '/app/bi/cruzamentos',
 ]);

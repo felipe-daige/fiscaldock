@@ -77,7 +77,6 @@ it('a página do fechamento renderiza (blade compila) com a nova IA', function (
     $resp->assertSee('Fechamento Fiscal', false);
     $resp->assertSee('secao-a-recolher', false);
     $resp->assertSee('rf-a-recolher-content', false);
-    $resp->assertSee('rf-btn-imprimir', false);
     $resp->assertSee('renderARecolher', false);
 });
 

@@ -31,7 +31,7 @@ it('admin edita limites e capabilities e persiste no catálogo', function () {
         'nome' => 'Essencial+',
         'preco_mensal_reais' => 129.00,
         'preco_anual_reais' => 1290.00,
-        'creditos_inclusos' => 400,
+        'saldo_incluso_reais' => 80,
         'faixa_slug' => 'base',
         'limite_clientes' => 20,
         'limite_cnpjs_monitorados' => '', // vazio = ilimitado
@@ -56,7 +56,7 @@ it('admin edita limites e capabilities e persiste no catálogo', function () {
     expect($ess->nome)->toBe('Essencial+');
     expect($ess->preco_mensal_centavos)->toBe(12900); // R$ 129,00 → centavos
     expect($ess->preco_anual_centavos)->toBe(129000);
-    expect($ess->creditos_inclusos)->toBe(400);
+    expect($ess->creditos_inclusos)->toBe(400); // R$ 80 ÷ 0,20
     expect($ess->limite_clientes)->toBe(20);
     expect($ess->limite_cnpjs_monitorados)->toBeNull(); // ilimitado
     expect($ess->profundidade_auto_monitor)->toBe('compliance');
@@ -76,7 +76,8 @@ it('renderiza a tela de edição com os valores atuais', function () {
 
     actingAs($admin)->get(route('app.admin.planos.edit', $prof->id))
         ->assertOk()
-        ->assertSee('Editar plano')
+        ->assertSee($prof->nome)          // cabeçalho mostra o nome do plano
+        ->assertSee('Comercial')
         ->assertSee('Capabilities')
         ->assertSee('preapproval_plan_id');
 });
@@ -87,7 +88,7 @@ it('valida profundidade e bi inválidos', function () {
 
     actingAs($admin)->post(route('app.admin.planos.update', $ess->id), [
         'nome' => 'X', 'preco_mensal_reais' => 1, 'preco_anual_reais' => 1,
-        'creditos_inclusos' => 10, 'faixa_slug' => 'base',
+        'saldo_incluso_reais' => 2, 'faixa_slug' => 'base',
         'frequencia_padrao_dias' => 30, 'profundidade_auto_monitor' => 'inexistente',
         'assentos_inclusos' => 1, 'rollover_cap_multiplicador' => 1, 'ordem' => 2,
         'cap_bi' => 'errado', 'cap_frequencia_minima_dias' => 30,
@@ -100,7 +101,7 @@ it('desmarcar is_active desativa o plano', function () {
 
     actingAs($admin)->post(route('app.admin.planos.update', $ess->id), [
         'nome' => $ess->nome, 'preco_mensal_reais' => $ess->preco_mensal_centavos / 100,
-        'preco_anual_reais' => $ess->preco_anual_centavos / 100, 'creditos_inclusos' => $ess->creditos_inclusos,
+        'preco_anual_reais' => $ess->preco_anual_centavos / 100, 'saldo_incluso_reais' => $ess->creditos_inclusos * 0.20,
         'faixa_slug' => $ess->faixa_slug, 'frequencia_padrao_dias' => 30,
         'profundidade_auto_monitor' => 'licitacao', 'assentos_inclusos' => 1,
         'rollover_cap_multiplicador' => 1, 'ordem' => 2,
@@ -121,7 +122,7 @@ it('mudar capability reflete no gate de entitlements de um usuário Free', funct
 
     actingAs($admin)->post(route('app.admin.planos.update', $free->id), [
         'nome' => $free->nome, 'preco_mensal_reais' => 0, 'preco_anual_reais' => 0,
-        'creditos_inclusos' => 0, 'faixa_slug' => 'base', 'limite_clientes' => 1,
+        'saldo_incluso_reais' => 0, 'faixa_slug' => 'base', 'limite_clientes' => 1,
         'limite_cnpjs_monitorados' => 1, 'frequencia_padrao_dias' => 30,
         'profundidade_auto_monitor' => 'cadastral', 'assentos_inclusos' => 1,
         'rollover_cap_multiplicador' => 1, 'ordem' => 1, 'is_active' => '1',
@@ -140,7 +141,7 @@ it('a edição do plano reflete no EntitlementService', function () {
         'nome' => $prof->nome,
         'preco_mensal_reais' => $prof->preco_mensal_centavos / 100,
         'preco_anual_reais' => $prof->preco_anual_centavos / 100,
-        'creditos_inclusos' => $prof->creditos_inclusos,
+        'saldo_incluso_reais' => $prof->creditos_inclusos * 0.20,
         'faixa_slug' => $prof->faixa_slug,
         'limite_clientes' => $prof->limite_clientes,
         'limite_cnpjs_monitorados' => 5,

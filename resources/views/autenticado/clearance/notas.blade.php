@@ -441,7 +441,7 @@
                         <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded uppercase tracking-wide">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $custosTiers['basico'])) / nota</span>
                         <span class="flex items-center gap-1.5">
                             <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Total</span>
-                            <span class="text-[10px] font-bold text-white px-2 py-0.5 rounded uppercase tracking-wide" style="background-color: #374151"><span class="plan-total" data-tier="basico">0</span> créditos</span>
+                            <span class="text-[10px] font-bold text-white px-2 py-0.5 rounded uppercase tracking-wide" style="background-color: #374151"><span class="plan-total" data-tier="basico">R$ 0,00</span></span>
                         </span>
                     </div>
                 </div>
@@ -466,7 +466,7 @@
                         <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded uppercase tracking-wide">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $custosTiers['full'])) / nota</span>
                         <span class="flex items-center gap-1.5">
                             <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Total</span>
-                            <span class="text-[10px] font-bold text-white px-2 py-0.5 rounded uppercase tracking-wide" style="background-color: #374151"><span class="plan-total" data-tier="full">0</span> créditos</span>
+                            <span class="text-[10px] font-bold text-white px-2 py-0.5 rounded uppercase tracking-wide" style="background-color: #374151"><span class="plan-total" data-tier="full">R$ 0,00</span></span>
                         </span>
                     </div>
                 </div>
@@ -731,11 +731,11 @@
             <div class="grid grid-cols-2 divide-x divide-gray-200 border border-gray-200 rounded overflow-hidden">
                 <div class="px-3 py-3">
                     <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Custo total</p>
-                    <p class="text-lg font-bold text-gray-900 mt-0.5"><span id="modal-confirm-custo">0</span> créditos</p>
+                    <p class="text-lg font-bold text-gray-900 mt-0.5"><span id="modal-confirm-custo">R$ 0,00</span></p>
                 </div>
                 <div class="px-3 py-3">
                     <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Saldo após</p>
-                    <p class="text-lg font-bold mt-0.5" id="modal-confirm-saldo-apos">0 créditos</p>
+                    <p class="text-lg font-bold mt-0.5" id="modal-confirm-saldo-apos">R$ 0,00</p>
                 </div>
             </div>
         </div>
@@ -762,7 +762,7 @@
             </div>
             <div class="border border-gray-200 rounded px-3 py-3" style="background-color: #ecfdf5">
                 <p class="text-[10px] font-semibold uppercase tracking-wide" style="color: #047857">Valor debitado</p>
-                <p class="text-lg font-bold mt-0.5" style="color: #047857"><span id="modal-sucesso-creditos">0</span> créditos</p>
+                <p class="text-lg font-bold mt-0.5" style="color: #047857"><span id="modal-sucesso-creditos">R$ 0,00</span></p>
             </div>
         </div>
         <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-end">

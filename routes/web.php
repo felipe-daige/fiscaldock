@@ -299,11 +299,11 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         ->middleware(RequiresEntitlement::class.':export')->name('app.resumo-fiscal.exportar-pdf');
     Route::get('app/resumo-fiscal/exportar-xlsx', [ResumoFiscalController::class, 'exportarXlsx'])
         ->middleware(RequiresEntitlement::class.':export,excel')->name('app.resumo-fiscal.exportar-xlsx');
-    Route::get('app/resumo-fiscal/apuracao-icms', [ResumoFiscalController::class, 'apuracaoIcms'])->name('app.resumo-fiscal.apuracao-icms');
-    Route::get('app/resumo-fiscal/apuracao-pis-cofins', [ResumoFiscalController::class, 'apuracaoPisCofins'])->name('app.resumo-fiscal.apuracao-pis-cofins');
-    Route::get('app/resumo-fiscal/retencoes', [ResumoFiscalController::class, 'retencoesFonte'])->name('app.resumo-fiscal.retencoes');
-    Route::get('app/resumo-fiscal/cruzamentos', [ResumoFiscalController::class, 'cruzamentos'])->name('app.resumo-fiscal.cruzamentos');
-    Route::get('app/resumo-fiscal/alertas', [ResumoFiscalController::class, 'alertasFiscais'])->name('app.resumo-fiscal.alertas');
+    Route::get('app/resumo-fiscal/apuracao-icms', [ResumoFiscalController::class, 'apuracaoIcms'])->middleware(RequiresEntitlement::class.':bi_completo')->name('app.resumo-fiscal.apuracao-icms');
+    Route::get('app/resumo-fiscal/apuracao-pis-cofins', [ResumoFiscalController::class, 'apuracaoPisCofins'])->middleware(RequiresEntitlement::class.':bi_completo')->name('app.resumo-fiscal.apuracao-pis-cofins');
+    Route::get('app/resumo-fiscal/retencoes', [ResumoFiscalController::class, 'retencoesFonte'])->middleware(RequiresEntitlement::class.':bi_completo')->name('app.resumo-fiscal.retencoes');
+    Route::get('app/resumo-fiscal/cruzamentos', [ResumoFiscalController::class, 'cruzamentos'])->middleware(RequiresEntitlement::class.':bi_completo')->name('app.resumo-fiscal.cruzamentos');
+    Route::get('app/resumo-fiscal/alertas', [ResumoFiscalController::class, 'alertasFiscais'])->middleware(RequiresEntitlement::class.':bi_completo')->name('app.resumo-fiscal.alertas');
 
     // BI Fiscal
     Route::get('app/bi/dashboard', [BiController::class, 'index'])->name('app.bi.index');
@@ -327,7 +327,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
             ->middleware(RequiresEntitlement::class.':export')->name('exportar-pdf');
         Route::get('/exportar-csv-zip', [BiController::class, 'exportarCsvZip'])
             ->middleware(RequiresEntitlement::class.':export,csv')->name('exportar-csv-zip');
-        Route::get('/catalogo-itens', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'index'])->middleware(RequiresEntitlement::class.':bi_completo')->name('catalogo-itens');
+        Route::get('/catalogo-itens', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'index'])->name('catalogo-itens');
         Route::get('/catalogo-itens/exportar', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'exportarCsv'])
             ->middleware(RequiresEntitlement::class.':export,csv')->name('catalogo-itens.exportar');
         Route::get('/catalogo-itens/exportar-pdf', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'exportarPdf'])
@@ -336,7 +336,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
             ->middleware(RequiresEntitlement::class.':export,excel')->name('catalogo-itens.exportar-xlsx');
         Route::post('/catalogo-itens/alerta/descartar', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'descartarAlerta'])->middleware(RequiresEntitlement::class.':bi_completo')->name('catalogo-itens.descartar');
         Route::post('/catalogo-itens/alerta/restaurar', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'restaurarAlerta'])->middleware(RequiresEntitlement::class.':bi_completo')->name('catalogo-itens.restaurar');
-        Route::get('/cruzamentos', [\App\Http\Controllers\Dashboard\BiCruzamentosController::class, 'index'])->middleware(RequiresEntitlement::class.':bi_completo')->name('cruzamentos');
+        Route::get('/cruzamentos', [\App\Http\Controllers\Dashboard\BiCruzamentosController::class, 'index'])->name('cruzamentos');
     });
 
     // Score Fiscal (Score de Regularidade) — alimentado pelos scores persistidos a cada lote de consulta
@@ -400,10 +400,17 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         ->middleware(\App\Http\Middleware\EnsureAdmin::class)->group(function () {
             Route::get('/', [\App\Http\Controllers\Dashboard\AdminAnalyticsController::class, 'index'])->name('index');
             Route::get('/usuarios', [\App\Http\Controllers\Dashboard\AdminUsuariosController::class, 'index'])->name('usuarios.index');
+            Route::get('/usuarios/novo', [\App\Http\Controllers\Dashboard\AdminUsuariosController::class, 'create'])->name('usuarios.create');
+            Route::post('/usuarios', [\App\Http\Controllers\Dashboard\AdminUsuariosController::class, 'store'])->name('usuarios.store');
             Route::get('/usuarios/{id}', [\App\Http\Controllers\Dashboard\AdminUsuariosController::class, 'show'])->name('usuarios.show')->where('id', '[0-9]+');
+            Route::get('/usuarios/{id}/editar', [\App\Http\Controllers\Dashboard\AdminUsuariosController::class, 'edit'])->name('usuarios.edit')->where('id', '[0-9]+');
+            Route::put('/usuarios/{id}', [\App\Http\Controllers\Dashboard\AdminUsuariosController::class, 'update'])->name('usuarios.update')->where('id', '[0-9]+');
+            Route::delete('/usuarios/{id}', [\App\Http\Controllers\Dashboard\AdminUsuariosController::class, 'destroy'])->name('usuarios.destroy')->where('id', '[0-9]+');
             Route::post('/usuarios/{id}/creditar', [\App\Http\Controllers\Dashboard\AdminUsuarioAcaoController::class, 'creditar'])->name('usuarios.creditar')->where('id', '[0-9]+');
             Route::post('/usuarios/{id}/bloquear', [\App\Http\Controllers\Dashboard\AdminUsuarioAcaoController::class, 'bloquear'])->name('usuarios.bloquear')->where('id', '[0-9]+');
             Route::post('/usuarios/{id}/admin', [\App\Http\Controllers\Dashboard\AdminUsuarioAcaoController::class, 'admin'])->name('usuarios.admin')->where('id', '[0-9]+');
+            Route::post('/usuarios/{id}/assinatura', [\App\Http\Controllers\Dashboard\AdminUsuarioAcaoController::class, 'assinatura'])->name('usuarios.assinatura')->where('id', '[0-9]+');
+            Route::post('/usuarios/{id}/trial', [\App\Http\Controllers\Dashboard\AdminUsuarioAcaoController::class, 'trial'])->name('usuarios.trial')->where('id', '[0-9]+');
             Route::post('/usuarios/{id}/impersonar', [\App\Http\Controllers\Dashboard\AdminUsuarioAcaoController::class, 'impersonar'])->name('usuarios.impersonar')->where('id', '[0-9]+');
             Route::get('/auditoria', [\App\Http\Controllers\Dashboard\AdminUsuarioAcaoController::class, 'auditoria'])->name('auditoria');
 

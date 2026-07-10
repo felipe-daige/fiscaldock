@@ -142,6 +142,9 @@
     </div>
 
     @php
+        // Gate BI completo: seções analíticas exigem plano pago (backend também bloqueia
+        // os endpoints via middleware :bi_completo — aqui é só a UI). Free = núcleo.
+        $biCompleto = $biCompleto ?? true;
         $secoes = [
             ['id' => 'resumo', 'label' => 'Visão do Mês', 'hex' => '#4338ca', 'content_id' => 'rf-resumo-content'],
             ['id' => 'a-recolher', 'label' => 'A Recolher & Vencimentos', 'hex' => '#b45309', 'content_id' => 'rf-a-recolher-content'],
@@ -151,10 +154,13 @@
             ['id' => 'pis-cofins', 'label' => 'Espelho — Apuração PIS/COFINS', 'hex' => '#7c3aed', 'content_id' => 'rf-piscofins-content', 'collapsed' => true],
             ['id' => 'retencoes', 'label' => 'Retenções na Fonte (F600)', 'hex' => '#d97706', 'content_id' => 'rf-retencoes-content', 'collapsed' => true],
         ];
+        // Seções analíticas: pro Free renderizam em paywall (blur + card), sem fetch.
+        $secoesAnaliticas = ['cruzamentos', 'alertas', 'icms', 'pis-cofins', 'retencoes'];
     @endphp
 
     @foreach($secoes as $sec)
-    <section id="secao-{{ $sec['id'] }}" class="rf-section mb-6">
+    @php $__secPaywall = ! $biCompleto && in_array($sec['id'], $secoesAnaliticas, true); @endphp
+    <section id="secao-{{ $sec['id'] }}" class="rf-section mb-6" @if($__secPaywall) data-paywall="1" @endif>
         <div class="bg-white rounded border border-gray-300 overflow-hidden">
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between cursor-pointer select-none" data-toggle="{{ $sec['id'] }}">
                 <div class="flex items-center gap-2">
@@ -166,7 +172,30 @@
                 </div>
                 <svg class="rf-chevron w-4 h-4 text-gray-400 {{ ($sec['collapsed'] ?? false) ? 'rotated' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
             </div>
-            <div class="rf-section-content p-4 {{ ($sec['collapsed'] ?? false) ? 'collapsed' : '' }}" data-section="{{ $sec['id'] }}">
+            <div class="rf-section-content p-4 {{ ($sec['collapsed'] ?? false) && ! $__secPaywall ? 'collapsed' : '' }}" data-section="{{ $sec['id'] }}">
+                @if($__secPaywall)
+                    <div class="relative overflow-hidden rounded" style="min-height: 180px">
+                        <div class="pointer-events-none select-none" style="filter: blur(6px)" aria-hidden="true">
+                            <div class="rf-skeleton h-4 w-40 rounded mb-4"></div>
+                            <div class="rf-skeleton h-24 w-full rounded"></div>
+                        </div>
+                        <div class="absolute inset-0 z-10 flex items-center justify-center" style="background: rgba(243, 244, 246, 0.45); backdrop-filter: blur(2px)">
+                            <div class="bg-white rounded-lg border border-gray-300 shadow-lg max-w-sm w-full mx-4 overflow-hidden">
+                                <div class="h-1 w-full" style="background: linear-gradient(90deg, #0b1f3a, #1d4ed8)"></div>
+                                <div class="p-4 flex items-start gap-3 text-left">
+                                    <div class="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: #eef2ff">
+                                        <svg class="w-4 h-4" style="color: #0b1f3a" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-[13px] font-bold text-gray-900 leading-snug mb-0.5">{{ $sec['label'] }}</p>
+                                        <p class="text-[11px] text-gray-500 leading-relaxed mb-2.5">Faz parte do BI completo, disponível nos planos pagos.</p>
+                                        <a href="/app/planos" data-link class="inline-flex px-3.5 py-1.5 rounded text-[10px] font-bold uppercase tracking-wide text-white hover:opacity-90 transition-opacity" style="background-color: #0b1f3a">Conhecer os planos</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @else
                 <div id="{{ $sec['content_id'] }}">
                     @if($sec['id'] === 'resumo')
                         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -183,6 +212,7 @@
                         <div class="rf-skeleton h-32 w-full rounded"></div>
                     @endif
                 </div>
+                @endif
             </div>
         </div>
     </section>
@@ -789,6 +819,7 @@
     var observer = new IntersectionObserver(function(entries) {
         entries.forEach(function(entry) {
             if (entry.isIntersecting) {
+                if (entry.target.dataset.paywall) return; // seção em paywall: sem fetch
                 var id = entry.target.id.replace('secao-', '');
                 var cfg = sectionMap[id];
                 if (cfg) loadSection(id, cfg.url, cfg.render);

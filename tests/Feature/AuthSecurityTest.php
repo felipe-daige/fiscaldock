@@ -313,7 +313,12 @@ test('csrf mismatch em AJAX retorna 419 JSON com token novo (auto-recuperacao)',
         ->postJson('/__test_csrf_mismatch');
 
     $response->assertStatus(419);
-    $response->assertJson(['success' => false]);
+    $response->assertJson([
+        'success' => false,
+        'support' => true,
+        'support_label' => 'Falar no WhatsApp',
+    ]);
+    expect($response->json('message'))->toContain('fale com o suporte pelo WhatsApp');
 
     $token = $response->json('csrf_token');
     expect($token)->toBeString()->not->toBeEmpty();

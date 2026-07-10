@@ -17,7 +17,7 @@ class EnsureNaoBloqueado
             $request->session()->regenerateToken();
 
             return redirect()->route('login')
-                ->withErrors(['email' => 'Conta suspensa. Fale com o suporte.']);
+                ->withErrors(['email' => 'Sua conta está temporariamente suspensa. Fale com o suporte pelo WhatsApp para regularizar o acesso.']);
         }
 
         return $next($request);

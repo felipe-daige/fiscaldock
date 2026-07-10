@@ -354,12 +354,16 @@ it('mostra os botões de exportar CSV e PDF na tela', function () {
     expect($html)->toContain('catalogo-itens/exportar-pdf');
 });
 
-it('exportar é barrado para Free puro (403)', function () {
+it('Free puro: CSV barrado (403), PDF liberado com marca d\'água', function () {
     $this->seed(\Database\Seeders\SubscriptionPlanSeeder::class);
     $user = User::factory()->create();
 
+    // CSV/XLSX seguem gated por formato
     actingAs($user)->get('/app/bi/catalogo-itens/exportar')->assertStatus(403);
-    actingAs($user)->get('/app/bi/catalogo-itens/exportar-pdf')->assertStatus(403);
+    // PDF é universal — Free recebe com marca d'água (vira canal de aquisição)
+    $resp = actingAs($user)->get('/app/bi/catalogo-itens/exportar-pdf');
+    $resp->assertOk();
+    expect($resp->headers->get('content-type'))->toContain('pdf');
 });
 
 it('mostra a coluna Arquivo de origem com link para a importação na tabela de itens', function () {

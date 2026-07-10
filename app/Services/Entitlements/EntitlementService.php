@@ -2,6 +2,7 @@
 
 namespace App\Services\Entitlements;
 
+use App\Models\AccountSubscription;
 use App\Models\Cliente;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
@@ -21,9 +22,16 @@ class EntitlementService
     {
         $subscription = $user->relationLoaded('subscription')
             ? $user->subscription
-            : $user->subscription()->with('plan')->first();
+            : $user->subscription()
+                ->where('status', AccountSubscription::STATUS_ATIVA)
+                ->with('plan')
+                ->first();
 
-        return $subscription?->plan ?? SubscriptionPlan::free();
+        if ($subscription?->status !== AccountSubscription::STATUS_ATIVA) {
+            return SubscriptionPlan::free();
+        }
+
+        return $subscription->plan ?? SubscriptionPlan::free();
     }
 
     public function can(User $user, string $cap): bool
@@ -114,7 +122,11 @@ class EntitlementService
     {
         $subscription = $user->relationLoaded('subscription')
             ? $user->subscription
-            : $user->subscription()->first();
+            : $user->subscription()->where('status', AccountSubscription::STATUS_ATIVA)->first();
+
+        if ($subscription?->status !== AccountSubscription::STATUS_ATIVA) {
+            $subscription = null;
+        }
 
         if ($subscription !== null && $subscription->limite_consumo_automatico !== null) {
             return (int) $subscription->limite_consumo_automatico;
@@ -130,7 +142,11 @@ class EntitlementService
     {
         $subscription = $user->relationLoaded('subscription')
             ? $user->subscription
-            : $user->subscription()->first();
+            : $user->subscription()->where('status', AccountSubscription::STATUS_ATIVA)->first();
+
+        if ($subscription?->status !== AccountSubscription::STATUS_ATIVA) {
+            $subscription = null;
+        }
 
         $anchor = $subscription?->ultimo_grant_em ?? $subscription?->iniciada_em;
 

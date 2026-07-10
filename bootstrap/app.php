@@ -73,12 +73,17 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($acceptsJson || $isAjax || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Sessão expirada. Atualizando credenciais, tente novamente.',
+                    'message' => 'Sua sessão de login expirou antes do envio. Recarregue a página e tente novamente. Se continuar acontecendo, fale com o suporte pelo WhatsApp.',
                     'csrf_token' => csrf_token(),
+                    'support' => true,
+                    'support_url' => config('support.whatsapp_url'),
+                    'support_label' => 'Falar no WhatsApp',
                 ], 419);
             }
 
             // Requisições web normais (form submit): redireciona para o login.
-            return redirect('/login')->with('error', 'Sua sessão expirou. Faça login novamente.');
+            return redirect('/login')->withErrors([
+                'email' => 'Sua sessão de login expirou antes do envio. Recarregue a página e tente novamente. Se continuar acontecendo, fale com o suporte pelo WhatsApp.',
+            ]);
         });
     })->create();

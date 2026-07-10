@@ -476,11 +476,11 @@
                     return;
                 }
                 pendingIds = j.participante_ids;
-                var aviso = j.suficiente ? '' : '<p class="mt-2 text-[12px] font-semibold text-red-600">Saldo insuficiente (' + j.saldo + ' crédito(s)).</p>';
+                var aviso = j.suficiente ? '' : '<p class="mt-2 text-[12px] font-semibold text-red-600">Saldo insuficiente (' + money(j.saldo) + ').</p>';
                 body.innerHTML =
                     '<p class="text-sm text-gray-700">Consultar SINTEGRA de <strong>' + j.total + '</strong> participante(s) sem Inscrição Estadual.</p>' +
-                    '<p class="mt-2 text-sm text-gray-900">Custo: <strong>' + j.custo_creditos + ' crédito(s)</strong> (' + money(j.custo_creditos) + ')</p>' +
-                    '<p class="text-[11px] text-gray-400">Saldo atual: ' + j.saldo + ' crédito(s). Estorno automático em fontes que falharem.</p>' + aviso;
+                    '<p class="mt-2 text-sm text-gray-900">Custo: <strong>' + money(j.custo_creditos) + '</strong></p>' +
+                    '<p class="text-[11px] text-gray-400">Saldo atual: ' + money(j.saldo) + '. Estorno automático em fontes que falharem.</p>' + aviso;
                 btn.disabled = !j.suficiente;
             }).catch(function () {
                 body.innerHTML = '<p class="text-sm text-red-600">Erro de rede ao calcular custo.</p>';

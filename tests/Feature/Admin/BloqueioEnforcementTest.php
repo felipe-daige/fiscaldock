@@ -29,3 +29,23 @@ it('login de usuário bloqueado é rejeitado', function () {
         ->assertSessionHasErrors('email');
     expect(auth()->check())->toBeFalse();
 });
+
+it('login ajax de usuário bloqueado retorna instrução de suporte por WhatsApp', function () {
+    User::factory()->create([
+        'email' => 'bloq-ajax@ex.com', 'password' => bcrypt('senha12345'), 'bloqueado_em' => now(),
+    ]);
+
+    post('/login', ['email' => 'bloq-ajax@ex.com', 'password' => 'senha12345'], [
+        'X-Requested-With' => 'XMLHttpRequest',
+        'Accept' => 'application/json',
+    ])
+        ->assertStatus(403)
+        ->assertJson([
+            'success' => false,
+            'support' => true,
+            'support_label' => 'Falar no WhatsApp',
+        ])
+        ->assertJsonPath('support_url', config('support.whatsapp_url'));
+
+    expect(auth()->check())->toBeFalse();
+});

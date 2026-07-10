@@ -46,6 +46,21 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('autenticado.partials.sidebar', SidebarComposer::class);
 
+        // PDFs de relatório (todos estendem reports.layout): decide marca d'água e header executivo
+        // pelo entitlement do usuário. Free/sem export pago → marca d'água; Profissional+/trial →
+        // header executivo. Controller pode sobrescrever passando as chaves explicitamente.
+        View::composer('reports.layout', function ($view) {
+            $user = auth()->user();
+            $ent = app(\App\Services\Entitlements\EntitlementService::class);
+
+            if (! $view->offsetExists('marcaDagua')) {
+                $view->with('marcaDagua', $user !== null && ! $ent->permits($user, 'export'));
+            }
+            if (! $view->offsetExists('pdfExecutivo')) {
+                $view->with('pdfExecutivo', $user !== null && $ent->permits($user, 'pdf_executivo'));
+            }
+        });
+
         Blade::directive('brl', fn ($e) => "<?php echo \App\Support\Dinheiro::brl($e); ?>");
 
         ResetPassword::toMailUsing(function (object $notifiable, string $token) {

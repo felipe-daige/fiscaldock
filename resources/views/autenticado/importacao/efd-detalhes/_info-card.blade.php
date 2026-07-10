@@ -48,11 +48,11 @@
  <p class="text-[11px] text-gray-500 mt-1">{{ $importacao->cliente?->documento_formatado ?? 'Sem vínculo a cliente' }}</p>
  </div>
  <div class="px-4 py-3 min-h-[96px] flex flex-col">
- <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Créditos</p>
+ <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Custo</p>
  <div class="flex-1 flex items-center">
- <p class="text-lg font-bold text-gray-900">{{ number_format((int) ($importacao->creditos_cobrados ?? 0), 0, ',', '.') }}</p>
+ <p class="text-lg font-bold text-gray-900">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($importacao->creditos_cobrados ?? 0))) }}</p>
  </div>
- <p class="text-[11px] text-gray-500 mt-1">cobrados no envio</p>
+ <p class="text-[11px] text-gray-500 mt-1">cobrado no envio</p>
  </div>
  <div class="px-4 py-3 min-h-[96px] flex flex-col">
  <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Status</p>

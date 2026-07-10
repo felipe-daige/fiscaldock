@@ -15,7 +15,18 @@ class RequiresEntitlement
     {
         $user = $request->user();
 
-        if ($user === null || ! $this->entitlements->permits($user, $capability)) {
+        if ($user === null) {
+            abort(403, 'Seu plano não inclui este recurso.');
+        }
+
+        // Export SEM formato = PDF: universal. Free recebe com marca d'água (aplicada no
+        // reports.layout via composer) — vira canal de aquisição, não parede. CSV/XLSX
+        // seguem gated pelo formato abaixo.
+        if ($capability === 'export' && $formato === null) {
+            return $next($request);
+        }
+
+        if (! $this->entitlements->permits($user, $capability)) {
             abort(403, 'Seu plano não inclui este recurso.');
         }
 

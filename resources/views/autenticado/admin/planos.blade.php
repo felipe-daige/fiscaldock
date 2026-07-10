@@ -4,7 +4,7 @@
     $fmtLim = fn ($v) => $v === null ? 'Ilimitado' : number_format((int) $v, 0, ',', '.');
 @endphp
 <div class="min-h-screen bg-gray-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+    <div class="admin-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
 
         <div class="mb-4 sm:mb-6">
             <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Admin — Planos</h1>
@@ -24,13 +24,13 @@
         </div>
 
         <div class="bg-white rounded border border-gray-300 overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-[13px]">
+            <div>
+                <table class="w-full text-[13px] tabela-cards">
                     <thead class="bg-gray-50 text-[10px] uppercase tracking-wide text-gray-500">
                         <tr>
                             <th class="text-left px-3 py-2">Plano</th>
                             <th class="text-right px-3 py-2">Mensal</th>
-                            <th class="text-right px-3 py-2">Créditos</th>
+                            <th class="text-right px-3 py-2">Saldo incluso/mês</th>
                             <th class="text-right px-3 py-2">Clientes</th>
                             <th class="text-right px-3 py-2">Monitorados</th>
                             <th class="text-left px-3 py-2">Profundidade</th>
@@ -41,28 +41,25 @@
                     <tbody class="divide-y divide-gray-100">
                         @foreach($planos as $p)
                             <tr class="hover:bg-gray-50">
-                                <td class="px-3 py-2.5">
+                                <td class="px-3 py-2.5" data-label="Plano">
                                     <span class="font-semibold text-gray-900">{{ $p->nome }}</span>
                                     <span class="block text-[11px] text-gray-400">{{ $p->codigo }}</span>
                                 </td>
-                                <td class="px-3 py-2.5 text-right text-gray-700">{{ $p->preco_mensal_centavos > 0 ? 'R$ '.number_format($p->preco_mensal_centavos / 100, 2, ',', '.') : '—' }}</td>
-                                <td class="px-3 py-2.5 text-right text-gray-700">
-                                    {{ number_format((int) $p->creditos_inclusos, 0, ',', '.') }}
-                                    <span class="block text-[10px] text-gray-400">≈ {{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $p->creditos_inclusos)) }}</span>
-                                </td>
-                                <td class="px-3 py-2.5 text-right text-gray-700">{{ $fmtLim($p->limite_clientes) }}</td>
-                                <td class="px-3 py-2.5 text-right text-gray-700">{{ $fmtLim($p->limite_cnpjs_monitorados) }}</td>
-                                <td class="px-3 py-2.5 text-gray-700">{{ $p->profundidade_auto_monitor ?? '—' }}</td>
-                                <td class="px-3 py-2.5 text-center">
+                                <td class="px-3 py-2.5 text-right text-gray-700" data-label="Mensal">{{ $p->preco_mensal_centavos > 0 ? 'R$ '.number_format($p->preco_mensal_centavos / 100, 2, ',', '.') : '—' }}</td>
+                                <td class="px-3 py-2.5 text-right text-gray-700" data-label="Saldo incluso/mês">{{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $p->creditos_inclusos)) }}</td>
+                                <td class="px-3 py-2.5 text-right text-gray-700" data-label="Clientes">{{ $fmtLim($p->limite_clientes) }}</td>
+                                <td class="px-3 py-2.5 text-right text-gray-700" data-label="Monitorados">{{ $fmtLim($p->limite_cnpjs_monitorados) }}</td>
+                                <td class="px-3 py-2.5 text-gray-700" data-label="Profundidade">{{ $p->profundidade_auto_monitor ?? '—' }}</td>
+                                <td class="px-3 py-2.5 text-center" data-label="Ativo">
                                     @if($p->is_active)
                                         <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase text-white" style="background-color: #047857">Ativo</span>
                                     @else
                                         <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase text-white" style="background-color: #6b7280">Inativo</span>
                                     @endif
                                 </td>
-                                <td class="px-3 py-2.5 text-right">
+                                <td class="px-3 py-2.5 text-right" data-label="Ações">
                                     <a href="{{ route('app.admin.planos.edit', $p->id) }}" data-link
-                                        class="inline-flex items-center px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide text-white hover:opacity-90" style="background-color: #0b1f3a">Editar</a>
+                                        class="admin-action w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide text-white hover:opacity-90" style="background-color: #0b1f3a">Editar</a>
                                 </td>
                             </tr>
                         @endforeach

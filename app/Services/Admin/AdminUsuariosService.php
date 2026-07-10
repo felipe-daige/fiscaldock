@@ -28,7 +28,11 @@ class AdminUsuariosService
               + (select count(*) from xml_importacoes xi where xi.user_id = users.id)) as qtd_importacoes,
              (select max(last_activity) from sessions se where se.user_id = users.id) as ultima_atividade_ts,
              (select sp.nome from account_subscriptions s join subscription_plans sp on sp.id = s.subscription_plan_id
-                where s.user_id = users.id and s.status = \'ativa\' limit 1) as plano_nome'
+                where s.user_id = users.id and s.status = \'ativa\' limit 1) as plano_nome,
+             (select s.subscription_plan_id from account_subscriptions s where s.user_id = users.id limit 1) as assinatura_plan_id,
+             (select s.status from account_subscriptions s where s.user_id = users.id limit 1) as assinatura_status,
+             (select s.ciclo from account_subscriptions s where s.user_id = users.id limit 1) as assinatura_ciclo,
+             (select s.creditos_inclusos_saldo from account_subscriptions s where s.user_id = users.id limit 1) as assinatura_bucket'
         );
 
         $busca = trim((string) ($filtros['q'] ?? ''));
@@ -67,6 +71,15 @@ class AdminUsuariosService
             ->join('subscription_plans as p', 'p.id', '=', 's.subscription_plan_id')
             ->where('s.user_id', $userId)->where('s.status', 'ativa')
             ->selectRaw('s.*, p.nome as plano_nome, p.preco_mensal_centavos, p.preco_anual_centavos')
+            ->first();
+    }
+
+    public function assinaturaAtual(int $userId): ?object
+    {
+        return DB::table('account_subscriptions as s')
+            ->join('subscription_plans as p', 'p.id', '=', 's.subscription_plan_id')
+            ->where('s.user_id', $userId)
+            ->selectRaw('s.*, p.nome as plano_nome, p.codigo as plano_codigo, p.preco_mensal_centavos, p.preco_anual_centavos')
             ->first();
     }
 

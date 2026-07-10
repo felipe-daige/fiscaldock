@@ -21,11 +21,12 @@ it('não-admin recebe 403', function () {
 
 it('admin credita e gera flash + audit', function () {
     actingAs($this->admin)
-        ->post("/app/admin/usuarios/{$this->alvo->id}/creditar", ['valor' => 40, 'motivo' => 'cortesia'])
-        ->assertRedirect("/app/admin/usuarios/{$this->alvo->id}")
+        ->from('/app/admin/usuarios')
+        ->post("/app/admin/usuarios/{$this->alvo->id}/creditar", ['valor' => 8, 'motivo' => 'cortesia'])
+        ->assertRedirect('/app/admin/usuarios')
         ->assertSessionHas('status');
 
-    expect($this->alvo->fresh()->credits)->toBe(50);
+    expect($this->alvo->fresh()->credits)->toBe(50); // 10 + R$ 8 ÷ 0,20
 });
 
 it('motivo vazio é rejeitado', function () {
@@ -44,7 +45,7 @@ it('admin bloqueia e promove', function () {
 
 it('creditar débito acima do saldo vira erro em valor, sem 500', function () {
     actingAs($this->admin)
-        ->post("/app/admin/usuarios/{$this->alvo->id}/creditar", ['valor' => -9999, 'motivo' => 'estorno grande'])
+        ->post("/app/admin/usuarios/{$this->alvo->id}/creditar", ['valor' => -9999, 'motivo' => 'estorno grande']) // R$ -9999 = -49995 cr
         ->assertSessionHasErrors('valor');
     expect($this->alvo->fresh()->credits)->toBe(10);
 });

@@ -102,5 +102,5 @@ it('nav admin mostra aba pendencias e badge de vencidas', function () {
     novaPendencia($a, ['titulo' => 'pend no badge', 'lembrar_em' => now()->subDay()]);
     $html = actingAs($a)->get('/app/admin/pendencias')->assertOk()->getContent();
     expect($html)->toContain('/app/admin/pendencias');   // aba presente
-    expect($html)->toContain('bg-red-600');              // badge de vencida
+    expect($html)->toContain('background-color:#dc2626'); // badge de vencida (hex inline: compatibilidade Tailwind v4)
 });

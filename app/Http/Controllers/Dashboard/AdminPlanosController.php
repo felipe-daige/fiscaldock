@@ -68,7 +68,8 @@ class AdminPlanosController extends Controller
             // Preços em R$ (padrão de exibição do projeto) — convertidos pra centavos ao salvar.
             'preco_mensal_reais' => ['required', 'numeric', 'min:0'],
             'preco_anual_reais' => ['required', 'numeric', 'min:0'],
-            'creditos_inclusos' => ['required', 'integer', 'min:0'],
+            // Saldo incluso digitado em R$ — convertido pra unidade interna do ledger ao salvar.
+            'saldo_incluso_reais' => ['required', 'numeric', 'min:0'],
             'faixa_slug' => ['required', 'string', 'max:20'],
             'limite_clientes' => ['nullable', 'integer', 'min:0'],
             'limite_cnpjs_monitorados' => ['nullable', 'integer', 'min:0'],
@@ -118,7 +119,7 @@ class AdminPlanosController extends Controller
             'nome' => $dados['nome'],
             'preco_mensal_centavos' => (int) round($dados['preco_mensal_reais'] * 100),
             'preco_anual_centavos' => (int) round($dados['preco_anual_reais'] * 100),
-            'creditos_inclusos' => (int) $dados['creditos_inclusos'],
+            'creditos_inclusos' => app(\App\Services\PricingCatalogService::class)->currencyToCredits((float) $dados['saldo_incluso_reais']),
             'faixa_slug' => $dados['faixa_slug'],
             // vazio = ilimitado (null)
             'limite_clientes' => $dados['limite_clientes'] ?? null,

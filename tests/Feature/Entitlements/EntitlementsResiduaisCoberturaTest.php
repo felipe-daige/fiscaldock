@@ -105,7 +105,7 @@ it('Essencial (sem excel) recebe 403 em toda rota de export XLSX', function (str
     ['get', '/app/bi/catalogo-itens/exportar-xlsx'],
 ]);
 
-it('Free puro recebe 403 em toda rota de export (antes ficavam SEM gate)', function (string $metodo, string $rota) {
+it('Free puro recebe 403 nas rotas de export por FORMATO (CSV/XLSX)', function (string $metodo, string $rota) {
     $user = User::factory()->create();
 
     $resp = $metodo === 'post'
@@ -114,13 +114,25 @@ it('Free puro recebe 403 em toda rota de export (antes ficavam SEM gate)', funct
 
     $resp->assertStatus(403);
 })->with([
-    ['get', '/app/alertas/exportar-pdf'],
     ['get', '/app/alertas/exportar-csv'],
-    ['post', '/app/clientes/exportar-pdf'],
     ['post', '/app/clientes/exportar-csv'],
-    ['post', '/app/participantes/exportar-pdf'],
     ['post', '/app/participantes/exportar-csv'],
     ['get', '/app/importacao/efd/1/exportar'],
+]);
+
+// PDF (export sem formato) é universal — Free recebe com marca d'água, vira canal de aquisição.
+it('Free puro NÃO é barrado no PDF (recebe com marca d\'água)', function (string $metodo, string $rota) {
+    $user = User::factory()->create();
+
+    $status = ($metodo === 'post'
+        ? actingAs($user)->post($rota)
+        : actingAs($user)->get($rota))->getStatusCode();
+
+    expect($status)->not->toBe(403);
+})->with([
+    ['get', '/app/alertas/exportar-pdf'],
+    ['post', '/app/clientes/exportar-pdf'],
+    ['post', '/app/participantes/exportar-pdf'],
 ]);
 
 it('Profissional passa pelo gate nas rotas XLSX (não-403)', function (string $metodo, string $rota) {
@@ -253,20 +265,86 @@ it('banner de retenção aparece para Free e não aparece para plano pago', func
 
 // ---- UI do BI: abas trancadas pro Free, livres pro pago ----
 
-it('BI index do Free mostra abas avançadas trancadas e aviso de upgrade', function () {
+it('BI index do Free mantém abas clicáveis com cadeado nas avançadas', function () {
     $resp = actingAs(User::factory()->create())->get('/app/bi/dashboard')->assertOk();
 
-    $resp->assertSee('BI completo', false);
-    $resp->assertSee('disabled', false);
-    // Abas básicas continuam clicáveis
     $resp->assertSee('data-tab="faturamento"', false);
-    $resp->assertDontSee('data-tab="cfop"', false);
+    $resp->assertSee('data-tab="cfop"', false);
+    $resp->assertSee('data-tab-lock', false);
 });
 
-it('BI index do pago não tranca nenhuma aba', function () {
+it('BI index do pago não mostra cadeado nas abas', function () {
     $resp = actingAs(coberturaComPlano(User::factory()->create(), 'essencial'))
         ->get('/app/bi/dashboard')->assertOk();
 
     $resp->assertSee('data-tab="cfop"', false);
-    $resp->assertDontSee('disponível nos planos pagos');
+    $resp->assertDontSee('data-tab-lock', false);
+});
+
+// ---- bi_completo estendido: Resumo Fiscal analítico (núcleo livre) ----
+
+it('Free puro recebe 403 nas seções analíticas do Resumo Fiscal', function (string $rota) {
+    actingAs(User::factory()->create())->get($rota)->assertStatus(403);
+})->with([
+    '/app/resumo-fiscal/apuracao-icms',
+    '/app/resumo-fiscal/apuracao-pis-cofins',
+    '/app/resumo-fiscal/retencoes',
+    '/app/resumo-fiscal/cruzamentos',
+    '/app/resumo-fiscal/alertas',
+]);
+
+it('Free puro mantém o núcleo do Resumo Fiscal (painel, resumo executivo, a-recolher)', function (string $rota) {
+    $status = actingAs(User::factory()->create())->get($rota)->getStatusCode();
+    expect($status)->not->toBe(403);
+})->with([
+    '/app/resumo-fiscal',
+    '/app/resumo-fiscal/resumo-executivo',
+    '/app/resumo-fiscal/a-recolher',
+]);
+
+it('Essencial acessa as seções analíticas do Resumo Fiscal', function () {
+    $status = actingAs(coberturaComPlano(User::factory()->create(), 'essencial'))
+        ->get('/app/resumo-fiscal/cruzamentos')->getStatusCode();
+    expect($status)->not->toBe(403);
+});
+
+it('view do Resumo Fiscal põe as seções analíticas em paywall pro Free (sem fetch)', function () {
+    $resp = actingAs(User::factory()->create())->get('/app/resumo-fiscal')->assertOk();
+
+    $resp->assertSee('data-paywall="1"', false);
+    $resp->assertSee('secao-cruzamentos', false);
+    $resp->assertSee('BI completo', false);
+    $resp->assertSee('secao-a-recolher', false);
+});
+
+it('view do Resumo Fiscal mostra tudo sem paywall pro plano pago', function () {
+    $resp = actingAs(coberturaComPlano(User::factory()->create(), 'essencial'))
+        ->get('/app/resumo-fiscal')->assertOk();
+
+    $resp->assertSee('secao-cruzamentos', false);
+    $resp->assertDontSee('data-paywall="1"', false);
+});
+
+it('sidebar mantém links reais e marca com cadeado pro Free', function () {
+    $resp = actingAs(User::factory()->create())->get('/app/dashboard')->assertOk();
+
+    $resp->assertSee('href="/app/bi/catalogo-itens"', false);
+    $resp->assertSee('href="/app/bi/cruzamentos"', false);
+    $resp->assertSee('data-lock-pill', false);
+});
+
+it('sidebar sem cadeado pro plano pago', function () {
+    $resp = actingAs(coberturaComPlano(User::factory()->create(), 'essencial'))
+        ->get('/app/dashboard')->assertOk();
+
+    $resp->assertSee('href="/app/bi/catalogo-itens"', false);
+    $resp->assertDontSee('data-lock-pill', false);
+});
+
+it('telas dedicadas abrem em paywall pro Free e normais pro pago', function () {
+    actingAs(User::factory()->create())->get('/app/bi/catalogo-itens')
+        ->assertOk()->assertSee('Conhecer os planos', false)->assertDontSee('id="catalogo-itens-tabela"', false);
+
+    actingAs(coberturaComPlano(User::factory()->create(), 'essencial'))->get('/app/bi/cruzamentos')
+        ->assertOk()->assertDontSee('Cruzamentos são do BI completo', false);
 });

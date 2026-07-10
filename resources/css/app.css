@@ -622,6 +622,53 @@
 }
 
 /* ===========================================================================
+   Admin responsivo — comportamento compartilhado por /app/admin/*.
+   =========================================================================== */
+.admin-page {
+    overflow-wrap: anywhere;
+}
+
+.admin-subnav {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+    -webkit-overflow-scrolling: touch;
+}
+
+.admin-subnav::-webkit-scrollbar {
+    height: 3px;
+}
+
+.admin-subnav::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
+}
+
+.admin-fixed-actions {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (max-width: 767px) {
+    .admin-page input:not([type="checkbox"]):not([type="radio"]),
+    .admin-page select,
+    .admin-page textarea {
+        min-height: 44px;
+        font-size: 16px;
+    }
+
+    .admin-page button,
+    .admin-page a.admin-action {
+        min-height: 44px;
+    }
+
+    .admin-dialog {
+        width: calc(100vw - 1rem) !important;
+        height: calc(100dvh - 1rem) !important;
+        max-height: calc(100dvh - 1rem) !important;
+        margin: auto;
+    }
+}
+
+/* ===========================================================================
    Tabela responsiva (mobile) — colapsa as linhas em "cards" abaixo de 768px.
 
    Uso:
@@ -672,6 +719,13 @@
         text-transform: uppercase;
         letter-spacing: 0.05em;
         color: #9ca3af;                 /* gray-400 */
+    }
+    .tabela-cards td[data-label] > * {
+        min-width: 0;
+        text-align: right;
+    }
+    .tabela-cards td[data-label] .text-left {
+        text-align: left;
     }
 }
 

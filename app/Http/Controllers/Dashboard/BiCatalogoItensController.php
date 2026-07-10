@@ -31,7 +31,26 @@ class BiCatalogoItensController extends Controller
         private NotaItemUnificadoService $service,
         private ReconciliacaoXmlEfdService $reconciliacao,
         private AlertaCatalogoDescarteService $descartes,
+        private \App\Services\Entitlements\EntitlementService $entitlements,
     ) {}
+
+    /** Free (sem bi_completo): tela abre em paywall — skeleton borrado + card, dados nem são computados. */
+    private function paywall(Request $request)
+    {
+        $view = 'autenticado.partials.paywall-page';
+        $data = [
+            'paginaTitulo' => 'Catálogo de Itens — XML + EFD',
+            'paginaSubtitulo' => 'Movimentação unificada por item, divergências de NCM e reconciliação declarado × documentado.',
+            'paywallTitulo' => 'Catálogo de Itens é do BI completo',
+            'paywallDescricao' => 'A visão unificada dos itens (XML + EFD), com alertas de NCM divergente e itens sem catálogo, faz parte do BI completo, disponível nos planos pagos.',
+        ];
+
+        if ($this->isAjaxRequest($request)) {
+            return response(view($view, $data)->render())->header('Content-Type', 'text/html');
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, array_merge(['initialView' => $view], $data));
+    }
 
     public function index(Request $request)
     {
@@ -43,6 +62,10 @@ class BiCatalogoItensController extends Controller
             }
 
             return redirect()->route('login');
+        }
+
+        if (! $this->entitlements->permits(Auth::user(), 'bi_completo')) {
+            return $this->paywall($request);
         }
 
         $userId = (int) Auth::id();

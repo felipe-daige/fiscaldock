@@ -31,6 +31,14 @@ it('sem assinatura resolve para o plano Free', function () {
     expect($this->svc->planFor($user)->codigo)->toBe('free');
 });
 
+it('assinatura não ativa não libera plano pago', function () {
+    $user = User::factory()->create();
+    assinar($user, 'profissional', ['status' => AccountSubscription::STATUS_CANCELADA]);
+
+    expect($this->svc->planFor($user)->codigo)->toBe('free');
+    expect($this->svc->permits($user, 'clearance_lote'))->toBeFalse();
+});
+
 it('can() respeita capabilities booleanas do plano', function () {
     $user = User::factory()->create();
     assinar($user, 'essencial');

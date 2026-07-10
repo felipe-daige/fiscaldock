@@ -1,5 +1,5 @@
 <div class="min-h-screen bg-gray-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+    <div class="admin-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div class="mb-4 sm:mb-6">
             <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Admin — Auditoria</h1>
             <p class="text-xs text-gray-500 mt-0.5">Trilha global das ações executadas por operadores FiscalDock.</p>
@@ -20,7 +20,7 @@
                 <tbody class="divide-y divide-gray-100">
                 @forelse($logs as $log)
                     <tr>
-                        <td class="px-3 py-2 text-[12px] text-gray-500">{{ optional($log->created_at)->format('d/m/Y H:i') }}</td>
+                        <td class="px-3 py-2 text-[12px] text-gray-500" data-label="Data">{{ optional($log->created_at)->format('d/m/Y H:i') }}</td>
                         <td class="px-3 py-2 text-gray-900" data-label="Operador">{{ $log->admin->name ?? '—' }}</td>
                         <td class="px-3 py-2 text-gray-700" data-label="Alvo">{{ $log->alvo->name ?? '—' }}</td>
                         <td class="px-3 py-2" data-label="Ação">

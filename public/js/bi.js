@@ -330,6 +330,7 @@
                 }
             });
 
+            if (response.status === 403) { showTabPaywall(tabName); return; }
             if (!response.ok) throw new Error('Erro ao carregar dados');
 
             const data = await response.json();
@@ -1802,6 +1803,42 @@
         if (el) {
             el.innerHTML = '<div class="flex items-center justify-center h-full text-gray-400 text-sm">' + message + '</div>';
         }
+    }
+
+    // Aba do BI completo bloqueada pro plano atual (endpoint devolveu 403):
+    // skeleton borrado + card explicando o porquê, com CTA pros planos.
+    function showTabPaywall(tabName) {
+        const tabEl = document.getElementById('tab-' + tabName);
+        if (!tabEl) return;
+        tabEl.innerHTML = `<div class="relative overflow-hidden rounded" style="min-height:320px">
+            <div class="pointer-events-none select-none" style="filter: blur(7px)" aria-hidden="true">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                    ${'<div class="bg-white rounded border border-gray-300 p-4"><div class="h-3 w-20 rounded bg-gray-200 mb-3"></div><div class="h-6 w-28 rounded bg-gray-300"></div></div>'.repeat(4)}
+                </div>
+                <div class="bg-white rounded border border-gray-300 p-4"><div class="h-48 rounded bg-gray-100"></div></div>
+            </div>
+            <div class="absolute inset-0 z-10 flex items-center justify-center p-4" style="background: rgba(243,244,246,.45); backdrop-filter: blur(2px)">
+                <div class="bg-white rounded-lg border border-gray-300 shadow-2xl max-w-md w-full overflow-hidden">
+                    <div class="h-1.5 w-full" style="background: linear-gradient(90deg, #0b1f3a, #1d4ed8)"></div>
+                    <div class="p-6 sm:p-7">
+                        <div class="flex items-start gap-4 mb-4">
+                            <div class="shrink-0 w-11 h-11 rounded-lg flex items-center justify-center" style="background-color:#eef2ff">
+                                <svg class="w-5 h-5" style="color:#0b1f3a" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                            </div>
+                            <div class="min-w-0">
+                                <span class="inline-block mb-1 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest text-white" style="background-color:#0b1f3a">BI completo</span>
+                                <h2 class="text-base font-bold text-gray-900 leading-snug">Esta aba faz parte do BI completo</h2>
+                            </div>
+                        </div>
+                        <p class="text-[13px] text-gray-600 leading-relaxed mb-4">Tributos, riscos, apuração × notas e CFOP são análises do BI completo, disponível nos planos pagos. Seus dados importados continuam intactos — ao assinar, a aba abre na hora com tudo calculado.</p>
+                        <ul class="space-y-2 mb-5">
+                            ${['Análises avançadas sobre o que você já importou', 'Alertas e divergências apontados automaticamente', 'Exportação em planilha nos planos com Excel/CSV'].map(t => `<li class="flex items-start gap-2 text-[12px] text-gray-700"><svg class="w-4 h-4 shrink-0 mt-px" style="color:#047857" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span>${t}</span></li>`).join('')}
+                        </ul>
+                        <a href="/app/planos" data-link class="block w-full text-center px-5 py-3 rounded text-[12px] font-bold uppercase tracking-wide text-white hover:opacity-90 transition-opacity" style="background-color:#0b1f3a">Conhecer os planos</a>
+                    </div>
+                </div>
+            </div>
+        </div>`;
     }
 
     function showTabError(tabName) {

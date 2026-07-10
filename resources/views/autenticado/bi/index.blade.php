@@ -184,17 +184,14 @@
             $tabClassMobile = fn($tab) => $tab === $defaultTab
                 ? 'bi-tab active border-gray-800 text-gray-900 whitespace-nowrap py-3 sm:py-4 px-3 sm:px-1 border-b-2 font-medium text-sm'
                 : 'bi-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 sm:py-4 px-3 sm:px-1 border-b-2 font-medium text-sm';
-            // Gate BI completo: abas analíticas exigem plano pago (trial libera). O backend
-            // também bloqueia (middleware :bi_completo nas rotas) — aqui é só UI.
+            // Gate BI completo: abas analíticas continuam clicáveis — o endpoint devolve 403
+            // e o bi.js renderiza o paywall (blur + card) no conteúdo da aba. Aqui só o cadeado.
             $biCompleto = $biCompleto ?? true;
             $abasAvancadas = ['tributos', 'riscos', 'tributario-efd', 'apuracao-notas', 'cfop'];
-            $tabBloqueada = fn($tab) => ! $biCompleto && in_array($tab, $abasAvancadas, true);
-            $classBloqueada = 'border-transparent text-gray-400 cursor-not-allowed whitespace-nowrap py-3 sm:py-4 px-3 sm:px-1 border-b-2 font-medium text-sm';
-            $renderTab = function ($tab, $label) use ($tabClassMobile, $tabBloqueada, $classBloqueada) {
-                if ($tabBloqueada($tab)) {
-                    return '<button type="button" disabled title="Disponível nos planos pagos — faça upgrade em /app/plano" class="'.$classBloqueada.'">'.$label.' <span aria-hidden="true">&#128274;</span></button>';
-                }
-                return '<button data-tab="'.$tab.'" class="'.$tabClassMobile($tab).'">'.$label.'</button>';
+            $renderTab = function ($tab, $label) use ($tabClassMobile, $biCompleto, $abasAvancadas) {
+                $svgCadeado = ' <svg data-tab-lock style="display:inline-block;width:11px;height:11px;vertical-align:-1px;margin-left:2px;color:#9ca3af" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>';
+                $cadeado = ! $biCompleto && in_array($tab, $abasAvancadas, true) ? $svgCadeado : '';
+                return '<button data-tab="'.$tab.'" class="'.$tabClassMobile($tab).'">'.$label.$cadeado.'</button>';
             };
         @endphp
         <div class="mb-4 sm:mb-6" data-default-tab="{{ $defaultTab }}">
@@ -211,9 +208,7 @@
                     {!! $renderTab('cfop', 'CFOP') !!}
                 </nav>
             </div>
-            @unless($biCompleto)
-                <p class="mt-2 text-[11px] text-gray-500">Abas analíticas (Tributos, Riscos, Tributário EFD, Apuração × Notas, CFOP) fazem parte do BI completo — disponível nos planos pagos. <a href="/app/plano" data-link class="font-semibold underline text-gray-700">Ver planos</a></p>
-            @endunless
+
         </div>
 
         {{-- Tab Faturamento --}}

@@ -162,9 +162,9 @@
                     <p class="text-[11px] text-gray-500 mt-1" data-kpi-sub>{{ $cockpit['kpis']['saude']['total'] > 0 ? 'pontos de atenção' : 'tudo em dia' }}</p>
                 </a>
                 <a href="/app/creditos" data-link data-kpi="creditos" class="block p-4 sm:p-6 hover:bg-gray-50/50 transition-colors">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Créditos</p>
-                    <p class="text-lg font-bold text-gray-900" data-kpi-valor>{{ $fmtN($cockpit['kpis']['creditos']['saldo']) }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1" data-kpi-sub>{{ $fmtN($cockpit['kpis']['creditos']['usados_mes']) }} usados este mês</p>
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Saldo</p>
+                    <p class="text-lg font-bold text-gray-900" data-kpi-valor>{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($cockpit['kpis']['creditos']['saldo'])) }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1" data-kpi-sub>{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($cockpit['kpis']['creditos']['usados_mes'])) }} usados este mês</p>
                 </a>
             </div>
         </div>

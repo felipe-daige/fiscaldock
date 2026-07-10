@@ -21,7 +21,7 @@ class ResumoFiscalController extends Controller
 
     private const LAYOUT = 'autenticado.layouts.app';
 
-    public function __construct(private ResumoFiscalService $service) {}
+    public function __construct(private ResumoFiscalService $service, private \App\Services\Entitlements\EntitlementService $entitlements) {}
 
     public function index(Request $request)
     {
@@ -48,6 +48,7 @@ class ResumoFiscalController extends Controller
             'defaultClienteId' => $defaultCliente?->id,
             'defaultCompetencia' => $defaultCompetencia,
             'temDados' => $competencias->isNotEmpty(),
+            'biCompleto' => $this->entitlements->permits(Auth::user(), 'bi_completo'),
         ];
 
         if ($this->isAjaxRequest($request)) {

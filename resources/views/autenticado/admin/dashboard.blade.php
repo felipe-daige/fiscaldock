@@ -4,7 +4,7 @@
     $periodos = ['30' => '30 dias', '90' => '90 dias', '365' => '12 meses', 'tudo' => 'Tudo'];
 @endphp
 <div class="min-h-screen bg-gray-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+    <div class="admin-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div class="mb-4 sm:mb-6">
             <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Admin — Visão Geral</h1>
             <p class="text-xs text-gray-500 mt-0.5">Analytics do negócio. Somente o operador FiscalDock vê esta área.</p>
@@ -15,7 +15,7 @@
         {{-- Filtro de período --}}
         <form method="GET" class="mb-4 flex items-center gap-2 text-[13px]">
             <label class="text-[11px] text-gray-500">Período</label>
-            <select name="periodo" onchange="this.form.submit()" class="text-[13px] py-2.5 px-3 border border-gray-300 rounded">
+            <select name="periodo" onchange="this.form.submit()" class="min-w-0 flex-1 sm:flex-none text-[13px] py-2.5 px-3 border border-gray-300 rounded">
                 @foreach($periodos as $k => $label)
                     <option value="{{ $k }}" @selected($m['periodo'] === $k)>{{ $label }}</option>
                 @endforeach
@@ -23,12 +23,12 @@
         </form>
 
         {{-- Headline (4 números-chave; o resto vira gráfico ou stat inline) --}}
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <div class="grid grid-cols-1 min-[380px]:grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
             @foreach([
                 ['Usuários', $fmtN($m['crescimento']['total_usuarios']), $fmtN($m['crescimento']['novos']).' novos · '.$fmtN($m['crescimento']['ativos']).' ativos (30d)', '#1d4ed8'],
                 ['Receita total', $fmtR($m['receita']['aprovada_total']), $fmtR($m['receita']['aprovada_periodo']).' no período', '#047857'],
                 ['MRR estimado', $fmtR($m['receita']['mrr']), $fmtN($m['receita']['assinaturas_ativas']).' assinatura(s) · '.$fmtN($m['receita']['recargas_ativas']).' recarga(s)', '#047857'],
-                ['Saldo de créditos', $fmtR(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int)$m['creditos']['saldo_base'])), $fmtR(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int)$m['creditos']['vendidos'])).' vendidos · '.$fmtR(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int)$m['creditos']['consumidos'])).' consumidos', '#334155'],
+                ['Saldo dos usuários', $fmtR(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int)$m['creditos']['saldo_base'])), $fmtR(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int)$m['creditos']['vendidos'])).' vendidos · '.$fmtR(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int)$m['creditos']['consumidos'])).' consumidos', '#334155'],
             ] as [$label, $valor, $sub, $cor])
                 <div class="bg-white rounded border border-gray-300 border-l-4 p-3" style="border-left-color: {{ $cor }}">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{{ $label }}</p>
@@ -41,14 +41,14 @@
         {{-- Tendências --}}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
             <div class="bg-white rounded border border-gray-300 p-4">
-                <div class="flex items-baseline justify-between mb-2">
+                <div class="flex flex-col min-[380px]:flex-row min-[380px]:items-baseline min-[380px]:justify-between gap-1 mb-2">
                     <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Novos usuários</p>
                     <p class="text-[11px] text-gray-500"><span class="font-bold" style="color:#047857">{{ $fmtN($m['trial']['convertidos']) }}</span> trial convertido</p>
                 </div>
                 <div id="chartSignups"></div>
             </div>
             <div class="bg-white rounded border border-gray-300 p-4">
-                <div class="flex items-baseline justify-between mb-2">
+                <div class="flex flex-col min-[380px]:flex-row min-[380px]:items-baseline min-[380px]:justify-between gap-1 mb-2">
                     <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Receita aprovada</p>
                     <p class="text-[11px] text-gray-500"><span class="font-bold text-gray-900">{{ $fmtR($m['receita']['aprovada_periodo']) }}</span> no período</p>
                 </div>
@@ -63,7 +63,7 @@
                 <div id="chartUso"></div>
             </div>
             <div class="bg-white rounded border border-gray-300 p-4">
-                <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Consumo de créditos por tipo</p>
+                <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Consumo por tipo</p>
                 @if(empty($m['creditos']['consumo_por_tipo']))
                     <p class="text-center text-gray-400 text-sm py-10">Sem consumo no período.</p>
                 @else

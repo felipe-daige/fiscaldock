@@ -28,7 +28,27 @@
                          Erros de formato de campo aparecem abaixo de cada campo (.field-error). --}}
                     <div id="login-alert" class="mb-4 hidden bg-white rounded border border-gray-300 p-3 border-l-4 border-l-red-500 text-sm text-gray-700"></div>
                     @if ($errors->any())
-                        <div class="mb-4 bg-white rounded border border-gray-300 p-3 border-l-4 border-l-red-500 text-sm text-gray-700">{{ $errors->first() }}</div>
+                        @php
+                            $primeiroErro = (string) $errors->first();
+                            $erroNormalizado = mb_strtolower($primeiroErro);
+                            $mostrarSuporte = str_contains($erroNormalizado, 'suspensa')
+                                || str_contains($erroNormalizado, 'suporte')
+                                || str_contains($erroNormalizado, 'sessão');
+                        @endphp
+                        <div class="mb-4 bg-white rounded border border-gray-300 p-3 border-l-4 border-l-red-500 text-sm text-gray-700">
+                            <p>{{ $primeiroErro }}</p>
+                            @if($mostrarSuporte)
+                                <a
+                                    href="{{ config('support.whatsapp_url') }}"
+                                    target="_blank"
+                                    rel="noopener"
+                                    class="mt-3 inline-flex items-center justify-center rounded text-white text-[12px] font-semibold px-3 py-2 hover:opacity-90"
+                                    style="background-color:#047857"
+                                >
+                                    Falar no WhatsApp
+                                </a>
+                            @endif
+                        </div>
                     @endif
 
                     <form id="login-form" class="space-y-4" method="POST" action="/login">

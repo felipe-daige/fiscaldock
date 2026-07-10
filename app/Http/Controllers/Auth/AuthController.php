@@ -231,11 +231,19 @@ class AuthController extends Controller
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
+            $mensagemContaSuspensa = 'Sua conta está temporariamente suspensa. Fale com o suporte pelo WhatsApp para regularizar o acesso.';
+
             if ($request->ajax()) {
-                return response()->json(['success' => false, 'message' => 'Conta suspensa. Fale com o suporte.'], 403);
+                return response()->json([
+                    'success' => false,
+                    'message' => $mensagemContaSuspensa,
+                    'support' => true,
+                    'support_url' => config('support.whatsapp_url'),
+                    'support_label' => 'Falar no WhatsApp',
+                ], 403);
             }
 
-            return back()->withErrors(['email' => 'Conta suspensa. Fale com o suporte.'])->withInput();
+            return back()->withErrors(['email' => $mensagemContaSuspensa])->withInput();
         }
 
         // Anti session-fixation: novo ID de sessão após autenticar.

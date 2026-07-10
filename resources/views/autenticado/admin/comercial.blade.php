@@ -9,7 +9,7 @@
     };
 @endphp
 <div class="min-h-screen bg-gray-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+    <div class="admin-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
 
         <div class="mb-4 sm:mb-6">
             <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Admin — Parâmetros comerciais</h1>
@@ -33,7 +33,7 @@
         <div class="space-y-4">
             @foreach($parametros as $chave => $p)
                 <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                    <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                    <div class="px-4 py-3 border-b border-gray-200 flex items-start justify-between gap-3">
                         <div>
                             <h2 class="text-sm font-bold text-gray-900">{{ $p['rotulo'] }}</h2>
                             @if(!empty($p['dica']))
@@ -47,7 +47,7 @@
                         @endif
                     </div>
                     <div class="p-4">
-                        <div class="grid grid-cols-2 gap-3 mb-3 text-sm">
+                        <div class="grid grid-cols-1 min-[380px]:grid-cols-2 gap-3 mb-3 text-sm">
                             <div class="bg-gray-50 rounded p-2">
                                 <p class="text-[10px] text-gray-500 uppercase tracking-wide">Padrão do sistema</p>
                                 <p class="font-bold text-gray-900">{{ $fmtVal($p['tipo'], $p['default']) }}</p>
@@ -57,8 +57,8 @@
                                 <p class="font-bold text-gray-900">{{ $fmtVal($p['tipo'], $p['efetivo']) }}</p>
                             </div>
                         </div>
-                        <div class="flex items-end gap-2">
-                            <form method="POST" action="{{ route('app.admin.comercial.update', $chave) }}" class="flex items-end gap-2 flex-1">
+                        <div class="flex flex-col sm:flex-row sm:items-end gap-2">
+                            <form method="POST" action="{{ route('app.admin.comercial.update', $chave) }}" class="flex flex-col sm:flex-row sm:items-end gap-2 flex-1">
                                 @csrf
                                 <div class="flex-1">
                                     <label class="block text-[11px] text-gray-500 mb-1">Novo valor{{ $p['tipo'] === 'float' ? ' (R$)' : '' }}</label>
@@ -66,13 +66,13 @@
                                            value="{{ $inputVal($p['tipo'], $p['efetivo']) }}"
                                            class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
                                 </div>
-                                <button type="submit" class="px-4 py-2.5 rounded text-[12px] font-bold uppercase tracking-wide text-white hover:opacity-90" style="background-color: #0b1f3a">Salvar</button>
+                                <button type="submit" class="w-full sm:w-auto px-4 py-2.5 rounded text-[12px] font-bold uppercase tracking-wide text-white hover:opacity-90" style="background-color: #0b1f3a">Salvar</button>
                             </form>
                             @if($p['override'] !== null)
-                                <form method="POST" action="{{ route('app.admin.comercial.reset', $chave) }}"
+                                <form method="POST" action="{{ route('app.admin.comercial.reset', $chave) }}" class="sm:shrink-0"
                                       onsubmit="return confirm('Voltar este parâmetro ao padrão do sistema?');">
                                     @csrf
-                                    <button type="submit" class="px-4 py-2.5 rounded text-[12px] font-bold uppercase tracking-wide text-white hover:opacity-90" style="background-color: #374151">Resetar</button>
+                                    <button type="submit" class="w-full sm:w-auto px-4 py-2.5 rounded text-[12px] font-bold uppercase tracking-wide text-white hover:opacity-90" style="background-color: #374151">Resetar</button>
                                 </form>
                             @endif
                         </div>
