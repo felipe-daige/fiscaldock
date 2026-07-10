@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password as PasswordBroker;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 
 class PasswordResetController extends Controller
@@ -86,7 +87,12 @@ class PasswordResetController extends Controller
         $status = PasswordBroker::reset(
             $validated,
             function (User $user, string $password) {
-                $user->forceFill(['password' => $password])->save();
+                // Rotaciona o remember_token para invalidar cookies "lembrar de mim"
+                // emitidos antes da troca de senha (sessões roubadas incluídas).
+                $user->forceFill([
+                    'password' => $password,
+                    'remember_token' => Str::random(60),
+                ])->save();
                 event(new PasswordReset($user));
             }
         );

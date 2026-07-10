@@ -213,7 +213,7 @@ class AuthController extends Controller
 
         $credentials = $request->only('email', 'password');
 
-        $user = Auth::attempt($credentials);
+        $user = Auth::attempt($credentials, $request->boolean('remember'));
 
         if (! $user) {
             if ($request->ajax()) {
