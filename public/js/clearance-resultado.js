@@ -472,10 +472,77 @@ function initClearanceResultado() {
     }
 }
 
-window.initClearanceResultado = initClearanceResultado;
+// Bloco "quem é seu cliente?": nenhum CNPJ do documento está na carteira — o usuário
+// escolhe o lado que vira Cliente; o outro fica como Participante.
+function initClassificarPartes() {
+    const bloco = document.getElementById('classificar-partes-bloco');
+    if (!bloco || bloco.dataset.classificarInitialized === '1') return;
+    bloco.dataset.classificarInitialized = '1';
+
+    const feedback = document.getElementById('classificar-partes-feedback');
+    const dispensar = document.getElementById('classificar-partes-dispensar');
+    const botoes = Array.from(bloco.querySelectorAll('[data-classificar-lado]'));
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    const csrf = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+    if (dispensar) {
+        dispensar.addEventListener('click', () => bloco.remove());
+    }
+
+    botoes.forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            botoes.forEach((b) => { b.disabled = true; });
+            btn.textContent = 'Cadastrando...';
+            if (feedback) feedback.textContent = '';
+
+            try {
+                const response = await fetch(bloco.dataset.endpoint, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({
+                        chave_acesso: bloco.dataset.chave,
+                        lado: btn.dataset.classificarLado,
+                    }),
+                });
+                const data = await response.json().catch(() => ({}));
+
+                if (response.ok && data.success) {
+                    btn.textContent = 'Cliente cadastrado ✓';
+                    btn.style.backgroundColor = '#15803d';
+                    if (feedback) {
+                        feedback.textContent = (data.cliente_nome || 'Cliente')
+                            + ' agora é seu cliente; a outra parte ficou como participante. Recarregando...';
+                    }
+                    window.setTimeout(() => window.location.reload(), 1200);
+                } else {
+                    botoes.forEach((b) => { b.disabled = false; });
+                    btn.textContent = 'Este é meu cliente';
+                    if (feedback) feedback.textContent = data.error || ('Erro ao cadastrar (HTTP ' + response.status + ').');
+                }
+            } catch (err) {
+                botoes.forEach((b) => { b.disabled = false; });
+                btn.textContent = 'Este é meu cliente';
+                if (feedback) feedback.textContent = err.message || 'Falha de rede.';
+            }
+        });
+    });
+}
+
+function bootClearanceResultado() {
+    initClearanceResultado();
+    initClassificarPartes();
+}
+
+window.initClearanceResultado = bootClearanceResultado;
 
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initClearanceResultado);
+    document.addEventListener('DOMContentLoaded', bootClearanceResultado);
 } else {
-    initClearanceResultado();
+    bootClearanceResultado();
 }

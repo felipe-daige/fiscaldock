@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\CteConsulta;
 use App\Models\NfeConsulta;
+use App\Services\Clearance\ParticipanteAutoCadastroService;
 use App\Services\Clearance\Sefaz\ContextoPersistencia;
 use App\Services\Clearance\Sefaz\DocumentoConsultaService;
 use App\Services\Clearance\Sefaz\SnapshotPersister;
@@ -55,6 +56,11 @@ class ProcessarClearanceJob implements ShouldQueue
                 consultaLoteId: $this->loteId,
                 custo: (float) $this->custoCreditos,
             ));
+
+            // Contrapartes (emit/dest/tomador/remetente) com CNPJ novo viram Participante
+            // (create-only, sem consulta externa) — o usuário decide depois se consulta o CNPJ.
+            app(ParticipanteAutoCadastroService::class)
+                ->criarDesdeSnapshot($snapshot, $this->userId, $this->clienteId);
         }
 
         // Estorno por doc (overwrite = idempotente em retry do job). Somado por FecharClearanceLoteService.

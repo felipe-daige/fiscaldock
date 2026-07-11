@@ -1390,7 +1390,7 @@ class ParticipanteController extends Controller
                 ->whereNotNull('importacao_efd_id')
                 ->orWhere('origem_tipo', 'ilike', 'SPED%')),
             'xml' => $query->whereNull('importacao_efd_id')
-                ->whereIn(DB::raw('upper(origem_tipo)'), ['XML', 'NFE', 'NFSE']),
+                ->whereIn(DB::raw('upper(origem_tipo)'), ['XML', 'NFE', 'NFSE', 'CTE']),
             'manual' => $query->where('origem_tipo', 'MANUAL'),
             default => null,
         };

@@ -521,12 +521,106 @@
     </div>
 </div>
 
+{{-- Modal precheck: chave já na base (acervo) ou já consultada (snapshot) --}}
+<style>
+    #modal-precheck .modal-precheck-card {
+        animation: modalPrecheckPop 180ms ease-out;
+    }
+    @keyframes modalPrecheckPop {
+        from { opacity: 0; transform: translateY(10px) scale(0.98); }
+        to { opacity: 1; transform: none; }
+    }
+</style>
+<div id="modal-precheck" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="modal-precheck-titulo">
+    <div class="absolute inset-0" style="background-color: rgba(17, 24, 39, 0.6);" data-precheck-close></div>
+    <div class="modal-precheck-card relative bg-white rounded-lg border border-gray-300 shadow-2xl w-full max-w-lg overflow-hidden">
+        <div class="px-4 py-3.5 border-b border-gray-200 bg-gray-50 flex items-start justify-between gap-3">
+            <div class="flex items-start gap-3">
+                <span class="mt-0.5 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background-color: #dbeafe;">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #1d4ed8;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </span>
+                <div>
+                    <h3 id="modal-precheck-titulo" class="text-sm font-bold text-gray-900 uppercase tracking-wide">Nota já está na sua base</h3>
+                    <p id="modal-precheck-subtitulo" class="text-[11px] text-gray-500 mt-0.5"></p>
+                </div>
+            </div>
+            <button type="button" class="text-gray-400 hover:text-gray-600 p-1 -m-1" data-precheck-close aria-label="Fechar">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="px-4 py-4 space-y-3">
+            {{-- Card da nota encontrada no acervo --}}
+            <div id="modal-precheck-nota" class="hidden border border-gray-200 rounded overflow-hidden">
+                <div class="bg-gray-50 px-3 py-2 border-b border-gray-200 flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span id="modal-precheck-origem" class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold text-white uppercase flex-shrink-0"></span>
+                        <span id="modal-precheck-doc" class="text-xs font-semibold text-gray-900 truncate"></span>
+                    </div>
+                    <a id="modal-precheck-atalho-listagem" href="#" data-link class="hidden items-center gap-1 text-[11px] font-medium text-blue-700 hover:underline whitespace-nowrap flex-shrink-0">
+                        Ver na listagem
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+                <div class="px-3 py-2.5 space-y-1">
+                    <p id="modal-precheck-partes" class="text-xs text-gray-700"></p>
+                    <p id="modal-precheck-valores" class="text-xs text-gray-900 font-semibold"></p>
+                    <p id="modal-precheck-chave" class="text-[10px] text-gray-400 font-mono break-all"></p>
+                </div>
+            </div>
+
+            {{-- Última verificação SEFAZ (snapshot) --}}
+            <div id="modal-precheck-snapshot" class="hidden text-xs rounded border p-2.5" style="border-color: #bfdbfe; background-color: #eff6ff; color: #1e40af;"></div>
+
+            {{-- Comparativo de preço (só na variante acervo) --}}
+            <div id="modal-precheck-comparativo" class="hidden grid grid-cols-2 gap-2">
+                <div class="border border-gray-200 rounded p-2.5 bg-gray-50/60">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Busca avulsa</p>
+                    <p id="modal-precheck-preco-avulsa" class="text-base font-bold text-gray-400 line-through mt-0.5"></p>
+                    <p class="text-[10px] text-gray-400 mt-0.5">desnecessária — nota já importada</p>
+                </div>
+                <div class="rounded p-2.5 border" style="border-color: #86efac; background-color: #f0fdf4;">
+                    <p class="text-[10px] font-semibold uppercase tracking-wide" style="color: #15803d;">Clearance da nota</p>
+                    <p id="modal-precheck-preco-clearance" class="text-base font-bold mt-0.5" style="color: #166534;"></p>
+                    <p class="text-[10px] mt-0.5" style="color: #15803d;">verificação SEFAZ da nota da base</p>
+                </div>
+            </div>
+
+            <p id="modal-precheck-mensagem" class="text-xs text-gray-600"></p>
+
+            {{-- Etapa de confirmação de pagamento --}}
+            <div id="modal-precheck-confirm" class="hidden rounded border p-3" style="border-color: #fcd34d; background-color: #fffbeb;">
+                <p class="text-xs font-bold uppercase tracking-wide" style="color: #92400e;">Confirmar pagamento</p>
+                <p id="modal-precheck-confirm-texto" class="text-xs mt-1" style="color: #78350f;"></p>
+            </div>
+
+            <div id="modal-precheck-erro" class="hidden text-xs font-medium rounded border p-2.5" style="color: #b91c1c; border-color: #fecaca; background-color: #fef2f2;"></div>
+        </div>
+
+        <div class="px-4 py-3 border-t border-gray-200 bg-gray-50 flex flex-col-reverse sm:flex-row gap-2 sm:items-center sm:justify-between">
+            <a id="modal-precheck-detalhe" href="#" data-link class="hidden items-center justify-center gap-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:underline">Abrir detalhe da nota</a>
+            <div class="flex flex-col sm:flex-row gap-2 sm:ml-auto">
+                <button type="button" data-precheck-close class="inline-flex items-center justify-center px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium">Agora não</button>
+                <button id="modal-precheck-acao" type="button" class="hidden items-center justify-center px-4 py-2 text-white rounded text-xs font-semibold" style="background-color: #1f2937;"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     window.BUSCAR_NFE_CONFIG = {
         custo: {{ $custoEstimadoCreditos }},
         creditUnitPrice: {{ app(\App\Services\PricingCatalogService::class)->creditUnitPrice() }},
         endpoints: {
             consultar: '{{ route('app.clearance.buscar.consultar') }}',
+            precheck: '{{ route('app.clearance.buscar.precheck') }}',
+            validar: '{{ route('app.clearance.validar') }}',
             resultado: '{{ url('/app/clearance/buscar/resultado') }}',
             sse: '{{ url('/app/consulta/progresso/stream') }}',
         },

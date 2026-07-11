@@ -376,6 +376,8 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         Route::post('/sintegra/executar', [ClearanceController::class, 'sintegraExecutar'])->name('sintegra.executar');
         Route::post('/sintegra/status', [ClearanceController::class, 'sintegraStatus'])->name('sintegra.status');
         Route::get('/buscar', [ClearanceController::class, 'buscarNfe'])->name('buscar');
+        Route::post('/buscar/precheck', [ClearanceController::class, 'buscarPrecheck'])->name('buscar.precheck');
+        Route::post('/buscar/classificar-partes', [ClearanceController::class, 'classificarPartesBusca'])->name('buscar.classificar-partes');
         Route::post('/buscar/consultar', [ClearanceController::class, 'consultarNfe'])->name('buscar.consultar');
         Route::get('/buscar/resultado/{consultaLoteId}', [ClearanceController::class, 'resultadoUltimaConsulta'])->name('buscar.resultado');
         Route::get('/buscar/resultado-local/{token}', [ClearanceController::class, 'resultadoBuscaLocal'])->name('buscar.resultado-local');

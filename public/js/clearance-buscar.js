@@ -49,6 +49,27 @@ function initClearanceBuscar() {
     const btnDetalhe = document.getElementById('btn-resultado-detalhe');
     const btnReconsultar = document.getElementById('btn-resultado-reconsultar');
 
+    const modalPrecheck = document.getElementById('modal-precheck');
+    const modalPrecheckTitulo = document.getElementById('modal-precheck-titulo');
+    const modalPrecheckSubtitulo = document.getElementById('modal-precheck-subtitulo');
+    const modalPrecheckNota = document.getElementById('modal-precheck-nota');
+    const modalPrecheckOrigem = document.getElementById('modal-precheck-origem');
+    const modalPrecheckDoc = document.getElementById('modal-precheck-doc');
+    const modalPrecheckPartes = document.getElementById('modal-precheck-partes');
+    const modalPrecheckValores = document.getElementById('modal-precheck-valores');
+    const modalPrecheckChave = document.getElementById('modal-precheck-chave');
+    const modalPrecheckSnapshot = document.getElementById('modal-precheck-snapshot');
+    const modalPrecheckComparativo = document.getElementById('modal-precheck-comparativo');
+    const modalPrecheckPrecoAvulsa = document.getElementById('modal-precheck-preco-avulsa');
+    const modalPrecheckPrecoClearance = document.getElementById('modal-precheck-preco-clearance');
+    const modalPrecheckMensagem = document.getElementById('modal-precheck-mensagem');
+    const modalPrecheckConfirm = document.getElementById('modal-precheck-confirm');
+    const modalPrecheckConfirmTexto = document.getElementById('modal-precheck-confirm-texto');
+    const modalPrecheckErro = document.getElementById('modal-precheck-erro');
+    const modalPrecheckAtalhoListagem = document.getElementById('modal-precheck-atalho-listagem');
+    const modalPrecheckDetalhe = document.getElementById('modal-precheck-detalhe');
+    const modalPrecheckAcao = document.getElementById('modal-precheck-acao');
+
     const defaultButtonLabel = button ? button.textContent.trim() : 'Consultar documento';
 
     let currentEventSource = null;
@@ -331,7 +352,188 @@ function initClearanceBuscar() {
         };
     }
 
-    async function enviarConsulta() {
+    function csrf() {
+        const meta = document.querySelector('meta[name="csrf-token"]');
+        return meta ? meta.getAttribute('content') : '';
+    }
+
+    function fecharModalPrecheck() {
+        if (!modalPrecheck) return;
+        modalPrecheck.classList.add('hidden');
+        modalPrecheck.classList.remove('flex');
+    }
+
+    function mostrarErroModalPrecheck(msg) {
+        if (!modalPrecheckErro) return;
+        modalPrecheckErro.textContent = msg;
+        modalPrecheckErro.classList.remove('hidden');
+    }
+
+    async function fazerPrecheck(chave) {
+        if (!ENDPOINTS.precheck) return null;
+        try {
+            const response = await fetch(ENDPOINTS.precheck, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrf(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ chave_acesso: chave }),
+            });
+            if (!response.ok) return null; // fail-open: o guard server-side segue protegendo a cobrança
+            return await response.json().catch(() => null);
+        } catch (_) {
+            return null;
+        }
+    }
+
+    // Dispara o clearance da nota que já está na base (tier básico — mais barato que a avulsa).
+    async function validarNoClearance(pre) {
+        if (!ENDPOINTS.validar || !pre || !pre.nota_id) return;
+        modalPrecheckAcao.disabled = true;
+        modalPrecheckAcao.textContent = 'Iniciando verificação...';
+        modalPrecheckErro.classList.add('hidden');
+
+        const origens = {};
+        origens[pre.nota_id] = pre.origem || 'xml';
+        const tabId = 'dfe-acervo-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+
+        try {
+            const response = await fetch(ENDPOINTS.validar, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrf(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({
+                    nota_ids: [pre.nota_id],
+                    origens: origens,
+                    tipo: 'basico',
+                    tab_id: tabId,
+                }),
+            });
+            const data = await response.json().catch(() => ({}));
+
+            if (response.status === 402) {
+                mostrarErroModalPrecheck(`Saldo insuficiente. Esta verificação custa ${brl(pre.custo_clearance || 3)}.`);
+            } else if (response.status === 403) {
+                mostrarErroModalPrecheck(data.error || 'Seu plano não inclui a verificação de notas da base.');
+            } else if (!response.ok || data.success === false) {
+                mostrarErroModalPrecheck(data.error || data.message || ('Erro ao iniciar a verificação (HTTP ' + response.status + ').'));
+            } else {
+                if (typeof data.novo_saldo === 'number') atualizarSaldo(data.novo_saldo);
+                if (data.resultado_url) {
+                    window.location.assign(data.resultado_url);
+                    return;
+                }
+                fecharModalPrecheck();
+            }
+        } catch (err) {
+            mostrarErroModalPrecheck(err.message || 'Falha de rede ao iniciar a verificação.');
+        }
+
+        modalPrecheckAcao.disabled = false;
+        modalPrecheckAcao.textContent = `Confirmar e pagar — ${brl(pre.custo_clearance || 3)}`;
+    }
+
+    // Etapa de confirmação de pagamento: 1º clique arma, 2º clique executa. Nada é
+    // debitado antes do "Confirmar e pagar".
+    function armarConfirmacaoPagamento(valorLabel, onConfirm) {
+        modalPrecheckErro.classList.add('hidden');
+        modalPrecheckMensagem.classList.add('hidden');
+        modalPrecheckComparativo.classList.add('hidden');
+        modalPrecheckConfirmTexto.textContent = 'O valor de ' + valorLabel
+            + ' será debitado do seu saldo assim que a consulta iniciar.';
+        modalPrecheckConfirm.classList.remove('hidden');
+        modalPrecheckAcao.textContent = 'Confirmar e pagar — ' + valorLabel;
+        modalPrecheckAcao.onclick = onConfirm;
+    }
+
+    function abrirModalPrecheck(pre, chave) {
+        if (!modalPrecheck) return;
+        [modalPrecheckErro, modalPrecheckSnapshot, modalPrecheckNota, modalPrecheckComparativo,
+            modalPrecheckConfirm].forEach((el) => el.classList.add('hidden'));
+        [modalPrecheckDetalhe, modalPrecheckAcao, modalPrecheckAtalhoListagem].forEach((el) => {
+            el.classList.add('hidden');
+            el.classList.remove('inline-flex');
+        });
+        modalPrecheckMensagem.classList.remove('hidden');
+        modalPrecheckAcao.disabled = false;
+
+        if (pre.snapshot) {
+            modalPrecheckSnapshot.textContent = 'Última verificação SEFAZ: '
+                + (pre.snapshot.status || '—')
+                + (pre.snapshot.consultado_em_label ? ' em ' + pre.snapshot.consultado_em_label : '') + '.';
+            modalPrecheckSnapshot.classList.remove('hidden');
+        }
+
+        if (pre.no_acervo) {
+            // Nota já importada (XML/EFD): não deixa pagar a busca avulsa — oferece o clearance da nota.
+            modalPrecheckTitulo.textContent = 'Nota já está na sua base';
+            modalPrecheckSubtitulo.textContent = 'Encontramos esta chave entre as notas já importadas.';
+            const nota = pre.nota || {};
+            modalPrecheckOrigem.textContent = nota.origem_acervo_label || (pre.origem || '').toUpperCase();
+            modalPrecheckOrigem.style.backgroundColor = nota.origem_acervo_hex || '#4b5563';
+            modalPrecheckDoc.textContent = (nota.tipo_documento || 'DF-e')
+                + (nota.numero ? ' nº ' + nota.numero : '')
+                + (nota.serie ? ' · série ' + nota.serie : '');
+            modalPrecheckPartes.textContent = [nota.emit_nome, nota.dest_nome].filter(Boolean).join(' para ') || '';
+            modalPrecheckValores.textContent = [nota.valor_total_label, nota.data_emissao_label].filter(Boolean).join(' · ');
+            modalPrecheckChave.textContent = chave || '';
+            modalPrecheckNota.classList.remove('hidden');
+
+            modalPrecheckPrecoAvulsa.textContent = brl(pre.custo_avulsa || CUSTO);
+            modalPrecheckPrecoClearance.textContent = brl(pre.custo_clearance || 3);
+            modalPrecheckComparativo.classList.remove('hidden');
+
+            modalPrecheckMensagem.textContent = 'Deseja verificar a situação desta nota na SEFAZ pelo clearance?';
+
+            if (pre.listagem_url) {
+                modalPrecheckAtalhoListagem.href = pre.listagem_url;
+                modalPrecheckAtalhoListagem.classList.remove('hidden');
+                modalPrecheckAtalhoListagem.classList.add('inline-flex');
+            }
+            if (pre.detalhe_url) {
+                modalPrecheckDetalhe.href = pre.detalhe_url;
+                modalPrecheckDetalhe.classList.remove('hidden');
+                modalPrecheckDetalhe.classList.add('inline-flex');
+            }
+            modalPrecheckAcao.textContent = `Sim, verificar na SEFAZ — ${brl(pre.custo_clearance || 3)}`;
+            modalPrecheckAcao.onclick = () => armarConfirmacaoPagamento(
+                brl(pre.custo_clearance || 3),
+                () => validarNoClearance(pre)
+            );
+            modalPrecheckAcao.classList.remove('hidden');
+            modalPrecheckAcao.classList.add('inline-flex');
+        } else {
+            // Sem acervo, mas já consultada antes (snapshot): confirma antes de recobrar.
+            modalPrecheckTitulo.textContent = 'Documento já consultado';
+            modalPrecheckSubtitulo.textContent = 'Esta chave já tem um resultado SEFAZ registrado no sistema.';
+            modalPrecheckMensagem.textContent = 'Deseja consultar novamente por '
+                + brl(pre.custo_avulsa || CUSTO) + '? O resultado anterior será sobrescrito.';
+            modalPrecheckAcao.textContent = `Sim, consultar novamente — ${brl(pre.custo_avulsa || CUSTO)}`;
+            modalPrecheckAcao.onclick = () => armarConfirmacaoPagamento(
+                brl(pre.custo_avulsa || CUSTO),
+                () => {
+                    fecharModalPrecheck();
+                    enviarConsulta({ skipPrecheck: true, reconsultar: true });
+                }
+            );
+            modalPrecheckAcao.classList.remove('hidden');
+            modalPrecheckAcao.classList.add('inline-flex');
+        }
+
+        modalPrecheck.classList.remove('hidden');
+        modalPrecheck.classList.add('flex');
+    }
+
+    async function enviarConsulta(opts = {}) {
         if (inFlight) return;
         if (!button || button.disabled) return;
 
@@ -340,14 +542,25 @@ function initClearanceBuscar() {
         const cliente = selectedCliente();
         const tabId = 'dfe-' + tipo + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
 
+        // Precheck: chave já importada (acervo) não paga busca avulsa — modal oferece o clearance
+        // da nota. Chave já consultada (snapshot) pede confirmação antes de recobrar.
+        if (!opts.skipPrecheck) {
+            setButtonLoading(true);
+            const pre = await fazerPrecheck(chave);
+            setButtonLoading(false);
+            if (pre && pre.success && (pre.no_acervo || pre.snapshot)) {
+                abrirModalPrecheck(pre, chave);
+                return;
+            }
+        }
+
         resetEstadosVisuais();
         show(blocoProgresso);
         setProgresso(5, 'Enviando requisição...');
         setButtonLoading(true);
         inFlight = true;
 
-        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-        const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+        const csrfToken = csrf();
 
         try {
             const response = await fetch(ENDPOINTS.consultar, {
@@ -364,6 +577,7 @@ function initClearanceBuscar() {
                     chave_acesso: chave,
                     cliente_id: cliente.id,
                     tab_id: tabId,
+                    reconsultar: opts.reconsultar === true,
                 }),
             });
 
@@ -435,7 +649,7 @@ function initClearanceBuscar() {
             abrirSse(data.tab_id || tabId, data.consulta_lote_id);
 
             if (btnReconsultar) {
-                btnReconsultar.onclick = () => enviarConsulta();
+                btnReconsultar.onclick = () => enviarConsulta({ skipPrecheck: true, reconsultar: true });
             }
         } catch (err) {
             mostrarErro('Falha de rede', err.message || 'Não foi possível contatar o servidor.', false);
@@ -499,12 +713,16 @@ function initClearanceBuscar() {
         if (!item.disabled) item.addEventListener('change', updateState);
     });
 
-    button.addEventListener('click', enviarConsulta);
+    button.addEventListener('click', () => enviarConsulta());
     input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !button.disabled) {
             e.preventDefault();
             enviarConsulta();
         }
+    });
+
+    document.querySelectorAll('[data-precheck-close]').forEach((el) => {
+        el.addEventListener('click', fecharModalPrecheck);
     });
 
     updateState();

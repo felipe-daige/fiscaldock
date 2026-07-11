@@ -282,6 +282,216 @@ class ClearanceController extends Controller
     }
 
     /**
+     * Precheck da busca avulsa: informa se a chave já está no acervo (xml/efd) e/ou já tem
+     * snapshot SEFAZ. A UI intercepta o submit com essa resposta e oferece o clearance da
+     * própria nota (tier básico, mais barato) em vez da consulta avulsa. Não cobra nem cria lote.
+     */
+    public function buscarPrecheck(Request $request)
+    {
+        if (! Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Usuário não autenticado.',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        if (! config('clearance.busca_avulsa.habilitada')) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Busca avulsa em desenvolvimento. Em breve.',
+            ], Response::HTTP_SERVICE_UNAVAILABLE);
+        }
+
+        $validated = $request->validate([
+            'chave_acesso' => 'required|string',
+        ]);
+
+        $chave = preg_replace('/\D/', '', $validated['chave_acesso']);
+
+        if (strlen($chave) !== 44) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro de validação.',
+                'errors' => ['chave_acesso' => ['A chave deve ter 44 dígitos numéricos.']],
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $userId = Auth::id();
+        $acervo = $this->localizarNotasNoAcervo($userId, collect([$chave]));
+        $snapshot = $this->snapshotResumoDfe($userId, $chave);
+
+        if (! isset($acervo[$chave])) {
+            return response()->json([
+                'success' => true,
+                'no_acervo' => false,
+                'snapshot' => $snapshot,
+                'custo_avulsa' => self::CLEARANCE_NFE_AVULSA_CUSTO,
+            ]);
+        }
+
+        $origem = $acervo[$chave]['origem'];
+        $nota = $acervo[$chave]['nota'];
+        $resumo = $this->formatarResultadoAcervoExistente($nota, $origem, 1);
+
+        return response()->json([
+            'success' => true,
+            'no_acervo' => true,
+            'origem' => $origem,
+            'nota_id' => $nota->id,
+            'detalhe_url' => $resumo->detalhe_url,
+            'listagem_url' => route('app.notas.index', ['busca' => $chave]),
+            'nota' => [
+                'tipo_documento' => $resumo->tipo_documento,
+                'numero' => $resumo->numero,
+                'serie' => $resumo->serie,
+                'valor_total_label' => $resumo->valor_total_label,
+                'data_emissao_label' => $resumo->data_emissao_label,
+                'emit_nome' => $resumo->emit_nome,
+                'dest_nome' => $resumo->dest_nome,
+                'origem_acervo_label' => $resumo->origem_acervo_label,
+                'origem_acervo_hex' => $resumo->origem_acervo_hex,
+            ],
+            'snapshot' => $snapshot,
+            'custo_clearance' => ValidacaoContabilService::custoUnitarioPorTier('basico'),
+            'custo_avulsa' => self::CLEARANCE_NFE_AVULSA_CUSTO,
+        ]);
+    }
+
+    /**
+     * Dados pro bloco "quem é seu cliente?" da tela de resultado da busca avulsa: só aparece
+     * quando NENHUM dos CNPJs do documento (emitente/destinatário) já é cliente do usuário —
+     * aí ele escolhe qual lado vira Cliente; o outro fica como Participante (contraparte).
+     */
+    private function montarClassificacaoPartes(int $userId, object $nota): ?array
+    {
+        $fmtCnpj = fn (string $d) => preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $d);
+
+        $lados = [];
+        $emit = preg_replace('/\D/', '', (string) ($nota->emit_cnpj ?? ''));
+        $dest = preg_replace('/\D/', '', (string) ($nota->dest_cnpj ?? ''));
+
+        if (strlen($emit) === 14) {
+            $lados[] = ['lado' => 'emit', 'papel' => 'Emitente', 'cnpj' => $emit, 'cnpj_fmt' => $fmtCnpj($emit), 'nome' => $nota->emit_nome ?: '—'];
+        }
+        if (strlen($dest) === 14 && $dest !== $emit) {
+            $lados[] = ['lado' => 'dest', 'papel' => 'Destinatário', 'cnpj' => $dest, 'cnpj_fmt' => $fmtCnpj($dest), 'nome' => $nota->dest_nome ?: '—'];
+        }
+
+        if ($lados === []) {
+            return null;
+        }
+
+        $jaEhCliente = Cliente::where('user_id', $userId)
+            ->whereIn('documento', array_column($lados, 'cnpj'))
+            ->exists();
+
+        if ($jaEhCliente) {
+            return null;
+        }
+
+        return [
+            'chave_acesso' => $nota->chave_acesso,
+            'lados' => $lados,
+        ];
+    }
+
+    /**
+     * Classifica as partes de um snapshot consultado: o lado escolhido ('emit'|'dest') vira
+     * Cliente do usuário (criado a partir dos dados da SEFAZ), o snapshot é reassociado a ele
+     * e o participante auto-criado com esse CNPJ é removido. O outro lado permanece participante.
+     */
+    public function classificarPartesBusca(Request $request)
+    {
+        if (! Auth::check()) {
+            return response()->json(['success' => false, 'error' => 'Usuário não autenticado.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $validated = $request->validate([
+            'chave_acesso' => 'required|string',
+            'lado' => 'required|in:emit,dest',
+        ]);
+
+        $chave = preg_replace('/\D/', '', $validated['chave_acesso']);
+        $userId = Auth::id();
+
+        $isCte = strlen($chave) === 44 && substr($chave, 20, 2) === '57';
+        $snap = $isCte
+            ? \App\Models\CteConsulta::where('user_id', $userId)->where('chave_acesso', $chave)->first()
+            : \App\Models\NfeConsulta::where('user_id', $userId)->where('chave_acesso', $chave)->first();
+
+        if (! $snap) {
+            return response()->json(['success' => false, 'error' => 'Consulta não encontrada para esta chave.'], Response::HTTP_NOT_FOUND);
+        }
+
+        $lado = $validated['lado'];
+        $cnpj = preg_replace('/\D/', '', (string) ($lado === 'emit' ? $snap->emit_cnpj : $snap->dest_cnpj));
+        $nome = $lado === 'emit' ? $snap->emit_nome : $snap->dest_nome;
+
+        if (strlen($cnpj) !== 14) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Este lado do documento não tem um CNPJ válido para virar cliente.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $cliente = Cliente::where('user_id', $userId)->where('documento', $cnpj)->first();
+
+        if (! $cliente) {
+            $cliente = Cliente::create([
+                'user_id' => $userId,
+                'tipo_pessoa' => 'PJ',
+                'documento' => $cnpj,
+                'razao_social' => $nome ?: null,
+                'uf' => $lado === 'emit' ? ($snap->emit_uf ?? null) : ($snap->dest_uf ?? null),
+                'municipio' => $lado === 'emit' ? ($snap->emit_municipio ?? null) : ($snap->dest_municipio ?? null),
+                'inscricao_estadual' => $lado === 'emit' ? ($snap->emit_ie ?? null) : null,
+            ]);
+        }
+
+        // Reassocia o snapshot ao cliente correto e remove o participante auto-criado
+        // com esse CNPJ (agora ele é cliente, não contraparte). Só apaga o que este
+        // fluxo criou (origem_ref.fonte) — participante manual/EFD não é tocado.
+        $snap->update(['cliente_id' => $cliente->id]);
+        Participante::where('user_id', $userId)
+            ->where('documento', $cnpj)
+            ->where('origem_ref->fonte', 'clearance_snapshot')
+            ->delete();
+
+        // Garante o outro lado como participante, agora vinculado ao cliente novo.
+        app(\App\Services\Clearance\ParticipanteAutoCadastroService::class)->criarDesdeColunas(
+            $snap->getAttributes(),
+            $isCte ? 'CTE' : 'NFE',
+            $chave,
+            $userId,
+            $cliente->id
+        );
+
+        return response()->json([
+            'success' => true,
+            'cliente_id' => $cliente->id,
+            'cliente_nome' => $cliente->razao_social ?: $cliente->documento,
+        ]);
+    }
+
+    /**
+     * Resumo do snapshot SEFAZ (nfe_consultas/cte_consultas) de uma chave, se existir.
+     */
+    private function snapshotResumoDfe(int $userId, string $chave): ?array
+    {
+        $snap = \App\Models\NfeConsulta::where('user_id', $userId)->where('chave_acesso', $chave)->first()
+            ?? \App\Models\CteConsulta::where('user_id', $userId)->where('chave_acesso', $chave)->first();
+
+        if (! $snap) {
+            return null;
+        }
+
+        return [
+            'status' => $snap->status,
+            'consultado_em_label' => optional($snap->consultado_em)->format('d/m/Y H:i'),
+        ];
+    }
+
+    /**
      * Busca avulsa de DF-e por chave (atrás da feature flag clearance.busca_avulsa.habilitada;
      * desabilitada → 503). Valida input, deduplica contra acervo/snapshot, debita créditos e
      * processa no Laravel (InfoSimples). Sem n8n — despacho desligado no cutover de 2026-06-07.
@@ -838,6 +1048,9 @@ class ClearanceController extends Controller
                     : ($notaResultado['chave_acesso'] ?? $notaResultado['nfe_id'] ?? null),
                 'aguardaPersistencia' => $lote->isFinalizado() && ! $notaResultado,
                 'progressSnapshot' => $this->getClearanceProgressSnapshot($lote),
+                'classificacaoPartes' => ($nota && $lote->isFinalizado())
+                    ? $this->montarClassificacaoPartes($userId, $nota)
+                    : null,
             ]);
         }
 
@@ -2230,7 +2443,120 @@ class ClearanceController extends Controller
             'situacao_hex' => $this->statusHexConsultaDfe($nota->status ?? null),
             'consultado_em' => $this->formatarDataConsulta($nota->consultado_em),
             'detalhe_url' => $this->resolverDetalheNotaUrl($userId, $nota->chave_acesso),
+            'detalhes' => $this->detalhesSnapshotDfe($nota),
         ];
+    }
+
+    /**
+     * Detalhes ricos do snapshot (nfe_consultas/cte_consultas) pra tela de resultado da busca
+     * avulsa: partes completas, eventos, totais, produtos/componentes e links do comprovante.
+     * O histórico unificado (consultaDfeHistoricoQuery) só traz colunas magras — recarrega a linha.
+     */
+    private function detalhesSnapshotDfe(object $nota): ?array
+    {
+        $isCte = strtoupper((string) ($nota->tipo_documento ?? '')) === 'CTE';
+        $snap = $isCte
+            ? \App\Models\CteConsulta::find($nota->id)
+            : \App\Models\NfeConsulta::find($nota->id);
+
+        if (! $snap) {
+            return null;
+        }
+
+        $eventos = is_array($snap->eventos) ? $snap->eventos : (json_decode((string) $snap->eventos, true) ?: []);
+        $eventosChips = collect($eventos)
+            ->map(fn ($e) => [
+                'label' => $this->rotuloEventoDfe((string) ($e['evento'] ?? '')),
+                'hex' => $this->hexEventoDfe((string) ($e['evento'] ?? '')),
+                'protocolo' => $e['protocolo'] ?? null,
+                'data' => $e['data_autorizacao'] ?? ($e['data_inclusao'] ?? null),
+            ])
+            ->filter(fn ($c) => $c['label'] !== '')
+            ->values()
+            ->all();
+
+        $fmtDoc = function (?string $doc): ?string {
+            $d = preg_replace('/\D/', '', (string) $doc);
+
+            return match (strlen($d)) {
+                14 => preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $d),
+                11 => preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $d),
+                default => $doc ?: null,
+            };
+        };
+        $local = fn (?string $municipio, ?string $uf) => trim(implode('/', array_filter([$municipio, $uf]))) ?: null;
+        $brl = fn ($v) => $v !== null ? 'R$ '.number_format((float) $v, 2, ',', '.') : null;
+
+        $detalhes = [
+            'natureza_operacao' => $snap->natureza_operacao,
+            'consulta_sem_certificado' => (bool) ($snap->consulta_sem_certificado ?? false),
+            'versao_xml' => $snap->versao_xml,
+            'comprovante_url' => $snap->url_html ?: ($snap->url_site_receipt ?: null),
+            'url_xml' => $snap->url_xml,
+            'eventos_chips' => $eventosChips,
+            'emit' => [
+                'nome' => $snap->emit_nome,
+                'documento' => $fmtDoc($snap->emit_cnpj),
+                'ie' => $snap->emit_ie,
+                'local' => $local($snap->emit_municipio, $snap->emit_uf),
+            ],
+        ];
+
+        if ($isCte) {
+            $componentes = is_array($snap->componentes) ? $snap->componentes : (json_decode((string) $snap->componentes, true) ?: []);
+
+            return array_merge($detalhes, [
+                'tipo_servico' => $snap->tipo_servico,
+                'cfop' => $snap->cfop,
+                'modal' => $snap->modal,
+                'trajeto' => trim(implode(' → ', array_filter([$snap->uf_inicio, $snap->uf_fim]))) ?: null,
+                'valor_carga_label' => $brl($snap->valor_carga),
+                'valor_prestacao_label' => $brl($snap->valor_prestacao),
+                'nfes_referenciadas_count' => (int) ($snap->nfes_referenciadas_count ?? 0),
+                'componentes' => collect($componentes)
+                    ->map(fn ($c) => ['nome' => $c['nome'] ?? '—', 'valor' => $c['valor'] ?? null])
+                    ->values()
+                    ->all(),
+                'partes' => array_values(array_filter([
+                    ['papel' => 'Tomador', 'nome' => $snap->tomador_nome, 'documento' => $fmtDoc($snap->tomador_cnpj ?: $snap->tomador_cpf), 'local' => $local($snap->tomador_municipio, $snap->tomador_uf)],
+                    ['papel' => 'Remetente', 'nome' => $snap->remet_nome, 'documento' => $fmtDoc($snap->remet_cnpj ?: $snap->remet_cpf), 'local' => $local(null, $snap->remet_uf)],
+                    ['papel' => 'Destinatário', 'nome' => $snap->dest_nome, 'documento' => $fmtDoc($snap->dest_cnpj ?: $snap->dest_cpf), 'local' => $local(null, $snap->dest_uf)],
+                    ['papel' => 'Expedidor', 'nome' => null, 'documento' => $fmtDoc($snap->expedidor_cnpj), 'local' => null],
+                    ['papel' => 'Recebedor', 'nome' => null, 'documento' => $fmtDoc($snap->recebedor_cnpj), 'local' => null],
+                ], fn ($p) => $p['nome'] || $p['documento'])),
+            ]);
+        }
+
+        $totais = is_array($snap->totais) ? $snap->totais : (json_decode((string) $snap->totais, true) ?: []);
+        $produtos = is_array($snap->produtos) ? $snap->produtos : (json_decode((string) $snap->produtos, true) ?: []);
+
+        return array_merge($detalhes, [
+            'tipo_operacao' => $snap->tipo_operacao,
+            'dest' => [
+                'nome' => $snap->dest_nome,
+                'documento' => $fmtDoc($snap->dest_cnpj ?: $snap->dest_cpf),
+                'local' => $local($snap->dest_municipio, $snap->dest_uf),
+            ],
+            'totais' => collect($totais)
+                ->filter(fn ($v) => is_scalar($v) && $v !== '' && $v !== null)
+                ->map(function ($v, $k) {
+                    $label = ucfirst(str_replace('_', ' ', preg_replace('/^normalizado_/', '', (string) $k)));
+
+                    return ['label' => $label, 'valor' => is_numeric($v) ? 'R$ '.number_format((float) $v, 2, ',', '.') : (string) $v];
+                })
+                ->values()
+                ->all(),
+            'produtos' => collect($produtos)
+                ->map(fn ($p) => [
+                    'descricao' => $p['descricao'] ?? ($p['nome'] ?? '—'),
+                    'ncm' => $p['ncm'] ?? null,
+                    'cfop' => $p['cfop'] ?? null,
+                    'quantidade' => $p['quantidade'] ?? ($p['qtd'] ?? null),
+                    'valor' => $p['valor'] ?? ($p['valor_total'] ?? null),
+                ])
+                ->values()
+                ->all(),
+        ]);
     }
 
     private function formatarResultadoXmlAcervo(XmlNota $nota): array
