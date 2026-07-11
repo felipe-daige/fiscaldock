@@ -337,6 +337,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         Route::post('/catalogo-itens/alerta/descartar', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'descartarAlerta'])->middleware(RequiresEntitlement::class.':bi_completo')->name('catalogo-itens.descartar');
         Route::post('/catalogo-itens/alerta/restaurar', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'restaurarAlerta'])->middleware(RequiresEntitlement::class.':bi_completo')->name('catalogo-itens.restaurar');
         Route::get('/cruzamentos', [\App\Http\Controllers\Dashboard\BiCruzamentosController::class, 'index'])->name('cruzamentos');
+        Route::get('/cruzamentos/fornecedor/{participante}/notas', [\App\Http\Controllers\Dashboard\BiCruzamentosController::class, 'fornecedorNotas'])->whereNumber('participante')->name('cruzamentos.fornecedor-notas');
     });
 
     // Score Fiscal (Score de Regularidade) — alimentado pelos scores persistidos a cada lote de consulta
