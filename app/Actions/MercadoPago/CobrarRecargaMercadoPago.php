@@ -2,11 +2,14 @@
 
 namespace App\Actions\MercadoPago;
 
+use App\Mail\RecargaAutomaticaPausada;
 use App\Models\MercadoPagoPayment;
 use App\Models\RecargaAutomatica;
+use App\Notifications\RecargaAutomaticaConfirmadaNotification;
 use App\Services\CreditService;
 use App\Services\MercadoPago\MercadoPagoClient;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Processa uma cobrança recorrente (authorized_payment) de uma recarga automática.
@@ -31,7 +34,10 @@ class CobrarRecargaMercadoPago
         $status = $dados['status'] ?? null;
         $preapprovalId = $dados['preapproval_id'] ?? null;
 
-        return DB::transaction(function () use ($authorizedPaymentId, $status, $preapprovalId, $dados) {
+        $reciboConfirmado = null;
+        $emailPausado = null;
+
+        $pagamento = DB::transaction(function () use ($authorizedPaymentId, $status, $preapprovalId, $dados, &$reciboConfirmado, &$emailPausado) {
             $recarga = $preapprovalId
                 ? RecargaAutomatica::lockForUpdate()->where('mp_preapproval_id', $preapprovalId)->first()
                 : null;
@@ -72,11 +78,35 @@ class CobrarRecargaMercadoPago
                     'status' => RecargaAutomatica::STATUS_ATIVA,
                     'ultima_cobranca_em' => now(),
                 ]);
+
+                // Recibo disparado após o commit (só quando creditamos nesta execução).
+                $reciboConfirmado = [
+                    'user' => $recarga->user,
+                    'pacote' => (string) $recarga->pacote,
+                    'valor' => (float) $recarga->valor,
+                ];
             } elseif (in_array($status, ['rejected', 'cancelled'], true)) {
                 $recarga->update(['status' => RecargaAutomatica::STATUS_INADIMPLENTE]);
+
+                // Só e-mail na 1ª vez que vemos este authorized_payment (idempotente).
+                $emailPausado = $pagamento->wasRecentlyCreated ? $recarga->user : null;
             }
 
             return $pagamento;
         });
+
+        if ($reciboConfirmado !== null && $reciboConfirmado['user'] !== null) {
+            $reciboConfirmado['user']->notify(new RecargaAutomaticaConfirmadaNotification(
+                $reciboConfirmado['pacote'],
+                $reciboConfirmado['valor'],
+                $authorizedPaymentId,
+            ));
+        }
+
+        if ($emailPausado !== null) {
+            Mail::to($emailPausado->email)->queue(new RecargaAutomaticaPausada($emailPausado, 'cartão recusado'));
+        }
+
+        return $pagamento;
     }
 }

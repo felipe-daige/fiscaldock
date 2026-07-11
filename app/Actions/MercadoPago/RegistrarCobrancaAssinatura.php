@@ -4,6 +4,8 @@ namespace App\Actions\MercadoPago;
 
 use App\Models\AccountSubscription;
 use App\Models\MercadoPagoPayment;
+use App\Notifications\AssinaturaPagamentoFalhouNotification;
+use App\Notifications\AssinaturaRenovadaNotification;
 use App\Services\MercadoPago\MercadoPagoClient;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -26,7 +28,9 @@ class RegistrarCobrancaAssinatura
         $preapprovalId = $dados['preapproval_id'] ?? null;
         $valor = (float) ($dados['transaction_amount'] ?? 0);
 
-        return DB::transaction(function () use ($authorizedPaymentId, $status, $preapprovalId, $valor, $dados) {
+        $recibo = null;
+
+        $pagamento = DB::transaction(function () use ($authorizedPaymentId, $status, $preapprovalId, $valor, $dados, &$recibo) {
             $sub = $preapprovalId
                 ? AccountSubscription::lockForUpdate()->where('mp_preapproval_id', $preapprovalId)->first()
                 : null;
@@ -37,7 +41,8 @@ class RegistrarCobrancaAssinatura
 
             // Idempotência: 1 linha por authorized_payment.
             $pagamento = MercadoPagoPayment::firstOrNew(['mp_payment_id' => $authorizedPaymentId]);
-            if (! $pagamento->exists) {
+            $novo = ! $pagamento->exists;
+            if ($novo) {
                 $pagamento->fill([
                     'user_id' => $sub->user_id,
                     'account_subscription_id' => $sub->id,
@@ -59,7 +64,29 @@ class RegistrarCobrancaAssinatura
                 $sub->update(['status' => AccountSubscription::STATUS_INADIMPLENTE]);
             }
 
+            // Marca o recibo p/ disparar DEPOIS do commit — só na 1ª vez que vemos este
+            // authorized_payment (idempotente: re-entrega do webhook não reenvia e-mail).
+            if ($novo && in_array($status, ['approved', 'rejected', 'cancelled'], true)) {
+                $recibo = [
+                    'user' => $sub->user,
+                    'status' => $status,
+                    'plano' => $sub->plan->nome ?? ($sub->plan->codigo ?? 'assinatura'),
+                    'valor' => $valor,
+                    'renova_em' => optional($sub->renova_em)->format('d/m/Y'),
+                ];
+            }
+
             return $pagamento;
         });
+
+        if ($recibo !== null && $recibo['user'] !== null) {
+            $notificacao = $recibo['status'] === 'approved'
+                ? new AssinaturaRenovadaNotification($recibo['plano'], $recibo['valor'], $recibo['renova_em'])
+                : new AssinaturaPagamentoFalhouNotification($recibo['plano']);
+
+            $recibo['user']->notify($notificacao);
+        }
+
+        return $pagamento;
     }
 }

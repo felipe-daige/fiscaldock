@@ -5,6 +5,8 @@ namespace App\Actions\MercadoPago;
 use App\Mail\RecargaAutomaticaPausada;
 use App\Models\MercadoPagoPayment;
 use App\Models\RecargaAutomatica;
+use App\Notifications\CompraConfirmadaNotification;
+use App\Notifications\RecargaAutomaticaConfirmadaNotification;
 use App\Services\CreditService;
 use App\Services\MercadoPago\MercadoPagoClient;
 use Illuminate\Support\Facades\DB;
@@ -32,8 +34,9 @@ class ProcessarPagamentoMercadoPago
         $externalReference = $dadosMp['external_reference'] ?? null;
 
         $emailPausado = null;
+        $reciboCreditado = null;
 
-        $payment = DB::transaction(function () use ($mpPaymentId, $dadosMp, $status, $externalReference, &$emailPausado) {
+        $payment = DB::transaction(function () use ($mpPaymentId, $dadosMp, $status, $externalReference, &$emailPausado, &$reciboCreditado) {
             // Localiza nossa linha pelo id do MP ou pela external_reference (nosso id).
             $query = MercadoPagoPayment::query()->lockForUpdate();
 
@@ -63,6 +66,15 @@ class ProcessarPagamentoMercadoPago
                 );
 
                 $payment->credited_at = now();
+
+                // Marca o recibo p/ disparar DEPOIS do commit (só quando creditamos nesta
+                // execução — idempotente: re-entrega do webhook não reenvia e-mail).
+                $reciboCreditado = [
+                    'user' => $payment->user,
+                    'tipo' => $payment->tipo,
+                    'pacote' => (string) $payment->pacote,
+                    'valor' => (float) $payment->valor,
+                ];
             }
 
             // Auto top-up por saldo: reflete o resultado na config de recarga (exclusiva).
@@ -96,6 +108,14 @@ class ProcessarPagamentoMercadoPago
 
         if ($emailPausado !== null) {
             Mail::to($emailPausado->email)->queue(new RecargaAutomaticaPausada($emailPausado, 'cartão recusado'));
+        }
+
+        if ($reciboCreditado !== null && $reciboCreditado['user'] !== null) {
+            $notificacao = $reciboCreditado['tipo'] === 'auto_topup'
+                ? new RecargaAutomaticaConfirmadaNotification($reciboCreditado['pacote'], $reciboCreditado['valor'], $mpPaymentId)
+                : new CompraConfirmadaNotification($reciboCreditado['pacote'], $reciboCreditado['valor'], $mpPaymentId);
+
+            $reciboCreditado['user']->notify($notificacao);
         }
 
         return $payment;
