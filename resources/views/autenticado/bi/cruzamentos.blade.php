@@ -53,6 +53,24 @@
                     </p>
                 </div>
                 <div>
+                    <p class="text-[11px] font-bold text-gray-900 uppercase tracking-wide mb-0.5">ICMS-ST nas compras × regime do fornecedor</p>
+                    <p class="text-xs text-gray-600 leading-relaxed">
+                        Compras com <strong>ICMS-ST destacado</strong> (substituição tributária, registro C190), agrupadas por fornecedor com o
+                        <strong>regime tributário</strong> dele na última consulta. Serve pra conferir de quem vem o ST que você paga embutido —
+                        fornecedor do Simples destacando ST, ou ST relevante de fornecedor não consultado, merece conferência de CEST/MVA.
+                        Ao lado, o <strong>ST a recolher</strong> da sua própria apuração (registro E210), quando você é o substituto.
+                    </p>
+                </div>
+                <div>
+                    <p class="text-[11px] font-bold text-gray-900 uppercase tracking-wide mb-0.5">Estoque declarado (H010) × movimentação</p>
+                    <p class="text-xs text-gray-600 leading-relaxed">
+                        O <strong>inventário mais recente</strong> de cada empresa (bloco H do SPED Fiscal), item a item, contra a
+                        <strong>movimentação do item nas notas</strong> dos 12 meses até a data do inventário. Item parado em estoque sem nenhuma
+                        entrada ou saída = capital imobilizado — ou saída sem escrituração do item. Limitação: saída lançada só no consolidado
+                        (C190, sem detalhe de item) não conta como movimentação aqui.
+                    </p>
+                </div>
+                <div>
                     <p class="text-[11px] font-bold text-gray-900 uppercase tracking-wide mb-0.5">Nota cancelada na SEFAZ</p>
                     <p class="text-xs text-gray-600 leading-relaxed">
                         Notas do seu acervo que constam <strong>canceladas na SEFAZ</strong> (via Clearance), lado a lado com a situação do emitente.
@@ -277,7 +295,131 @@
             @endif
         </div>
 
-        {{-- 4. Nota cancelada SEFAZ × emitente --}}
+        {{-- 4. ICMS-ST nas compras × regime do fornecedor --}}
+        <div class="bg-white rounded border border-gray-300 mb-5 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: #7c3aed"></span>
+                    <h2 class="text-sm font-bold text-gray-900">ICMS-ST nas compras × regime do fornecedor</h2>
+                </div>
+                <span class="text-[10px] text-gray-400 uppercase tracking-wide">
+                    ST a recolher (E210): <strong class="text-gray-600">{{ $fmtMoeda($icmsSt['e210_st_recolher']) }}</strong>
+                </span>
+            </div>
+            @if($icmsSt['fornecedores']->isEmpty())
+                <p class="px-4 py-6 text-sm text-gray-500">
+                    Nenhuma compra com ICMS-ST destacado no filtro atual. Comum em comércio que compra de atacado com ST já retido na origem —
+                    o cruzamento acende quando o SPED Fiscal escriturar base ou valor de ST nas entradas (registro C190).
+                </p>
+            @else
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm tabela-cards">
+                        <thead class="bg-gray-50 text-[10px] uppercase tracking-wide text-gray-400">
+                            <tr>
+                                <th class="text-left px-4 py-2">Fornecedor</th>
+                                <th class="text-left px-4 py-2">Regime tributário</th>
+                                <th class="text-right px-4 py-2">Notas</th>
+                                <th class="text-right px-4 py-2">Base ST</th>
+                                <th class="text-right px-4 py-2">ICMS-ST</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @foreach($icmsSt['fornecedores'] as $f)
+                                <tr>
+                                    <td class="px-4 py-2.5">
+                                        @if($f['participante_id'])
+                                            <a href="{{ route('app.participante', $f['participante_id']) }}" data-link class="font-medium text-blue-600 hover:underline">{{ $f['razao_social'] }}</a>
+                                        @else
+                                            <div class="font-medium text-gray-900">{{ $f['razao_social'] }}</div>
+                                        @endif
+                                        <div class="text-[11px] text-gray-400">{{ $f['documento'] }}</div>
+                                    </td>
+                                    <td class="px-4 py-2.5" data-label="Regime">
+                                        @if($f['regime'] === null)
+                                            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background-color: #9ca3af">Não consultado</span>
+                                        @elseif($f['regime'] === 'Simples Nacional' || $f['regime'] === 'MEI')
+                                            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background-color: #d97706">{{ $f['regime'] }}</span>
+                                        @else
+                                            <span class="text-gray-700">{{ $f['regime'] }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-2.5 text-right text-gray-600" data-label="Notas">{{ $f['qtd_notas'] }}</td>
+                                    <td class="px-4 py-2.5 text-right text-gray-900" data-label="Base ST">{{ $fmtMoeda($f['bc_st']) }}</td>
+                                    <td class="px-4 py-2.5 text-right font-semibold text-gray-900" data-label="ICMS-ST">{{ $fmtMoeda($f['valor_st']) }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+
+        {{-- 5. Estoque declarado (H010) × movimentação --}}
+        <div class="bg-white rounded border border-gray-300 mb-5 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: #0891b2"></span>
+                    <h2 class="text-sm font-bold text-gray-900">Estoque declarado (H010) × movimentação do item</h2>
+                </div>
+                @if($estoque['itens_total'] > 0)
+                    <span class="text-[10px] text-gray-400 uppercase tracking-wide">
+                        {{ number_format($estoque['parados_qtd'], 0, ',', '.') }} sem giro · <strong class="text-gray-600">{{ $fmtMoeda($estoque['parados_valor']) }}</strong> parados
+                    </span>
+                @endif
+            </div>
+            @if($estoque['itens']->isEmpty())
+                <p class="px-4 py-6 text-sm text-gray-500">
+                    Nenhum inventário (bloco H) importado no filtro atual. O bloco H aparece no SPED Fiscal de fevereiro
+                    (inventário de 31/12) ou quando a empresa é obrigada a inventário periódico — importe o arquivo que o contém e o cruzamento acende.
+                </p>
+            @else
+                @foreach($estoque['inventarios'] as $inv)
+                    <p class="px-4 pt-3 text-[11px] text-gray-500">
+                        <strong class="text-gray-700">{{ $inv->cliente_nome }}</strong> — inventário de {{ \Illuminate\Support\Carbon::parse((string) $inv->dt_inventario)->format('d/m/Y') }}
+                    </p>
+                @endforeach
+                @if($estoque['itens_total'] > $estoque['itens']->count())
+                    <p class="px-4 pt-1 text-[11px] text-gray-400">Mostrando os {{ $estoque['itens']->count() }} itens de maior valor (de {{ number_format($estoque['itens_total'], 0, ',', '.') }}).</p>
+                @endif
+                <div class="overflow-x-auto mt-2">
+                    <table class="w-full text-sm tabela-cards">
+                        <thead class="bg-gray-50 text-[10px] uppercase tracking-wide text-gray-400">
+                            <tr>
+                                <th class="text-left px-4 py-2">Item</th>
+                                <th class="text-right px-4 py-2">Qtd em estoque</th>
+                                <th class="text-right px-4 py-2">Valor em estoque</th>
+                                <th class="text-right px-4 py-2">Entradas 12m</th>
+                                <th class="text-right px-4 py-2">Saídas 12m</th>
+                                <th class="text-left px-4 py-2">Giro</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @foreach($estoque['itens'] as $item)
+                                <tr>
+                                    <td class="px-4 py-2.5">
+                                        <div class="font-medium text-gray-900">{{ $item['descricao'] ?? $item['cod_item'] }}</div>
+                                        <div class="text-[11px] text-gray-400">{{ $item['cod_item'] }}</div>
+                                    </td>
+                                    <td class="px-4 py-2.5 text-right text-gray-600" data-label="Qtd">{{ number_format($item['qtd'], 3, ',', '.') }} {{ $item['unid'] }}</td>
+                                    <td class="px-4 py-2.5 text-right font-semibold text-gray-900" data-label="Valor">{{ $fmtMoeda($item['vl_item']) }}</td>
+                                    <td class="px-4 py-2.5 text-right text-gray-900" data-label="Entradas">{{ $fmtMoeda($item['mov_entradas']) }}</td>
+                                    <td class="px-4 py-2.5 text-right text-gray-900" data-label="Saídas">{{ $fmtMoeda($item['mov_saidas']) }}</td>
+                                    <td class="px-4 py-2.5" data-label="Giro">
+                                        @if($item['sem_movimentacao'])
+                                            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background-color: #d97706">Sem giro 12m</span>
+                                        @else
+                                            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background-color: #16a34a">Com giro</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+
+        {{-- 6. Nota cancelada SEFAZ × emitente --}}
         <div class="bg-white rounded border border-gray-300 mb-5 overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-200 flex items-center gap-2">
                 <span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: #6b7280"></span>

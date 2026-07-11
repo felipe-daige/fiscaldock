@@ -67,6 +67,8 @@ class BiCruzamentosController extends Controller
         $canceladas = $this->service->notasCanceladasComEmitente($userId, $filtros);
         $naoTributadas = $this->efdInternos->receitasNaoTributadasPorCompetencia($userId, $filtros);
         $retencoesFonte = $this->efdInternos->retencoesPorFonte($userId, $filtros);
+        $icmsSt = $this->efdInternos->icmsStRegime($userId, $filtros);
+        $estoque = $this->efdInternos->estoqueVsMovimentacao($userId, $filtros);
 
         // Deriva o resumo das coleções já carregadas (mesmo contrato de service->resumo, sem recomputar).
         $resumo = [
@@ -82,7 +84,7 @@ class BiCruzamentosController extends Controller
             ->orderBy('razao_social')
             ->get(['id', 'razao_social']);
 
-        $data = compact('irregulares', 'canceladas', 'naoTributadas', 'retencoesFonte', 'resumo', 'diagnostico', 'clientes', 'filtros');
+        $data = compact('irregulares', 'canceladas', 'naoTributadas', 'retencoesFonte', 'icmsSt', 'estoque', 'resumo', 'diagnostico', 'clientes', 'filtros');
 
         if ($this->isAjaxRequest($request)) {
             return response(view($view, $data)->render())->header('Content-Type', 'text/html');

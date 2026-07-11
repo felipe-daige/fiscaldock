@@ -11,7 +11,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(fn () => (new Database\Seeders\SubscriptionPlanSeeder)->run());
 
-function assinar(User $user, string $codigo): void
+function assinarPlanoPdf(User $user, string $codigo): void
 {
     $p = SubscriptionPlan::where('codigo', $codigo)->first();
     AccountSubscription::create([
@@ -28,7 +28,7 @@ it('Free puro recebe marca d\'água no PDF', function () {
 
 it('plano pago (Essencial) NÃO recebe marca d\'água', function () {
     $u = User::factory()->create();
-    assinar($u, 'essencial'); // export=[csv] → export pago
+    assinarPlanoPdf($u, 'essencial'); // export=[csv] → export pago
     actingAs($u->fresh());
     $html = view('reports.layout')->render();
     expect($html)->not->toContain('Plano gratuito');
@@ -42,12 +42,12 @@ it('trial ativo NÃO recebe marca d\'água', function () {
 
 it('header executivo aparece só com pdf_executivo (Profissional), não no Essencial', function () {
     $ess = User::factory()->create();
-    assinar($ess, 'essencial'); // pdf_executivo=false
+    assinarPlanoPdf($ess, 'essencial'); // pdf_executivo=false
     actingAs($ess->fresh());
     expect(view('reports.layout')->render())->not->toContain('Relatório Executivo');
 
     $prof = User::factory()->create();
-    assinar($prof, 'profissional'); // pdf_executivo=true
+    assinarPlanoPdf($prof, 'profissional'); // pdf_executivo=true
     actingAs($prof->fresh());
     expect(view('reports.layout')->render())->toContain('Relatório Executivo');
 });

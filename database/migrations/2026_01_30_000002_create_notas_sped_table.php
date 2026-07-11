@@ -340,6 +340,40 @@ return new class extends Migration
         // ainda assim deduplicar. Permite ON CONFLICT com colunas simples no n8n.
         DB::statement('CREATE UNIQUE INDEX efd_notas_consolidados_unique ON efd_notas_consolidados (efd_nota_id, cst_icms, cfop, aliquota_icms) NULLS NOT DISTINCT');
 
+        // Inventário físico — Bloco H (EFD Fiscal). Cabeçalho H005 desnormalizado
+        // em cada linha H010 (1 inventário → N itens; dt_inventario + motivo repetem).
+        // ind_prop: 0 = próprio em posse, 1 = próprio em terceiros, 2 = de terceiros.
+        Schema::create('efd_estoque', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('importacao_id')->constrained('efd_importacoes')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('cliente_id')->constrained('clientes')->cascadeOnDelete();
+
+            // ── H005 — cabeçalho do inventário ──
+            $table->date('dt_inventario');
+            $table->string('motivo_inventario', 2)->default('01'); // MOT_INV (01 = final de período)
+            $table->decimal('vl_inventario_total', 19, 2)->nullable(); // VL_INV do H005 (confere com SUM(vl_item))
+
+            // ── H010 — item inventariado ──
+            $table->string('cod_item', 60);
+            $table->string('unid', 20)->nullable();
+            $table->decimal('qtd', 19, 3)->default(0);
+            $table->decimal('vl_unit', 19, 6)->default(0);
+            $table->decimal('vl_item', 19, 2)->default(0);
+            $table->string('ind_prop', 1)->default('0');
+            $table->string('cod_part', 60)->nullable(); // dono/possuidor quando ind_prop 1|2
+            $table->decimal('vl_item_ir', 19, 2)->nullable(); // valorização IR (Lucro Real)
+            $table->jsonb('dados_brutos')->nullable();
+            $table->timestamps();
+
+            $table->index('user_id', 'efd_estoque_user_idx');
+            $table->index(['cliente_id', 'dt_inventario'], 'efd_estoque_cliente_data_idx');
+            $table->index(['user_id', 'cod_item'], 'efd_estoque_item_idx');
+        });
+
+        // Dedup idempotente pro INSERT direto do n8n (mesmo padrão de efd_notas_consolidados).
+        DB::statement('CREATE UNIQUE INDEX efd_estoque_unique ON efd_estoque (importacao_id, dt_inventario, cod_item, ind_prop, cod_part) NULLS NOT DISTINCT');
+
         // Divergências detectadas entre SPED bruto e estado persistido.
         // Cobre canceladas descartadas, duplicações de pipeline, constraints,
         // órfãos do Merge, parse inconsistente e reconciliação de valor.
@@ -372,6 +406,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('efd_divergencias');
+        Schema::dropIfExists('efd_estoque');
         Schema::dropIfExists('efd_notas_consolidados');
         DB::statement('DROP TRIGGER IF EXISTS efd_catalogo_historico_trg ON efd_catalogo_itens');
         DB::statement('DROP FUNCTION IF EXISTS efd_catalogo_log_mudanca()');

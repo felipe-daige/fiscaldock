@@ -141,7 +141,10 @@ class CruzamentosConsultasClearanceService
      */
     public function diagnostico(int $userId): array
     {
+        // toBase(): o map devolve Eloquent\Collection quando vazio, e intersect()
+        // de Eloquent chama getKey() nos itens (strings) — crash com 0 consultados.
         $docsConsultados = $this->scoresPorParticipante($userId)
+            ->toBase()
             ->map(fn (ParticipanteScore $s) => preg_replace('/\D/', '', (string) ($s->participante?->documento ?? '')))
             ->filter()
             ->unique();
