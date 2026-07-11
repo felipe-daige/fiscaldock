@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Log;
  */
 class ParticipanteAutoCadastroService
 {
+    public function __construct(private readonly CnpjMascaradoResolver $mascaradoResolver) {}
+
     public function criarDesdeSnapshot(DocumentoSnapshot $snapshot, int $userId, ?int $clienteId): void
     {
         $this->criarDesdeColunas(
@@ -57,6 +59,14 @@ class ParticipanteAutoCadastroService
 
             // Só CNPJ — CPF não entra no produto de consulta de contraparte.
             if (strlen($documento) !== 14 || isset($documentosClientes[$documento])) {
+                continue;
+            }
+
+            // Consulta sem certificado mascara a contraparte (5 primeiros dígitos zerados,
+            // nome 'RAIZ***'): não dá pra cadastrar CNPJ incompleto. Se o sufixo casar com
+            // participante existente, ele já está no sistema; senão, fica sem cadastro —
+            // o usuário identifica depois (nunca criamos participante com documento lixo).
+            if ($this->mascaradoResolver->estaMascarado($documento)) {
                 continue;
             }
 

@@ -538,7 +538,8 @@
                         @endif
                     </div>
 
-                    <div class="p-4 sm:p-5 border-t border-gray-100 xl:col-span-8 xl:border-t-0 xl:border-l">
+                    {{-- id ancorado pelos banners de "consulta pública" do clearance (atalho de cadastro) --}}
+                    <div id="certificado-digital" class="p-4 sm:p-5 border-t border-gray-100 xl:col-span-8 xl:border-t-0 xl:border-l">
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Certificado Digital (A1)</p>
                         @if(session('status'))
                             <p class="text-[12px] text-green-700 mb-3">{{ session('status') }}</p>

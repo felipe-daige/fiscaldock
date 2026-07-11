@@ -365,6 +365,7 @@ class ClearanceController extends Controller
     private function montarClassificacaoPartes(int $userId, object $nota): ?array
     {
         $fmtCnpj = fn (string $d) => preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $d);
+        $resolver = app(\App\Services\Clearance\CnpjMascaradoResolver::class);
 
         $lados = [];
         $emit = preg_replace('/\D/', '', (string) ($nota->emit_cnpj ?? ''));
@@ -376,6 +377,30 @@ class ClearanceController extends Controller
         if (strlen($dest) === 14 && $dest !== $emit) {
             $lados[] = ['lado' => 'dest', 'papel' => 'Destinatário', 'cnpj' => $dest, 'cnpj_fmt' => $fmtCnpj($dest), 'nome' => $nota->dest_nome ?: '—'];
         }
+
+        // Lado mascarado pela SEFAZ (consulta sem certificado): tenta identificar o cadastro
+        // real por sufixo do CNPJ + prefixo do nome. Cliente identificado encerra o bloco;
+        // participante identificado exibe os dados reais; não identificado fica inelegível
+        // (não dá pra cadastrar cliente com CNPJ incompleto).
+        foreach ($lados as &$lado) {
+            if (! $resolver->estaMascarado($lado['cnpj'])) {
+                continue;
+            }
+
+            if ($resolver->identificarCliente($userId, $lado['cnpj'], $lado['nome'])) {
+                return null;
+            }
+
+            if ($p = $resolver->identificarParticipante($userId, $lado['cnpj'], $lado['nome'])) {
+                $lado['cnpj'] = $p->documento;
+                $lado['cnpj_fmt'] = $fmtCnpj($p->documento);
+                $lado['nome'] = $p->razao_social ?: $lado['nome'];
+                $lado['identificado_acervo'] = true;
+            } else {
+                $lado['mascarado'] = true;
+            }
+        }
+        unset($lado);
 
         if ($lados === []) {
             return null;
@@ -432,6 +457,24 @@ class ClearanceController extends Controller
                 'success' => false,
                 'error' => 'Este lado do documento não tem um CNPJ válido para virar cliente.',
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        // CNPJ mascarado pela SEFAZ (consulta sem certificado): só vira cliente se o
+        // sufixo + nome identificarem com segurança um participante já cadastrado —
+        // aí usamos o documento real dele. Sem identificação, não cadastramos lixo.
+        $resolver = app(\App\Services\Clearance\CnpjMascaradoResolver::class);
+        if ($resolver->estaMascarado($cnpj)) {
+            $identificado = $resolver->identificarParticipante($userId, $cnpj, $nome);
+
+            if (! $identificado) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'O CNPJ deste lado veio mascarado pela SEFAZ (consulta sem certificado) e não foi identificado no seu acervo. Cadastre o cliente manualmente com o CNPJ completo.',
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            $cnpj = $identificado->documento;
+            $nome = $identificado->razao_social ?: $nome;
         }
 
         $cliente = Cliente::where('user_id', $userId)->where('documento', $cnpj)->first();
@@ -2418,6 +2461,11 @@ class ClearanceController extends Controller
 
     private function formatarResultadoConsultaDfe(object $nota, int $userId): array
     {
+        // Contraparte mascarada (consulta sem certificado) identificada no acervo:
+        // exibe a razão social real do participante em vez de 'RAIZ***'.
+        $destIdentificado = app(\App\Services\Clearance\CnpjMascaradoResolver::class)
+            ->identificarParticipante($userId, $nota->dest_cnpj ?? null, $nota->dest_nome ?? null);
+
         return [
             'id' => $nota->id,
             'consulta_lote_id' => $nota->consulta_lote_id,
@@ -2434,8 +2482,10 @@ class ClearanceController extends Controller
             'data_emissao' => $this->formatarDataCurta($nota->data_emissao),
             'emit' => $nota->emit_nome ?: $nota->emit_cnpj,
             'emit_cnpj' => $nota->emit_cnpj ?? null,
-            'dest' => $nota->dest_nome ?: $nota->tomador_nome ?: $nota->dest_cnpj ?: $nota->tomador_cnpj,
-            'dest_cnpj' => $nota->dest_cnpj ?? null,
+            'dest' => $destIdentificado?->razao_social
+                ?: ($nota->dest_nome ?: $nota->tomador_nome ?: $nota->dest_cnpj ?: $nota->tomador_cnpj),
+            'dest_identificado_acervo' => $destIdentificado !== null,
+            'dest_cnpj' => $destIdentificado?->documento ?? ($nota->dest_cnpj ?? null),
             'tomador_nome' => $nota->tomador_nome ?? null,
             'tomador_cnpj' => $nota->tomador_cnpj ?? null,
             'cliente_nome' => $nota->cliente_nome,
@@ -2464,16 +2514,51 @@ class ClearanceController extends Controller
         }
 
         $eventos = is_array($snap->eventos) ? $snap->eventos : (json_decode((string) $snap->eventos, true) ?: []);
-        $eventosChips = collect($eventos)
-            ->map(fn ($e) => [
-                'label' => $this->rotuloEventoDfe((string) ($e['evento'] ?? '')),
-                'hex' => $this->hexEventoDfe((string) ($e['evento'] ?? '')),
-                'protocolo' => $e['protocolo'] ?? null,
-                'data' => $e['data_autorizacao'] ?? ($e['data_inclusao'] ?? null),
-            ])
+
+        // Datas da SEFAZ vêm como '13/08/2025 às 08:36:57-04:00' — normaliza pra ordenar
+        // a linha do tempo e exibir 'd/m/Y H:i' (hora local da SEFAZ, offset descartado).
+        $parseDataEvento = function (?string $raw): ?\Carbon\Carbon {
+            if (! $raw) {
+                return null;
+            }
+            $s = trim((string) preg_replace('/[+-]\d{2}:\d{2}$/', '', (string) preg_replace('/\s*às\s*/u', ' ', trim($raw))));
+
+            try {
+                return \Carbon\Carbon::createFromFormat('d/m/Y H:i:s', $s);
+            } catch (\Throwable) {
+                return null;
+            }
+        };
+
+        $eventosTimeline = collect($eventos)
+            ->map(function ($e) use ($parseDataEvento) {
+                $dt = $parseDataEvento($e['data_autorizacao'] ?? null) ?? $parseDataEvento($e['data_inclusao'] ?? null);
+
+                return [
+                    'label' => $this->rotuloEventoDfe((string) ($e['evento'] ?? '')),
+                    'descricao' => trim((string) ($e['evento'] ?? '')) ?: null,
+                    'hex' => $this->hexEventoDfe((string) ($e['evento'] ?? '')),
+                    'protocolo' => $e['protocolo'] ?? null,
+                    'data_label' => $dt?->format('d/m/Y H:i') ?? ($e['data_autorizacao'] ?? ($e['data_inclusao'] ?? null)),
+                    'ordem' => $dt?->getTimestamp(),
+                ];
+            })
             ->filter(fn ($c) => $c['label'] !== '')
+            ->sortBy(fn ($c) => $c['ordem'] ?? PHP_INT_MAX)
             ->values()
             ->all();
+
+        // Primeiro ponto da linha do tempo: a emissão do documento (quando conhecida).
+        if ($snap->data_emissao) {
+            array_unshift($eventosTimeline, [
+                'label' => 'Emissão',
+                'descricao' => null,
+                'hex' => '#6b7280',
+                'protocolo' => null,
+                'data_label' => $this->formatarDataCurta($snap->data_emissao),
+                'ordem' => null,
+            ]);
+        }
 
         $fmtDoc = function (?string $doc): ?string {
             $d = preg_replace('/\D/', '', (string) $doc);
@@ -2487,13 +2572,27 @@ class ClearanceController extends Controller
         $local = fn (?string $municipio, ?string $uf) => trim(implode('/', array_filter([$municipio, $uf]))) ?: null;
         $brl = fn ($v) => $v !== null ? 'R$ '.number_format((float) $v, 2, ',', '.') : null;
 
+        // Parte mascarada (consulta sem certificado) identificada no acervo do usuário.
+        $resolver = app(\App\Services\Clearance\CnpjMascaradoResolver::class);
+        $identificar = fn (?string $doc, ?string $nome) => $resolver->identificarParticipante((int) $snap->user_id, $doc, $nome);
+
+        // Consulta pública: SEFAZ mascara contraparte, descrição de itens, totais e tributos.
+        // O banner da view explica e oferece o atalho pro cadastro do certificado A1 — a menos
+        // que o usuário já tenha um válido (aí o copy muda: consumo do cert ainda não existe).
+        $semCertificado = (bool) ($snap->consulta_sem_certificado ?? false);
+        $certificadoCadastrado = $semCertificado && \App\Models\CertificadoDigital::query()
+            ->whereIn('cliente_id', Cliente::where('user_id', $snap->user_id)->select('id'))
+            ->whereDate('validade', '>=', now()->toDateString())
+            ->exists();
+
         $detalhes = [
             'natureza_operacao' => $snap->natureza_operacao,
-            'consulta_sem_certificado' => (bool) ($snap->consulta_sem_certificado ?? false),
+            'consulta_sem_certificado' => $semCertificado,
+            'certificado_cadastrado' => $certificadoCadastrado,
             'versao_xml' => $snap->versao_xml,
             'comprovante_url' => $snap->url_html ?: ($snap->url_site_receipt ?: null),
             'url_xml' => $snap->url_xml,
-            'eventos_chips' => $eventosChips,
+            'eventos_timeline' => $eventosTimeline,
             'emit' => [
                 'nome' => $snap->emit_nome,
                 'documento' => $fmtDoc($snap->emit_cnpj),
@@ -2517,25 +2616,42 @@ class ClearanceController extends Controller
                     ->map(fn ($c) => ['nome' => $c['nome'] ?? '—', 'valor' => $c['valor'] ?? null])
                     ->values()
                     ->all(),
-                'partes' => array_values(array_filter([
-                    ['papel' => 'Tomador', 'nome' => $snap->tomador_nome, 'documento' => $fmtDoc($snap->tomador_cnpj ?: $snap->tomador_cpf), 'local' => $local($snap->tomador_municipio, $snap->tomador_uf)],
-                    ['papel' => 'Remetente', 'nome' => $snap->remet_nome, 'documento' => $fmtDoc($snap->remet_cnpj ?: $snap->remet_cpf), 'local' => $local(null, $snap->remet_uf)],
-                    ['papel' => 'Destinatário', 'nome' => $snap->dest_nome, 'documento' => $fmtDoc($snap->dest_cnpj ?: $snap->dest_cpf), 'local' => $local(null, $snap->dest_uf)],
-                    ['papel' => 'Expedidor', 'nome' => null, 'documento' => $fmtDoc($snap->expedidor_cnpj), 'local' => null],
-                    ['papel' => 'Recebedor', 'nome' => null, 'documento' => $fmtDoc($snap->recebedor_cnpj), 'local' => null],
-                ], fn ($p) => $p['nome'] || $p['documento'])),
+                'partes' => collect([
+                    ['papel' => 'Tomador', 'cnpj' => $snap->tomador_cnpj, 'cpf' => $snap->tomador_cpf, 'nome' => $snap->tomador_nome, 'local' => $local($snap->tomador_municipio, $snap->tomador_uf)],
+                    ['papel' => 'Remetente', 'cnpj' => $snap->remet_cnpj, 'cpf' => $snap->remet_cpf, 'nome' => $snap->remet_nome, 'local' => $local(null, $snap->remet_uf)],
+                    ['papel' => 'Destinatário', 'cnpj' => $snap->dest_cnpj, 'cpf' => $snap->dest_cpf, 'nome' => $snap->dest_nome, 'local' => $local(null, $snap->dest_uf)],
+                    ['papel' => 'Expedidor', 'cnpj' => $snap->expedidor_cnpj, 'cpf' => null, 'nome' => null, 'local' => null],
+                    ['papel' => 'Recebedor', 'cnpj' => $snap->recebedor_cnpj, 'cpf' => null, 'nome' => null, 'local' => null],
+                ])
+                    ->map(function ($p) use ($identificar, $fmtDoc) {
+                        $ident = $identificar($p['cnpj'], $p['nome']);
+
+                        return [
+                            'papel' => $p['papel'],
+                            'nome' => $ident?->razao_social ?: $p['nome'],
+                            'documento' => $fmtDoc($ident?->documento ?: ($p['cnpj'] ?: $p['cpf'])),
+                            'local' => $p['local'],
+                            'identificado_acervo' => $ident !== null,
+                        ];
+                    })
+                    ->filter(fn ($p) => $p['nome'] || $p['documento'])
+                    ->values()
+                    ->all(),
             ]);
         }
 
         $totais = is_array($snap->totais) ? $snap->totais : (json_decode((string) $snap->totais, true) ?: []);
         $produtos = is_array($snap->produtos) ? $snap->produtos : (json_decode((string) $snap->produtos, true) ?: []);
 
+        $destIdentificado = $identificar($snap->dest_cnpj, $snap->dest_nome);
+
         return array_merge($detalhes, [
             'tipo_operacao' => $snap->tipo_operacao,
             'dest' => [
-                'nome' => $snap->dest_nome,
-                'documento' => $fmtDoc($snap->dest_cnpj ?: $snap->dest_cpf),
+                'nome' => $destIdentificado?->razao_social ?: $snap->dest_nome,
+                'documento' => $fmtDoc($destIdentificado?->documento ?: ($snap->dest_cnpj ?: $snap->dest_cpf)),
                 'local' => $local($snap->dest_municipio, $snap->dest_uf),
+                'identificado_acervo' => $destIdentificado !== null,
             ],
             'totais' => collect($totais)
                 ->filter(fn ($v) => is_scalar($v) && $v !== '' && $v !== null)

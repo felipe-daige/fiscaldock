@@ -96,6 +96,18 @@ it('CT-e cadastra também tomador e remetente', function () {
         ->and(Participante::where('user_id', $user->id)->where('documento', '13305697000150')->value('origem_tipo'))->toBe('CTE');
 });
 
+it('CNPJ mascarado pela SEFAZ (consulta sem certificado) nunca vira participante', function () {
+    $user = User::factory()->create();
+    // Dest mascarado: 5 primeiros dígitos zerados + DV que não fecha (RAIZEN 09538958000105)
+    app(ParticipanteAutoCadastroService::class)->criarDesdeSnapshot(pacSnapshot('NFE', [
+        'emit_cnpj' => '97551165000193', 'emit_nome' => 'HIDRATOP COMERCIO',
+        'dest_cnpj' => '00000958000105', 'dest_nome' => 'RAIZ***',
+    ]), $user->id, null);
+
+    expect(Participante::where('user_id', $user->id)->count())->toBe(1)
+        ->and(Participante::where('user_id', $user->id)->where('documento', '00000958000105')->exists())->toBeFalse();
+});
+
 it('isola por usuário: mesmo CNPJ pode existir pra outro usuário', function () {
     $u1 = User::factory()->create();
     $u2 = User::factory()->create();

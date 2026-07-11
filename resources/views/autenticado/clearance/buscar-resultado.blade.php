@@ -127,6 +127,9 @@
                         <div class="border border-gray-200 rounded p-3">
                             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Destinatário / Tomador</p>
                             <p class="text-sm text-gray-900 mt-1">{{ $notaResultado['dest'] ?? '—' }}</p>
+                            @if(!empty($notaResultado['dest_identificado_acervo']))
+                                <span class="inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] font-semibold text-white" style="background-color: #0e7490;">Identificado no seu acervo</span>
+                            @endif
                         </div>
                     </div>
 
@@ -144,6 +147,32 @@
                     @php $detalhes = $notaResultado['detalhes'] ?? null; @endphp
                     @if($detalhes)
                         @php $isCteResultado = ($notaResultado['tipo_documento'] ?? '') === 'CTE'; @endphp
+
+                        {{-- Consulta pública: SEFAZ mascara dados — explica e atalha pro certificado A1 --}}
+                        @if(!empty($detalhes['consulta_sem_certificado']))
+                            <div class="border rounded overflow-hidden" style="border-color: #bfdbfe;">
+                                <div class="px-3 py-2.5 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3" style="background-color: #eff6ff;">
+                                    <div class="flex-1">
+                                        <p class="text-[10px] font-bold uppercase tracking-widest" style="color: #1d4ed8;">Consulta pública (sem certificado digital)</p>
+                                        <p class="text-xs mt-0.5" style="color: #1e3a8a;">
+                                            A SEFAZ oculta parte dos dados nesse tipo de consulta: CNPJ e nome da contraparte aparecem mascarados, descrições de itens vêm reduzidas e totais/tributos não são informados.
+                                            @if(!empty($detalhes['certificado_cadastrado']))
+                                                Seu certificado A1 já está cadastrado — a consulta completa com certificado será usada assim que estiver disponível na plataforma.
+                                            @else
+                                                Com um certificado digital A1 cadastrado, a consulta retorna o documento completo.
+                                            @endif
+                                        </p>
+                                    </div>
+                                    @if(empty($detalhes['certificado_cadastrado']))
+                                        <a href="/app/minha-empresa#certificado-digital" data-link
+                                           class="self-start sm:self-center whitespace-nowrap inline-flex items-center justify-center px-3 py-1.5 text-white rounded text-xs font-semibold"
+                                           style="background-color: #1d4ed8;">
+                                            Cadastrar certificado A1
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
 
                         {{-- Dados da operação --}}
                         <div class="border border-gray-200 rounded overflow-hidden">
@@ -207,6 +236,9 @@
                                                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{{ $parte['papel'] }}</p>
                                                 <p class="text-sm text-gray-900">{{ $parte['nome'] ?? '—' }}</p>
                                                 <p class="text-[11px] text-gray-500 font-mono">{{ $parte['documento'] ?? '' }}{{ !empty($parte['local']) ? ' · '.$parte['local'] : '' }}</p>
+                                                @if(!empty($parte['identificado_acervo']))
+                                                    <span class="inline-block mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold text-white" style="background-color: #0e7490;">Identificado no seu acervo</span>
+                                                @endif
                                             </div>
                                         @empty
                                             <p class="text-xs text-gray-500">Sem partes adicionais informadas.</p>
@@ -218,29 +250,40 @@
                                         <p class="text-sm text-gray-900 mt-1">{{ $detalhes['dest']['nome'] ?? '—' }}</p>
                                         <p class="text-[11px] text-gray-500 font-mono">{{ $detalhes['dest']['documento'] ?? '' }}</p>
                                         <p class="text-[11px] text-gray-500">{{ $detalhes['dest']['local'] ?? '' }}</p>
+                                        @if(!empty($detalhes['dest']['identificado_acervo']))
+                                            <span class="inline-block mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold text-white" style="background-color: #0e7490;">Identificado no seu acervo</span>
+                                        @endif
                                     </div>
                                 @endif
                             </div>
                         </div>
 
-                        {{-- Eventos SEFAZ --}}
-                        @if(!empty($detalhes['eventos_chips']))
+                        {{-- Eventos SEFAZ — linha do tempo --}}
+                        @if(!empty($detalhes['eventos_timeline']))
                             <div class="border border-gray-200 rounded overflow-hidden">
                                 <div class="bg-gray-50 px-3 py-2 border-b border-gray-200">
                                     <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Eventos na SEFAZ</span>
                                 </div>
-                                <div class="px-3 py-2.5 flex flex-wrap gap-2">
-                                    @foreach($detalhes['eventos_chips'] as $chip)
-                                        <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-bold text-white" style="background-color: {{ $chip['hex'] ?? '#374151' }}">
-                                            {{ $chip['label'] }}
-                                            @if(!empty($chip['protocolo']))
-                                                <span class="font-mono font-normal opacity-80">prot. {{ $chip['protocolo'] }}</span>
-                                            @endif
-                                            @if(!empty($chip['data']))
-                                                <span class="font-normal opacity-80">{{ $chip['data'] }}</span>
-                                            @endif
-                                        </span>
-                                    @endforeach
+                                <div class="px-4 py-3">
+                                    <ol style="position: relative; margin-left: 5px; border-left: 2px solid #e5e7eb; list-style: none; padding-left: 0;">
+                                        @foreach($detalhes['eventos_timeline'] as $ev)
+                                            <li style="position: relative; padding-left: 18px; {{ $loop->last ? '' : 'padding-bottom: 16px;' }}">
+                                                <span style="position: absolute; left: -7px; top: 3px; width: 12px; height: 12px; border-radius: 9999px; border: 2px solid #ffffff; box-shadow: 0 0 0 1px #e5e7eb; background-color: {{ $ev['hex'] ?? '#374151' }};"></span>
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $ev['hex'] ?? '#374151' }}">{{ $ev['label'] }}</span>
+                                                    @if(!empty($ev['data_label']))
+                                                        <span class="text-[11px] text-gray-500">{{ $ev['data_label'] }}</span>
+                                                    @endif
+                                                </div>
+                                                @if(!empty($ev['descricao']) && mb_strtoupper($ev['descricao']) !== mb_strtoupper($ev['label']))
+                                                    <p class="text-xs text-gray-700 mt-0.5">{{ $ev['descricao'] }}</p>
+                                                @endif
+                                                @if(!empty($ev['protocolo']))
+                                                    <p class="text-[11px] text-gray-500 font-mono mt-0.5">Protocolo {{ $ev['protocolo'] }}</p>
+                                                @endif
+                                            </li>
+                                        @endforeach
+                                    </ol>
                                 </div>
                             </div>
                         @endif
@@ -286,7 +329,18 @@
                         @if(!$isCteResultado && !empty($detalhes['produtos']))
                             <div class="border border-gray-200 rounded overflow-hidden">
                                 <div class="bg-gray-50 px-3 py-2 border-b border-gray-200">
-                                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Produtos ({{ count($detalhes['produtos']) }})</span>
+                                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Produtos ({{ count($detalhes['produtos']) }})</span>
+                                        @if(!empty($detalhes['consulta_sem_certificado']))
+                                            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-semibold" style="background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">
+                                                <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                                </svg>
+                                                <span>Descrições reduzidas na consulta pública</span>
+                                                <a href="/app/minha-empresa#certificado-digital" data-link class="underline font-bold whitespace-nowrap">ver completas com certificado A1</a>
+                                            </span>
+                                        @endif
+                                    </div>
                                 </div>
                                 <div class="overflow-x-auto">
                                     <table class="w-full text-xs">
@@ -360,13 +414,20 @@
                                             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{{ $parte['papel'] }}</p>
                                             <p class="text-sm font-semibold text-gray-900 mt-0.5">{{ $parte['nome'] }}</p>
                                             <p class="text-[11px] text-gray-500 font-mono">{{ $parte['cnpj_fmt'] }}</p>
+                                            @if(!empty($parte['identificado_acervo']))
+                                                <span class="inline-block mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold text-white" style="background-color: #0e7490;">Identificado no seu acervo</span>
+                                            @endif
                                         </div>
-                                        <button type="button"
-                                                data-classificar-lado="{{ $parte['lado'] }}"
-                                                class="self-start inline-flex items-center justify-center px-3 py-1.5 text-white rounded text-xs font-semibold"
-                                                style="background-color: #1f2937;">
-                                            Este é meu cliente
-                                        </button>
+                                        @if(!empty($parte['mascarado']))
+                                            <p class="text-[11px] text-gray-500">CNPJ mascarado pela SEFAZ (consulta sem certificado) — para cadastrar como cliente, use o CNPJ completo em Cadastros → Clientes.</p>
+                                        @else
+                                            <button type="button"
+                                                    data-classificar-lado="{{ $parte['lado'] }}"
+                                                    class="self-start inline-flex items-center justify-center px-3 py-1.5 text-white rounded text-xs font-semibold"
+                                                    style="background-color: #1f2937;">
+                                                Este é meu cliente
+                                            </button>
+                                        @endif
                                     </div>
                                 @endforeach
                             </div>

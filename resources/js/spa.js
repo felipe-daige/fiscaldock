@@ -587,6 +587,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 window.scrollTo(0, mesmaPagina ? scrollAnterior : 0);
 
+                // Deep-link por âncora (#id) após render SPA — ex.: banner do clearance
+                // apontando pro cadastro de certificado em /app/minha-empresa#certificado-digital.
+                if (targetUrl.hash) {
+                    const alvoAncora = document.getElementById(targetUrl.hash.slice(1));
+                    if (alvoAncora) {
+                        alvoAncora.scrollIntoView({ block: 'start' });
+                    }
+                }
+
                 // Marca o que está de fato renderizado (usado pela comparação de contexto).
                 _caminhoRenderizado = urlPath;
             }

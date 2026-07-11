@@ -116,6 +116,119 @@ it('não vaza snapshot de outro usuário', function () {
     ])->assertNotFound();
 });
 
+it('lado mascarado identificado no acervo vira cliente com o CNPJ real do participante', function () {
+    $user = User::factory()->create();
+    cpSnapshot($user)->update(['dest_cnpj' => '00000958000105', 'dest_nome' => 'RAIZ***']);
+    Participante::create([
+        'user_id' => $user->id, 'documento' => '09538958000105', 'tipo_documento' => 'PJ',
+        'razao_social' => 'RAIZEN AGRICOLA CAARAPO LTDA', 'origem_tipo' => 'EFD',
+    ]);
+
+    actingAs($user)->postJson('/app/clearance/buscar/classificar-partes', [
+        'chave_acesso' => cpChave(), 'lado' => 'dest',
+    ])->assertOk()->assertJsonPath('success', true);
+
+    // Cliente criado com o CNPJ REAL, não com o mascarado
+    expect(Cliente::where('user_id', $user->id)->where('documento', '09538958000105')->exists())->toBeTrue()
+        ->and(Cliente::where('user_id', $user->id)->where('documento', '00000958000105')->exists())->toBeFalse();
+});
+
+it('lado mascarado NÃO identificado no acervo retorna 422 e não cria cliente lixo', function () {
+    $user = User::factory()->create();
+    cpSnapshot($user)->update(['dest_cnpj' => '00000958000105', 'dest_nome' => 'RAIZ***']);
+
+    actingAs($user)->postJson('/app/clearance/buscar/classificar-partes', [
+        'chave_acesso' => cpChave(), 'lado' => 'dest',
+    ])->assertStatus(422);
+
+    expect(Cliente::where('user_id', $user->id)->where('documento', '00000958000105')->exists())->toBeFalse();
+});
+
+it('resultado exibe dados reais do participante identificado e trava o lado mascarado sem match', function () {
+    $user = User::factory()->create();
+    $lote = ConsultaLote::create([
+        'user_id' => $user->id, 'plano_id' => null, 'status' => ConsultaLote::STATUS_FINALIZADO,
+        'total_participantes' => 1, 'creditos_cobrados' => 14, 'tab_id' => 'tab-cpm', 'processado_em' => now(),
+    ]);
+    cpSnapshot($user)->update([
+        'consulta_lote_id' => $lote->id,
+        'dest_cnpj' => '00000958000105', 'dest_nome' => 'RAIZ***',
+    ]);
+    Participante::create([
+        'user_id' => $user->id, 'documento' => '09538958000105', 'tipo_documento' => 'PJ',
+        'razao_social' => 'RAIZEN AGRICOLA CAARAPO LTDA', 'origem_tipo' => 'EFD',
+    ]);
+
+    // Identificado: mostra razão social + CNPJ reais e badge do acervo
+    actingAs($user)->get('/app/clearance/buscar/resultado/'.$lote->id.'?tipo_documento=nfe')
+        ->assertOk()
+        ->assertSee('RAIZEN AGRICOLA CAARAPO LTDA')
+        ->assertSee('09.538.958/0001-05')
+        ->assertSee('Identificado no seu acervo');
+
+    // Sem match no acervo: lado mascarado fica inelegível pra virar cliente
+    Participante::where('user_id', $user->id)->delete();
+
+    actingAs($user)->get('/app/clearance/buscar/resultado/'.$lote->id.'?tipo_documento=nfe')
+        ->assertOk()
+        ->assertSee('CNPJ mascarado pela SEFAZ');
+});
+
+it('bloco de classificação some quando o lado mascarado já é cliente do usuário', function () {
+    $user = User::factory()->create();
+    Cliente::create([
+        'user_id' => $user->id, 'tipo_pessoa' => 'PJ',
+        'documento' => '09538958000105', 'razao_social' => 'RAIZEN AGRICOLA CAARAPO LTDA',
+    ]);
+    $lote = ConsultaLote::create([
+        'user_id' => $user->id, 'plano_id' => null, 'status' => ConsultaLote::STATUS_FINALIZADO,
+        'total_participantes' => 1, 'creditos_cobrados' => 14, 'tab_id' => 'tab-cpm2', 'processado_em' => now(),
+    ]);
+    cpSnapshot($user)->update([
+        'consulta_lote_id' => $lote->id,
+        'dest_cnpj' => '00000958000105', 'dest_nome' => 'RAIZ***',
+    ]);
+
+    actingAs($user)->get('/app/clearance/buscar/resultado/'.$lote->id.'?tipo_documento=nfe')
+        ->assertOk()
+        ->assertDontSee('Organize sua carteira');
+});
+
+it('consulta completa (certificado A1): dados sem máscara não passam pelo resolver — fluxo normal', function () {
+    $user = User::factory()->create();
+    $lote = ConsultaLote::create([
+        'user_id' => $user->id, 'plano_id' => null, 'status' => ConsultaLote::STATUS_FINALIZADO,
+        'total_participantes' => 1, 'creditos_cobrados' => 14, 'tab_id' => 'tab-cpa1', 'processado_em' => now(),
+    ]);
+    // Snapshot como virá com A1: consulta_sem_certificado=false, dest completo (DV válido)
+    cpSnapshot($user)->update([
+        'consulta_lote_id' => $lote->id,
+        'consulta_sem_certificado' => false,
+        'dest_cnpj' => '09538958000105', 'dest_nome' => 'RAIZEN AGRICOLA CAARAPO LTDA',
+    ]);
+    // Mesmo com participante homônimo no acervo, nada é "identificado" — o dado já é completo
+    Participante::create([
+        'user_id' => $user->id, 'documento' => '09538958000105', 'tipo_documento' => 'PJ',
+        'razao_social' => 'RAIZEN AGRICOLA CAARAPO LTDA', 'origem_tipo' => 'EFD',
+    ]);
+
+    actingAs($user)->get('/app/clearance/buscar/resultado/'.$lote->id.'?tipo_documento=nfe')
+        ->assertOk()
+        ->assertSee('RAIZEN AGRICOLA CAARAPO LTDA')
+        ->assertDontSee('Identificado no seu acervo')
+        ->assertDontSee('CNPJ mascarado pela SEFAZ')
+        // Bloco de classificação normal, com os dois lados selecionáveis
+        ->assertSee('Organize sua carteira')
+        ->assertSee('Este é meu cliente');
+
+    // E o lado dest pode virar cliente com o próprio CNPJ da SEFAZ
+    actingAs($user)->postJson('/app/clearance/buscar/classificar-partes', [
+        'chave_acesso' => cpChave(), 'lado' => 'dest',
+    ])->assertOk();
+
+    expect(Cliente::where('user_id', $user->id)->where('documento', '09538958000105')->exists())->toBeTrue();
+});
+
 it('resultado da busca exibe o bloco de classificação quando nenhum CNPJ é cliente', function () {
     $user = User::factory()->create();
     $lote = ConsultaLote::create([
