@@ -61,7 +61,7 @@
     </div>
 
     {{-- Filtros --}}
-    <div id="rf-filtros" class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
+    <div id="rf-filtros" class="bg-white rounded border border-gray-300 overflow-hidden mb-6" data-mobile-filters>
         <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
             <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
         </div>
@@ -167,7 +167,7 @@
                     <span class="w-1 h-4 rounded" style="background-color: {{ $sec['hex'] }}"></span>
                     <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">{{ $sec['label'] }}</span>
                     @if($sec['badge'] ?? false)
-                        <span id="rf-alertas-badge" class="hidden ml-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">0</span>
+                        <span id="rf-alertas-badge" class="whitespace-nowrap hidden ml-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">0</span>
                     @endif
                 </div>
                 <svg class="rf-chevron w-4 h-4 text-gray-400 {{ ($sec['collapsed'] ?? false) ? 'rotated' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -265,7 +265,7 @@
     function semaforoHtml(status, label) {
         var hex = { verde: '#047857', amarelo: '#d97706', vermelho: '#b91c1c', sem_dado: '#9ca3af', sem_dados: '#9ca3af', neutro: '#9ca3af' };
         var h = hex[status] || hex.sem_dados;
-        return '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + h + '">' + (label || status) + '</span>';
+        return '<span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + h + '">' + (label || status) + '</span>';
     }
 
     // ── Sub-bloco (header cinza DANFE) ──
@@ -433,7 +433,7 @@
         if (data.tem_st && data.icms_st) {
             var st = data.icms_st;
             var stInner = '<div class="space-y-2">';
-            if (st.uf) stInner = '<div class="mb-3"><span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #ea580c">UF ' + st.uf + '</span></div>' + stInner;
+            if (st.uf) stInner = '<div class="mb-3"><span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #ea580c">UF ' + st.uf + '</span></div>' + stInner;
             stInner += fluxoRow('Saldo Credor Anterior', st.sld_credor_ant, 'green');
             stInner += fluxoRow('(+) Devoluções', st.devolucoes);
             stInner += fluxoRow('(+) Ressarcimentos', st.ressarcimentos);
@@ -522,7 +522,7 @@
                 obInner += '<td class="px-3 py-2 font-mono text-xs text-gray-700">' + (ob.cod_or || ob.codigo_credito || '-') + '</td>';
                 obInner += '<td class="px-3 py-2 text-right text-sm font-semibold text-gray-900 font-mono">' + fBrl(valor) + '</td>';
                 obInner += '<td class="px-3 py-2 text-center text-sm text-gray-700">';
-                if (vencido) obInner += '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white mr-2" style="background-color: #b91c1c">Vencido</span>';
+                if (vencido) obInner += '<span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white mr-2" style="background-color: #b91c1c">Vencido</span>';
                 obInner += (dtVcto ? new Date(dtVcto).toLocaleDateString('pt-BR') : '—');
                 obInner += '</td></tr>';
             });
@@ -555,7 +555,7 @@
         // Regime badge
         var regimeLabel = { nao_cumulativo: 'Não-Cumulativo', cumulativo: 'Cumulativo', misto: 'Misto' };
         var regimeHex = { nao_cumulativo: '#4338ca', cumulativo: '#374151', misto: '#7c3aed' };
-        html += '<div class="mb-4"><span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + (regimeHex[data.regime] || '#9ca3af') + '">Regime: ' + (regimeLabel[data.regime] || data.regime) + '</span></div>';
+        html += '<div class="mb-4"><span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + (regimeHex[data.regime] || '#9ca3af') + '">Regime: ' + (regimeLabel[data.regime] || data.regime) + '</span></div>';
 
         html += renderContribuicao('PIS', data.pis);
         html += renderContribuicao('COFINS', data.cofins);
@@ -675,7 +675,7 @@
             tblInner += '<tr class="hover:bg-gray-50/50 transition-colors">';
             tblInner += '<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700 font-mono">' + r.data + '</td>';
             tblInner += '<td class="px-3 py-2 font-mono text-xs text-gray-700">' + r.cnpj + '</td>';
-            tblInner += '<td class="px-3 py-2"><span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + h + '">' + r.natureza + '</span></td>';
+            tblInner += '<td class="px-3 py-2"><span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + h + '">' + r.natureza + '</span></td>';
             tblInner += '<td class="px-3 py-2 text-right font-mono text-sm text-gray-700">' + fBrl(r.base_calculo) + '</td>';
             tblInner += '<td class="px-3 py-2 text-right font-mono text-sm text-gray-700">' + fBrl(r.valor_pis) + '</td>';
             tblInner += '<td class="px-3 py-2 text-right font-mono text-sm text-gray-700">' + fBrl(r.valor_cofins) + '</td>';
@@ -789,7 +789,7 @@
             html += '<div class="flex items-start justify-between gap-2">';
             html += '<div>';
             html += '<div class="flex items-center gap-2 mb-1">';
-            html += '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + badgeHex + '">' + a.categoria + '</span>';
+            html += '<span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + badgeHex + '">' + a.categoria + '</span>';
             html += '<h4 class="text-sm font-semibold text-gray-900">' + a.titulo + '</h4>';
             html += '</div>';
             html += '<p class="text-sm text-gray-600">' + a.descricao + '</p>';

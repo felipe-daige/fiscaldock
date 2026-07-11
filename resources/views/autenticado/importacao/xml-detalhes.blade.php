@@ -48,8 +48,8 @@
                         Excluir
                     </button>
                 @endif
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $tipoStyle }}">{{ $tipoDocLabel }}</span>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $badgeStyle }}">{{ $badgeLabel }}</span>
+                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $tipoStyle }}">{{ $tipoDocLabel }}</span>
+                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $badgeStyle }}">{{ $badgeLabel }}</span>
             </div>
         </div>
 
@@ -78,7 +78,7 @@
                 <div class="px-4 py-3 min-h-[96px] flex flex-col">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Tipo Documento</p>
                     <div class="flex-1 flex items-center">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $tipoStyle }}">{{ $tipoDocLabel }}</span>
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $tipoStyle }}">{{ $tipoDocLabel }}</span>
                     </div>
                     <p class="text-[11px] text-gray-500 mt-1">Documentos importados</p>
                 </div>
@@ -99,7 +99,7 @@
                 <div class="px-4 py-3 min-h-[96px] flex flex-col">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Status</p>
                     <div class="flex-1 flex items-center">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $badgeStyle }}">{{ $badgeLabel }}</span>
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $badgeStyle }}">{{ $badgeLabel }}</span>
                     </div>
                     <p class="text-[11px] text-gray-500 mt-1">{{ $importacao->tempo_processamento ?: 'Em andamento' }}</p>
                 </div>
@@ -366,7 +366,7 @@
                 </div>
                 <div class="px-4 py-3">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Valor Total</p>
-                    <p class="text-lg font-bold text-gray-900">@if($valorTotal)R$ {{ number_format($valorTotal, 2, ',', '.') }}@else<span class="text-gray-400">—</span>@endif</p>
+                    <p class="text-lg font-bold text-gray-900">@if($valorTotal)R$&nbsp;{{ number_format($valorTotal, 2, ',', '.') }}@else<span class="text-gray-400">—</span>@endif</p>
                     <p class="text-[11px] text-gray-500">somatório dos documentos</p>
                 </div>
             </div>
@@ -441,7 +441,7 @@
                             </td>
                             <td class="px-3 py-3 text-sm text-gray-900 font-mono text-right whitespace-nowrap">{{ $nota->valor_formatado }}</td>
                             <td class="px-3 py-3 text-center whitespace-nowrap">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tipoHex }}">{{ $nota->tipo_nota_descricao }}</span>
+                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tipoHex }}">{{ $nota->tipo_nota_descricao }}</span>
                             </td>
                         </tr>
                         @endforeach
@@ -509,7 +509,7 @@
 
         {{-- Participantes --}}
         <div class="bg-white rounded border border-gray-300" id="participantes-section">
-            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-4 flex-wrap">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3" data-mobile-filters>
                 <div class="flex items-center gap-2">
                     <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Participantes</span>
                     @if($participantes->total() > 0)
@@ -517,7 +517,7 @@
                     @endif
                 </div>
                 @if($participantes->total() > 0)
-                <div class="flex items-center gap-3">
+                <div class="flex w-full flex-col min-[480px]:flex-row min-[480px]:items-center gap-3 sm:w-auto">
                     <div class="flex items-center gap-2">
                         <label for="per-page-participantes-xml" class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Por pág.</label>
                         <select id="per-page-participantes-xml" class="border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400 px-2 py-1.5 bg-white" onchange="let u = new URL(window.location.href); u.searchParams.set('per_page_participantes', this.value); u.searchParams.delete('page'); const a = document.createElement('a'); a.href = u.toString(); a.setAttribute('data-link', ''); document.body.appendChild(a); a.click(); a.remove();">
@@ -527,7 +527,7 @@
                             <option value="100" {{ request('per_page_participantes') == 100 ? 'selected' : '' }}>100 por pág.</option>
                         </select>
                     </div>
-                    <div class="relative">
+                    <div class="relative min-w-0 flex-1 sm:flex-none">
                         <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
@@ -535,7 +535,7 @@
                             type="text"
                             id="busca-participantes-xml"
                             placeholder="Buscar participante..."
-                            class="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400 w-64"
+                            class="w-full sm:w-64 pl-9 pr-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                         >
                     </div>
                 </div>

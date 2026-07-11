@@ -78,7 +78,7 @@
                     @endif
                 </div>
             </div>
-            <form method="GET" action="/app/consulta/historico">
+            <form method="GET" action="/app/consulta/historico" data-mobile-filters>
                 <div class="px-4 py-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-3">
                         <input
@@ -119,7 +119,7 @@
                         <div class="text-xs text-gray-500">
                             {{ $lotes->total() }} lote{{ $lotes->total() === 1 ? '' : 's' }} encontrado{{ $lotes->total() === 1 ? '' : 's' }}
                         </div>
-                        <div class="flex gap-2 w-full sm:w-auto">
+                        <div class="mobile-filter-actions flex gap-2 w-full sm:w-auto">
                             <button type="submit" class="flex-1 sm:flex-none px-4 py-2 bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium">
                                 Filtrar
                             </button>
@@ -175,20 +175,20 @@
                                     <td class="px-3 py-3 text-sm text-gray-700">
                                         <div class="text-gray-900">{{ $lote->plano?->nome ?? 'Sem plano' }}</div>
                                         @if($lote->eh_monitoramento ?? false)
-                                            <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #7c3aed">Monitoramento</span>
+                                            <span class="whitespace-nowrap inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #7c3aed">Monitoramento</span>
                                         @endif
                                         @if($lote->processado_em)
                                             <div class="text-[11px] text-gray-500 mt-1">Processado em {{ $lote->processado_em->format('d/m/Y H:i') }}</div>
                                         @endif
                                     </td>
                                     <td class="px-3 py-3 text-sm text-gray-700">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ number_format($lote->total_participantes, 0, ',', '.') }}</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ number_format($lote->total_participantes, 0, ',', '.') }}</span>
                                     </td>
                                     <td class="px-3 py-3 text-sm font-semibold text-gray-900 font-mono">
                                         {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $lote->creditos_cobrados)) }}
                                     </td>
                                     <td class="px-3 py-3">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusMeta['hex'] }}">{{ $statusMeta['label'] }}</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusMeta['hex'] }}">{{ $statusMeta['label'] }}</span>
                                         @if($lote->isErro())
                                             <div class="mt-2">
                                                 <a href="{{ $erroCritico['action_url'] ?? config('support.whatsapp_url') }}"
@@ -236,7 +236,7 @@
                                     <p class="text-[10px] text-gray-400 uppercase">Lote</p>
                                     <p class="text-sm text-gray-900 font-medium">#{{ $lote->id }} · {{ $lote->plano?->nome ?? 'Sem plano' }}</p>
                                 </div>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusMeta['hex'] }}">{{ $statusMeta['label'] }}</span>
+                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusMeta['hex'] }}">{{ $statusMeta['label'] }}</span>
                             </div>
                             <div class="grid grid-cols-2 gap-3 mt-3 text-sm text-gray-700">
                                 <div>

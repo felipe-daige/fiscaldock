@@ -71,7 +71,7 @@
                                             @if($i->atualizadoPor) · por {{ $i->atualizadoPor->name }} @endif
                                         </p>
                                     </div>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap mt-0.5" style="background-color: {{ $i->corHex }}">
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap mt-0.5" style="background-color: {{ $i->corHex }}">
                                         {{ $i->label }}
                                     </span>
                                 </div>

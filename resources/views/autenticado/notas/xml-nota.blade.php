@@ -72,11 +72,11 @@
                     <p class="text-xs text-gray-500">{{ $modeloSubtitulo }}</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tipoBadge['hex'] }}">{{ $tipoBadge['label'] }}</span>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $modeloLabel }}</span>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #0f766e">XML</span>
+                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tipoBadge['hex'] }}">{{ $tipoBadge['label'] }}</span>
+                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $modeloLabel }}</span>
+                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #0f766e">XML</span>
                     @if($finalidadeBadge)
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $finalidadeBadge['hex'] }}">{{ $finalidadeBadge['label'] }}</span>
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $finalidadeBadge['hex'] }}">{{ $finalidadeBadge['label'] }}</span>
                     @endif
                 </div>
             </div>
@@ -107,7 +107,7 @@
                 </div>
                 <div class="p-4">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Tributos</p>
-                    <p class="text-lg font-bold text-gray-900">R$ {{ number_format($nota->total_tributos_calculado, 2, ',', '.') }}</p>
+                    <p class="text-lg font-bold text-gray-900">R$&nbsp;{{ number_format($nota->total_tributos_calculado, 2, ',', '.') }}</p>
                     <p class="text-[11px] text-gray-500">Soma dos tributos capturados</p>
                 </div>
             </div>
@@ -138,7 +138,7 @@
             <div class="bg-white rounded border border-gray-300 overflow-hidden">
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-2">
                     <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Emitente</span>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeEmit['hex'] }}">{{ $badgeEmit['label'] }}</span>
+                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeEmit['hex'] }}">{{ $badgeEmit['label'] }}</span>
                 </div>
                 <div class="p-4">
                     <div class="flex flex-wrap items-start justify-between gap-3">
@@ -153,7 +153,7 @@
                             @endif
                         </div>
                         @if($emitentePrincipal?->situacao_cadastral)
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ strtolower((string) $emitentePrincipal->situacao_cadastral) === 'ativa' ? '#047857' : '#dc2626' }}">
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ strtolower((string) $emitentePrincipal->situacao_cadastral) === 'ativa' ? '#047857' : '#dc2626' }}">
                                 {{ strtoupper($emitentePrincipal->situacao_cadastral) }}
                             </span>
                         @endif
@@ -181,7 +181,7 @@
             <div class="bg-white rounded border border-gray-300 overflow-hidden">
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-2">
                     <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Destinatario</span>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeDest['hex'] }}">{{ $badgeDest['label'] }}</span>
+                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeDest['hex'] }}">{{ $badgeDest['label'] }}</span>
                 </div>
                 <div class="p-4">
                     <div class="flex flex-wrap items-start justify-between gap-3">
@@ -196,7 +196,7 @@
                             @endif
                         </div>
                         @if($destinatarioPrincipal?->situacao_cadastral)
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ strtolower((string) $destinatarioPrincipal->situacao_cadastral) === 'ativa' ? '#047857' : '#dc2626' }}">
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ strtolower((string) $destinatarioPrincipal->situacao_cadastral) === 'ativa' ? '#047857' : '#dc2626' }}">
                                 {{ strtoupper($destinatarioPrincipal->situacao_cadastral) }}
                             </span>
                         @endif
@@ -249,27 +249,27 @@
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 divide-x divide-y lg:divide-y-0 divide-gray-200">
                     <div class="p-4">
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">ICMS</p>
-                        <p class="text-lg font-bold text-gray-900">R$ {{ number_format((float) ($nota->icms_valor ?? 0), 2, ',', '.') }}</p>
+                        <p class="text-lg font-bold text-gray-900">R$&nbsp;{{ number_format((float) ($nota->icms_valor ?? 0), 2, ',', '.') }}</p>
                     </div>
                     <div class="p-4">
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">ICMS ST</p>
-                        <p class="text-lg font-bold text-gray-900">R$ {{ number_format((float) ($nota->icms_st_valor ?? 0), 2, ',', '.') }}</p>
+                        <p class="text-lg font-bold text-gray-900">R$&nbsp;{{ number_format((float) ($nota->icms_st_valor ?? 0), 2, ',', '.') }}</p>
                     </div>
                     <div class="p-4">
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">PIS</p>
-                        <p class="text-lg font-bold text-gray-900">R$ {{ number_format((float) ($nota->pis_valor ?? 0), 2, ',', '.') }}</p>
+                        <p class="text-lg font-bold text-gray-900">R$&nbsp;{{ number_format((float) ($nota->pis_valor ?? 0), 2, ',', '.') }}</p>
                     </div>
                     <div class="p-4">
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">COFINS</p>
-                        <p class="text-lg font-bold text-gray-900">R$ {{ number_format((float) ($nota->cofins_valor ?? 0), 2, ',', '.') }}</p>
+                        <p class="text-lg font-bold text-gray-900">R$&nbsp;{{ number_format((float) ($nota->cofins_valor ?? 0), 2, ',', '.') }}</p>
                     </div>
                     <div class="p-4">
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">IPI</p>
-                        <p class="text-lg font-bold text-gray-900">R$ {{ number_format((float) ($nota->ipi_valor ?? 0), 2, ',', '.') }}</p>
+                        <p class="text-lg font-bold text-gray-900">R$&nbsp;{{ number_format((float) ($nota->ipi_valor ?? 0), 2, ',', '.') }}</p>
                     </div>
                     <div class="p-4">
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Total</p>
-                        <p class="text-lg font-bold text-gray-900">R$ {{ number_format($nota->total_tributos_calculado, 2, ',', '.') }}</p>
+                        <p class="text-lg font-bold text-gray-900">R$&nbsp;{{ number_format($nota->total_tributos_calculado, 2, ',', '.') }}</p>
                     </div>
                 </div>
             </div>
@@ -300,7 +300,7 @@
                 </div>
                 <div class="p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div class="flex flex-wrap items-center gap-2">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $validacaoBadgeHex }}">
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $validacaoBadgeHex }}">
                             {{ strtoupper($nota->validacao_classificacao_label) }}
                         </span>
                         @if($nota->validacao_score !== null)

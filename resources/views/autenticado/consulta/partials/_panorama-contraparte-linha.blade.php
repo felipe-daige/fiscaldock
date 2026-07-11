@@ -11,8 +11,8 @@
         <p class="font-semibold leading-tight" style="color: {{ $papelHex[$rel['papel']] ?? '#374151' }}">{{ $papelLabel[$rel['papel']] ?? '—' }}</p>
     </div>
     <div class="shrink-0 text-right font-mono text-slate-700">
-        <p>R$ {{ number_format($relEntrada + $relSaida, 2, ',', '.') }}</p>
-        @if($relEntrada > 0)<p class="text-[10px] leading-tight font-normal" style="color: #2563eb">↓ entrada R$ {{ number_format($relEntrada, 2, ',', '.') }}</p>@endif
-        @if($relSaida > 0)<p class="text-[10px] leading-tight font-normal" style="color: #0f766e">↑ saída R$ {{ number_format($relSaida, 2, ',', '.') }}</p>@endif
+        <p>R$&nbsp;{{ number_format($relEntrada + $relSaida, 2, ',', '.') }}</p>
+        @if($relEntrada > 0)<p class="text-[10px] leading-tight font-normal" style="color: #2563eb">↓ entrada R$&nbsp;{{ number_format($relEntrada, 2, ',', '.') }}</p>@endif
+        @if($relSaida > 0)<p class="text-[10px] leading-tight font-normal" style="color: #0f766e">↑ saída R$&nbsp;{{ number_format($relSaida, 2, ',', '.') }}</p>@endif
     </div>
 </div>

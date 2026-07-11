@@ -43,7 +43,7 @@
                                         <div class="flex-1 min-w-0">
                                             <div class="flex items-center gap-2 flex-wrap">
                                                 <span class="text-sm font-semibold text-gray-900">EFD Fiscal</span>
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
+                                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
                                             </div>
                                             <p class="text-xs text-gray-500 mt-1">ICMS/IPI para escrituração fiscal digital.</p>
                                         </div>
@@ -53,7 +53,7 @@
                                         <div class="flex-1 min-w-0">
                                             <div class="flex items-center gap-2 flex-wrap">
                                                 <span class="text-sm font-semibold text-gray-900">EFD Contribuições</span>
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
+                                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
                                             </div>
                                             <p class="text-xs text-gray-500 mt-1">PIS/COFINS para contribuições federais.</p>
                                         </div>
@@ -65,19 +65,19 @@
                                 <div class="bg-gray-50 border border-gray-200 rounded p-4">
                                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Escopo da Extração</p>
                                     <div id="info-efd-fiscal" class="hidden flex flex-wrap gap-2">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Participantes</span>
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">NF-e Mercadorias</span>
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">CT-e</span>
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">Catálogo</span>
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">Apuração ICMS</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Participantes</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">NF-e Mercadorias</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">CT-e</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">Catálogo</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">Apuração ICMS</span>
                                     </div>
                                     <div id="info-efd-contrib" class="hidden flex flex-wrap gap-2">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Participantes</span>
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Notas Serviço</span>
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">NF-e Mercadorias</span>
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">Catálogo</span>
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">Apuração PIS/COFINS</span>
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Retenções</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Participantes</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Notas Serviço</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">NF-e Mercadorias</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">Catálogo</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">Apuração PIS/COFINS</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Retenções</span>
                                     </div>
                                 </div>
                             </div>
@@ -181,8 +181,8 @@
                                         <div class="flex items-start justify-between gap-3">
                                             <div class="min-w-0">
                                                 <div class="flex items-center gap-2 flex-wrap">
-                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $recentTipoBadge['hex'] }}">{{ $recentTipoBadge['label'] }}</span>
-                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $recentStatus['hex'] }}">{{ $recentStatus['label'] }}</span>
+                                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $recentTipoBadge['hex'] }}">{{ $recentTipoBadge['label'] }}</span>
+                                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $recentStatus['hex'] }}">{{ $recentStatus['label'] }}</span>
                                                 </div>
                                                 <p class="text-sm text-gray-900 mt-2 truncate" title="{{ $recentImp->filename }}">{{ $recentImp->filename ?? ('Importação #' . $recentImp->id) }}</p>
                                                 <p class="text-[11px] text-gray-500 mt-1">

@@ -33,22 +33,25 @@ class ComercialParametroService
             'default' => PricingCatalogService::MINIMUM_DEPOSIT, // 100.00
             'dica' => 'Valor mínimo de recarga avulsa.',
         ],
+        // Preços por produto em R$ — consumidos por PricingCatalogService::getProductPriceByPlan
+        // (que converte pra unidade do ledger na cobrança). Defaults = custo_creditos do
+        // PlanoCatalog × peg (15/20/25 cr × 0,20). Tipo float: preço com centavos é válido.
         'preco_validacao' => [
             'rotulo' => 'Preço Validação (R$)',
-            'tipo' => 'int',
-            'default' => 15,
+            'tipo' => 'float',
+            'default' => 3.00,
             'dica' => 'Preço por CNPJ exibido e cobrado para o produto Validação.',
         ],
         'preco_licitacao' => [
             'rotulo' => 'Preço Licitação (R$)',
-            'tipo' => 'int',
-            'default' => 20,
+            'tipo' => 'float',
+            'default' => 4.00,
             'dica' => 'Preço por CNPJ exibido e cobrado para o produto Licitação.',
         ],
         'preco_compliance' => [
             'rotulo' => 'Preço Compliance (R$)',
-            'tipo' => 'int',
-            'default' => 25,
+            'tipo' => 'float',
+            'default' => 5.00,
             'dica' => 'Preço por CNPJ exibido e cobrado para o produto Compliance.',
         ],
     ];

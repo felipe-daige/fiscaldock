@@ -36,7 +36,7 @@
                     <td class="px-3 py-3 text-sm font-mono text-gray-700 whitespace-nowrap">{{ $item->cfop ?: '—' }}</td>
                     <td class="px-3 py-3 text-sm text-gray-700 font-mono text-right whitespace-nowrap">{{ rtrim(rtrim(number_format((float) $item->quantidade, 4, ',', '.'), '0'), ',') ?: '0' }}</td>
                     <td class="px-3 py-3 text-sm text-gray-500 text-center whitespace-nowrap">{{ number_format($item->ocorrencias) }}</td>
-                    <td class="px-3 py-3 text-sm text-gray-900 font-mono text-right whitespace-nowrap">R$ {{ number_format((float) $item->valor_total, 2, ',', '.') }}</td>
+                    <td class="px-3 py-3 text-sm text-gray-900 font-mono text-right whitespace-nowrap">R$&nbsp;{{ number_format((float) $item->valor_total, 2, ',', '.') }}</td>
                 </tr>
                 @endforeach
             </tbody>

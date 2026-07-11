@@ -20,19 +20,19 @@
                 <div class="flex items-center gap-2 flex-wrap">
                     <h1 class="text-lg font-bold text-gray-900 truncate">{{ $nomeCompleto }}</h1>
                     @if($usuario->is_admin)
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#475569">admin</span>
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#475569">admin</span>
                     @endif
                     @if($usuario->bloqueado_em)
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#b91c1c">bloqueado</span>
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#b91c1c">bloqueado</span>
                     @endif
                     @if($trialAtivo)
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#1e4679">trial</span>
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#1e4679">trial</span>
                     @endif
                     @if($usuario->deletion_requested_at)
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#dc2626">exclusão pedida</span>
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#dc2626">exclusão pedida</span>
                     @endif
                     @if($usuario->anonimizado_em)
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#6b7280">anonimizado</span>
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#6b7280">anonimizado</span>
                     @endif
                 </div>
                 <p class="text-[11px] text-gray-400 mt-0.5">{{ $usuario->email }} · ID <code class="text-gray-600">#{{ $usuario->id }}</code></p>

@@ -93,7 +93,7 @@ class ClearanceLoteService
             return [
                 'success' => false,
                 'http_status' => Response::HTTP_PAYMENT_REQUIRED,
-                'error' => 'Créditos insuficientes.',
+                'error' => 'Saldo insuficiente.',
                 'custo_necessario' => $custoTotal,
                 'saldo_atual' => $this->creditService->getBalance($user),
             ];
@@ -163,7 +163,7 @@ class ClearanceLoteService
             return [
                 'success' => false,
                 'http_status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'error' => 'Erro ao iniciar o clearance. Créditos estornados.',
+                'error' => 'Erro ao iniciar o clearance. Saldo estornado.',
             ];
         }
     }

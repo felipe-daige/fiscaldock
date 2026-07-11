@@ -18,7 +18,7 @@
                     @foreach($top_produtos as $p)
                         <tr class="odd:bg-slate-50/60">
                             <td class="py-0.5 pr-2 text-slate-700"><div class="max-w-[180px] truncate" title="{{ $p['descricao'] ?? $p['cod_item'] ?? '—' }}">{{ $p['descricao'] ?? $p['cod_item'] ?? '—' }}</div></td>
-                            <td class="py-0.5 text-right font-mono text-slate-900 whitespace-nowrap">R$ {{ number_format((float) ($p['valor'] ?? 0), 2, ',', '.') }}</td>
+                            <td class="py-0.5 text-right font-mono text-slate-900 whitespace-nowrap">R$&nbsp;{{ number_format((float) ($p['valor'] ?? 0), 2, ',', '.') }}</td>
                             <td class="py-0.5 pl-2 text-right text-slate-500 whitespace-nowrap">{{ (int) ($p['qtd'] ?? 0) }}</td>
                         </tr>
                     @endforeach
@@ -47,7 +47,7 @@
                         <tr class="odd:bg-slate-50/60">
                             <td class="py-0.5 pr-2 font-mono text-slate-700 whitespace-nowrap">{{ $c['cfop'] ?? '—' }}</td>
                             <td class="py-0.5 pr-2 text-slate-600"><div class="max-w-[160px] truncate" title="{{ $c['descricao'] ?? '' }}">{{ $c['descricao'] ?? '' }}</div></td>
-                            <td class="py-0.5 text-right font-mono text-slate-900 whitespace-nowrap">R$ {{ number_format((float) ($c['valor'] ?? 0), 2, ',', '.') }}</td>
+                            <td class="py-0.5 text-right font-mono text-slate-900 whitespace-nowrap">R$&nbsp;{{ number_format((float) ($c['valor'] ?? 0), 2, ',', '.') }}</td>
                             <td class="py-0.5 pl-2 text-right text-slate-500 whitespace-nowrap">{{ (int) ($c['qtd'] ?? 0) }}</td>
                         </tr>
                     @endforeach

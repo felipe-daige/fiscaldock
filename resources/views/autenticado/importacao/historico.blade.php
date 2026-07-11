@@ -36,12 +36,12 @@
         </div>
 
         @if($importacoes->isNotEmpty())
-            <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
+            <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6" data-mobile-filters>
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 hidden sm:block">
                     <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtro</span>
                 </div>
                 <div class="px-4 py-4">
-                    <div class="flex items-center gap-2 flex-wrap" id="filtro-tipo-wrapper">
+                    <div class="mobile-filter-scroll flex items-center gap-2" id="filtro-tipo-wrapper">
                         <button
                             type="button"
                             data-tipo="todos"
@@ -173,7 +173,7 @@
                                     <td class="px-2 py-3 text-sm text-gray-700 whitespace-nowrap">{{ $tempoProc }}</td>
                                     <td class="pl-2 pr-3 py-3 text-sm text-gray-700 leading-tight" title="{{ $volume }}">{{ $volume }}</td>
                                     <td class="px-1 py-3 whitespace-nowrap">
-                                        <span class="inline-block max-w-full truncate px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white align-middle" style="background-color: {{ $statusBadge['hex'] }}">{{ $statusBadge['label'] }}</span>
+                                        <span class="whitespace-nowrap inline-block max-w-full truncate px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white align-middle" style="background-color: {{ $statusBadge['hex'] }}">{{ $statusBadge['label'] }}</span>
                                     </td>
                                     <td class="pl-2 pr-3 py-3 text-right whitespace-nowrap">
                                         @php $proc = in_array($imp['status'] ?? '', ['processando', 'pendente'], true); @endphp
@@ -259,7 +259,7 @@
                                 @if($origemDetalhe)
                                     <span class="text-[10px] text-gray-500 uppercase tracking-wide whitespace-nowrap">{{ $origemDetalhe }}</span>
                                 @endif
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusBadge['hex'] }}">{{ $statusBadge['label'] }}</span>
+                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusBadge['hex'] }}">{{ $statusBadge['label'] }}</span>
                             </div>
                             <a href="{{ $href }}" data-link class="block text-sm text-gray-900 hover:text-gray-600 hover:underline">{{ $filename }}</a>
                             @if($competencia)

@@ -24,7 +24,7 @@
                             <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Contato FiscalDock</p>
                             <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide mt-1">Fale com nosso time</h1>
                         </div>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
                             Comercial
                         </span>
                     </div>
@@ -78,7 +78,7 @@
                         </a>
                         <a href="{{ route('precos') }}"
                            class="bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded text-sm font-medium px-4 py-3 text-center">
-                            Ver créditos e faixas
+                            Ver preços e faixas
                         </a>
                         <a href="{{ route('duvidas') }}"
                            class="bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded text-sm font-medium px-4 py-3 text-center">

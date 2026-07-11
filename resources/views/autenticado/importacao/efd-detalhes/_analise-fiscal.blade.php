@@ -60,20 +60,20 @@
  @if(isset($kpi['ticket_medio_entradas']))
  <div class="bg-gray-50 rounded p-3 text-center">
  <p class="text-[10px] text-gray-500 uppercase tracking-wide font-medium">Ticket Médio Entradas</p>
- <p class="text-lg font-bold text-gray-900">R$ {{ number_format($kpi['ticket_medio_entradas'], 2, ',', '.') }}</p>
+ <p class="text-lg font-bold text-gray-900">R$&nbsp;{{ number_format($kpi['ticket_medio_entradas'], 2, ',', '.') }}</p>
  </div>
  @endif
  @if(isset($kpi['ticket_medio_saidas']))
  <div class="bg-gray-50 rounded p-3 text-center">
  <p class="text-[10px] text-gray-500 uppercase tracking-wide font-medium">Ticket Médio Saídas</p>
- <p class="text-lg font-bold text-gray-900">R$ {{ number_format($kpi['ticket_medio_saidas'], 2, ',', '.') }}</p>
+ <p class="text-lg font-bold text-gray-900">R$&nbsp;{{ number_format($kpi['ticket_medio_saidas'], 2, ',', '.') }}</p>
  </div>
  @endif
  @if(isset($kpi['total_impostos_periodo']) || isset($kpi['total_impostos_declarados']))
  @php $totalImpostos = $kpi['total_impostos_periodo'] ?? $kpi['total_impostos_declarados'] ?? 0; @endphp
  <div class="bg-gray-50 rounded p-3 text-center">
  <p class="text-[10px] text-gray-500 uppercase tracking-wide font-medium">Total Impostos</p>
- <p class="text-lg font-bold text-gray-900">R$ {{ number_format($totalImpostos, 2, ',', '.') }}</p>
+ <p class="text-lg font-bold text-gray-900">R$&nbsp;{{ number_format($totalImpostos, 2, ',', '.') }}</p>
  </div>
  @endif
  @if(isset($kpi['carga_tributaria_percentual']))
@@ -85,7 +85,7 @@
  @if(isset($kpi['total_entradas']))
  <div class="bg-gray-50 border border-gray-300 rounded p-3 text-center">
  <p class="text-[10px] text-gray-500 uppercase tracking-wide font-medium">Total Entradas</p>
- <p class="text-lg font-bold text-gray-800">R$ {{ number_format(is_array($kpi['total_entradas']) ? ($kpi['total_entradas']['valor'] ?? 0) : $kpi['total_entradas'], 2, ',', '.') }}</p>
+ <p class="text-lg font-bold text-gray-800">R$&nbsp;{{ number_format(is_array($kpi['total_entradas']) ? ($kpi['total_entradas']['valor'] ?? 0) : $kpi['total_entradas'], 2, ',', '.') }}</p>
  @if(is_array($kpi['total_entradas']) && isset($kpi['total_entradas']['count']))
  <a href="/app/notas?tipo_operacao=entrada&importacao_id={{ $importacao->id }}" data-link class="text-[10px] text-gray-500 hover:text-gray-700 hover:underline">{{ $kpi['total_entradas']['count'] }} notas →</a>
  @endif
@@ -94,7 +94,7 @@
  @if(isset($kpi['total_saidas']))
  <div class="bg-gray-50 border border-gray-300 rounded p-3 text-center">
  <p class="text-[10px] text-gray-500 uppercase tracking-wide font-medium">Total Saídas</p>
- <p class="text-lg font-bold text-gray-800">R$ {{ number_format(is_array($kpi['total_saidas']) ? ($kpi['total_saidas']['valor'] ?? 0) : $kpi['total_saidas'], 2, ',', '.') }}</p>
+ <p class="text-lg font-bold text-gray-800">R$&nbsp;{{ number_format(is_array($kpi['total_saidas']) ? ($kpi['total_saidas']['valor'] ?? 0) : $kpi['total_saidas'], 2, ',', '.') }}</p>
  @if(is_array($kpi['total_saidas']) && isset($kpi['total_saidas']['count']))
  <a href="/app/notas?tipo_operacao=saida&importacao_id={{ $importacao->id }}" data-link class="text-[10px] text-gray-500 hover:text-gray-700 hover:underline">{{ $kpi['total_saidas']['count'] }} notas →</a>
  @endif
@@ -121,7 +121,7 @@
  @endforeach
  </div>
  <div class="flex items-center gap-2">
- <span class="text-xs text-gray-500">R$ {{ number_format($icmsVs['declarado_recolher'] ?? 0, 2, ',', '.') }}</span>
+ <span class="text-xs text-gray-500">R$&nbsp;{{ number_format($icmsVs['declarado_recolher'] ?? 0, 2, ',', '.') }}</span>
  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
  </div>
  </summary>
@@ -131,7 +131,7 @@
  @php $cfg = $alertaTipoConfig[$alerta['tipo'] ?? 'info'] ?? $alertaTipoConfig['info']; @endphp
  <div class="border-l-4 {{ $cfg['border'] }} bg-white rounded p-3 mb-2">
  <div class="flex items-center gap-2 mb-1">
- <span class="px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: {{ $cfg['badgeHex'] }}">{{ $cfg['label'] }}</span>
+ <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: {{ $cfg['badgeHex'] }}">{{ $cfg['label'] }}</span>
  <span class="text-sm font-semibold text-gray-900">{{ $alerta['titulo'] ?? '' }}</span>
  </div>
  <p class="text-sm text-gray-600">{{ $alerta['descricao'] ?? $alerta['mensagem'] ?? '' }}</p>
@@ -148,11 +148,11 @@
  <th class="text-right py-2 px-3 text-xs font-medium text-gray-500 uppercase">Valor</th>
  </tr></thead>
  <tbody class="divide-y divide-gray-100">
- <tr><td class="py-2 px-3 text-gray-700">Débitos Declarados (E110)</td><td class="py-2 px-3 text-right font-mono text-gray-900">R$ {{ number_format($icmsVs['declarado_debitos'] ?? 0, 2, ',', '.') }}</td></tr>
- <tr><td class="py-2 px-3 text-gray-700">Créditos Declarados (E110)</td><td class="py-2 px-3 text-right font-mono text-gray-900">R$ {{ number_format($icmsVs['declarado_creditos'] ?? 0, 2, ',', '.') }}</td></tr>
- <tr><td class="py-2 px-3 text-gray-700">ICMS a Recolher</td><td class="py-2 px-3 text-right font-mono font-bold text-gray-900">R$ {{ number_format($icmsVs['declarado_recolher'] ?? 0, 2, ',', '.') }}</td></tr>
- <tr class="bg-gray-50"><td class="py-2 px-3 text-gray-700">Total Notas Entradas</td><td class="py-2 px-3 text-right font-mono text-gray-900">R$ {{ number_format($icmsVs['notas_entradas_valor'] ?? 0, 2, ',', '.') }}</td></tr>
- <tr class="bg-gray-50"><td class="py-2 px-3 text-gray-700">Total Notas Saídas</td><td class="py-2 px-3 text-right font-mono text-gray-900">R$ {{ number_format($icmsVs['notas_saidas_valor'] ?? 0, 2, ',', '.') }}</td></tr>
+ <tr><td class="py-2 px-3 text-gray-700">Débitos Declarados (E110)</td><td class="py-2 px-3 text-right font-mono text-gray-900">R$&nbsp;{{ number_format($icmsVs['declarado_debitos'] ?? 0, 2, ',', '.') }}</td></tr>
+ <tr><td class="py-2 px-3 text-gray-700">Créditos Declarados (E110)</td><td class="py-2 px-3 text-right font-mono text-gray-900">R$&nbsp;{{ number_format($icmsVs['declarado_creditos'] ?? 0, 2, ',', '.') }}</td></tr>
+ <tr><td class="py-2 px-3 text-gray-700">ICMS a Recolher</td><td class="py-2 px-3 text-right font-mono font-bold text-gray-900">R$&nbsp;{{ number_format($icmsVs['declarado_recolher'] ?? 0, 2, ',', '.') }}</td></tr>
+ <tr class="bg-gray-50"><td class="py-2 px-3 text-gray-700">Total Notas Entradas</td><td class="py-2 px-3 text-right font-mono text-gray-900">R$&nbsp;{{ number_format($icmsVs['notas_entradas_valor'] ?? 0, 2, ',', '.') }}</td></tr>
+ <tr class="bg-gray-50"><td class="py-2 px-3 text-gray-700">Total Notas Saídas</td><td class="py-2 px-3 text-right font-mono text-gray-900">R$&nbsp;{{ number_format($icmsVs['notas_saidas_valor'] ?? 0, 2, ',', '.') }}</td></tr>
  <tr><td class="py-2 px-3 text-gray-700 font-medium">Ratio Débitos/Saídas</td><td class="py-2 px-3 text-right font-mono font-bold text-gray-700">{{ number_format($icmsVs['ratio_debitos_sobre_saidas'] ?? 0, 1, ',', '.') }}%</td></tr>
  </tbody>
  </table>
@@ -175,7 +175,7 @@
  <div class="flex items-center gap-2">
  <span class="text-sm font-semibold text-gray-900">Concentração de Fornecedores</span>
  @if($conc['concentracao_alta'] ?? false)
- <span class="px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #d97706">Alta</span>
+ <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #d97706">Alta</span>
  @endif
  @foreach($alertasParticipantes->groupBy('tipo') as $tipo => $group)
  @php $cfg = $alertaTipoConfig[$tipo] ?? $alertaTipoConfig['info']; @endphp
@@ -183,7 +183,7 @@
  @endforeach
  </div>
  <div class="flex items-center gap-2">
- <span class="text-xs text-gray-500">R$ {{ number_format($conc['total_entradas_valor'] ?? 0, 2, ',', '.') }}</span>
+ <span class="text-xs text-gray-500">R$&nbsp;{{ number_format($conc['total_entradas_valor'] ?? 0, 2, ',', '.') }}</span>
  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
  </div>
  </summary>
@@ -192,13 +192,13 @@
  @php $cfg = $alertaTipoConfig[$alerta['tipo'] ?? 'info'] ?? $alertaTipoConfig['info']; @endphp
  <div class="border-l-4 {{ $cfg['border'] }} bg-white rounded p-3 mb-2">
  <div class="flex items-center gap-2 mb-1">
- <span class="px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: {{ $cfg['badgeHex'] }}">{{ $cfg['label'] }}</span>
+ <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: {{ $cfg['badgeHex'] }}">{{ $cfg['label'] }}</span>
  <span class="text-sm font-semibold text-gray-900">{{ $alerta['titulo'] ?? '' }}</span>
  </div>
  <p class="text-sm text-gray-600">{{ $alerta['descricao'] ?? $alerta['mensagem'] ?? '' }}</p>
  </div>
  @endforeach
- <p class="text-xs text-gray-500 mb-2">Total entradas: <span class="font-medium text-gray-700">R$ {{ number_format($conc['total_entradas_valor'] ?? 0, 2, ',', '.') }}</span></p>
+ <p class="text-xs text-gray-500 mb-2">Total entradas: <span class="font-medium text-gray-700">R$&nbsp;{{ number_format($conc['total_entradas_valor'] ?? 0, 2, ',', '.') }}</span></p>
  <div class="overflow-x-auto">
  <table class="min-w-full text-sm">
  <thead><tr class="border-b border-gray-300">
@@ -221,7 +221,7 @@
  </td>
  <td class="py-2 px-3 text-gray-700 truncate max-w-[200px]">{{ $forn['razao_social'] ?? '—' }}</td>
  <td class="py-2 px-3 text-right text-gray-700">{{ $forn['num_notas'] ?? 0 }}</td>
- <td class="py-2 px-3 text-right font-mono text-gray-900">R$ {{ number_format($forn['valor_total'] ?? 0, 2, ',', '.') }}</td>
+ <td class="py-2 px-3 text-right font-mono text-gray-900">R$&nbsp;{{ number_format($forn['valor_total'] ?? 0, 2, ',', '.') }}</td>
  <td class="py-2 px-3 text-right font-bold text-gray-700">{{ number_format($forn['percentual'] ?? 0, 1, ',', '.') }}%</td>
  </tr>
  @endforeach
@@ -242,14 +242,14 @@
  <summary class="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-50/50 transition-colors">
  <div class="flex items-center gap-2">
  <span class="text-sm font-semibold text-gray-900">Notas Irregulares</span>
- <span class="px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #dc2626">{{ $irreg['count'] }}</span>
+ <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #dc2626">{{ $irreg['count'] }}</span>
  @foreach($alertasNotas->groupBy('tipo') as $tipo => $group)
  @php $cfg = $alertaTipoConfig[$tipo] ?? $alertaTipoConfig['info']; @endphp
  <span class="text-[10px] font-bold text-white px-2 py-0.5 rounded" style="background-color: {{ $cfg['badgeHex'] }}">{{ $group->count() }} {{ $cfg['label'] }}</span>
  @endforeach
  </div>
  <div class="flex items-center gap-2">
- <span class="text-xs text-gray-500">R$ {{ number_format($irreg['valor_total'] ?? 0, 2, ',', '.') }}</span>
+ <span class="text-xs text-gray-500">R$&nbsp;{{ number_format($irreg['valor_total'] ?? 0, 2, ',', '.') }}</span>
  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
  </div>
  </summary>
@@ -258,7 +258,7 @@
  @php $cfg = $alertaTipoConfig[$alerta['tipo'] ?? 'info'] ?? $alertaTipoConfig['info']; @endphp
  <div class="border-l-4 {{ $cfg['border'] }} bg-white rounded p-3 mb-2">
  <div class="flex items-center gap-2 mb-1">
- <span class="px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: {{ $cfg['badgeHex'] }}">{{ $cfg['label'] }}</span>
+ <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: {{ $cfg['badgeHex'] }}">{{ $cfg['label'] }}</span>
  <span class="text-sm font-semibold text-gray-900">{{ $alerta['titulo'] ?? '' }}</span>
  </div>
  <p class="text-sm text-gray-600">{{ $alerta['descricao'] ?? $alerta['mensagem'] ?? '' }}</p>
@@ -296,7 +296,7 @@
  @else — @endif
  </td>
  <td class="py-1.5 px-2 text-gray-700">{{ $nota['cod_sit_label'] ?? $nota['cod_sit'] ?? '—' }}</td>
- <td class="py-1.5 px-2 text-right font-mono text-gray-900">R$ {{ number_format($nota['valor'] ?? 0, 2, ',', '.') }}</td>
+ <td class="py-1.5 px-2 text-right font-mono text-gray-900">R$&nbsp;{{ number_format($nota['valor'] ?? 0, 2, ',', '.') }}</td>
  <td class="py-1.5 px-2 text-gray-500">{{ $nota['bloco'] ?? '—' }}</td>
  </tr>
  @endforeach
@@ -315,10 +315,10 @@
  <summary class="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-50/50 transition-colors">
  <div class="flex items-center gap-2">
  <span class="text-sm font-semibold text-gray-900">Notas em Situação Especial</span>
- <span class="px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #374151">{{ $espec['count'] }}</span>
+ <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #374151">{{ $espec['count'] }}</span>
  </div>
  <div class="flex items-center gap-2">
- <span class="text-xs text-gray-500">R$ {{ number_format($espec['valor_total'] ?? 0, 2, ',', '.') }}</span>
+ <span class="text-xs text-gray-500">R$&nbsp;{{ number_format($espec['valor_total'] ?? 0, 2, ',', '.') }}</span>
  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
  </div>
  </summary>
@@ -353,7 +353,7 @@
  @else — @endif
  </td>
  <td class="py-1.5 px-2 text-gray-700">{{ $nota['cod_sit_label'] ?? $nota['cod_sit'] ?? '—' }}</td>
- <td class="py-1.5 px-2 text-right font-mono text-gray-900">R$ {{ number_format($nota['valor'] ?? 0, 2, ',', '.') }}</td>
+ <td class="py-1.5 px-2 text-right font-mono text-gray-900">R$&nbsp;{{ number_format($nota['valor'] ?? 0, 2, ',', '.') }}</td>
  <td class="py-1.5 px-2 text-gray-500">{{ $nota['bloco'] ?? '—' }}</td>
  </tr>
  @endforeach
@@ -372,7 +372,7 @@
  <summary class="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-50/50 transition-colors">
  <span class="text-sm font-semibold text-gray-900">Duplicatas</span>
  <div class="flex items-center gap-2">
- <span class="text-xs text-gray-500">{{ $dup['count'] }} · R$ {{ number_format($dup['valor_total_potencial'] ?? 0, 2, ',', '.') }}</span>
+ <span class="text-xs text-gray-500">{{ $dup['count'] }} · R$&nbsp;{{ number_format($dup['valor_total_potencial'] ?? 0, 2, ',', '.') }}</span>
  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
  </div>
  </summary>
@@ -384,7 +384,7 @@
  </div>
  <div class="bg-gray-50 rounded p-3 text-center">
  <p class="text-[10px] text-gray-500 uppercase tracking-wide">Valor Potencial</p>
- <p class="text-lg font-bold text-gray-800">R$ {{ number_format($dup['valor_total_potencial'] ?? 0, 2, ',', '.') }}</p>
+ <p class="text-lg font-bold text-gray-800">R$&nbsp;{{ number_format($dup['valor_total_potencial'] ?? 0, 2, ',', '.') }}</p>
  </div>
  <div class="bg-gray-50 rounded p-3 text-center">
  <p class="text-[10px] text-gray-500 uppercase tracking-wide">% do Total</p>
@@ -411,7 +411,7 @@
  @endforeach
  </div>
  <div class="flex items-center gap-2">
- <span class="text-xs text-gray-500">R$ {{ number_format($frete['total_frete'] ?? 0, 2, ',', '.') }}</span>
+ <span class="text-xs text-gray-500">R$&nbsp;{{ number_format($frete['total_frete'] ?? 0, 2, ',', '.') }}</span>
  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
  </div>
  </summary>
@@ -420,7 +420,7 @@
  @php $cfg = $alertaTipoConfig[$alerta['tipo'] ?? 'info'] ?? $alertaTipoConfig['info']; @endphp
  <div class="border-l-4 {{ $cfg['border'] }} bg-white rounded p-3 mb-2">
  <div class="flex items-center gap-2 mb-1">
- <span class="px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: {{ $cfg['badgeHex'] }}">{{ $cfg['label'] }}</span>
+ <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: {{ $cfg['badgeHex'] }}">{{ $cfg['label'] }}</span>
  <span class="text-sm font-semibold text-gray-900">{{ $alerta['titulo'] ?? '' }}</span>
  </div>
  <p class="text-sm text-gray-600">{{ $alerta['descricao'] ?? $alerta['mensagem'] ?? '' }}</p>
@@ -429,11 +429,11 @@
  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
  <div class="bg-gray-50 rounded p-3 text-center">
  <p class="text-[10px] text-gray-500 uppercase tracking-wide">Total Frete</p>
- <p class="text-sm font-bold text-gray-800">R$ {{ number_format($frete['total_frete'] ?? 0, 2, ',', '.') }}</p>
+ <p class="text-sm font-bold text-gray-800">R$&nbsp;{{ number_format($frete['total_frete'] ?? 0, 2, ',', '.') }}</p>
  </div>
  <div class="bg-gray-50 rounded p-3 text-center">
  <p class="text-[10px] text-gray-500 uppercase tracking-wide">Total Mercadorias</p>
- <p class="text-sm font-bold text-gray-800">R$ {{ number_format($frete['total_mercadorias'] ?? 0, 2, ',', '.') }}</p>
+ <p class="text-sm font-bold text-gray-800">R$&nbsp;{{ number_format($frete['total_mercadorias'] ?? 0, 2, ',', '.') }}</p>
  </div>
  <div class="bg-gray-50 rounded p-3 text-center">
  <p class="text-[10px] text-gray-500 uppercase tracking-wide">% Frete/Mercad.</p>
@@ -457,7 +457,7 @@
  <tr>
  <td class="py-1.5 px-2 text-gray-700 font-mono">{{ $rota['rota'] ?? ($rota['origem'] ?? '?') . ' → ' . ($rota['destino'] ?? '?') }}</td>
  <td class="py-1.5 px-2 text-right text-gray-700" data-label="CT-es">{{ $rota['count'] ?? 0 }}</td>
- <td class="py-1.5 px-2 text-right font-mono text-gray-900" data-label="Valor">R$ {{ number_format($rota['valor_total'] ?? 0, 2, ',', '.') }}</td>
+ <td class="py-1.5 px-2 text-right font-mono text-gray-900" data-label="Valor">R$&nbsp;{{ number_format($rota['valor_total'] ?? 0, 2, ',', '.') }}</td>
  </tr>
  @endforeach
  </tbody>
@@ -478,10 +478,10 @@
  <div class="flex items-center gap-2">
  <span class="text-sm font-semibold text-gray-900">Obrigações a Vencer</span>
  @if(($obr['vencidas'] ?? 0) > 0)
- <span class="px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #dc2626">{{ $obr['vencidas'] }} vencida{{ ($obr['vencidas'] ?? 0) > 1 ? 's' : '' }}</span>
+ <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #dc2626">{{ $obr['vencidas'] }} vencida{{ ($obr['vencidas'] ?? 0) > 1 ? 's' : '' }}</span>
  @endif
  @if(($obr['proximas_7_dias'] ?? 0) > 0)
- <span class="px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #d97706">{{ $obr['proximas_7_dias'] }} próx.</span>
+ <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #d97706">{{ $obr['proximas_7_dias'] }} próx.</span>
  @endif
  @foreach($alertasObrigacoes->groupBy('tipo') as $tipo => $group)
  @php $cfg = $alertaTipoConfig[$tipo] ?? $alertaTipoConfig['info']; @endphp
@@ -495,13 +495,13 @@
  @php $cfg = $alertaTipoConfig[$alerta['tipo'] ?? 'info'] ?? $alertaTipoConfig['info']; @endphp
  <div class="border-l-4 {{ $cfg['border'] }} bg-white rounded p-3 mb-2">
  <div class="flex items-center gap-2 mb-1">
- <span class="px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: {{ $cfg['badgeHex'] }}">{{ $cfg['label'] }}</span>
+ <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: {{ $cfg['badgeHex'] }}">{{ $cfg['label'] }}</span>
  <span class="text-sm font-semibold text-gray-900">{{ $alerta['titulo'] ?? '' }}</span>
  </div>
  <p class="text-sm text-gray-600">{{ $alerta['descricao'] ?? $alerta['mensagem'] ?? '' }}</p>
  </div>
  @endforeach
- <p class="text-xs text-gray-500 mb-2">Total a recolher: <span class="font-bold text-gray-700">R$ {{ number_format($obr['total_a_recolher'] ?? $obr['total_recolher'] ?? 0, 2, ',', '.') }}</span></p>
+ <p class="text-xs text-gray-500 mb-2">Total a recolher: <span class="font-bold text-gray-700">R$&nbsp;{{ number_format($obr['total_a_recolher'] ?? $obr['total_recolher'] ?? 0, 2, ',', '.') }}</span></p>
  <div class="overflow-x-auto">
  <table class="min-w-full text-xs">
  <thead><tr class="border-b border-gray-300">
@@ -522,7 +522,7 @@
  <td class="py-1.5 px-2 text-gray-700">{{ $ob['tipo'] ?? '—' }}</td>
  <td class="py-1.5 px-2 text-gray-700 font-mono">{{ $ob['cod_receita'] ?? '—' }}</td>
  <td class="py-1.5 px-2 text-gray-700">{{ $ob['data_vencimento'] ?? '—' }}</td>
- <td class="py-1.5 px-2 text-right font-mono text-gray-900">R$ {{ number_format($ob['valor'] ?? 0, 2, ',', '.') }}</td>
+ <td class="py-1.5 px-2 text-right font-mono text-gray-900">R$&nbsp;{{ number_format($ob['valor'] ?? 0, 2, ',', '.') }}</td>
  <td class="py-1.5 px-2 text-right {{ $diasClass }}">{{ $diasLabel }}</td>
  </tr>
  @endforeach
@@ -555,7 +555,7 @@
  @php $cfg = $alertaTipoConfig[$alerta['tipo'] ?? 'info'] ?? $alertaTipoConfig['info']; @endphp
  <div class="border-l-4 {{ $cfg['border'] }} bg-white rounded p-3 mb-2">
  <div class="flex items-center gap-2 mb-1">
- <span class="px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: {{ $cfg['badgeHex'] }}">{{ $cfg['label'] }}</span>
+ <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: {{ $cfg['badgeHex'] }}">{{ $cfg['label'] }}</span>
  <span class="text-sm font-semibold text-gray-900">{{ $alerta['titulo'] ?? '' }}</span>
  </div>
  <p class="text-sm text-gray-600">{{ $alerta['descricao'] ?? $alerta['mensagem'] ?? '' }}</p>
@@ -624,7 +624,7 @@
  @php $cfg = $alertaTipoConfig[$alerta['tipo'] ?? 'info'] ?? $alertaTipoConfig['info']; @endphp
  <div class="border-l-4 {{ $cfg['border'] }} bg-white rounded p-3 mb-2">
  <div class="flex items-center gap-2 mb-1">
- <span class="px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: {{ $cfg['badgeHex'] }}">{{ $cfg['label'] }}</span>
+ <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: {{ $cfg['badgeHex'] }}">{{ $cfg['label'] }}</span>
  <span class="text-sm font-semibold text-gray-900">{{ $alerta['titulo'] ?? '' }}</span>
  </div>
  <p class="text-sm text-gray-600">{{ $alerta['descricao'] ?? $alerta['mensagem'] ?? '' }}</p>
@@ -639,7 +639,7 @@
  </div>
  <div class="bg-gray-50 rounded p-3 text-center">
  <p class="text-[10px] text-gray-500 uppercase tracking-wide">Valor Interestadual</p>
- <p class="text-sm font-bold text-gray-800">R$ {{ number_format($interest['valor_total'] ?? $interest['valor'] ?? 0, 2, ',', '.') }}</p>
+ <p class="text-sm font-bold text-gray-800">R$&nbsp;{{ number_format($interest['valor_total'] ?? $interest['valor'] ?? 0, 2, ',', '.') }}</p>
  </div>
  @if(isset($interest['percentual']))
  <div class="bg-gray-50 rounded p-3 text-center">
@@ -665,7 +665,7 @@
  <tr>
  <td class="py-1.5 px-2 text-gray-700 font-bold">{{ $uf['sigla'] ?? $uf['uf'] ?? $ufKey }}</td>
  <td class="py-1.5 px-2 text-right text-gray-700" data-label="Notas">{{ $uf['count'] ?? 0 }}</td>
- <td class="py-1.5 px-2 text-right font-mono text-gray-900" data-label="Valor">R$ {{ number_format($uf['valor_total'] ?? $uf['valor'] ?? 0, 2, ',', '.') }}</td>
+ <td class="py-1.5 px-2 text-right font-mono text-gray-900" data-label="Valor">R$&nbsp;{{ number_format($uf['valor_total'] ?? $uf['valor'] ?? 0, 2, ',', '.') }}</td>
  </tr>
  @endforeach
  </tbody>

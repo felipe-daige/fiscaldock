@@ -6,7 +6,7 @@
     window.__adminUserActionConfirmV2Bound = true;
 
     function brl(value) {
-        return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     function parseDecimal(value) {
@@ -126,8 +126,8 @@
                 ['Novo plano', plano, true],
                 ['Status', status, true],
                 ['Ciclo', fieldValue(form, 'ciclo', 'mensal')],
-                ['Bucket incluso', fieldValue(form, 'creditos_inclusos_saldo', '0') + ' créditos'],
-                ['Cap auto', cap === 'Default do plano' ? cap : cap + ' créditos'],
+                ['Bucket incluso', 'R$ ' + fieldValue(form, 'creditos_inclusos_saldo', '0')],
+                ['Cap auto', cap === 'Default do plano' ? cap : 'R$ ' + cap],
                 ['Motivo', fieldValue(form, 'motivo', '-')],
             ],
             warning: status !== 'ativa'
@@ -143,13 +143,13 @@
         var saldoAtual = saldoCreditos * unit;
         var novoSaldo = saldoAtual + movimento;
         var novoSaldoVisivel = Math.max(0, novoSaldo);
-        var operacao = movimento < 0 ? 'débito' : 'crédito';
+        var operacao = movimento < 0 ? 'debitar saldo' : 'adicionar saldo';
 
         return {
             title: 'Confirmar ajuste de saldo?',
             kicker: 'Saldo manual',
             description: 'O movimento será registrado na trilha administrativa do usuário.',
-            button: movimento < 0 ? 'Aplicar débito' : 'Aplicar crédito',
+            button: movimento < 0 ? 'Debitar saldo' : 'Adicionar saldo',
             color: movimento < 0 ? '#b91c1c' : '#1d4ed8',
             rows: [
                 ['Saldo atual', brl(saldoAtual)],

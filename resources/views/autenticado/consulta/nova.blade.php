@@ -323,7 +323,7 @@
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                     <div class="flex items-center justify-between gap-2">
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Cadastro Rápido de CNPJ</span>
-                        <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Em breve</span>
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Em breve</span>
                     </div>
                 </div>
                 <div class="px-4 py-4 opacity-60">
@@ -412,7 +412,7 @@
                             </div>
 
                             {{-- Filtros --}}
-                            <div class="px-4 py-4 border-b border-gray-200">
+                            <div class="px-4 py-4 border-b border-gray-200" data-mobile-filters>
                                 <p class="text-xs text-gray-600 mb-3">Selecione os CNPJs que quer consultar e refine com os filtros abaixo.</p>
 
                                 {{-- Básico --}}
@@ -654,7 +654,7 @@
                             <div class="px-4 pt-4">
                                 <p class="text-xs text-gray-500">Selecionar um cliente consulta o <strong>CNPJ da própria empresa</strong> (regularidade). Para consultar as contrapartes de um cliente, use a aba <strong>Grupos</strong> → "Participantes do …".</p>
                             </div>
-                            <div class="px-4 py-4 border-b border-gray-200">
+                            <div class="px-4 py-4 border-b border-gray-200" data-mobile-filters>
                                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                                     <input type="text" id="busca-clientes" placeholder="Buscar cliente por nome ou documento..."
                                         class="w-full px-3 py-2 border border-gray-300 rounded text-sm text-gray-700 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
@@ -794,11 +794,11 @@
                                     </div>
                                     <span class="flex-1 min-w-0 text-sm font-medium text-gray-900 truncate">{{ $pd['nome'] }}</span>
                                     @if($pd['gratuito'])
-                                        <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
+                                        <span class="whitespace-nowrap flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
                                     @elseif($isLocked)
-                                        <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Bloq.</span>
+                                        <span class="whitespace-nowrap flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Bloq.</span>
                                     @else
-                                        <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeHex }}">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) $pd['creditos'])) }}</span>
+                                        <span class="whitespace-nowrap flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeHex }}">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) $pd['creditos'])) }}</span>
                                     @endif
                                     @if(!empty($pd['trial_aplicavel']))
                                         <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap"
@@ -824,7 +824,7 @@
                         <div class="px-4 py-4">
                             <div class="flex items-center justify-between mb-3">
                                 <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Total</span>
-                                <span id="resumo-custo-total" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">R$ 0,00</span>
+                                <span id="resumo-custo-total" class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">R$ 0,00</span>
                             </div>
 
                             <div class="space-y-2 text-sm">
@@ -842,11 +842,11 @@
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span class="text-gray-500">Custo unitário</span>
-                                    <span id="resumo-custo-unitario" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">R$ 0,00</span>
+                                    <span id="resumo-custo-unitario" class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">R$ 0,00</span>
                                 </div>
                                 <div class="flex justify-between items-center pt-2 border-t border-gray-100">
                                     <span class="text-gray-500">Seu saldo</span>
-                                    <span id="resumo-saldo" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) $credits)) }}</span>
+                                    <span id="resumo-saldo" class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) $credits)) }}</span>
                                 </div>
                             </div>
 
@@ -1030,13 +1030,13 @@
                                                     </div>
                                                     <h4 class="flex-1 text-sm font-bold text-gray-900 uppercase tracking-wide">{{ $pd['nome'] }}</h4>
                                                     @if($pd['locked'] ?? false)
-                                                        <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Bloqueado</span>
+                                                        <span class="whitespace-nowrap flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Bloqueado</span>
                                                     @elseif($pd['gratuito'])
-                                                        <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
+                                                        <span class="whitespace-nowrap flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
                                                     @elseif($pd['promo'])
-                                                        <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) $pd['creditos'])) }}</span>
+                                                        <span class="whitespace-nowrap flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) $pd['creditos'])) }}</span>
                                                     @else
-                                                        <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeHex }}">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) $pd['creditos'])) }}</span>
+                                                        <span class="whitespace-nowrap flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeHex }}">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) $pd['creditos'])) }}</span>
                                                     @endif
                                                 </div>
                                                 <p class="text-sm text-gray-700">{{ $pd['descricao'] }}</p>

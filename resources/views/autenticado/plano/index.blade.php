@@ -82,7 +82,7 @@
                                         <tr class="hover:bg-gray-50/50 transition-colors">
                                             <td class="px-3 py-2.5 text-sm text-gray-700 whitespace-nowrap">{{ $tx->created_at->format('d/m/Y H:i') }}</td>
                                             <td class="px-3 py-2.5 text-sm text-gray-700" data-label="Execução">
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusHex }}">{{ $statusLabel }}</span>
+                                                <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusHex }}">{{ $statusLabel }}</span>
                                                 <span class="ml-2">Lote #{{ $tx->id }}</span>
                                             </td>
                                             <td class="px-3 py-2.5 text-sm text-gray-600" data-label="Produto">{{ $tx->plano->nome ?? '-' }}</td>
@@ -114,7 +114,7 @@
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Valor livre</span>
                     </div>
                     <div class="p-4 space-y-4">
-                        <p class="text-sm text-gray-700">Faça uma recarga personalizada a partir de R$ {{ number_format($pricing['minimum_deposit'] ?? 50, 0, ',', '.') }} e adicione saldo quando precisar.</p>
+                        <p class="text-sm text-gray-700">Faça uma recarga personalizada a partir de R$&nbsp;{{ number_format($pricing['minimum_deposit'] ?? 50, 0, ',', '.') }} e adicione saldo quando precisar.</p>
                         <form method="GET" action="/app/checkout/custom" class="space-y-3">
                             <div>
                                 <label for="plan-custom-amount" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Quanto deseja pagar</label>

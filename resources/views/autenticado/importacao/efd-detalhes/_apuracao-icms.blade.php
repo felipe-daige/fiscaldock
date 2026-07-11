@@ -43,18 +43,18 @@
  @foreach($icmsCampos as $campo)
  <div class="flex justify-between items-center py-1">
  <span class="text-gray-600">{{ $campo[0] }}</span>
- <span class="text-gray-700 font-mono text-xs">R$ {{ number_format($campo[1] ?? 0, 2, ',', '.') }}</span>
+ <span class="text-gray-700 font-mono text-xs">R$&nbsp;{{ number_format($campo[1] ?? 0, 2, ',', '.') }}</span>
  </div>
  @endforeach
  </div>
  <div class="mt-3 pt-3 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 gap-4">
  <div class="flex justify-between items-center bg-gray-50 rounded px-4 py-2">
  <span class="text-sm font-semibold text-gray-900">ICMS a Recolher</span>
- <span class="text-sm font-bold text-gray-700">R$ {{ number_format($ai->icms_a_recolher ?? 0, 2, ',', '.') }}</span>
+ <span class="text-sm font-bold text-gray-700">R$&nbsp;{{ number_format($ai->icms_a_recolher ?? 0, 2, ',', '.') }}</span>
  </div>
  <div class="flex justify-between items-center bg-gray-50 rounded px-4 py-2">
  <span class="text-sm font-medium text-gray-700">Saldo Credor a Transportar</span>
- <span class="text-sm font-bold text-gray-900">R$ {{ number_format($ai->icms_sld_credor_transportar ?? 0, 2, ',', '.') }}</span>
+ <span class="text-sm font-bold text-gray-900">R$&nbsp;{{ number_format($ai->icms_sld_credor_transportar ?? 0, 2, ',', '.') }}</span>
  </div>
  </div>
 
@@ -79,7 +79,7 @@
  @foreach($ai->icms_obrigacoes['items'] as $obr)
  <tr class="hover:bg-gray-50">
  <td class="px-3 py-1.5 font-mono">{{ $obr['cod_obrigacao'] ?? $obr['COD_OR'] ?? '—' }}</td>
- <td class="px-3 py-1.5 text-right font-mono">R$ {{ number_format((float)($obr['valor'] ?? $obr['VL_OR'] ?? 0), 2, ',', '.') }}</td>
+ <td class="px-3 py-1.5 text-right font-mono">R$&nbsp;{{ number_format((float)($obr['valor'] ?? $obr['VL_OR'] ?? 0), 2, ',', '.') }}</td>
  <td class="px-3 py-1.5">{{ $obr['data_vencimento'] ?? $obr['DT_VCTO'] ?? '—' }}</td>
  <td class="px-3 py-1.5 font-mono">{{ $obr['cod_receita'] ?? $obr['COD_REC'] ?? '—' }}</td>
  </tr>
@@ -117,18 +117,18 @@
  @foreach($stCampos as $campo)
  <div class="flex justify-between items-center py-1">
  <span class="text-gray-600">{{ $campo[0] }}</span>
- <span class="text-gray-700 font-mono text-xs">R$ {{ number_format($campo[1] ?? 0, 2, ',', '.') }}</span>
+ <span class="text-gray-700 font-mono text-xs">R$&nbsp;{{ number_format($campo[1] ?? 0, 2, ',', '.') }}</span>
  </div>
  @endforeach
  </div>
  <div class="mt-3 pt-3 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 gap-4">
  <div class="flex justify-between items-center bg-gray-50 rounded px-4 py-2">
  <span class="text-sm font-semibold text-gray-900">ICMS-ST a Recolher</span>
- <span class="text-sm font-bold text-gray-700">R$ {{ number_format($ai->st_icms_recolher ?? 0, 2, ',', '.') }}</span>
+ <span class="text-sm font-bold text-gray-700">R$&nbsp;{{ number_format($ai->st_icms_recolher ?? 0, 2, ',', '.') }}</span>
  </div>
  <div class="flex justify-between items-center bg-gray-50 rounded px-4 py-2">
  <span class="text-sm font-medium text-gray-700">Saldo Credor a Transportar</span>
- <span class="text-sm font-bold text-gray-900">R$ {{ number_format($ai->st_sld_credor_transportar ?? 0, 2, ',', '.') }}</span>
+ <span class="text-sm font-bold text-gray-900">R$&nbsp;{{ number_format($ai->st_sld_credor_transportar ?? 0, 2, ',', '.') }}</span>
  </div>
  </div>
 
@@ -153,7 +153,7 @@
  @foreach($ai->st_obrigacoes['items'] as $obr)
  <tr class="hover:bg-gray-50">
  <td class="px-3 py-1.5 font-mono">{{ $obr['cod_obrigacao'] ?? $obr['COD_OR'] ?? '—' }}</td>
- <td class="px-3 py-1.5 text-right font-mono">R$ {{ number_format((float)($obr['valor'] ?? $obr['VL_OR'] ?? 0), 2, ',', '.') }}</td>
+ <td class="px-3 py-1.5 text-right font-mono">R$&nbsp;{{ number_format((float)($obr['valor'] ?? $obr['VL_OR'] ?? 0), 2, ',', '.') }}</td>
  <td class="px-3 py-1.5">{{ $obr['data_vencimento'] ?? $obr['DT_VCTO'] ?? '—' }}</td>
  <td class="px-3 py-1.5 font-mono">{{ $obr['cod_receita'] ?? $obr['COD_REC'] ?? '—' }}</td>
  </tr>
@@ -188,9 +188,9 @@
  @foreach($difal['items'] as $d)
  <tr class="hover:bg-gray-50">
  <td class="px-3 py-1.5 text-xs font-medium">{{ $d['UF'] ?? $d['uf'] ?? '—' }}</td>
- <td class="px-3 py-1.5 text-xs text-right font-mono">R$ {{ number_format((float)($d['VL_SLD_DEV_ANT_DIFAL'] ?? $d['difal_origem'] ?? 0), 2, ',', '.') }}</td>
- <td class="px-3 py-1.5 text-xs text-right font-mono">R$ {{ number_format((float)($d['VL_ICMS_RECOLHER_DIFAL'] ?? $d['difal_destino'] ?? $d['icms_recolher'] ?? 0), 2, ',', '.') }}</td>
- <td class="px-3 py-1.5 text-xs text-right font-mono">R$ {{ number_format((float)($d['VL_FCP_RECOLHER'] ?? $d['fcp'] ?? 0), 2, ',', '.') }}</td>
+ <td class="px-3 py-1.5 text-xs text-right font-mono">R$&nbsp;{{ number_format((float)($d['VL_SLD_DEV_ANT_DIFAL'] ?? $d['difal_origem'] ?? 0), 2, ',', '.') }}</td>
+ <td class="px-3 py-1.5 text-xs text-right font-mono">R$&nbsp;{{ number_format((float)($d['VL_ICMS_RECOLHER_DIFAL'] ?? $d['difal_destino'] ?? $d['icms_recolher'] ?? 0), 2, ',', '.') }}</td>
+ <td class="px-3 py-1.5 text-xs text-right font-mono">R$&nbsp;{{ number_format((float)($d['VL_FCP_RECOLHER'] ?? $d['fcp'] ?? 0), 2, ',', '.') }}</td>
  </tr>
  @endforeach
  </tbody>
@@ -204,11 +204,11 @@
  </div>
  <div class="flex justify-between items-center py-1">
  <span class="text-gray-600">DIFAL a Recolher</span>
- <span class="text-gray-700 font-mono">R$ {{ number_format((float)($difal['VL_ICMS_RECOLHER_DIFAL'] ?? $difal['icms_recolher'] ?? 0), 2, ',', '.') }}</span>
+ <span class="text-gray-700 font-mono">R$&nbsp;{{ number_format((float)($difal['VL_ICMS_RECOLHER_DIFAL'] ?? $difal['icms_recolher'] ?? 0), 2, ',', '.') }}</span>
  </div>
  <div class="flex justify-between items-center py-1">
  <span class="text-gray-600">FCP a Recolher</span>
- <span class="text-gray-700 font-mono">R$ {{ number_format((float)($difal['VL_FCP_RECOLHER'] ?? $difal['fcp'] ?? 0), 2, ',', '.') }}</span>
+ <span class="text-gray-700 font-mono">R$&nbsp;{{ number_format((float)($difal['VL_FCP_RECOLHER'] ?? $difal['fcp'] ?? 0), 2, ',', '.') }}</span>
  </div>
  </div>
  @endif
@@ -238,10 +238,10 @@
  @foreach($ipiData['items'] as $ip)
  <tr class="hover:bg-gray-50">
  <td class="px-3 py-1.5 text-xs">{{ ($ip['DT_INI'] ?? $ip['periodo_inicio'] ?? '—') }} a {{ ($ip['DT_FIN'] ?? $ip['periodo_fim'] ?? '') }}</td>
- <td class="px-3 py-1.5 text-xs text-right font-mono">R$ {{ number_format((float)($ip['VL_TOT_DEBITOS'] ?? $ip['debitos'] ?? 0), 2, ',', '.') }}</td>
- <td class="px-3 py-1.5 text-xs text-right font-mono">R$ {{ number_format((float)($ip['VL_TOT_CREDITOS'] ?? $ip['creditos'] ?? 0), 2, ',', '.') }}</td>
- <td class="px-3 py-1.5 text-xs text-right font-mono">R$ {{ number_format((float)($ip['VL_SLD_APURADO'] ?? $ip['saldo'] ?? 0), 2, ',', '.') }}</td>
- <td class="px-3 py-1.5 text-xs text-right font-mono font-semibold">R$ {{ number_format((float)($ip['VL_IPI_RECOLHER'] ?? $ip['a_recolher'] ?? 0), 2, ',', '.') }}</td>
+ <td class="px-3 py-1.5 text-xs text-right font-mono">R$&nbsp;{{ number_format((float)($ip['VL_TOT_DEBITOS'] ?? $ip['debitos'] ?? 0), 2, ',', '.') }}</td>
+ <td class="px-3 py-1.5 text-xs text-right font-mono">R$&nbsp;{{ number_format((float)($ip['VL_TOT_CREDITOS'] ?? $ip['creditos'] ?? 0), 2, ',', '.') }}</td>
+ <td class="px-3 py-1.5 text-xs text-right font-mono">R$&nbsp;{{ number_format((float)($ip['VL_SLD_APURADO'] ?? $ip['saldo'] ?? 0), 2, ',', '.') }}</td>
+ <td class="px-3 py-1.5 text-xs text-right font-mono font-semibold">R$&nbsp;{{ number_format((float)($ip['VL_IPI_RECOLHER'] ?? $ip['a_recolher'] ?? 0), 2, ',', '.') }}</td>
  </tr>
  @endforeach
  </tbody>
@@ -251,19 +251,19 @@
  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
  <div class="flex justify-between items-center py-1">
  <span class="text-gray-600">Débitos</span>
- <span class="text-gray-700 font-mono">R$ {{ number_format((float)($ipiData['VL_TOT_DEBITOS'] ?? $ipiData['debitos'] ?? 0), 2, ',', '.') }}</span>
+ <span class="text-gray-700 font-mono">R$&nbsp;{{ number_format((float)($ipiData['VL_TOT_DEBITOS'] ?? $ipiData['debitos'] ?? 0), 2, ',', '.') }}</span>
  </div>
  <div class="flex justify-between items-center py-1">
  <span class="text-gray-600">Créditos</span>
- <span class="text-gray-700 font-mono">R$ {{ number_format((float)($ipiData['VL_TOT_CREDITOS'] ?? $ipiData['creditos'] ?? 0), 2, ',', '.') }}</span>
+ <span class="text-gray-700 font-mono">R$&nbsp;{{ number_format((float)($ipiData['VL_TOT_CREDITOS'] ?? $ipiData['creditos'] ?? 0), 2, ',', '.') }}</span>
  </div>
  <div class="flex justify-between items-center py-1">
  <span class="text-gray-600">Saldo Apurado</span>
- <span class="text-gray-700 font-mono">R$ {{ number_format((float)($ipiData['VL_SLD_APURADO'] ?? $ipiData['saldo'] ?? 0), 2, ',', '.') }}</span>
+ <span class="text-gray-700 font-mono">R$&nbsp;{{ number_format((float)($ipiData['VL_SLD_APURADO'] ?? $ipiData['saldo'] ?? 0), 2, ',', '.') }}</span>
  </div>
  <div class="flex justify-between items-center py-1 font-semibold">
  <span class="text-gray-900">IPI a Recolher</span>
- <span class="text-gray-900 font-mono">R$ {{ number_format((float)($ipiData['VL_IPI_RECOLHER'] ?? $ipiData['a_recolher'] ?? 0), 2, ',', '.') }}</span>
+ <span class="text-gray-900 font-mono">R$&nbsp;{{ number_format((float)($ipiData['VL_IPI_RECOLHER'] ?? $ipiData['a_recolher'] ?? 0), 2, ',', '.') }}</span>
  </div>
  </div>
  @endif
@@ -273,7 +273,7 @@
  {{-- Total Geral --}}
  <div class="mt-6 pt-4 border-t-2 border-gray-300 flex justify-between items-center">
  <span class="text-base font-bold text-gray-900">Total a Recolher (ICMS + ST)</span>
- <span class="text-lg font-bold text-gray-900">R$ {{ number_format($ai->total_recolher ?? 0, 2, ',', '.') }}</span>
+ <span class="text-lg font-bold text-gray-900">R$&nbsp;{{ number_format($ai->total_recolher ?? 0, 2, ',', '.') }}</span>
  </div>
  </div>
 </div>

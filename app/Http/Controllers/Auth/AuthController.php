@@ -410,7 +410,8 @@ class AuthController extends Controller
 
             $creditos = (int) config('trial.creditos');
             $validadeDias = (int) config('trial.validade_dias');
-            $message = "Conta criada com sucesso. Você recebeu {$creditos} créditos grátis por {$validadeDias} dias.";
+            $bonusReais = 'R$ '.number_format(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($creditos), 2, ',', '.');
+            $message = "Conta criada com sucesso. Você recebeu {$bonusReais} de saldo grátis por {$validadeDias} dias.";
 
             if ($request->ajax()) {
                 return response()->json([

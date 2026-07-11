@@ -43,7 +43,7 @@
                         @php $hex = $inconclusivo ? '#9ca3af' : $scoreColor($score->score_total); @endphp
                         <div class="text-center flex-shrink-0">
                             <div class="text-3xl font-bold font-mono" style="color: {{ $hex }}">{{ $inconclusivo ? '—' : $score->score_total }}</div>
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white mt-1" style="background-color: {{ $hex }}">
+                            <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white mt-1" style="background-color: {{ $hex }}">
                                 {{ $inconclusivo ? 'NÃO CONCLUSIVO' : $scoreLabel($score->score_total) }}
                             </span>
                             @if($inconclusivo)
@@ -53,7 +53,7 @@
                     @else
                         <div class="text-center flex-shrink-0">
                             <div class="text-3xl font-bold text-gray-400 font-mono">—</div>
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white mt-1" style="background-color: #9ca3af">
+                            <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white mt-1" style="background-color: #9ca3af">
                                 Não Avaliado
                             </span>
                         </div>
@@ -112,7 +112,7 @@
                     <dl class="divide-y divide-gray-100">
                         <div class="px-4 py-3">
                             <dt class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Movimentado em notas (EFD)</dt>
-                            <dd class="text-sm font-semibold text-gray-900 font-mono mt-0.5">R$ {{ number_format($volumeEfd ?? 0, 2, ',', '.') }}</dd>
+                            <dd class="text-sm font-semibold text-gray-900 font-mono mt-0.5">R$&nbsp;{{ number_format($volumeEfd ?? 0, 2, ',', '.') }}</dd>
                         </div>
                     </dl>
                 </div>
@@ -127,12 +127,12 @@
                 <div class="bg-white rounded border border-gray-300 overflow-hidden">
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-2">
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Crédito IBS/CBS — Reforma</span>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $crCor }}">{{ $cr['gera_credito'] ?? 'Regime não identificado' }}</span>
+                        <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $crCor }}">{{ $cr['gera_credito'] ?? 'Regime não identificado' }}</span>
                     </div>
                     <dl class="divide-y divide-gray-100">
                         <div class="px-4 py-3">
                             <dt class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Crédito potencial (estimado)</dt>
-                            <dd class="text-sm text-gray-700 font-mono mt-0.5">R$ {{ number_format($cr['credito_potencial'] ?? 0, 2, ',', '.') }}</dd>
+                            <dd class="text-sm text-gray-700 font-mono mt-0.5">R$&nbsp;{{ number_format($cr['credito_potencial'] ?? 0, 2, ',', '.') }}</dd>
                         </div>
                         <div class="px-4 py-3">
                             <dt class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Crédito em risco</dt>
@@ -140,7 +140,7 @@
                                 @if(($cr['credito_em_risco'] ?? null) === null)
                                     —
                                 @else
-                                    R$ {{ number_format($cr['credito_em_risco'], 2, ',', '.') }}
+                                    R$&nbsp;{{ number_format($cr['credito_em_risco'], 2, ',', '.') }}
                                 @endif
                             </dd>
                         </div>

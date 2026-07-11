@@ -14,7 +14,7 @@
         <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
             <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-2">
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#b91c1c">Zona de perigo</span>
+                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#b91c1c">Zona de perigo</span>
                     <span class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">Ação administrativa</span>
                 </div>
                 <h2 class="text-sm font-bold text-gray-900 mt-2">Excluir usuário</h2>

@@ -23,7 +23,7 @@ function $(id) { return document.getElementById(id); }
 // Converte CRÉDITOS pra R$ formatado (espelha PricingCatalogService::creditsToCurrency).
 function brl(creditos) {
     const reais = Math.round((creditos || 0) * creditUnitPrice * 100) / 100;
-    return 'R$ ' + reais.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return 'R$ ' + reais.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function gerarTabId() {

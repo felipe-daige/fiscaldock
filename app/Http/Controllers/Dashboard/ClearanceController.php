@@ -1155,7 +1155,7 @@ class ClearanceController extends Controller
         if (! $this->creditService->hasEnough($user, $custoTotal)) {
             return response()->json([
                 'success' => false,
-                'error' => 'Créditos insuficientes.',
+                'error' => 'Saldo insuficiente.',
                 'creditos_necessarios' => $custoTotal,
                 'creditos_disponiveis' => $this->creditService->getBalance($user),
             ], Response::HTTP_PAYMENT_REQUIRED);
@@ -1165,7 +1165,7 @@ class ClearanceController extends Controller
 
         try {
             if (! $this->creditService->deduct($user, $custoTotal, 'consulta_lote', "SINTEGRA IE — {$total} participante(s)")) {
-                return response()->json(['success' => false, 'error' => 'Falha ao debitar créditos.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+                return response()->json(['success' => false, 'error' => 'Falha ao debitar o saldo.'], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
             $lote = ConsultaLote::create([

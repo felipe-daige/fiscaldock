@@ -58,7 +58,7 @@
         </div>
 
         {{-- Filtros --}}
-        <form id="form-filtros" method="GET" action="/app/participantes" class="bg-white rounded border border-gray-300 overflow-hidden">
+        <form id="form-filtros" method="GET" action="/app/participantes" class="bg-white rounded border border-gray-300 overflow-hidden" data-mobile-filters>
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
             </div>
@@ -219,7 +219,7 @@
                 </div>
             </div>
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4 pt-4 border-t border-gray-200">
-                <div class="flex items-center gap-2">
+                <div class="mobile-filter-actions flex items-center gap-2">
                     <button type="submit" class="bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium px-4 py-2">
                         Filtrar
                     </button>
@@ -379,7 +379,7 @@
                                 <td class="px-3 py-3 text-right align-middle">
                                     @if(($part->mov_qtd ?? 0) > 0)
                                         <div class="text-sm font-semibold text-gray-900 whitespace-nowrap" title="Valor total movimentado nas notas EFD (entradas + saídas, todas as empresas)">
-                                            R$ {{ number_format($part->mov_valor, 2, ',', '.') }}
+                                            R$&nbsp;{{ number_format($part->mov_valor, 2, ',', '.') }}
                                         </div>
                                         <div class="text-[11px] text-gray-500 mt-0.5 whitespace-nowrap">
                                             {{ number_format($part->mov_qtd, 0, ',', '.') }} {{ $part->mov_qtd === 1 ? 'nota' : 'notas' }}
@@ -395,11 +395,11 @@
                                     <div class="flex flex-col items-center gap-1" title="{{ $part->situacao_cadastral ?? '' }}">
                                         <div class="flex items-center justify-center gap-1.5 flex-wrap">
                                             @if($part->situacao_cadastral === 'ATIVA')
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857">
+                                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857">
                                                     Ativa
                                                 </span>
                                             @elseif($part->situacao_cadastral)
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #d97706">
+                                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #d97706">
                                                     {{ $part->situacao_cadastral }}
                                                 </span>
                                             @endif

@@ -55,7 +55,7 @@ class ConcederCreditosService
                             $user,
                             $expira,
                             'subscription_expiration',
-                            "Expiração de créditos inclusos acima do limite de acúmulo ({$capBancado}).",
+                            'Expiração de saldo incluso acima do limite de acúmulo (R$ '.number_format(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($capBancado), 2, ',', '.').').',
                             $sub,
                         );
                     }
@@ -68,7 +68,7 @@ class ConcederCreditosService
                         $user,
                         $mensal,
                         $primeiraComoCompra ? 'purchase' : 'subscription_credit',
-                        "Créditos inclusos do plano {$plan->nome} ({$mensal} créditos).",
+                        "Saldo incluso do plano {$plan->nome} (R$ ".number_format(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($mensal), 2, ',', '.').').',
                         $sub,
                     );
                     $sub->creditos_inclusos_saldo = (int) $sub->creditos_inclusos_saldo + $mensal;
@@ -108,7 +108,7 @@ class ConcederCreditosService
                 $user,
                 $expira,
                 'subscription_proration',
-                "Ajuste pro-rata da troca de plano: expira {$expira} créditos inclusos não usados do plano anterior.",
+                'Ajuste pro-rata da troca de plano: expira R$ '.number_format(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($expira), 2, ',', '.').' de saldo incluso não usado do plano anterior.',
                 $sub,
             );
         }

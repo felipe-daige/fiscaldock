@@ -51,7 +51,7 @@
                             class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium">Planilha</button>
                 @endif
                 <a href="/app/consulta/nova" data-link class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium">Nova consulta</a>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusMeta['hex'] }}">
+                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusMeta['hex'] }}">
                     {{ $statusMeta['label'] }}
                 </span>
             </div>
@@ -732,7 +732,7 @@
                                             @if(!empty($resultado['parecer']))
                                                 <div class="flex flex-wrap gap-1">
                                                     @foreach($resultado['parecer'] as $parecer)
-                                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $parecer['hex'] ?? '#374151' }}" title="{{ $parecer['tooltip'] ?? ($parecer['descricao'] ?? '') }}">
+                                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $parecer['hex'] ?? '#374151' }}" title="{{ $parecer['tooltip'] ?? ($parecer['descricao'] ?? '') }}">
                                                             {{ $parecer['badge_label'] ?? ($parecer['titulo'] ?? ($parecer['chave'] ?? 'Parecer')) }}
                                                         </span>
                                                     @endforeach
@@ -742,7 +742,7 @@
                                             @endif
                                         </td>
                                         <td class="px-3 py-3">
-                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $resultado['status_hex'] }}">
+                                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $resultado['status_hex'] }}">
                                                 {{ $resultado['status_label'] }}
                                             </span>
                                             @if(!empty($resultado['mensagem_exibivel']))
@@ -783,7 +783,7 @@
                                         </p>
                                         <p class="text-[11px] text-gray-500 mt-1 font-mono">{{ $resultado['documento_formatado'] ?: '—' }}@if(!empty($resultado['uf'])) · {{ $resultado['uf'] }}@endif</p>
                                     </div>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $resultado['status_hex'] }}">{{ $resultado['status_label'] }}</span>
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $resultado['status_hex'] }}">{{ $resultado['status_label'] }}</span>
                                 </div>
                                 <div class="grid grid-cols-2 gap-3 mt-3 text-sm text-gray-700">
                                     <div class="text-center">
@@ -821,7 +821,7 @@
                                 @if(!empty($resultado['parecer']))
                                     <div class="flex flex-wrap gap-1 mt-3">
                                         @foreach($resultado['parecer'] as $parecer)
-                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $parecer['hex'] ?? '#374151' }}" title="{{ $parecer['tooltip'] ?? ($parecer['descricao'] ?? '') }}">
+                                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $parecer['hex'] ?? '#374151' }}" title="{{ $parecer['tooltip'] ?? ($parecer['descricao'] ?? '') }}">
                                                 {{ $parecer['badge_label'] ?? ($parecer['titulo'] ?? ($parecer['chave'] ?? 'Parecer')) }}
                                             </span>
                                         @endforeach

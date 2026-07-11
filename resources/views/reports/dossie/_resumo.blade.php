@@ -1,6 +1,6 @@
 @php
     $k = $movimentacao['kpis'];
-    $fmt = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
+    $fmt = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
     $scoreHex = \App\Support\Reports\ReportTheme::riscoHex($score['classificacao'] ?? 'medio');
     $scoreInconclusivo = ($score['classificacao'] ?? '') === 'inconclusivo';
 @endphp

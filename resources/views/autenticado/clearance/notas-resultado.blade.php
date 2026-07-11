@@ -44,7 +44,7 @@
         'revisar' => 'Revisar',
         default => 'Tudo certo',
     };
-    $formatMoney = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
+    $formatMoney = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
     $breakdownCards = [
         ['key' => 'notas_frias', 'label' => 'Notas frias', 'sub' => 'chave inexistente na SEFAZ', 'hex' => '#dc2626'],
         ['key' => 'canceladas_declaradas', 'label' => 'Canceladas declaradas', 'sub' => 'SEFAZ cancelou, escriturado', 'hex' => '#dc2626'],
@@ -80,15 +80,15 @@
                 <p class="text-xs text-gray-500 mt-1">Esta pagina concentra o andamento do lote e recarrega o resultado final quando o provedor finalizar.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
+                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
                     Lote #{{ $lote->id }}
                 </span>
                 @if($tipoValidacaoLabel)
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
+                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
                         {{ $tipoValidacaoLabel }}
                     </span>
                 @endif
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusMeta['hex'] }}">
+                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusMeta['hex'] }}">
                     {{ $statusMeta['label'] }}
                 </span>
                 @if($statusLote === 'finalizado' && empty($aguardaPersistencia) && config('consultas.infosimples_ativo'))
@@ -254,8 +254,8 @@
                                 <tr class="hover:bg-gray-50/50 transition-colors">
                                     <td class="px-3 py-3">
                                         <div class="flex flex-wrap items-center gap-2">
-                                            <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $linha->tipo_documento }}</span>
-                                            <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #4b5563">{{ $linha->modelo }}</span>
+                                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $linha->tipo_documento }}</span>
+                                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #4b5563">{{ $linha->modelo }}</span>
                                         </div>
                                         <p class="text-sm text-gray-900 mt-1">Nº {{ $linha->numero ?: '—' }} / Série {{ $linha->serie ?: '—' }}</p>
                                         <p class="text-[10px] text-gray-400 font-mono mt-0.5">{{ $linha->chave_acesso }}</p>
@@ -286,7 +286,7 @@
                                         <p class="text-[10px] mt-0.5">{{ $linha->delta_percentual_label }}</p>
                                     </td>
                                     <td class="px-3 py-3" data-label="Severidade">
-                                        <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $sevHex }}">{{ $sevLabel }}</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $sevHex }}">{{ $sevLabel }}</span>
                                         @if(!empty($linha->motivos))
                                             <ul class="mt-1 space-y-0.5">
                                                 @foreach($linha->motivos as $m)
@@ -380,7 +380,7 @@
                                     <td class="px-3 py-2 text-sm text-gray-700 text-right font-mono align-top whitespace-nowrap" data-label="SEFAZ">{{ $linha->valor_total_label ?? ($linha->valor_total !== null ? $formatMoney($linha->valor_total) : '—') }}</td>
                                     <td class="px-3 py-2 text-sm text-gray-500 text-right font-mono align-top whitespace-nowrap" data-label="Δ">{{ $linha->delta_valor_label }}</td>
                                     <td class="px-3 py-2 align-top" data-label="Situação SEFAZ">
-                                        <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $linha->status_hex ?? '#374151' }}">{{ $linha->status_label ?? $linha->status }}</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $linha->status_hex ?? '#374151' }}">{{ $linha->status_label ?? $linha->status }}</span>
                                         @if(!empty($linha->motivos))
                                             <ul class="mt-1 space-y-0.5">
                                                 @foreach($linha->motivos as $m)

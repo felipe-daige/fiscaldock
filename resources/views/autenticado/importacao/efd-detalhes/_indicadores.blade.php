@@ -29,7 +29,7 @@
  <div class="px-4 py-3">
  <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas Fiscais</p>
  <p class="text-lg font-bold text-gray-900">{{ number_format($notasTotal) }}</p>
- <p class="text-[11px] text-gray-500">@if($notasValor)R$ {{ number_format($notasValor, 2, ',', '.') }}@else—@endif</p>
+ <p class="text-[11px] text-gray-500">@if($notasValor)R$&nbsp;{{ number_format($notasValor, 2, ',', '.') }}@else—@endif</p>
  </div>
  <div class="px-4 py-3">
  <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Performance</p>

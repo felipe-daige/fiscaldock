@@ -3,7 +3,7 @@
 @php
     use App\Support\Reports\ReportTheme;
 
-    $fmtRs = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
+    $fmtRs = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
 
     // Regularidade → cor do design system (mesmo mapa da grade/relatórios).
     $regHex = [

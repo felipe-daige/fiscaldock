@@ -73,7 +73,7 @@
             </div>
             <div class="p-3 sm:p-4">
                 <p class="text-[10px] uppercase text-gray-400 font-semibold tracking-wide">Valor Movimentado</p>
-                <p class="text-lg font-bold text-gray-900 mt-0.5">R$ {{ number_format($kpis['valor_movimentado'] ?? 0, 0, ',', '.') }}</p>
+                <p class="text-lg font-bold text-gray-900 mt-0.5">R$&nbsp;{{ number_format($kpis['valor_movimentado'] ?? 0, 0, ',', '.') }}</p>
             </div>
             <div class="p-3 sm:p-4">
                 <p class="text-[10px] uppercase text-gray-400 font-semibold tracking-wide">Alíq. Divergente</p>
@@ -374,7 +374,7 @@
                 $cfopsSel = $filtros['cfops'] ?? [];
                 $cstsSel = $filtros['csts'] ?? [];
             @endphp
-            <form method="GET" action="/app/catalogo">
+            <form method="GET" action="/app/catalogo" data-mobile-filters>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
                 <div>
                     <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Cliente</label>
@@ -606,23 +606,23 @@
                             @if($semMov)
                             <span class="text-xs text-gray-400">&mdash;</span>
                             @else
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #374151">{{ $item->total_movimentacoes }}</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #374151">{{ $item->total_movimentacoes }}</span>
                             @endif
                         </td>
                         <td class="px-3 py-2.5 text-right text-xs font-mono text-gray-700">
                             @if(!$semMov)
-                            R$ {{ number_format((float)($item->valor_movimentado ?? 0), 2, ',', '.') }}
+                            R$&nbsp;{{ number_format((float)($item->valor_movimentado ?? 0), 2, ',', '.') }}
                             @else
                             <span class="text-gray-400">&mdash;</span>
                             @endif
                         </td>
                         <td class="px-3 py-2.5 text-center">
                             @if($divergente)
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #d97706">Divergente</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #d97706">Divergente</span>
                             @elseif($semMov)
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #9ca3af">Sem Mov.</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #9ca3af">Sem Mov.</span>
                             @else
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #047857">OK</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #047857">OK</span>
                             @endif
                         </td>
                     </tr>

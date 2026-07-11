@@ -13,7 +13,7 @@
             <label for="recarga-saldo-pacote" class="block text-[11px] text-gray-500 mb-1">Pacote a recomprar</label>
             <select id="recarga-saldo-pacote" class="text-[13px] py-2.5 px-3 border border-gray-300 rounded bg-white">
                 @foreach(($pricing['featured_offers'] ?? []) as $pac)
-                    <option value="{{ $pac['slug'] }}" data-valor="{{ $pac['preco'] }}">{{ $pac['nome'] }} — R$ {{ number_format($pac['preco'], 0, ',', '.') }}</option>
+                    <option value="{{ $pac['slug'] }}" data-valor="{{ $pac['preco'] }}">{{ $pac['nome'] }} — R$&nbsp;{{ number_format($pac['preco'], 0, ',', '.') }}</option>
                 @endforeach
             </select>
         </div>

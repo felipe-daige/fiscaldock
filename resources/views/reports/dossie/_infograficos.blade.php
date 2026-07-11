@@ -1,6 +1,6 @@
 @php
     use App\Support\Reports\ReportTheme;
-    $fmt = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
+    $fmt = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
     $comp = $movimentacao['por_competencia'];
     $maxComp = collect($comp)->flatMap(fn ($c) => [$c['entrada'], $c['saida']])->max() ?: 1;
     $barsComp = [];

@@ -24,7 +24,7 @@
                         <td class="px-3 py-2 text-gray-900" data-label="Operador">{{ $log->admin->name ?? '—' }}</td>
                         <td class="px-3 py-2 text-gray-700" data-label="Alvo">{{ $log->alvo->name ?? '—' }}</td>
                         <td class="px-3 py-2" data-label="Ação">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#334155">{{ $log->acao }}</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#334155">{{ $log->acao }}</span>
                         </td>
                         <td class="px-3 py-2 text-[12px] text-gray-600" data-label="Motivo">{{ $log->motivo }}</td>
                     </tr>

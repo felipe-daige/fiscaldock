@@ -45,7 +45,7 @@
                             <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
                                 <div class="min-w-0">
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:{{ $cor }}">{{ $status }}</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:{{ $cor }}">{{ $status }}</span>
                                         @if($p->lembrar_em)
                                             <span class="text-[11px] @class(['text-red-700 font-semibold' => $p->esta_vencida, 'text-gray-500' => ! $p->esta_vencida])">
                                                 {{ $p->esta_vencida ? 'vencida em' : 'lembrar em' }} {{ $p->lembrar_em->format('d/m/Y') }}
@@ -114,7 +114,7 @@
                             <h2 class="text-sm font-bold text-gray-900 uppercase tracking-wide">Resolvidas</h2>
                             <p class="text-xs text-gray-500 mt-0.5">Últimas {{ $resolvidas->count() }} pendências fechadas.</p>
                         </div>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#334155">{{ $resolvidas->count() }}</span>
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#334155">{{ $resolvidas->count() }}</span>
                     </div>
 
                     @if($resolvidas->isNotEmpty())

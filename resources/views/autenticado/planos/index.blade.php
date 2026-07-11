@@ -26,9 +26,9 @@
                     <span class="font-semibold">Sua assinatura:</span>
                     {{ $assinaturaAtual->plan->nome ?? '—' }} ({{ $assinaturaAtual->ciclo }})
                     @if($assinaturaAtual->status === 'inadimplente')
-                        <span class="ml-2 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">Pagamento pendente</span>
+                        <span class="whitespace-nowrap ml-2 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">Pagamento pendente</span>
                     @else
-                        <span class="ml-2 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Ativa</span>
+                        <span class="whitespace-nowrap ml-2 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Ativa</span>
                     @endif
                     @if($assinaturaAtual->renova_em)
                         <span class="block text-[11px] text-gray-500 mt-1">Próxima cobrança: {{ $assinaturaAtual->renova_em->format('d/m/Y') }}</span>
@@ -97,8 +97,8 @@
                             <p class="text-2xl font-bold text-gray-900">Sob consulta</p>
                             <p class="text-[11px] text-gray-500 mt-1">operação intensiva</p>
                         @else
-                            <p class="text-2xl font-bold text-gray-900">R$ {{ number_format($precoMes, 0, ',', '.') }}<span class="text-sm font-medium text-gray-500">/mês</span></p>
-                            <p class="text-[11px] text-gray-500 mt-1">ou R$ {{ number_format($precoAno, 0, ',', '.') }}/ano <span class="font-semibold text-emerald-700">(−17%)</span></p>
+                            <p class="text-2xl font-bold text-gray-900">R$&nbsp;{{ number_format($precoMes, 0, ',', '.') }}<span class="text-sm font-medium text-gray-500">/mês</span></p>
+                            <p class="text-[11px] text-gray-500 mt-1">ou R$&nbsp;{{ number_format($precoAno, 0, ',', '.') }}/ano <span class="font-semibold text-emerald-700">(−17%)</span></p>
                         @endif
                     </div>
 

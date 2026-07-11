@@ -34,7 +34,7 @@
                     <p class="text-sm font-semibold text-gray-900 truncate">{{ $fullName }}</p>
                     <p class="text-[11px] text-gray-500 truncate">{{ $user->email ?? '—' }}</p>
                     <div class="flex items-center gap-2 mt-1">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $planoHex }}">{{ $planoLabel }}</span>
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $planoHex }}">{{ $planoLabel }}</span>
                         <span class="text-[10px] text-gray-500">Membro desde {{ $memberSince }}</span>
                     </div>
                 </div>

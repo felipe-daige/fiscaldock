@@ -295,7 +295,7 @@
         </div>
 
         {{-- Filtros --}}
-        <form method="GET" action="/app/clearance/notas" class="bg-white rounded border border-gray-300 overflow-hidden mb-4" id="validacao-filtros-form">
+        <form method="GET" action="/app/clearance/notas" class="bg-white rounded border border-gray-300 overflow-hidden mb-4" id="validacao-filtros-form" data-mobile-filters>
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
             </div>
@@ -378,7 +378,7 @@
                     </div>
                 </details>
             </div>
-            <div class="bg-gray-50 px-4 py-2 border-t border-gray-200 flex gap-2">
+            <div class="mobile-filter-actions bg-gray-50 px-4 py-2 border-t border-gray-200 flex gap-2">
                 <button type="submit" class="px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Aplicar</button>
                 <a href="/app/clearance/notas" data-link class="px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide border border-gray-300 text-gray-700">Limpar</a>
             </div>
@@ -430,7 +430,7 @@
                             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Clearance</p>
                             <p class="text-base font-bold text-gray-900">Básico</p>
                         </div>
-                        <span class="plan-chip px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #1f2937">Selecionado</span>
+                        <span class="whitespace-nowrap plan-chip px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #1f2937">Selecionado</span>
                     </div>
                     <ul class="space-y-1.5 text-xs text-gray-700 mb-3">
                         <li class="flex items-start gap-2"><svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #047857"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>Status SEFAZ (NF-e)</li>
@@ -452,9 +452,9 @@
                             <p class="text-base font-bold text-gray-900">Full</p>
                         </div>
                         @if(config('clearance.full.habilitado'))
-                            <span class="plan-chip hidden px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #1f2937">Selecionado</span>
+                            <span class="whitespace-nowrap plan-chip hidden px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #1f2937">Selecionado</span>
                         @else
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #6b7280">Em breve</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #6b7280">Em breve</span>
                         @endif
                     </div>
                     <ul class="space-y-1.5 text-xs text-gray-700 mb-3">
@@ -581,7 +581,7 @@
                                     <input type="checkbox" class="w-4 h-4 chk-nota" value="{{ $n->id }}">
                                 </td>
                                 <td class="px-3 py-2" data-label="Origem">
-                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemHex }}">
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemHex }}">
                                         {{ strtoupper($n->origem) }}
                                     </span>
                                 </td>
@@ -589,19 +589,19 @@
                                 <td class="px-3 py-2 text-xs" data-label="Emissão">{{ $dataEmissao?->format('d/m/Y') }}</td>
                                 <td class="px-3 py-2 text-xs text-gray-700 truncate max-w-[180px]" data-label="Emitente">{{ $n->emit_razao_social }}</td>
                                 <td class="px-3 py-2 text-xs text-gray-700 truncate max-w-[180px]" data-label="Destinatário">{{ $n->dest_razao_social }}</td>
-                                <td class="px-3 py-2 text-xs text-right font-mono" data-label="Valor">R$ {{ number_format((float) $n->valor_total, 2, ',', '.') }}</td>
+                                <td class="px-3 py-2 text-xs text-right font-mono" data-label="Valor">R$&nbsp;{{ number_format((float) $n->valor_total, 2, ',', '.') }}</td>
                                 <td class="px-3 py-2 text-xs" data-label="Modelo">
-                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $modeloHex }}">
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $modeloHex }}">
                                         {{ $modeloLabel }}
                                     </span>
                                 </td>
                                 <td class="px-3 py-2 text-xs" data-label="Tipo">
-                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $n->tipo_nota === 'entrada' ? '#047857' : '#d97706' }}">
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $n->tipo_nota === 'entrada' ? '#047857' : '#d97706' }}">
                                         {{ ucfirst($n->tipo_nota) }}
                                     </span>
                                 </td>
                                 <td class="px-3 py-2 text-xs" data-label="Status">
-                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white td-status" style="background-color: {{ $s['hex'] }}">{{ $s['label'] }}</span>
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white td-status" style="background-color: {{ $s['hex'] }}">{{ $s['label'] }}</span>
                                 </td>
                                 <td class="px-3 py-2 text-right">
                                     <button type="button" class="nota-details-toggle inline-flex items-center gap-1 text-xs text-gray-600 hover:text-gray-900" data-nota-id="{{ $n->id }}" aria-expanded="false">
@@ -634,7 +634,7 @@
                                         <div class="rounded border border-gray-200 bg-white px-3 py-2.5">
                                             <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Status clearance</p>
                                             <p class="mt-1">
-                                                <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $s['hex'] }}">{{ $s['label'] }}</span>
+                                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $s['hex'] }}">{{ $s['label'] }}</span>
                                             </p>
                                             @if ($motivo)
                                                 <p class="text-[11px] text-gray-600 mt-1">{{ $motivo }}</p>
@@ -645,24 +645,24 @@
                                             <div class="mt-1 text-[11px] leading-tight space-y-1">
                                                 <div class="flex items-baseline gap-1.5">
                                                     <span class="text-gray-500">Total:</span>
-                                                    <span class="font-mono font-semibold text-gray-900">R$ {{ number_format((float) $n->valor_total, 2, ',', '.') }}</span>
+                                                    <span class="font-mono font-semibold text-gray-900">R$&nbsp;{{ number_format((float) $n->valor_total, 2, ',', '.') }}</span>
                                                 </div>
                                                 <div class="grid grid-cols-2 gap-x-4 gap-y-0.5 pt-1 border-t border-gray-100">
                                                     <div class="flex items-baseline gap-1.5">
                                                         <span class="text-gray-500">ICMS:</span>
-                                                        <span class="font-mono text-gray-900">{{ isset($n->icms_valor) ? 'R$ '.number_format((float) $n->icms_valor, 2, ',', '.') : '—' }}</span>
+                                                        <span class="font-mono text-gray-900">{{ isset($n->icms_valor) ? 'R$ '.number_format((float) $n->icms_valor, 2, ',', '.') : '—' }}</span>
                                                     </div>
                                                     <div class="flex items-baseline gap-1.5">
                                                         <span class="text-gray-500">PIS:</span>
-                                                        <span class="font-mono text-gray-900">{{ isset($n->pis_valor) ? 'R$ '.number_format((float) $n->pis_valor, 2, ',', '.') : '—' }}</span>
+                                                        <span class="font-mono text-gray-900">{{ isset($n->pis_valor) ? 'R$ '.number_format((float) $n->pis_valor, 2, ',', '.') : '—' }}</span>
                                                     </div>
                                                     <div class="flex items-baseline gap-1.5">
                                                         <span class="text-gray-500">IPI:</span>
-                                                        <span class="font-mono text-gray-900">{{ isset($n->ipi_valor) ? 'R$ '.number_format((float) $n->ipi_valor, 2, ',', '.') : '—' }}</span>
+                                                        <span class="font-mono text-gray-900">{{ isset($n->ipi_valor) ? 'R$ '.number_format((float) $n->ipi_valor, 2, ',', '.') : '—' }}</span>
                                                     </div>
                                                     <div class="flex items-baseline gap-1.5">
                                                         <span class="text-gray-500">COFINS:</span>
-                                                        <span class="font-mono text-gray-900">{{ isset($n->cofins_valor) ? 'R$ '.number_format((float) $n->cofins_valor, 2, ',', '.') : '—' }}</span>
+                                                        <span class="font-mono text-gray-900">{{ isset($n->cofins_valor) ? 'R$ '.number_format((float) $n->cofins_valor, 2, ',', '.') : '—' }}</span>
                                                     </div>
                                                 </div>
                                             </div>

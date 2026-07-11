@@ -66,7 +66,7 @@
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                 <div class="flex items-center justify-between gap-3">
                     <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo de Alertas</span>
-                    <span id="kpi-novos-hoje" class="hidden px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151"></span>
+                    <span id="kpi-novos-hoje" class="whitespace-nowrap hidden px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151"></span>
                 </div>
             </div>
             {{-- Materialidade: valor fiscal em risco (o número que o contador leva ao cliente) --}}
@@ -171,7 +171,7 @@
         </div>
 
         {{-- Filters (simplified) --}}
-        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6 sm:mb-8">
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6 sm:mb-8" data-mobile-filters>
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
             </div>
@@ -358,7 +358,7 @@
         var label = { alta: 'Alta', media: 'Média', baixa: 'Baixa' };
         var color = colors[sev] || '#9ca3af';
         var lbl = label[sev] || escapeHtml(sev);
-        return '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + color + '">' + escapeHtml(lbl) + '</span>';
+        return '<span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + color + '">' + escapeHtml(lbl) + '</span>';
     }
 
     function severidadeDot(sev) {
@@ -371,7 +371,7 @@
         var labels = { notas_fiscais: 'Notas Fiscais', compliance: 'Compliance', importacao: 'Importação' };
         var colors = { notas_fiscais: '#374151', compliance: '#4338ca', importacao: '#0f766e' };
         var color = colors[cat] || '#374151';
-        return '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + color + '">' + escapeHtml(labels[cat] || cat) + '</span>';
+        return '<span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + color + '">' + escapeHtml(labels[cat] || cat) + '</span>';
     }
 
     async function fetchJson(url, options) {
@@ -701,7 +701,7 @@
             html += '</div>';
             html += '<div class="flex items-center gap-2 flex-shrink-0">';
             if (items.length > 1) {
-                html += '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">' + items.length + '</span>';
+                html += '<span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">' + items.length + '</span>';
             }
             if (totalAfetados) {
                 html += '<span class="text-xs text-gray-500">' + totalAfetados + ' afetados</span>';
@@ -1142,7 +1142,7 @@
             html += '<tr class="hover:bg-gray-50/50 transition-colors">';
             html += '<td class="px-3 py-3 text-sm text-gray-700">' + escapeHtml(item.numero || item.num_doc || '-') + '</td>';
             html += '<td class="px-3 py-3 text-sm text-gray-700" data-label="Série">' + escapeHtml(item.serie || '-') + '</td>';
-            html += '<td class="px-3 py-3" data-label="Modelo"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">' + escapeHtml(item.modelo || item.cod_mod || '-') + '</span></td>';
+            html += '<td class="px-3 py-3" data-label="Modelo"><span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">' + escapeHtml(item.modelo || item.cod_mod || '-') + '</span></td>';
             html += '<td class="px-3 py-3 text-sm text-gray-700 max-w-[150px] truncate" data-label="Participante">' + escapeHtml(item.participante || item.participante_nome || '-') + '</td>';
             html += '<td class="px-3 py-3 text-sm text-gray-700" data-label="Data">' + formatarData(item.data || item.dt_doc) + '</td>';
             html += '<td class="px-3 py-3 text-sm font-semibold text-gray-900 text-right font-mono" data-label="Valor">' + formatarMoeda(item.valor || item.vl_doc) + '</td>';
@@ -1222,7 +1222,7 @@
         }
         if (detalhes.situacao_cadastral) {
             var sitStyle = detalhes.situacao_cadastral === 'ATIVA' ? '#047857' : '#dc2626';
-            html += '<p class="mt-1.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + sitStyle + '">' + escapeHtml(detalhes.situacao_cadastral) + '</span></p>';
+            html += '<p class="mt-1.5"><span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + sitStyle + '">' + escapeHtml(detalhes.situacao_cadastral) + '</span></p>';
         }
         if (detalhes.ultima_consulta_em) {
             html += '<p class="text-xs text-gray-400 mt-1">Última consulta: ' + formatarData(detalhes.ultima_consulta_em) + '</p>';
@@ -1251,7 +1251,7 @@
 
         var html = '<div class="flex flex-wrap gap-2">';
         meses.forEach(function(mes) {
-            html += '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">' + escapeHtml(mes) + '</span>';
+            html += '<span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">' + escapeHtml(mes) + '</span>';
         });
         html += '</div>';
         if (detalhes.mensagem) {
@@ -1318,7 +1318,7 @@
             html += '<div class="flex items-center justify-between gap-3 border border-gray-100 rounded px-3 py-1.5">';
             html += '<div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full" style="background-color:' + cor + '"></span>';
             html += '<span class="text-sm text-gray-800">' + escapeHtml(c.label || '—') + '</span></div>';
-            html += '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:' + cor + '">' + escapeHtml(c.status || 'Positiva') + '</span>';
+            html += '<span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:' + cor + '">' + escapeHtml(c.status || 'Positiva') + '</span>';
             html += '</div>';
         });
         html += '</div>';

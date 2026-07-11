@@ -128,7 +128,7 @@
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ $s['label'] }}</p>
                         <p class="text-lg font-bold text-gray-900">{{ number_format($kpis[$s['key']], 0, ',', '.') }}</p>
                         <p class="text-[11px] mt-1">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $s['hex'] }}">{{ $s['label'] }}</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $s['hex'] }}">{{ $s['label'] }}</span>
                         </p>
                         <p class="text-[11px] text-gray-500 mt-2">{{ $s['descricao'] }}</p>
                     </a>
@@ -157,7 +157,7 @@
                                     · Origem {{ strtoupper($nota['origem']) }}
                                 </p>
                             </div>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white self-start" style="background-color: {{ $situacaoBadge[$situacao] ?? '#374151' }}">
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white self-start" style="background-color: {{ $situacaoBadge[$situacao] ?? '#374151' }}">
                                 {{ $situacaoLabel[$situacao] ?? $situacao }}
                             </span>
                         </div>
@@ -197,7 +197,7 @@
                                         </a>
                                         <p class="text-[11px] text-gray-500 mt-1">{{ $formatarConsultadoEm($consultadoEm) }} · Origem {{ strtoupper($nota['origem']) }}</p>
                                     </div>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white self-start" style="background-color: {{ $situacaoBadge[$situacao] ?? '#374151' }}">
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white self-start" style="background-color: {{ $situacaoBadge[$situacao] ?? '#374151' }}">
                                         {{ $situacaoLabel[$situacao] ?? $situacao }}
                                     </span>
                                 </div>

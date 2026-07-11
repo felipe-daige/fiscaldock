@@ -39,7 +39,7 @@ class FecharClearanceLoteService
                     $lote->user,
                     $estorno,
                     'clearance_refund',
-                    "Estorno de {$estorno} crédito(s) — documentos com falha no clearance #{$lote->id}",
+                    'Estorno de R$ '.number_format(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($estorno), 2, ',', '.')." — documentos com falha no clearance #{$lote->id}",
                     $lote,
                 );
             }

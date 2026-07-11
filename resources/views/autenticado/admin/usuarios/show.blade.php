@@ -1,6 +1,6 @@
 @php
     $pricing = app(\App\Services\PricingCatalogService::class);
-    $fmtR = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
+    $fmtR = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
     $fmtN = fn ($v) => number_format((float) $v, 0, ',', '.');
     $fmtData = fn ($v) => $v ? \Carbon\Carbon::parse($v)->format('d/m/Y') : '—';
     $fmtDataHora = fn ($v) => $v ? \Carbon\Carbon::parse($v)->format('d/m/Y H:i') : '—';
@@ -35,7 +35,7 @@
         'consulta' => 'Consulta',
         'importacao_efd' => 'Importação EFD',
         'importacao_xml' => 'Importação XML',
-        'credito' => 'Crédito',
+        'credito' => 'Saldo adicionado',
         'pagamento' => 'Pagamento',
     ];
     $tipoCor = [
@@ -71,20 +71,20 @@
                 <div class="flex flex-col items-start lg:items-end gap-2">
                     <div class="flex flex-wrap gap-1.5 lg:justify-end">
                         @if($usuario->is_admin)
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#334155">Admin</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#334155">Admin</span>
                         @endif
                         @if($usuario->bloqueado_em)
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#b91c1c">Bloqueado</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#b91c1c">Bloqueado</span>
                         @else
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#047857">Acesso ativo</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#047857">Acesso ativo</span>
                         @endif
                         @if($conta['lgpd_solicitada'] ?? false)
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#dc2626">LGPD</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#dc2626">LGPD</span>
                         @endif
                         @if($conta['tem_compra_confirmada'] ?? false)
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#047857">Compra confirmada</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#047857">Compra confirmada</span>
                         @endif
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#374151">{{ $conta['trial_status'] ?? 'Sem trial' }}</span>
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#374151">{{ $conta['trial_status'] ?? 'Sem trial' }}</span>
                     </div>
                     <a href="{{ route('app.admin.usuarios.edit', $usuario->id) }}" data-link class="admin-action w-full sm:w-auto inline-flex items-center justify-center px-3 py-2 rounded text-[12px] font-bold uppercase tracking-wide text-white" style="background-color:#0b1f3a">Editar cadastro</a>
                 </div>
@@ -171,7 +171,7 @@
                             <p class="text-[11px] text-gray-500">{{ $fmtN($uso['consultas_30d'] ?? 0) }} nos últimos 30 dias</p>
                             <div class="mt-2 flex flex-wrap gap-1">
                                 @forelse($uso['consultas_por_status'] ?? [] as $status => $total)
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:{{ $statusCor($status) }}">{{ $statusLabel[$status] ?? $status }} · {{ $fmtN($total) }}</span>
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:{{ $statusCor($status) }}">{{ $statusLabel[$status] ?? $status }} · {{ $fmtN($total) }}</span>
                                 @empty
                                     <span class="text-[11px] text-gray-400">Sem consultas.</span>
                                 @endforelse
@@ -183,7 +183,7 @@
                             <p class="text-[11px] text-gray-500">{{ $fmtN($uso['efd_notas'] ?? 0) }} EFD · {{ $fmtN($uso['xml_notas'] ?? 0) }} XML</p>
                             <div class="mt-2 flex flex-wrap gap-1">
                                 @forelse($uso['importacoes_por_status'] ?? [] as $status => $total)
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:{{ $statusCor($status) }}">{{ $statusLabel[$status] ?? $status }} · {{ $fmtN($total) }}</span>
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:{{ $statusCor($status) }}">{{ $statusLabel[$status] ?? $status }} · {{ $fmtN($total) }}</span>
                                 @empty
                                     <span class="text-[11px] text-gray-400">Sem importações.</span>
                                 @endforelse
@@ -195,7 +195,7 @@
                             <p class="text-[11px] text-gray-500">{{ $fmtN($uso['clearance_30d'] ?? 0) }} nos últimos 30 dias</p>
                             <div class="mt-2 flex flex-wrap gap-1">
                                 @forelse($uso['clearance_por_status'] ?? [] as $status => $total)
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:{{ $statusCor($status) }}">{{ $statusLabel[$status] ?? $status }} · {{ $fmtN($total) }}</span>
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:{{ $statusCor($status) }}">{{ $statusLabel[$status] ?? $status }} · {{ $fmtN($total) }}</span>
                                 @empty
                                     <span class="text-[11px] text-gray-400">Sem verificações.</span>
                                 @endforelse
@@ -239,7 +239,7 @@
                         @forelse($financeiro['movimentos_recentes'] ?? [] as $mov)
                             <tr>
                                 <td class="px-3 py-2 text-[12px] text-gray-500" data-label="Data">{{ $fmtDataHora($mov->created_at) }}</td>
-                                <td class="px-3 py-2" data-label="Tipo"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#374151">{{ $mov->type }}</span></td>
+                                <td class="px-3 py-2" data-label="Tipo"><span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#374151">{{ $mov->type }}</span></td>
                                 <td class="px-3 py-2 text-right font-mono font-semibold" data-label="Movimento" style="color:{{ ((float) $mov->amount) >= 0 ? '#047857' : '#b91c1c' }}">{{ ((float) $mov->amount) >= 0 ? '+' : '' }}{{ $fmtN($mov->amount) }}</td>
                                 <td class="px-3 py-2 text-right font-mono text-gray-900" data-label="Saldo após">{{ $fmtN($mov->balance_after) }}</td>
                                 <td class="px-3 py-2 text-[12px] text-gray-500" data-label="Descrição">{{ $mov->description ?: '—' }}</td>
@@ -260,7 +260,7 @@
                         @forelse($timeline as $ev)
                             <tr>
                                 <td class="px-3 py-2 w-40 text-[12px] text-gray-500" data-label="Data">{{ $fmtDataHora($ev['data'] ?? null) }}</td>
-                                <td class="px-3 py-2 w-36" data-label="Tipo"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:{{ $tipoCor[$ev['tipo']] ?? '#374151' }}">{{ $tipoLabel[$ev['tipo']] ?? $ev['tipo'] }}</span></td>
+                                <td class="px-3 py-2 w-36" data-label="Tipo"><span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:{{ $tipoCor[$ev['tipo']] ?? '#374151' }}">{{ $tipoLabel[$ev['tipo']] ?? $ev['tipo'] }}</span></td>
                                 <td class="px-3 py-2 text-gray-800" data-label="Título">{{ $ev['titulo'] }}</td>
                                 <td class="px-3 py-2 text-[12px] text-gray-500" data-label="Detalhe">{{ $ev['detalhe'] ?: '—' }}</td>
                             </tr>
@@ -478,7 +478,7 @@
                         @forelse($trilhaAdmin as $log)
                             <tr>
                                 <td class="px-3 py-2 text-[12px] text-gray-500" data-label="Data">{{ $fmtDataHora($log->created_at) }}</td>
-                                <td class="px-3 py-2" data-label="Ação"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#374151">{{ $log->acao }}</span></td>
+                                <td class="px-3 py-2" data-label="Ação"><span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#374151">{{ $log->acao }}</span></td>
                                 <td class="px-3 py-2 text-[12px] text-gray-700" data-label="Motivo">{{ $log->motivo }} <span class="text-gray-400">· {{ $log->admin->name ?? '—' }}</span></td>
                             </tr>
                         @empty

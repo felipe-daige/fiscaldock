@@ -875,7 +875,7 @@ class ConsultaController extends Controller
         if (! $plano->is_gratuito && ! $this->creditService->hasEnough($user, $custoTotal)) {
             return response()->json([
                 'success' => false,
-                'error' => 'Créditos insuficientes.',
+                'error' => 'Saldo insuficiente.',
                 'creditos_necessarios' => $custoTotal,
                 'creditos_disponiveis' => $this->creditService->getBalance($user),
             ], Response::HTTP_PAYMENT_REQUIRED);
@@ -906,7 +906,7 @@ class ConsultaController extends Controller
                 if (! $debitado) {
                     return response()->json([
                         'success' => false,
-                        'error' => 'Falha ao debitar créditos. Tente novamente.',
+                        'error' => 'Falha ao debitar o saldo. Tente novamente.',
                     ], Response::HTTP_INTERNAL_SERVER_ERROR);
                 }
             }

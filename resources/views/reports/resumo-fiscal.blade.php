@@ -3,7 +3,7 @@
 @php
     use App\Support\Reports\ReportTheme;
 
-    $fmtRs = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
+    $fmtRs = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
     $fmtPct = fn ($v) => number_format((float) $v, 1, ',', '.').'%';
     $fmtData = fn ($d) => $d ? \Illuminate\Support\Carbon::parse($d)->format('d/m/Y') : '—';
 

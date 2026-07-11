@@ -29,20 +29,20 @@
                 </div>
                 <div>
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Valor Total</p>
-                    <p class="text-sm font-mono text-gray-900">R$ {{ $nota->valor_total !== null ? number_format($nota->valor_total, 2, ',', '.') : '—' }}</p>
+                    <p class="text-sm font-mono text-gray-900">R$&nbsp;{{ $nota->valor_total !== null ? number_format($nota->valor_total, 2, ',', '.') : '—' }}</p>
                 </div>
                 @if($nota->valor_desconto)
                     <div>
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Desconto</p>
-                        <p class="text-sm font-mono text-gray-900">R$ {{ number_format($nota->valor_desconto, 2, ',', '.') }}</p>
+                        <p class="text-sm font-mono text-gray-900">R$&nbsp;{{ number_format($nota->valor_desconto, 2, ',', '.') }}</p>
                     </div>
                 @endif
                 <div>
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Classificação</p>
                     <div class="flex flex-wrap gap-2">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tipoBadge['hex'] }}">{{ $tipoBadge['label'] }}</span>
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tipoBadge['hex'] }}">{{ $tipoBadge['label'] }}</span>
                         @if($origemBadge)
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemBadge['hex'] }}">{{ $origemBadge['label'] }}</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemBadge['hex'] }}">{{ $origemBadge['label'] }}</span>
                         @endif
                     </div>
                 </div>
@@ -83,10 +83,10 @@
                     </div>
                     <div class="flex flex-wrap gap-2">
                         @if($situacaoBadge)
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $situacaoBadge['hex'] }}">{{ $situacaoBadge['label'] }}</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $situacaoBadge['hex'] }}">{{ $situacaoBadge['label'] }}</span>
                         @endif
                         @if($p->regime_tributario)
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #0f766e">{{ strtoupper($p->regime_tributario) }}</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #0f766e">{{ strtoupper($p->regime_tributario) }}</span>
                         @endif
                     </div>
                 </div>
@@ -198,7 +198,7 @@
                 @endforeach
             </div>
             <div class="bg-gray-50 px-4 py-2 border-t border-gray-200 flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-[11px]">
-                <span class="text-gray-500">Total itens <span class="font-mono font-semibold text-gray-900">R$ {{ number_format($tabValor, 2, ',', '.') }}</span></span>
+                <span class="text-gray-500">Total itens <span class="font-mono font-semibold text-gray-900">R$&nbsp;{{ number_format($tabValor, 2, ',', '.') }}</span></span>
                 <span class="text-gray-500">ICMS <span class="font-mono text-gray-700">{{ number_format($tabIcms, 2, ',', '.') }}</span></span>
                 <span class="text-gray-500">PIS <span class="font-mono text-gray-700">{{ number_format($tabPis, 2, ',', '.') }}</span></span>
                 <span class="text-gray-500">COFINS <span class="font-mono text-gray-700">{{ number_format($tabCofins, 2, ',', '.') }}</span></span>

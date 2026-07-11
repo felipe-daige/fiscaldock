@@ -42,7 +42,7 @@ it('landing pricing lê override de preço por plano', function () {
         ->firstWhere('slug', 'compliance');
 
     expect($produto['price'])->toBe(6.00);
-    expect($produto['price_label'])->toBe('R$ 6,00/consulta');
+    expect($produto['price_label'])->toBe(\App\Support\Dinheiro::brl(6.00).'/consulta');
 });
 
 it('faixas de volume removidas do PricingCatalogService', function () {

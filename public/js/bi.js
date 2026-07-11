@@ -1781,13 +1781,13 @@
         const abs = Math.abs(value);
         const sign = value < 0 ? '-' : '';
         if (abs >= 1e9) {
-            return sign + 'R$ ' + (abs / 1e9).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' bi';
+            return sign + 'R$ ' + (abs / 1e9).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' bi';
         }
         if (abs >= 1e6) {
-            return sign + 'R$ ' + (abs / 1e6).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' mi';
+            return sign + 'R$ ' + (abs / 1e6).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' mi';
         }
         if (abs >= 1e4) {
-            return sign + 'R$ ' + (abs / 1e3).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' mil';
+            return sign + 'R$ ' + (abs / 1e3).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' mil';
         }
         return formatCurrency(value);
     }
@@ -1826,7 +1826,7 @@
                                 <svg class="w-5 h-5" style="color:#0b1f3a" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                             </div>
                             <div class="min-w-0">
-                                <span class="inline-block mb-1 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest text-white" style="background-color:#0b1f3a">BI completo</span>
+                                <span class="whitespace-nowrap inline-block mb-1 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest text-white" style="background-color:#0b1f3a">BI completo</span>
                                 <h2 class="text-base font-bold text-gray-900 leading-snug">Esta aba faz parte do BI completo</h2>
                             </div>
                         </div>

@@ -27,21 +27,21 @@
                     <div class="flex items-center gap-2 flex-wrap">
                         <h1 class="text-lg font-bold text-gray-900">{{ $plano->nome }}</h1>
                         @if($plano->is_active)
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Ativo</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Ativo</span>
                         @else
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #6b7280">Inativo</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #6b7280">Inativo</span>
                         @endif
                     </div>
                     <p class="text-[11px] text-gray-400 mt-0.5">código <code class="text-gray-600">{{ $plano->codigo }}</code></p>
                 </div>
                 {{-- Chips de resumo (estado salvo) --}}
                 <div class="flex items-center gap-2 flex-wrap text-[11px]">
-                    <span class="px-2 py-1 rounded bg-gray-50 border border-gray-200 text-gray-700">{{ $plano->preco_mensal_centavos > 0 ? 'R$ '.$reais($plano->preco_mensal_centavos).'/mês' : 'sob consulta' }}</span>
-                    <span class="px-2 py-1 rounded bg-gray-50 border border-gray-200 text-gray-700">{{ $saldoInclusoBrl }}/mês incluso</span>
+                    <span class="whitespace-nowrap px-2 py-1 rounded bg-gray-50 border border-gray-200 text-gray-700">{{ $plano->preco_mensal_centavos > 0 ? 'R$ '.$reais($plano->preco_mensal_centavos).'/mês' : 'sob consulta' }}</span>
+                    <span class="whitespace-nowrap px-2 py-1 rounded bg-gray-50 border border-gray-200 text-gray-700">{{ $saldoInclusoBrl }}/mês incluso</span>
                     @if($temExportPago)
-                        <span class="px-2 py-1 rounded text-white" style="background-color: #1e4679">export: {{ strtoupper(implode(' · ', $exportAtual)) }}</span>
+                        <span class="whitespace-nowrap px-2 py-1 rounded text-white" style="background-color: #1e4679">export: {{ strtoupper(implode(' · ', $exportAtual)) }}</span>
                     @else
-                        <span class="px-2 py-1 rounded text-white" style="background-color: #b45309">PDF com marca d'água</span>
+                        <span class="whitespace-nowrap px-2 py-1 rounded text-white" style="background-color: #b45309">PDF com marca d'água</span>
                     @endif
                 </div>
             </div>

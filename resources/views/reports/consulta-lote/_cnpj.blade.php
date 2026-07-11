@@ -116,7 +116,7 @@
                 'cabecalho' => ['Descrição', 'Valor', 'Qtd'], 'aligns' => ['left', 'right', 'right'],
                 'linhas' => collect($fiscal['top_produtos'] ?? [])->take(10)->map(fn ($p) => [
                     $p['descricao'] ?? $p['cod_item'] ?? '—',
-                    'R$ '.number_format((float) ($p['valor'] ?? 0), 2, ',', '.'),
+                    'R$ '.number_format((float) ($p['valor'] ?? 0), 2, ',', '.'),
                     (string) (int) ($p['qtd'] ?? 0),
                 ])->all(),
                 'vazio' => 'Sem produtos no acervo.',
@@ -128,7 +128,7 @@
                 'linhas' => collect($fiscal['top_cfops'] ?? [])->take(10)->map(fn ($c) => [
                     (string) ($c['cfop'] ?? '—'),
                     $c['descricao'] ?? '',
-                    'R$ '.number_format((float) ($c['valor'] ?? 0), 2, ',', '.'),
+                    'R$ '.number_format((float) ($c['valor'] ?? 0), 2, ',', '.'),
                     (string) (int) ($c['qtd'] ?? 0),
                 ])->all(),
                 'vazio' => 'Sem CFOPs no acervo.',
@@ -141,7 +141,7 @@
                     ($n['numero'] ?? '—').(!empty($n['serie']) ? '/'.$n['serie'] : ''),
                     (string) ($n['cfop'] ?? '—'),
                     $n['data'] ? \Carbon\Carbon::parse($n['data'])->format('d/m/Y') : '—',
-                    'R$ '.number_format((float) ($n['valor'] ?? 0), 2, ',', '.'),
+                    'R$ '.number_format((float) ($n['valor'] ?? 0), 2, ',', '.'),
                 ])->all(),
                 'vazio' => 'Sem entradas.',
             ])
@@ -153,7 +153,7 @@
                     ($n['numero'] ?? '—').(!empty($n['serie']) ? '/'.$n['serie'] : ''),
                     (string) ($n['cfop'] ?? '—'),
                     $n['data'] ? \Carbon\Carbon::parse($n['data'])->format('d/m/Y') : '—',
-                    'R$ '.number_format((float) ($n['valor'] ?? 0), 2, ',', '.'),
+                    'R$ '.number_format((float) ($n['valor'] ?? 0), 2, ',', '.'),
                 ])->all(),
                 'vazio' => 'Sem saídas.',
             ])
@@ -164,7 +164,7 @@
                 'linhas' => collect($fiscal['relacionamentos'] ?? [])->take(10)->map(fn ($r) => [
                     $r['nome'] ?? $r['empresa_nome'] ?? '—',
                     ucfirst((string) ($r['papel'] ?? '—')),
-                    'R$ '.number_format((float) ($r['valor_entrada'] ?? 0) + (float) ($r['valor_saida'] ?? 0), 2, ',', '.'),
+                    'R$ '.number_format((float) ($r['valor_entrada'] ?? 0) + (float) ($r['valor_saida'] ?? 0), 2, ',', '.'),
                 ])->all(),
                 'vazio' => 'Sem contrapartes.',
             ])

@@ -27,7 +27,7 @@
                 </div>
                 <div>
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Tipo</p>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tipoBadge['hex'] }}">{{ $tipoBadge['label'] }}</span>
+                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tipoBadge['hex'] }}">{{ $tipoBadge['label'] }}</span>
                 </div>
                 @if($nota->finalidade)
                     <div>
@@ -129,27 +129,27 @@
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 divide-x divide-y md:divide-y-0 divide-gray-200">
                 <div class="p-4">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">ICMS</p>
-                    <p class="text-sm font-mono text-gray-900">R$ {{ number_format((float) ($nota->icms_valor ?? 0), 2, ',', '.') }}</p>
+                    <p class="text-sm font-mono text-gray-900">R$&nbsp;{{ number_format((float) ($nota->icms_valor ?? 0), 2, ',', '.') }}</p>
                 </div>
                 <div class="p-4">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">ICMS ST</p>
-                    <p class="text-sm font-mono text-gray-900">R$ {{ number_format((float) ($nota->icms_st_valor ?? 0), 2, ',', '.') }}</p>
+                    <p class="text-sm font-mono text-gray-900">R$&nbsp;{{ number_format((float) ($nota->icms_st_valor ?? 0), 2, ',', '.') }}</p>
                 </div>
                 <div class="p-4">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">PIS</p>
-                    <p class="text-sm font-mono text-gray-900">R$ {{ number_format((float) ($nota->pis_valor ?? 0), 2, ',', '.') }}</p>
+                    <p class="text-sm font-mono text-gray-900">R$&nbsp;{{ number_format((float) ($nota->pis_valor ?? 0), 2, ',', '.') }}</p>
                 </div>
                 <div class="p-4">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">COFINS</p>
-                    <p class="text-sm font-mono text-gray-900">R$ {{ number_format((float) ($nota->cofins_valor ?? 0), 2, ',', '.') }}</p>
+                    <p class="text-sm font-mono text-gray-900">R$&nbsp;{{ number_format((float) ($nota->cofins_valor ?? 0), 2, ',', '.') }}</p>
                 </div>
                 <div class="p-4">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">IPI</p>
-                    <p class="text-sm font-mono text-gray-900">R$ {{ number_format((float) ($nota->ipi_valor ?? 0), 2, ',', '.') }}</p>
+                    <p class="text-sm font-mono text-gray-900">R$&nbsp;{{ number_format((float) ($nota->ipi_valor ?? 0), 2, ',', '.') }}</p>
                 </div>
                 <div class="p-4">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Total Tributos</p>
-                    <p class="text-sm font-mono font-semibold text-gray-900">R$ {{ number_format($nota->total_tributos_calculado, 2, ',', '.') }}</p>
+                    <p class="text-sm font-mono font-semibold text-gray-900">R$&nbsp;{{ number_format($nota->total_tributos_calculado, 2, ',', '.') }}</p>
                 </div>
             </div>
         </div>
@@ -178,7 +178,7 @@
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Validação</span>
             </div>
             <div class="p-4 flex flex-wrap items-center gap-3">
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ strtoupper($nota->validacao_classificacao_label) }}</span>
+                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ strtoupper($nota->validacao_classificacao_label) }}</span>
                 @if($nota->validacao_score !== null)
                     <span class="text-sm text-gray-700">Score: <span class="font-mono text-gray-900">{{ $nota->validacao_score }}/100</span></span>
                 @endif

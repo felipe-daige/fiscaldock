@@ -320,7 +320,7 @@ class PricingCatalogService
                 'nome' => $product['nome'],
                 'descricao' => $product['descricao'],
                 'price' => $price,
-                'price_label' => 'R$ '.number_format($price, 2, ',', '.').'/consulta',
+                'price_label' => \App\Support\Dinheiro::brl($price).'/consulta',
                 'price_for_100' => $price * 100,
             ];
         }, $this->getProductCatalog());
@@ -343,7 +343,7 @@ class PricingCatalogService
     {
         $featuredOffers = array_map(fn (array $package) => $this->decorateOffer($package), $this->getFeaturedOffers());
 
-        $products = array_map(function (array $product) use ($user) {
+        $products = array_map(function (array $product) {
             $plano = MonitoramentoPlano::where('codigo', $product['slug'])->first();
             $price = $plano ? $this->getProductPriceByPlan($plano) : 0.0;
 
@@ -352,7 +352,7 @@ class PricingCatalogService
                 'nome' => $product['nome'],
                 'descricao' => $product['descricao'],
                 'price' => $price,
-                'price_label' => 'R$ '.number_format($price, 2, ',', '.').'/consulta',
+                'price_label' => \App\Support\Dinheiro::brl($price).'/consulta',
             ];
         }, $this->getProductCatalog());
 

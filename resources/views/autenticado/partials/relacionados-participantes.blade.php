@@ -8,7 +8,7 @@
         </div>
     </div>
 
-    <form method="GET" action="{{ $ajaxBaseUrl }}" class="js-related-filter-form px-4 py-3 border-b border-gray-200 bg-gray-50">
+    <form method="GET" action="{{ $ajaxBaseUrl }}" class="js-related-filter-form px-4 py-3 border-b border-gray-200 bg-gray-50" data-mobile-filters>
         <div class="flex flex-col sm:flex-row sm:items-end gap-3">
             <div class="w-full sm:w-56">
                 <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 block">Tipo de Documento</label>
@@ -18,7 +18,7 @@
                     <option value="CPF" {{ ($filtros['tipo_documento'] ?? '') === 'CPF' ? 'selected' : '' }}>CPF</option>
                 </select>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="mobile-filter-actions flex items-center gap-2">
                 <button type="submit" class="bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium px-4 py-2">
                     Filtrar
                 </button>
@@ -28,7 +28,7 @@
             </div>
             @if(($filtros['tipo_documento'] ?? '') !== '')
                 <div class="sm:ml-auto">
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
+                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
                         {{ $filtros['tipo_documento'] }}
                     </span>
                 </div>
@@ -80,17 +80,17 @@
                             <td class="px-3 py-3 text-sm text-gray-700 font-mono" data-label="Documento">{{ $participante->cnpj_formatado }}</td>
                             <td class="px-3 py-3" data-label="Situação">
                                 @if(($participante->situacao_cadastral ?? '') === 'ATIVA')
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Ativa</span>
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Ativa</span>
                                 @elseif($participante->situacao_cadastral)
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">
                                         {{ $participante->situacao_cadastral }}
                                     </span>
                                 @else
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Sem Mov.</span>
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Sem Mov.</span>
                                 @endif
                             </td>
                             <td class="px-3 py-3" data-label="Origem">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origem['hex'] }}">
+                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origem['hex'] }}">
                                     {{ $origem['label'] }}
                                 </span>
                             </td>

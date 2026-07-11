@@ -11,7 +11,7 @@
         @foreach($alertas as $alerta)
         @php $hex = ($alerta['sev'] ?? 'info') === 'alerta' ? '#d97706' : '#6b7280'; @endphp
         <div class="px-4 py-3 flex items-start gap-3 border-l-4" style="border-left-color: {{ $hex }}">
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white flex-shrink-0 mt-0.5" style="background-color: {{ $hex }}">
+            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white flex-shrink-0 mt-0.5" style="background-color: {{ $hex }}">
                 {{ ($alerta['sev'] ?? 'info') === 'alerta' ? 'Atenção' : 'Info' }}
             </span>
             <div class="min-w-0">

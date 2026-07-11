@@ -1,7 +1,7 @@
 @php
     /** @var \Illuminate\Support\Collection $itens */
     /** @var array $resumoFiltros */
-    $fmt = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
+    $fmt = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
     $origemHex = ['efd' => '#1d4ed8', 'xml' => '#7c3aed', 'ambas' => '#047857'];
 @endphp
 

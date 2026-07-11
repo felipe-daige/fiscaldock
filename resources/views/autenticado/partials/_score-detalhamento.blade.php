@@ -18,7 +18,7 @@
     @if($comHeadline)
         <div class="flex items-center gap-4 mb-4 pb-4 border-b border-gray-200" data-test="score-headline-total">
             <div class="text-3xl font-bold font-mono" style="color: {{ $headlineHex }}">{{ $scoreTotal ?? '—' }}</div>
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $headlineHex }}">{{ $classLabel }}</span>
+            <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $headlineHex }}">{{ $classLabel }}</span>
         </div>
     @endif
 

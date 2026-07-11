@@ -41,12 +41,12 @@
  @foreach($pisCampos as $campo)
  <div class="flex justify-between items-center {{ ($campo[2] ?? false) ? 'pt-2 border-t border-gray-200 font-semibold' : '' }}">
  <span class="text-gray-600">{{ $campo[0] }}</span>
- <span class="{{ ($campo[2] ?? false) ? 'text-gray-900' : 'text-gray-700' }}">R$ {{ number_format($campo[1] ?? 0, 2, ',', '.') }}</span>
+ <span class="{{ ($campo[2] ?? false) ? 'text-gray-900' : 'text-gray-700' }}">R$&nbsp;{{ number_format($campo[1] ?? 0, 2, ',', '.') }}</span>
  </div>
  @endforeach
  <div class="flex justify-between items-center pt-2 border-t-2 border-gray-300 font-bold text-gray-900">
  <span>Total PIS a Recolher</span>
- <span>R$ {{ number_format($ac->pis_total_recolher ?? 0, 2, ',', '.') }}</span>
+ <span>R$&nbsp;{{ number_format($ac->pis_total_recolher ?? 0, 2, ',', '.') }}</span>
  </div>
  </div>
  </div>
@@ -75,12 +75,12 @@
  @foreach($cofinsCampos as $campo)
  <div class="flex justify-between items-center {{ ($campo[2] ?? false) ? 'pt-2 border-t border-gray-200 font-semibold' : '' }}">
  <span class="text-gray-600">{{ $campo[0] }}</span>
- <span class="{{ ($campo[2] ?? false) ? 'text-gray-900' : 'text-gray-700' }}">R$ {{ number_format($campo[1] ?? 0, 2, ',', '.') }}</span>
+ <span class="{{ ($campo[2] ?? false) ? 'text-gray-900' : 'text-gray-700' }}">R$&nbsp;{{ number_format($campo[1] ?? 0, 2, ',', '.') }}</span>
  </div>
  @endforeach
  <div class="flex justify-between items-center pt-2 border-t-2 border-gray-300 font-bold text-gray-900">
  <span>Total COFINS a Recolher</span>
- <span>R$ {{ number_format($ac->cofins_total_recolher ?? 0, 2, ',', '.') }}</span>
+ <span>R$&nbsp;{{ number_format($ac->cofins_total_recolher ?? 0, 2, ',', '.') }}</span>
  </div>
  </div>
  </div>
@@ -89,7 +89,7 @@
  {{-- Total Geral --}}
  <div class="mt-6 pt-4 border-t-2 border-gray-300 flex justify-between items-center">
  <span class="text-base font-bold text-gray-900">Total PIS + COFINS a Recolher</span>
- <span class="text-lg font-bold text-gray-900">R$ {{ number_format($ac->total_recolher ?? 0, 2, ',', '.') }}</span>
+ <span class="text-lg font-bold text-gray-900">R$&nbsp;{{ number_format($ac->total_recolher ?? 0, 2, ',', '.') }}</span>
  </div>
 
  {{-- Indicadores de créditos NC --}}
@@ -128,9 +128,9 @@
  @foreach($ac->pis_detalhes['items'] as $cst)
  <tr class="hover:bg-gray-50">
  <td class="px-3 py-1.5 font-mono font-medium">{{ $cst['COD_CONT'] ?? $cst['cst'] ?? '—' }}</td>
- <td class="px-3 py-1.5 text-right font-mono">R$ {{ number_format((float)($cst['VL_BC_CONT'] ?? $cst['base_calculo'] ?? 0), 2, ',', '.') }}</td>
+ <td class="px-3 py-1.5 text-right font-mono">R$&nbsp;{{ number_format((float)($cst['VL_BC_CONT'] ?? $cst['base_calculo'] ?? 0), 2, ',', '.') }}</td>
  <td class="px-3 py-1.5 text-right font-mono">{{ number_format((float)($cst['ALIQ_PIS'] ?? $cst['aliquota'] ?? 0), 4, ',', '.') }}%</td>
- <td class="px-3 py-1.5 text-right font-mono font-semibold">R$ {{ number_format((float)($cst['VL_CONT_APUR'] ?? $cst['valor_contribuicao'] ?? $cst['VL_CONT'] ?? 0), 2, ',', '.') }}</td>
+ <td class="px-3 py-1.5 text-right font-mono font-semibold">R$&nbsp;{{ number_format((float)($cst['VL_CONT_APUR'] ?? $cst['valor_contribuicao'] ?? $cst['VL_CONT'] ?? 0), 2, ',', '.') }}</td>
  </tr>
  @endforeach
  </tbody>
@@ -159,9 +159,9 @@
  @foreach($ac->cofins_detalhes['items'] as $cst)
  <tr class="hover:bg-gray-50">
  <td class="px-3 py-1.5 font-mono font-medium">{{ $cst['COD_CONT'] ?? $cst['cst'] ?? '—' }}</td>
- <td class="px-3 py-1.5 text-right font-mono">R$ {{ number_format((float)($cst['VL_BC_CONT'] ?? $cst['base_calculo'] ?? 0), 2, ',', '.') }}</td>
+ <td class="px-3 py-1.5 text-right font-mono">R$&nbsp;{{ number_format((float)($cst['VL_BC_CONT'] ?? $cst['base_calculo'] ?? 0), 2, ',', '.') }}</td>
  <td class="px-3 py-1.5 text-right font-mono">{{ number_format((float)($cst['ALIQ_COFINS'] ?? $cst['aliquota'] ?? 0), 4, ',', '.') }}%</td>
- <td class="px-3 py-1.5 text-right font-mono font-semibold">R$ {{ number_format((float)($cst['VL_CONT_APUR'] ?? $cst['valor_contribuicao'] ?? $cst['VL_CONT'] ?? 0), 2, ',', '.') }}</td>
+ <td class="px-3 py-1.5 text-right font-mono font-semibold">R$&nbsp;{{ number_format((float)($cst['VL_CONT_APUR'] ?? $cst['valor_contribuicao'] ?? $cst['VL_CONT'] ?? 0), 2, ',', '.') }}</td>
  </tr>
  @endforeach
  </tbody>
@@ -197,8 +197,8 @@
  <tr class="hover:bg-gray-50">
  <td class="px-3 py-1.5 font-mono font-medium">{{ $nt['CST_PIS'] ?? $nt['cst'] ?? '—' }}</td>
  <td class="px-3 py-1.5">{{ $nt['NAT_REC'] ?? $nt['natureza_receita'] ?? '—' }}</td>
- <td class="px-3 py-1.5 text-right font-mono">R$ {{ number_format((float)($nt['VL_REC'] ?? $nt['valor'] ?? 0), 2, ',', '.') }}</td>
- <td class="px-3 py-1.5 text-right font-mono">R$ {{ number_format((float)($nt['VL_REC_COFINS'] ?? $nt['valor_cofins'] ?? 0), 2, ',', '.') }}</td>
+ <td class="px-3 py-1.5 text-right font-mono">R$&nbsp;{{ number_format((float)($nt['VL_REC'] ?? $nt['valor'] ?? 0), 2, ',', '.') }}</td>
+ <td class="px-3 py-1.5 text-right font-mono">R$&nbsp;{{ number_format((float)($nt['VL_REC_COFINS'] ?? $nt['valor_cofins'] ?? 0), 2, ',', '.') }}</td>
  </tr>
  @endforeach
  </tbody>
@@ -237,9 +237,9 @@
  @foreach($ac->pis_creditos_nc['items'] as $cr)
  <tr class="hover:bg-gray-50">
  <td class="px-3 py-1.5 font-mono">{{ $cr['COD_CRED'] ?? $cr['tipo'] ?? '—' }}</td>
- <td class="px-3 py-1.5 text-right font-mono">R$ {{ number_format((float)($cr['VL_BC_PIS'] ?? $cr['base_calculo'] ?? 0), 2, ',', '.') }}</td>
+ <td class="px-3 py-1.5 text-right font-mono">R$&nbsp;{{ number_format((float)($cr['VL_BC_PIS'] ?? $cr['base_calculo'] ?? 0), 2, ',', '.') }}</td>
  <td class="px-3 py-1.5 text-right font-mono">{{ number_format((float)($cr['ALIQ_PIS'] ?? $cr['aliquota'] ?? 0), 4, ',', '.') }}%</td>
- <td class="px-3 py-1.5 text-right font-mono font-semibold">R$ {{ number_format((float)($cr['VL_CRED'] ?? $cr['valor'] ?? 0), 2, ',', '.') }}</td>
+ <td class="px-3 py-1.5 text-right font-mono font-semibold">R$&nbsp;{{ number_format((float)($cr['VL_CRED'] ?? $cr['valor'] ?? 0), 2, ',', '.') }}</td>
  </tr>
  @endforeach
  </tbody>
@@ -268,9 +268,9 @@
  @foreach($ac->cofins_creditos_nc['items'] as $cr)
  <tr class="hover:bg-gray-50">
  <td class="px-3 py-1.5 font-mono">{{ $cr['COD_CRED'] ?? $cr['tipo'] ?? '—' }}</td>
- <td class="px-3 py-1.5 text-right font-mono">R$ {{ number_format((float)($cr['VL_BC_COFINS'] ?? $cr['base_calculo'] ?? 0), 2, ',', '.') }}</td>
+ <td class="px-3 py-1.5 text-right font-mono">R$&nbsp;{{ number_format((float)($cr['VL_BC_COFINS'] ?? $cr['base_calculo'] ?? 0), 2, ',', '.') }}</td>
  <td class="px-3 py-1.5 text-right font-mono">{{ number_format((float)($cr['ALIQ_COFINS'] ?? $cr['aliquota'] ?? 0), 4, ',', '.') }}%</td>
- <td class="px-3 py-1.5 text-right font-mono font-semibold">R$ {{ number_format((float)($cr['VL_CRED'] ?? $cr['valor'] ?? 0), 2, ',', '.') }}</td>
+ <td class="px-3 py-1.5 text-right font-mono font-semibold">R$&nbsp;{{ number_format((float)($cr['VL_CRED'] ?? $cr['valor'] ?? 0), 2, ',', '.') }}</td>
  </tr>
  @endforeach
  </tbody>

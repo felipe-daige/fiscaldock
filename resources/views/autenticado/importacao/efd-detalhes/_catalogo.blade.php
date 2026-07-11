@@ -4,12 +4,12 @@
 @if(isset($catalogoItens) && ($catalogoItens instanceof \Illuminate\Pagination\LengthAwarePaginator ? $catalogoItens->total() > 0 : $catalogoItens->count() > 0))
 @php $totalCatalogo = $catalogoItens instanceof \Illuminate\Pagination\LengthAwarePaginator ? $catalogoItens->total() : $catalogoItens->count(); @endphp
 <div class="bg-white rounded border border-gray-300 mt-6" id="catalogo-section">
- <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-4 flex-wrap">
+ <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3" data-mobile-filters>
  <div class="flex items-center gap-2">
 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Catálogo de Produtos/Serviços</span>
  <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ $totalCatalogo }}</span>
  </div>
- <div class="flex items-center gap-3">
+ <div class="flex w-full flex-col min-[480px]:flex-row min-[480px]:items-center gap-3 sm:w-auto">
  <div class="flex items-center gap-2">
  <label for="per-page-catalogo-efd" class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Por pág.</label>
  <select id="per-page-catalogo-efd" class="border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400 px-2 py-1.5 bg-white" onchange="let u = new URL(window.location.href); u.searchParams.set('per_page_catalogo', this.value); u.searchParams.delete('catalogo_page'); window.asyncLoadEFD(u.toString(), ['catalogo-section']);">
@@ -19,11 +19,11 @@
  <option value="100" {{ request('per_page_catalogo') == 100 ? 'selected' : '' }}>100 por pág.</option>
  </select>
  </div>
- <div class="relative">
+ <div class="relative min-w-0 flex-1 sm:flex-none">
  <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
  </svg>
- <input type="text" id="busca-catalogo" placeholder="Buscar por código, descrição ou NCM..." class="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400 w-72">
+ <input type="text" id="busca-catalogo" placeholder="Buscar por código, descrição ou NCM..." class="w-full sm:w-72 pl-9 pr-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
  </div>
  </div>
  </div>

@@ -36,7 +36,7 @@
  <div class="px-4 py-3 min-h-[96px] flex flex-col">
  <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Tipo EFD</p>
  <div class="flex-1 flex items-center">
- <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $tipoStyle }}">{{ $tipoLabel }}</span>
+ <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $tipoStyle }}">{{ $tipoLabel }}</span>
  </div>
  <p class="text-[11px] text-gray-500 mt-1">{{ $spedPeriodo ?: 'Arquivo analisado' }}</p>
  </div>
@@ -57,7 +57,7 @@
  <div class="px-4 py-3 min-h-[96px] flex flex-col">
  <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Status</p>
  <div class="flex-1 flex items-center">
- <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $badgeStyle }}">{{ $badgeLabel }}</span>
+ <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $badgeStyle }}">{{ $badgeLabel }}</span>
  </div>
  <p class="text-[11px] text-gray-500 mt-1">{{ $importacao->tempo_processamento ?: 'Em andamento' }}</p>
  </div>

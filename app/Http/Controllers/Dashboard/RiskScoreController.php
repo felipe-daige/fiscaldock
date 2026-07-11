@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Concerns\RespondeAjax;
+use App\Http\Controllers\Concerns\SetsDownloadToken;
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Models\ConsultaResultado;
@@ -10,13 +11,19 @@ use App\Models\Participante;
 use App\Models\ParticipanteScore;
 use App\Services\Consultas\ResultadoDetalhePresenter;
 use App\Services\Reforma\CreditoRiscoReformaService;
+use App\Services\Risk\Export\RiskScoreReportBuilder;
+use App\Services\Risk\Export\RiskScoreXlsxBuilder;
 use App\Services\RiskScoreService;
+use App\Support\CsvExport;
+use App\Support\PdfReport;
+use App\Support\Reports\XlsxReport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class RiskScoreController extends Controller
 {
     use RespondeAjax;
+    use SetsDownloadToken;
 
     private const AUTH_VIEW_PREFIX = 'autenticado.risk.';
 
@@ -277,6 +284,55 @@ class RiskScoreController extends Controller
         ])->render();
 
         return response()->json(['html' => $html]);
+    }
+
+    public function exportarPdf(Request $request, RiskScoreReportBuilder $builder)
+    {
+        $relatorio = $builder->montar((int) Auth::id(), $this->filtrosExportacao($request));
+
+        return $this->comTokenDownload(
+            PdfReport::render('reports.risk-score', ['relatorio' => $relatorio], 'portrait')
+                ->download($this->nomeExportacao().'.pdf'),
+            $request
+        );
+    }
+
+    public function exportarXlsx(Request $request, RiskScoreReportBuilder $builder, RiskScoreXlsxBuilder $xlsx)
+    {
+        if (! XlsxReport::disponivel()) {
+            abort(503, 'Exportação XLSX indisponível.');
+        }
+
+        $relatorio = $builder->montar((int) Auth::id(), $this->filtrosExportacao($request));
+
+        return $this->comTokenDownload(
+            $xlsx->download($relatorio, $this->nomeExportacao().'.xlsx'),
+            $request
+        );
+    }
+
+    public function exportarCsv(Request $request, RiskScoreReportBuilder $builder)
+    {
+        $relatorio = $builder->montar((int) Auth::id(), $this->filtrosExportacao($request));
+        $linhas = array_map(
+            fn (array $registro) => RiskScoreReportBuilder::linha($registro),
+            $relatorio['registros']
+        );
+
+        return $this->comTokenDownload(
+            CsvExport::download($this->nomeExportacao().'.csv', $relatorio['colunas'], $linhas),
+            $request
+        );
+    }
+
+    private function filtrosExportacao(Request $request): array
+    {
+        return $request->only(['cliente_id', 'classificacao', 'busca']);
+    }
+
+    private function nomeExportacao(): string
+    {
+        return 'score-fiscal-'.now()->format('Ymd');
     }
 
     /**

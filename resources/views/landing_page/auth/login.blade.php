@@ -8,7 +8,7 @@
                             <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Acesso FiscalDock</p>
                             <h1 class="text-lg font-bold text-gray-900 uppercase tracking-wide mt-1">Entrar no painel</h1>
                         </div>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
                             Seguro
                         </span>
                     </div>

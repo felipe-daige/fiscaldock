@@ -52,7 +52,7 @@
                     </span>
                 </div>
                 <h1 class="mt-6 text-4xl md:text-5xl font-bold text-gray-900">
-                    Comece com <span class="text-blue-600">R$ {{ number_format($minimumDeposit, 0, ',', '.') }} de saldo</span> e pague só pelas consultas que usar
+                    Comece com <span class="text-blue-600">R$&nbsp;{{ number_format($minimumDeposit, 0, ',', '.') }} de saldo</span> e pague só pelas consultas que usar
                 </h1>
                 <p class="mt-5 text-lg text-gray-600 max-w-3xl mx-auto">
                     A FiscalDock funciona no modelo pré-pago em reais: você testa sem cartão, adiciona saldo quando precisar e cada consulta tem preço fixo e transparente. Sem mensalidade.
@@ -92,7 +92,7 @@
                         <div class="flex flex-col gap-6">
                             <div class="max-w-3xl">
                                 <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Comece sem assinatura</p>
-                                <h2 class="mt-2 text-3xl sm:text-4xl font-bold text-gray-900">R$ {{ number_format($minimumDeposit, 0, ',', '.') }} para ativar o primeiro saldo</h2>
+                                <h2 class="mt-2 text-3xl sm:text-4xl font-bold text-gray-900">R$&nbsp;{{ number_format($minimumDeposit, 0, ',', '.') }} para ativar o primeiro saldo</h2>
                                 <p class="mt-3 text-sm sm:text-base text-gray-600">Esse é o valor mínimo para começar a operar com saldo real, sem mensalidade e sem travar a entrada no produto.</p>
                             </div>
 
@@ -167,16 +167,16 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-8">
             <h2 class="text-3xl font-bold text-gray-900">Valor livre com atalhos promocionais</h2>
-            <p class="mt-3 text-base text-gray-600">Você escolhe quanto adicionar de saldo, acima do mínimo de R$ {{ number_format($minimumDeposit, 0, ',', '.') }}. Business e Volume são atalhos promocionais para acelerar a decisão.</p>
+            <p class="mt-3 text-base text-gray-600">Você escolhe quanto adicionar de saldo, acima do mínimo de R$&nbsp;{{ number_format($minimumDeposit, 0, ',', '.') }}. Business e Volume são atalhos promocionais para acelerar a decisão.</p>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-stretch">
             <div class="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 flex flex-col h-full">
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Valor livre</p>
                 <h3 class="mt-2 text-2xl font-bold text-gray-900">Você escolhe quanto adicionar</h3>
-                <p class="mt-4 text-sm text-gray-600">Comece com o mínimo de R$ {{ number_format($minimumDeposit, 0, ',', '.') }} ou adicione mais conforme seu momento operacional. O saldo não expira.</p>
+                <p class="mt-4 text-sm text-gray-600">Comece com o mínimo de R$&nbsp;{{ number_format($minimumDeposit, 0, ',', '.') }} ou adicione mais conforme seu momento operacional. O saldo não expira.</p>
                 <div class="mt-6 rounded-xl border border-gray-200 p-4">
                     <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Mínimo</p>
-                    <p class="mt-2 text-lg font-bold text-gray-900">R$ {{ number_format($minimumDeposit, 0, ',', '.') }}</p>
+                    <p class="mt-2 text-lg font-bold text-gray-900">R$&nbsp;{{ number_format($minimumDeposit, 0, ',', '.') }}</p>
                 </div>
                 <a href="{{ route('signup') }}" data-link class="mt-6 btn-cta">Criar conta grátis</a>
             </div>
@@ -188,10 +188,10 @@
                             <p class="text-[11px] font-semibold uppercase tracking-wide {{ !empty($package['featured']) ? 'text-gray-300' : 'text-gray-400' }}">{{ $package['usage_hint'] ?? 'Oferta' }}</p>
                             <h3 class="mt-2 text-xl font-bold {{ !empty($package['featured']) ? 'text-white' : 'text-gray-900' }}">{{ $package['nome'] }}</h3>
                         </div>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ !empty($package['featured']) ? '#0f766e' : '#374151' }}">{{ $package['badge'] ?? 'Pacote' }}</span>
+                        <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ !empty($package['featured']) ? '#0f766e' : '#374151' }}">{{ $package['badge'] ?? 'Pacote' }}</span>
                     </div>
-                    <p class="mt-5 text-4xl font-bold {{ !empty($package['featured']) ? 'text-white' : 'text-gray-900' }}">R$ {{ number_format($package['preco'], 0, ',', '.') }}</p>
-                    <p class="mt-2 text-sm {{ !empty($package['featured']) ? 'text-gray-300' : 'text-gray-500' }}">R$ {{ number_format($package['preco'], 0, ',', '.') }} em saldo</p>
+                    <p class="mt-5 text-4xl font-bold {{ !empty($package['featured']) ? 'text-white' : 'text-gray-900' }}">R$&nbsp;{{ number_format($package['preco'], 0, ',', '.') }}</p>
+                    <p class="mt-2 text-sm {{ !empty($package['featured']) ? 'text-gray-300' : 'text-gray-500' }}">R$&nbsp;{{ number_format($package['preco'], 0, ',', '.') }} em saldo</p>
                     <p class="mt-4 text-sm flex-1 {{ !empty($package['featured']) ? 'text-gray-200' : 'text-gray-600' }}">{{ $package['descricao'] }}</p>
                     <a href="{{ route('signup') }}" data-link class="mt-6 {{ !empty($package['featured']) ? 'inline-flex w-full items-center justify-center rounded border border-white/20 bg-white px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-gray-100' : 'btn-cta btn-cta--block text-center' }}">
                         Criar conta grátis
@@ -225,8 +225,8 @@
                                     <p class="text-sm font-semibold text-gray-900">{{ $product['nome'] }}</p>
                                     <p class="mt-1 text-xs text-gray-500">{{ $product['descricao'] }}</p>
                                 </td>
-                                <td class="px-4 py-4 text-sm font-semibold text-gray-900">R$ {{ number_format($product['price'], 2, ',', '.') }}</td>
-                                <td class="px-4 py-4 text-sm font-semibold text-gray-900">R$ {{ number_format($product['price_for_100'] ?? ($product['price'] * 100), 0, ',', '.') }}</td>
+                                <td class="px-4 py-4 text-sm font-semibold text-gray-900">R$&nbsp;{{ number_format($product['price'], 2, ',', '.') }}</td>
+                                <td class="px-4 py-4 text-sm font-semibold text-gray-900">R$&nbsp;{{ number_format($product['price_for_100'] ?? ($product['price'] * 100), 0, ',', '.') }}</td>
                             </tr>
                         @endforeach
                     </tbody>

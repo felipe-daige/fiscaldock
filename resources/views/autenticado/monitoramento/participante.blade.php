@@ -43,12 +43,12 @@
                 </div>
                 <div class="flex items-center gap-2 flex-wrap">
                     @if($participante->situacao_cadastral)
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $situacaoBadge['hex'] }}">
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $situacaoBadge['hex'] }}">
                             {{ $situacaoBadge['label'] }}
                         </span>
                     @endif
                     @if($regimeBadge)
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $regimeBadge['hex'] }}">
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $regimeBadge['hex'] }}">
                             {{ $regimeBadge['label'] }}
                         </span>
                     @endif
@@ -215,7 +215,7 @@
                                         ];
                                         $badgeColor = $planoBadgeColors[$ultimaConsulta->lote->plano->codigo] ?? '#6b7280';
                                     @endphp
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeColor }}">
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeColor }}">
                                         {{ $ultimaConsulta->lote->plano->nome }}
                                     </span>
                                     @endif
@@ -603,7 +603,7 @@
                                     @if(isset($dados['capital_social']))
                                     <div class="bg-gray-50 rounded border border-gray-200 p-3">
                                         <dt class="text-xs text-gray-500">Capital Social</dt>
-                                        <dd class="mt-1 text-sm font-semibold text-gray-900">R$ {{ number_format($dados['capital_social'], 2, ',', '.') }}</dd>
+                                        <dd class="mt-1 text-sm font-semibold text-gray-900">R$&nbsp;{{ number_format($dados['capital_social'], 2, ',', '.') }}</dd>
                                     </div>
                                     @endif
                                     @if(isset($dados['data_inicio_atividade']))
@@ -831,7 +831,7 @@
                     </div>
                     <div class="grid grid-cols-4 gap-3 mb-4">
                         <div><div class="text-[11px] text-gray-500">Total Notas</div><div class="text-[15px] font-bold">{{ $movimentacao['kpis']['total_notas'] }}</div></div>
-                        <div><div class="text-[11px] text-gray-500">Valor Movimentado</div><div class="text-[15px] font-bold">R$ {{ number_format($movimentacao['kpis']['valor_movimentado'], 2, ',', '.') }}</div></div>
+                        <div><div class="text-[11px] text-gray-500">Valor Movimentado</div><div class="text-[15px] font-bold">R$&nbsp;{{ number_format($movimentacao['kpis']['valor_movimentado'], 2, ',', '.') }}</div></div>
                         <div><div class="text-[11px] text-gray-500">Entradas</div><div class="text-[15px] font-bold">{{ $movimentacao['kpis']['entradas_qtd'] }}</div></div>
                         <div><div class="text-[11px] text-gray-500">Saídas</div><div class="text-[15px] font-bold">{{ $movimentacao['kpis']['saidas_qtd'] }}</div></div>
                     </div>
@@ -935,11 +935,11 @@
                                 </div>
                                 <div class="flex items-center gap-3">
                                     @if($lote->plano)
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $lotePlanoBadgeColors[$lote->plano->codigo] ?? '#6b7280' }}">
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $lotePlanoBadgeColors[$lote->plano->codigo] ?? '#6b7280' }}">
                                         {{ $lote->plano->nome }}
                                     </span>
                                     @endif
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $resultadoStatusColors[$statusResultado] ?? '#6b7280' }}">
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $resultadoStatusColors[$statusResultado] ?? '#6b7280' }}">
                                         {{ $resultadoStatusLabel[$statusResultado] ?? ucfirst($statusResultado) }}
                                     </span>
                                     <a href="/app/consulta/historico?lote={{ $lote->id }}"
@@ -968,7 +968,7 @@
                         <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                             <div class="flex items-center justify-between">
                                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Assinatura Ativa</span>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">
+                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">
                                     ATIVA
                                 </span>
                             </div>

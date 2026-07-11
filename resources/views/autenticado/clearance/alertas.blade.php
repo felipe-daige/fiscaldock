@@ -43,7 +43,7 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <p class="text-lg font-bold text-gray-900">{{ number_format($cruzamentos['irregulares_qtd'], 0, ',', '.') }}</p>
-                        <p class="text-[11px] text-gray-500">Fornecedores irregulares com compras (R$ {{ number_format($cruzamentos['irregulares_valor'], 2, ',', '.') }})</p>
+                        <p class="text-[11px] text-gray-500">Fornecedores irregulares com compras (R$&nbsp;{{ number_format($cruzamentos['irregulares_valor'], 2, ',', '.') }})</p>
                     </div>
                     <div>
                         <p class="text-lg font-bold text-gray-900">{{ number_format($cruzamentos['canceladas_qtd'], 0, ',', '.') }}</p>
@@ -86,7 +86,7 @@
                 >
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">{{ $card['label'] }}</span>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $card['hex'] }}">{{ number_format($card['valor'], 0, ',', '.') }}</span>
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $card['hex'] }}">{{ number_format($card['valor'], 0, ',', '.') }}</span>
                     </div>
                     <div class="p-4">
                         <p class="text-lg font-bold text-gray-900">{{ number_format($card['valor'], 0, ',', '.') }}</p>
@@ -96,7 +96,7 @@
             @endforeach
         </div>
 
-        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6" data-mobile-filters>
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
             </div>
@@ -121,7 +121,7 @@
                         </select>
                     </div>
                     <div class="flex gap-2">
-                        <a href="/app/clearance/alertas" data-link class="px-4 py-2 bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded text-sm font-medium text-center {{ ($filtroNivel || $filtroCategoria) ? '' : 'invisible' }}">
+                        <a href="/app/clearance/alertas" data-link class="w-full sm:w-auto px-4 py-2 bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded text-sm font-medium text-center {{ ($filtroNivel || $filtroCategoria) ? '' : 'invisible' }}">
                             Limpar filtros
                         </a>
                     </div>
@@ -164,20 +164,20 @@
                                         <span class="text-sm font-semibold text-gray-900 font-mono">{{ $nota->validacao_score ?? '-' }}</span>
                                     </td>
                                     <td class="px-3 py-3 text-center">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeHex }}">
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeHex }}">
                                             {{ strtoupper($nota->validacao_classificacao_label ?? 'N/A') }}
                                         </span>
                                     </td>
                                     <td class="px-3 py-3 text-center">
                                         <div class="flex items-center justify-center gap-2">
                                             @if($alertasBloqueantes > 0)
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #dc2626">{{ $alertasBloqueantes }}</span>
+                                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #dc2626">{{ $alertasBloqueantes }}</span>
                                             @endif
                                             @if($alertasAtencao > 0)
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">{{ $alertasAtencao }}</span>
+                                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">{{ $alertasAtencao }}</span>
                                             @endif
                                             @if($alertasInfo > 0)
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $alertasInfo }}</span>
+                                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $alertasInfo }}</span>
                                             @endif
                                         </div>
                                     </td>
@@ -208,7 +208,7 @@
                                     <p class="text-sm text-gray-700">{{ $nota->emitente->razao_social ?? $nota->emit_razao_social ?? '-' }}</p>
                                     <p class="text-[11px] font-mono text-gray-400 mt-1">{{ $nota->emit_documento_formatado }}</p>
                                 </div>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white shrink-0" style="background-color: {{ $badgeHex }}">
+                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white shrink-0" style="background-color: {{ $badgeHex }}">
                                     {{ strtoupper($nota->validacao_classificacao_label ?? 'N/A') }}
                                 </span>
                             </div>
@@ -216,13 +216,13 @@
                                 <span class="text-sm text-gray-700">Score: <span class="font-mono text-gray-900">{{ $nota->validacao_score ?? '-' }}</span></span>
                                 <div class="flex gap-2">
                                     @if($alertasBloqueantes > 0)
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #dc2626">{{ $alertasBloqueantes }}</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #dc2626">{{ $alertasBloqueantes }}</span>
                                     @endif
                                     @if($alertasAtencao > 0)
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">{{ $alertasAtencao }}</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">{{ $alertasAtencao }}</span>
                                     @endif
                                     @if($alertasInfo > 0)
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $alertasInfo }}</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $alertasInfo }}</span>
                                     @endif
                                 </div>
                             </div>

@@ -1,7 +1,7 @@
 {{-- Dashboard - Cockpit --}}
 @php
     $fmtN = fn ($v) => number_format((float) $v, 0, ',', '.');
-    $fmtR = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
+    $fmtR = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
     $prefsCards = $dashboardPrefs['cards'];
     $cardVisivel = fn ($k) => (bool) ($prefsCards[$k]['visivel'] ?? true);
     $atalhoLabels = [

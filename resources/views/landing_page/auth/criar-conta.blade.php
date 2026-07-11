@@ -19,7 +19,7 @@
                                 <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide mt-1">Criar conta grátis</h1>
                                 <p class="text-xs text-gray-500 mt-1">Receba @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(config('trial.creditos'))) de saldo grátis para usar em até {{ config('trial.validade_dias') }} dias.</p>
                             </div>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">
                                 @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(config('trial.creditos')))
                             </span>
                         </div>

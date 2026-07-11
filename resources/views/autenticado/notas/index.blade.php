@@ -38,22 +38,22 @@
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Entradas</p>
                     <p class="text-lg sm:text-xl font-bold text-gray-900">{{ number_format($ops['entradas']['quantidade'], 0, ',', '.') }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">R$ {{ number_format($ops['entradas']['valor'], 2, ',', '.') }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">R$&nbsp;{{ number_format($ops['entradas']['valor'], 2, ',', '.') }}</p>
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Saídas</p>
                     <p class="text-lg sm:text-xl font-bold text-gray-900">{{ number_format($ops['saidas']['quantidade'], 0, ',', '.') }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">R$ {{ number_format($ops['saidas']['valor'], 2, ',', '.') }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">R$&nbsp;{{ number_format($ops['saidas']['valor'], 2, ',', '.') }}</p>
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Devoluções</p>
                     <p class="text-lg sm:text-xl font-bold text-gray-900">{{ number_format($ops['devolucoes']['quantidade'], 0, ',', '.') }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">R$ {{ number_format($ops['devolucoes']['valor'], 2, ',', '.') }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">R$&nbsp;{{ number_format($ops['devolucoes']['valor'], 2, ',', '.') }}</p>
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Total</p>
                     <p class="text-lg sm:text-xl font-bold text-gray-900">{{ number_format($ops['total']['quantidade'], 0, ',', '.') }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">R$ {{ number_format($ops['total']['valor'], 2, ',', '.') }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">R$&nbsp;{{ number_format($ops['total']['valor'], 2, ',', '.') }}</p>
                 </div>
             </div>
         </div>
@@ -68,11 +68,11 @@
                     <div class="space-y-1 text-sm text-gray-700">
                         <div class="flex items-center justify-between gap-3">
                             <span>Crédito</span>
-                            <span class="font-mono text-gray-900">R$ {{ number_format($trib['icms']['credito'], 2, ',', '.') }}</span>
+                            <span class="font-mono text-gray-900">R$&nbsp;{{ number_format($trib['icms']['credito'], 2, ',', '.') }}</span>
                         </div>
                         <div class="flex items-center justify-between gap-3">
                             <span>Débito</span>
-                            <span class="font-mono text-gray-900">R$ {{ number_format($trib['icms']['debito'], 2, ',', '.') }}</span>
+                            <span class="font-mono text-gray-900">R$&nbsp;{{ number_format($trib['icms']['debito'], 2, ',', '.') }}</span>
                         </div>
                     </div>
                 </div>
@@ -81,11 +81,11 @@
                     <div class="space-y-1 text-sm text-gray-700">
                         <div class="flex items-center justify-between gap-3">
                             <span>Crédito</span>
-                            <span class="font-mono text-gray-900">R$ {{ number_format($trib['pis']['credito'], 2, ',', '.') }}</span>
+                            <span class="font-mono text-gray-900">R$&nbsp;{{ number_format($trib['pis']['credito'], 2, ',', '.') }}</span>
                         </div>
                         <div class="flex items-center justify-between gap-3">
                             <span>Débito</span>
-                            <span class="font-mono text-gray-900">R$ {{ number_format($trib['pis']['debito'], 2, ',', '.') }}</span>
+                            <span class="font-mono text-gray-900">R$&nbsp;{{ number_format($trib['pis']['debito'], 2, ',', '.') }}</span>
                         </div>
                     </div>
                 </div>
@@ -94,11 +94,11 @@
                     <div class="space-y-1 text-sm text-gray-700">
                         <div class="flex items-center justify-between gap-3">
                             <span>Crédito</span>
-                            <span class="font-mono text-gray-900">R$ {{ number_format($trib['cofins']['credito'], 2, ',', '.') }}</span>
+                            <span class="font-mono text-gray-900">R$&nbsp;{{ number_format($trib['cofins']['credito'], 2, ',', '.') }}</span>
                         </div>
                         <div class="flex items-center justify-between gap-3">
                             <span>Débito</span>
-                            <span class="font-mono text-gray-900">R$ {{ number_format($trib['cofins']['debito'], 2, ',', '.') }}</span>
+                            <span class="font-mono text-gray-900">R$&nbsp;{{ number_format($trib['cofins']['debito'], 2, ',', '.') }}</span>
                         </div>
                     </div>
                 </div>
@@ -109,12 +109,12 @@
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 hidden sm:block rounded-t">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
             </div>
-            <form id="nf-filtros-form">
+            <form id="nf-filtros-form" data-mobile-filters data-mobile-filters-native>
                 <button type="button" id="nf-filtros-toggle" class="sm:hidden w-full flex items-center justify-between px-4 py-3 text-sm text-gray-700 border-b border-gray-200 rounded-t">
                     <span class="inline-flex items-center gap-2">
                         <span>Filtros</span>
                         @if($filtrosAtivos > 0)
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $filtrosAtivos }}</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $filtrosAtivos }}</span>
                         @endif
                     </span>
                     <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 nf-filtros-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,7 +138,7 @@
                     </div>
 
                     {{-- Filtros básicos (sempre visíveis) --}}
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="grid grid-cols-1 min-[480px]:grid-cols-2 sm:grid-cols-4 gap-3">
                         <div>
                             <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Origem</label>
                             <select name="origem" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400 bg-white">
@@ -178,7 +178,7 @@
                     </div>
 
                     {{-- Filtros avançados (colapsável) --}}
-                    <div id="filtros-avancados-nf" class="{{ $avancadosNfAtivos > 0 ? '' : 'hidden' }} grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3 pt-4 border-t border-gray-200">
+                    <div id="filtros-avancados-nf" class="{{ $avancadosNfAtivos > 0 ? '' : 'hidden' }} grid grid-cols-1 min-[480px]:grid-cols-2 sm:grid-cols-3 gap-3 mt-3 pt-4 border-t border-gray-200">
                         <div>
                             <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Modelo</label>
                             <select name="modelo" class="w-full border border-gray-300 rounded text-[13px] py-2.5 px-3 focus:ring-1 focus:ring-gray-400 focus:border-gray-400 bg-white">
@@ -285,7 +285,7 @@
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200">
+                    <div class="mobile-filter-actions flex items-center gap-2 mt-4 pt-4 border-t border-gray-200">
                         <button type="submit" class="bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium px-4 py-2">Filtrar</button>
                         <a href="/app/notas" data-link class="bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded text-sm font-medium px-4 py-2">Limpar</a>
                     </div>
@@ -321,17 +321,17 @@
                                 @endphp
                                 <tr class="hover:bg-gray-50/50 transition-colors cursor-pointer nf-row" data-origem="{{ $n['origem'] }}" data-id="{{ $n['id'] }}">
                                     <td class="px-3 py-3">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemBadge['hex'] }}">{{ $origemBadge['label'] }}</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemBadge['hex'] }}">{{ $origemBadge['label'] }}</span>
                                     </td>
                                     <td class="px-3 py-3 text-sm font-mono whitespace-nowrap">
                                         <a href="/app/notas/{{ $n['origem'] }}/{{ $n['id'] }}" data-link class="text-gray-900 hover:text-gray-600 hover:underline">{{ $numero }}{{ $serie }}</a>
                                     </td>
                                     <td class="px-3 py-3">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $n['modelo_label'] }}</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $n['modelo_label'] }}</span>
                                     </td>
                                     <td class="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">{{ $dataFormatada }}</td>
                                     <td class="px-3 py-3">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tipoBadge['hex'] }}">{{ $tipoBadge['label'] }}</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tipoBadge['hex'] }}">{{ $tipoBadge['label'] }}</span>
                                     </td>
                                     <td class="px-3 py-3 text-sm text-gray-700 max-w-xs">
                                         @if($n['participante_id'])
@@ -351,7 +351,7 @@
                                         @endif
                                     </td>
                                     <td class="px-3 py-3 text-sm font-semibold text-gray-900 text-right whitespace-nowrap font-mono">
-                                        R$ {{ number_format($n['valor_total'], 2, ',', '.') }}
+                                        R$&nbsp;{{ number_format($n['valor_total'], 2, ',', '.') }}
                                     </td>
                                     <td class="px-3 py-3 text-center">
                                         <button type="button" class="nf-expand-btn text-gray-400 hover:text-gray-700 transition-colors p-1" data-origem="{{ $n['origem'] }}" data-id="{{ $n['id'] }}" title="Ver detalhes">
@@ -383,9 +383,9 @@
                         <div class="px-4 py-4 nf-card cursor-pointer" data-origem="{{ $n['origem'] }}" data-id="{{ $n['id'] }}">
                             <div class="flex items-start justify-between gap-2 mb-2">
                                 <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemBadge['hex'] }}">{{ $origemBadge['label'] }}</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $n['modelo_label'] }}</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tipoBadge['hex'] }}">{{ $tipoBadge['label'] }}</span>
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemBadge['hex'] }}">{{ $origemBadge['label'] }}</span>
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $n['modelo_label'] }}</span>
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tipoBadge['hex'] }}">{{ $tipoBadge['label'] }}</span>
                                 </div>
                                 <button type="button" class="nf-expand-btn text-gray-400 hover:text-gray-700 p-2 -mr-2 min-w-[40px] min-h-[40px] flex items-center justify-center" data-origem="{{ $n['origem'] }}" data-id="{{ $n['id'] }}">
                                     <svg class="w-5 h-5 nf-expand-icon transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -395,7 +395,7 @@
                             </div>
                             <div class="flex items-baseline justify-between gap-2">
                                 <a href="/app/notas/{{ $n['origem'] }}/{{ $n['id'] }}" data-link class="text-sm font-mono font-medium text-gray-900 hover:text-gray-600 hover:underline">{{ $numero }}{{ $serie }}</a>
-                                <span class="text-sm font-semibold font-mono text-gray-900">R$ {{ number_format($n['valor_total'], 2, ',', '.') }}</span>
+                                <span class="text-sm font-semibold font-mono text-gray-900">R$&nbsp;{{ number_format($n['valor_total'], 2, ',', '.') }}</span>
                             </div>
                             <div class="mt-1 text-[11px] text-gray-500">{{ $dataFormatada }}</div>
                             @if($n['participante_nome'])

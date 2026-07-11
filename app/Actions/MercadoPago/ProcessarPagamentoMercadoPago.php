@@ -58,7 +58,7 @@ class ProcessarPagamentoMercadoPago
                     $payment->user,
                     (float) $payment->creditos,
                     'purchase',
-                    "Compra de créditos — pacote {$payment->pacote} (Mercado Pago #{$mpPaymentId})",
+                    "Compra de saldo — pacote {$payment->pacote} (Mercado Pago #{$mpPaymentId})",
                     $payment,
                 );
 

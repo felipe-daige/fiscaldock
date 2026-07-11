@@ -1,5 +1,5 @@
 @php
-    $fmtMoeda = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
+    $fmtMoeda = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
 @endphp
 <div class="min-h-screen bg-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -67,8 +67,8 @@
         </div>
 
         {{-- Filtros (padrão /app/clientes) --}}
-        <form method="GET" class="bg-white rounded border border-gray-300 p-3 mb-4 flex flex-wrap items-end gap-3">
-            <div class="min-w-[220px] flex-1 sm:flex-none">
+        <form method="GET" class="bg-white rounded border border-gray-300 p-3 mb-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-3" data-mobile-filters>
+            <div class="min-w-0 w-full flex-1 sm:w-auto sm:min-w-[220px] sm:flex-none">
                 <label class="block text-[11px] text-gray-500 mb-1">Cliente</label>
                 <select name="cliente_id" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
                     <option value="">Todos</option>
@@ -77,7 +77,7 @@
                     @endforeach
                 </select>
             </div>
-            <button type="submit" class="px-4 py-2.5 rounded text-[12px] font-bold uppercase tracking-wide text-white hover:opacity-90" style="background-color: #0b1f3a">Aplicar filtro</button>
+            <button type="submit" class="w-full sm:w-auto px-4 py-2.5 rounded text-[12px] font-bold uppercase tracking-wide text-white hover:opacity-90" style="background-color: #0b1f3a">Aplicar filtro</button>
             @if(! empty($filtros['cliente_id']))
                 <a href="{{ route('app.bi.cruzamentos') }}" data-link class="text-[12px] text-gray-500 hover:underline self-center">Limpar</a>
             @endif

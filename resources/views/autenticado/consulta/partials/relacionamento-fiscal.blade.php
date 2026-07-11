@@ -22,10 +22,10 @@
         </div>
         <div class="flex flex-col items-end gap-1 shrink-0">
             @if(!empty($fiscal) && !empty($fiscal['papel']))
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
+                <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
                       style="background-color: {{ $papelHex[$fiscal['papel']] ?? '#374151' }}">{{ $papelLabel[$fiscal['papel']] ?? '—' }}</span>
             @elseif(!empty($fiscal))
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
+                <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
                       style="background-color: #475569">Acervo próprio</span>
             @endif
             @if(!empty($fiscal['primeira_nota']) && !empty($fiscal['ultima_nota']))
@@ -46,7 +46,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-200 border-b border-slate-200">
             <div class="px-3.5 py-2.5">
                 <p class="text-[10px] uppercase tracking-wide text-slate-400">Entradas (comprado)</p>
-                <p class="text-base font-bold text-slate-900 font-mono leading-tight whitespace-nowrap">R$ {{ number_format($fiscal['total_comprado'], 2, ',', '.') }}</p>
+                <p class="text-base font-bold text-slate-900 font-mono leading-tight whitespace-nowrap">R$&nbsp;{{ number_format($fiscal['total_comprado'], 2, ',', '.') }}</p>
                 <div class="mt-1 h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
                     <div class="h-full rounded-full" style="width: {{ round(100 * (float) $fiscal['total_comprado'] / $pfMax) }}%; background-color: #2563eb"></div>
                 </div>
@@ -54,7 +54,7 @@
             </div>
             <div class="px-3.5 py-2.5">
                 <p class="text-[10px] uppercase tracking-wide text-slate-400">Saídas (vendido)</p>
-                <p class="text-base font-bold text-slate-900 font-mono leading-tight whitespace-nowrap">R$ {{ number_format($fiscal['total_vendido'], 2, ',', '.') }}</p>
+                <p class="text-base font-bold text-slate-900 font-mono leading-tight whitespace-nowrap">R$&nbsp;{{ number_format($fiscal['total_vendido'], 2, ',', '.') }}</p>
                 <div class="mt-1 h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
                     <div class="h-full rounded-full" style="width: {{ round(100 * (float) $fiscal['total_vendido'] / $pfMax) }}%; background-color: #0f766e"></div>
                 </div>
@@ -75,7 +75,7 @@
                             <span class="text-xs text-gray-700">
                                 Fornecedor: {{ $f['gera_credito'] }}.
                                 @if($f['credito_em_risco'] !== null)
-                                    <strong class="font-mono">R$ {{ number_format($f['credito_em_risco'], 2, ',', '.') }}</strong> em risco
+                                    <strong class="font-mono">R$&nbsp;{{ number_format($f['credito_em_risco'], 2, ',', '.') }}</strong> em risco
                                 @else
                                     <span class="text-gray-500">Regime do fornecedor não consultado — rode a consulta pra estimar o crédito.</span>
                                 @endif
@@ -88,7 +88,7 @@
                         <div class="flex items-center gap-2 mb-1">
                             <span class="inline-block w-2 h-2 rounded-full" style="background-color: {{ $crHex[$b['flag']] ?? '#6b7280' }}"></span>
                             <span class="text-xs text-gray-700">
-                                Você transfere <strong class="font-mono">R$ {{ number_format($b['credito_transferido'], 2, ',', '.') }}</strong> de crédito a este comprador (B2B).
+                                Você transfere <strong class="font-mono">R$&nbsp;{{ number_format($b['credito_transferido'], 2, ',', '.') }}</strong> de crédito a este comprador (B2B).
                             </span>
                         </div>
                     @endif
@@ -99,10 +99,10 @@
                     <details class="mt-1">
                         <summary class="text-[11px] text-blue-600 cursor-pointer select-none">Como calculamos ▸</summary>
                         @if($crTemRisco)
-                            <p class="text-[10px] text-gray-500 mt-1 font-mono">Potencial pleno: R$ {{ number_format($cr['fornecedor']['credito_potencial'], 2, ',', '.') }} · alíquota {{ number_format($cr['fornecedor']['aliquota'] * 100, 1, ',', '.') }}%</p>
+                            <p class="text-[10px] text-gray-500 mt-1 font-mono">Potencial pleno: R$&nbsp;{{ number_format($cr['fornecedor']['credito_potencial'], 2, ',', '.') }} · alíquota {{ number_format($cr['fornecedor']['aliquota'] * 100, 1, ',', '.') }}%</p>
                         @endif
                         @if($crTemLegado)
-                            <p class="text-[10px] text-gray-500 mt-1">Regime atual: <strong class="font-mono">R$ {{ number_format($cr['legado']['destacado'], 2, ',', '.') }}</strong> destacado nas entradas (ICMS+PIS+COFINS+IPI).</p>
+                            <p class="text-[10px] text-gray-500 mt-1">Regime atual: <strong class="font-mono">R$&nbsp;{{ number_format($cr['legado']['destacado'], 2, ',', '.') }}</strong> destacado nas entradas (ICMS+PIS+COFINS+IPI).</p>
                         @endif
                         @include('autenticado.consulta.partials._credito-reforma-metodologia')
                     </details>

@@ -64,17 +64,17 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                     <label class="flex flex-col items-start gap-1 p-3 border border-gray-300 rounded cursor-pointer transition tipo-doc-label has-[:checked]:border-gray-700 has-[:checked]:bg-gray-50 hover:border-gray-400" data-tipo="NFE">
                                         <input type="radio" name="tipo-documento" value="NFE" class="sr-only" checked>
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #0f766e">NF-e</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #0f766e">NF-e</span>
                                         <span class="text-[11px] text-gray-500 leading-tight">Nota Fiscal Eletrônica</span>
                                     </label>
                                     <label class="flex flex-col items-start gap-1 p-3 border border-gray-200 rounded cursor-not-allowed opacity-50 tipo-doc-label" data-tipo="NFSE">
                                         <input type="radio" name="tipo-documento" value="NFSE" class="sr-only" disabled>
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">NFS-e</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">NFS-e</span>
                                         <span class="text-[11px] text-gray-500 leading-tight">Nota Fiscal de Serviços <em>(não disponível)</em></span>
                                     </label>
                                     <label class="flex flex-col items-start gap-1 p-3 border border-gray-200 rounded cursor-not-allowed opacity-50 tipo-doc-label" data-tipo="CTE">
                                         <input type="radio" name="tipo-documento" value="CTE" class="sr-only" disabled>
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">CT-e</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">CT-e</span>
                                         <span class="text-[11px] text-gray-500 leading-tight">Conhecimento de Transporte <em>(não disponível)</em></span>
                                     </label>
                                 </div>
@@ -87,7 +87,7 @@
                                         <input type="radio" name="modo-envio" value="zip" class="sr-only">
                                         <div class="flex items-center gap-2">
                                             <span class="text-sm font-semibold text-gray-900">Arquivo ZIP</span>
-                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">50 MB</span>
+                                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">50 MB</span>
                                         </div>
                                         <span class="text-[11px] text-gray-500 leading-tight">Até 5.000 XMLs em um ZIP</span>
                                     </label>
@@ -95,7 +95,7 @@
                                         <input type="radio" name="modo-envio" value="xml" class="sr-only">
                                         <div class="flex items-center gap-2">
                                             <span class="text-sm font-semibold text-gray-900">XMLs Avulsos</span>
-                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">100 arq</span>
+                                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">100 arq</span>
                                         </div>
                                         <span class="text-[11px] text-gray-500 leading-tight">Até 100 arquivos por lote</span>
                                     </label>
@@ -255,8 +255,8 @@
                                 <div class="flex items-start justify-between gap-3">
                                     <div class="min-w-0">
                                         <div class="flex items-center gap-2 flex-wrap">
-                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $recentTipoBadge['hex'] }}">{{ $recentTipoBadge['label'] }}</span>
-                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $recentStatus['hex'] }}">{{ $recentStatus['label'] }}</span>
+                                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $recentTipoBadge['hex'] }}">{{ $recentTipoBadge['label'] }}</span>
+                                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $recentStatus['hex'] }}">{{ $recentStatus['label'] }}</span>
                                         </div>
                                         <p class="text-sm text-gray-900 mt-2 truncate">{{ $recentImp->filename ?? ('Importação #' . $recentImp->id) }}</p>
                                         <p class="text-[11px] text-gray-500 mt-1">
@@ -425,7 +425,7 @@
                         <div class="flex items-center justify-between mb-3 gap-3">
                             <div class="flex items-center gap-2">
                                 <h4 class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">CNPJs Novos Encontrados</h4>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706" id="cnpjs-novos-count-badge">0</span>
+                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706" id="cnpjs-novos-count-badge">0</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <button type="button" id="btn-selecionar-todos-cnpjs" class="text-[11px] text-gray-600 hover:text-gray-900 hover:underline font-medium">
@@ -538,7 +538,7 @@
                     <div id="resultado-notas-container" class="hidden px-4 py-4 border-b border-gray-200">
                         <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
                             <h4 class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas Fiscais</h4>
-                            <div class="flex gap-0 border border-gray-300 rounded overflow-hidden" id="notas-filtros">
+                            <div class="mobile-filter-scroll flex gap-0 border border-gray-300 rounded" id="notas-filtros">
                                 <button type="button" class="notas-filtro-btn px-2.5 py-1 text-[11px] bg-gray-800 text-white font-medium" data-filtro="todas">
                                     Todas <span id="notas-count-todas">0</span>
                                 </button>
@@ -578,7 +578,7 @@
                     <div id="resultado-participantes-container" class="hidden px-4 py-4 border-b border-gray-200">
                         <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
                             <h4 class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Participantes</h4>
-                            <div class="flex gap-0 border border-gray-300 rounded overflow-hidden" id="participantes-filtros">
+                            <div class="mobile-filter-scroll flex gap-0 border border-gray-300 rounded" id="participantes-filtros">
                                 <button type="button" class="part-filtro-btn px-2.5 py-1 text-[11px] bg-gray-800 text-white font-medium" data-filtro="todos">
                                     Todos <span id="part-count-todos">0</span>
                                 </button>
@@ -1003,7 +1003,7 @@
                 div.className = 'flex items-center justify-between p-2 rounded border ' +
                     (isError ? 'bg-white border-gray-300 border-l-4 border-l-red-500' : 'bg-white border-gray-200');
 
-                const badgeBase = 'px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white flex-shrink-0';
+                const badgeBase = 'whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white flex-shrink-0';
 
                 // Build status indicator HTML
                 let statusHtml = '';
@@ -1287,7 +1287,7 @@
 
         function buildBadgeHtml(label, hexColor, extraClasses) {
             const classes = extraClasses ? ' ' + extraClasses : '';
-            return '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white' + classes + '" style="background-color: ' + hexColor + '">' + label + '</span>';
+            return '<span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white' + classes + '" style="background-color: ' + hexColor + '">' + label + '</span>';
         }
 
         // Atualizar icone de status

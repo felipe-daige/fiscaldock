@@ -625,7 +625,9 @@
    Admin responsivo — comportamento compartilhado por /app/admin/*.
    =========================================================================== */
 .admin-page {
-    overflow-wrap: anywhere;
+    /* break-word (não anywhere): quebra token comprido (e-mail, hash) só quando não
+       couber, mas respeita NBSP — "R$ 931,00" nunca parte no meio. */
+    overflow-wrap: break-word;
 }
 
 .admin-subnav {
@@ -662,9 +664,223 @@
 
     .admin-dialog {
         width: calc(100vw - 1rem) !important;
+        max-width: calc(100vw - 1rem) !important;
         height: calc(100dvh - 1rem) !important;
         max-height: calc(100dvh - 1rem) !important;
         margin: auto;
+    }
+
+    .admin-users-table tbody {
+        padding: 0.5rem;
+    }
+
+    .admin-users-table .admin-user-card-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin: 0 0 0.75rem;
+        overflow: hidden;
+        border-color: #dbe2ea;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .admin-users-table .admin-user-card-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .admin-users-table .admin-user-card-row td[data-label] {
+        display: block;
+        padding: 0.625rem 0.75rem;
+        text-align: left;
+    }
+
+    .admin-users-table .admin-user-card-row td[data-label]::before {
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+
+    .admin-users-table .admin-user-card-row td[data-label] > * {
+        text-align: left;
+    }
+
+    .admin-users-table .admin-user-card__identity {
+        grid-column: 1 / -1;
+        padding: 0.75rem !important;
+        background-color: #f8fafc;
+        border-bottom: 1px solid #e5e7eb !important;
+    }
+
+    .admin-users-table .admin-user-card__identity::before {
+        display: none !important;
+    }
+
+    .admin-users-table .admin-user-card__identity > div {
+        width: 100%;
+        text-align: left !important;
+    }
+
+    .admin-users-table .admin-user-card__name {
+        min-height: 0;
+        line-height: 1.25rem;
+    }
+
+    .admin-users-table .admin-user-card__company {
+        grid-column: 1 / -1;
+        border-bottom: 1px solid #eef2f7 !important;
+    }
+
+    .admin-users-table .admin-user-card__plan,
+    .admin-users-table .admin-user-card__activity {
+        border-right: 1px solid #eef2f7 !important;
+    }
+
+    .admin-users-table .admin-user-card__plan,
+    .admin-users-table .admin-user-card__balance {
+        border-bottom: 1px solid #eef2f7 !important;
+    }
+
+    .admin-users-table .admin-user-card__actions {
+        grid-column: 1 / -1;
+        border-top: 1px solid #eef2f7 !important;
+        background-color: #f8fafc;
+    }
+
+    .admin-users-table .admin-user-card__actions > div {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        gap: 0.5rem;
+    }
+
+    .admin-users-table .admin-user-card-empty {
+        display: block;
+        margin: 0;
+    }
+}
+
+/* ===========================================================================
+   Filtros responsivos — contrato compartilhado das telas autenticadas.
+
+   `data-mobile-filters` mantém controles confortáveis para toque e evita o
+   zoom automático do iOS. As classes auxiliares cuidam de pares de ações e
+   seletores segmentados sem alterar o comportamento funcional dos filtros.
+   =========================================================================== */
+.mobile-filter-toggle {
+    display: none;
+}
+
+.mobile-filter-panel {
+    display: contents;
+}
+
+@media (max-width: 767px) {
+    .mobile-filters-enhanced {
+        display: block !important;
+    }
+
+    .mobile-filters-enhanced > .mobile-filter-toggle {
+        display: flex;
+        width: 100%;
+        min-height: 48px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        border: 0;
+        border-bottom: 1px solid #e5e7eb;
+        border-radius: 0.375rem 0.375rem 0 0;
+        background: #f9fafb;
+        color: #374151;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-align: left;
+    }
+
+    .mobile-filter-toggle__label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .mobile-filter-toggle__count {
+        display: inline-flex;
+        min-width: 1.25rem;
+        height: 1.25rem;
+        align-items: center;
+        justify-content: center;
+        padding: 0 0.375rem;
+        border-radius: 9999px;
+        background: #374151;
+        color: #fff;
+        font-size: 0.625rem;
+        line-height: 1;
+    }
+
+    .mobile-filter-toggle__chevron {
+        width: 1rem;
+        height: 1rem;
+        flex: 0 0 auto;
+        fill: none;
+        stroke: currentColor;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 2;
+        transition: transform 150ms ease;
+    }
+
+    .mobile-filters-enhanced > .mobile-filter-panel {
+        display: none;
+    }
+
+    .mobile-filters-enhanced.mobile-filters-open > .mobile-filter-panel {
+        display: contents;
+    }
+
+    .mobile-filters-open > .mobile-filter-toggle .mobile-filter-toggle__chevron {
+        transform: rotate(180deg);
+    }
+
+    .mobile-filter-panel > .mobile-filter-original-header {
+        display: none;
+    }
+
+    [data-mobile-filters] input:not([type="checkbox"]):not([type="radio"]),
+    [data-mobile-filters] select,
+    [data-mobile-filters] textarea,
+    [data-mobile-filters] [data-pop-toggle] {
+        min-width: 0;
+        max-width: 100%;
+        min-height: 44px;
+        font-size: 16px;
+    }
+
+    [data-mobile-filters] .mobile-filter-actions {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        gap: 0.5rem;
+    }
+
+    [data-mobile-filters] .mobile-filter-actions > * {
+        display: inline-flex;
+        min-width: 0;
+        min-height: 44px;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .mobile-filter-scroll {
+        max-width: 100%;
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .mobile-filter-scroll > * {
+        flex: 0 0 auto;
+        min-height: 40px;
     }
 }
 

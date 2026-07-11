@@ -68,7 +68,7 @@
                                     <td class="px-3 py-3" data-label="Consultas">
                                         <div class="flex flex-wrap gap-1">
                                             @foreach($consulta->getConsultasRealizadas() as $tipo)
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
+                                                <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
                                                       style="background-color: #374151">
                                                     {{ str_replace('_', ' ', ucfirst($tipo)) }}
                                                 </span>
@@ -77,13 +77,13 @@
                                     </td>
                                     <td class="px-3 py-3 whitespace-nowrap text-center" data-label="Status">
                                         @if($consulta->isSucesso())
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
+                                            <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
                                                   style="background-color: #047857">Sucesso</span>
                                         @elseif($consulta->isErro())
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
+                                            <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
                                                   style="background-color: #b91c1c">Erro</span>
                                         @else
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
+                                            <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
                                                   style="background-color: #d97706">Pendente</span>
                                         @endif
                                         @if($consulta->getMensagemExibivel())

@@ -1,4 +1,4 @@
-@php $fmt = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.'); $imp = $movimentacao['impostos']; @endphp
+@php $fmt = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.'); $imp = $movimentacao['impostos']; @endphp
 
 @if($consulta['tem'] && !empty($consulta['blocos']))
 <div class="secao">

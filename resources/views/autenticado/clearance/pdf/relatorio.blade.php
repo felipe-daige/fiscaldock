@@ -1,6 +1,6 @@
 @php
     /** @var array $r */
-    $fmt = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
+    $fmt = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
     $sevHex = [
         'critica' => \App\Support\Reports\ReportTheme::IRREGULAR,
         'revisar' => \App\Support\Reports\ReportTheme::ALERTA,
@@ -156,7 +156,7 @@
         <div class="secao">
             <div class="secao-header">Anexo — Documentos sem Divergência <span class="meta">{{ $r['sem_divergencia']->count() }}</span></div>
             <div class="secao-body">
-                <div class="muted small" style="margin-bottom:4px;">Evidência de cobertura: documentos auditados que conferem com a SEFAZ dentro da tolerância de ruído (R$ {{ number_format($r['metodologia']['tolerancia_absoluta'], 2, ',', '.') }} ou {{ $r['metodologia']['tolerancia_percentual'] }}%).</div>
+                <div class="muted small" style="margin-bottom:4px;">Evidência de cobertura: documentos auditados que conferem com a SEFAZ dentro da tolerância de ruído (R$&nbsp;{{ number_format($r['metodologia']['tolerancia_absoluta'], 2, ',', '.') }} ou {{ $r['metodologia']['tolerancia_percentual'] }}%).</div>
                 <table class="table">
                     <thead><tr><th>Documento</th><th>Emitente</th><th class="right">Valor</th></tr></thead>
                     <tbody>
@@ -179,7 +179,7 @@
         <div class="secao-body">
             <div class="muted" style="font-size:8px;">
                 <strong>Fonte da verdade:</strong> consulta à Receita Federal via InfoSimples (Declarado × SEFAZ por chave de acesso).
-                <strong>Tolerância de ruído:</strong> R$ {{ number_format($r['metodologia']['tolerancia_absoluta'], 2, ',', '.') }} ou {{ $r['metodologia']['tolerancia_percentual'] }}%.
+                <strong>Tolerância de ruído:</strong> R$&nbsp;{{ number_format($r['metodologia']['tolerancia_absoluta'], 2, ',', '.') }} ou {{ $r['metodologia']['tolerancia_percentual'] }}%.
                 <strong>Severidade:</strong> crítica (ação imediata) / a revisar (análise recomendada).
                 A exposição fiscal é <strong>estimativa</strong> e não substitui parecer formal; a multa de ofício segue o art. 44, I da Lei 9.430/96 e o prazo decadencial o art. 173, I do CTN.
                 Integridade verificável pelo hash SHA-256 no cabeçalho.

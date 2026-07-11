@@ -51,7 +51,7 @@
                 </div>
             </div>
 
-            <form id="form-filtros-clientes" method="GET" action="/app/clientes" class="bg-white rounded border border-gray-300 overflow-hidden">
+            <form id="form-filtros-clientes" method="GET" action="/app/clientes" class="bg-white rounded border border-gray-300 overflow-hidden" data-mobile-filters>
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                     <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
                 </div>
@@ -178,7 +178,7 @@
                         </div>
                     </div>
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4 pt-4 border-t border-gray-200">
-                        <div class="flex items-center gap-2">
+                        <div class="mobile-filter-actions flex items-center gap-2">
                             <button type="submit" class="bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium px-4 py-2">Filtrar</button>
                             <a href="/app/clientes" data-link class="bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded text-sm font-medium px-4 py-2">Limpar</a>
                         </div>
@@ -287,11 +287,11 @@
                                                 >
                                                     {{ $cliente->razao_social ?? $cliente->nome ?? '-' }}
                                                 </a>
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white flex-shrink-0" style="background-color: {{ $cliente->tipo_pessoa === 'PJ' ? '#374151' : '#9ca3af' }}">
+                                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white flex-shrink-0" style="background-color: {{ $cliente->tipo_pessoa === 'PJ' ? '#374151' : '#9ca3af' }}">
                                                     {{ $cliente->tipo_pessoa }}
                                                 </span>
                                                 @if($cliente->is_empresa_propria)
-                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white flex-shrink-0" style="background-color: #047857">Empresa Própria</span>
+                                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white flex-shrink-0" style="background-color: #047857">Empresa Própria</span>
                                                 @endif
                                             </div>
                                             @if($cliente->nome_fantasia)
@@ -330,7 +330,7 @@
                                         <td class="px-3 py-3 text-right align-middle">
                                             @if(($cliente->mov_qtd ?? 0) > 0)
                                                 <div class="text-sm font-semibold text-gray-900 whitespace-nowrap" title="Valor total movimentado nas notas desta empresa (EFD + XML, sem duplicar a mesma nota; entradas + saídas)">
-                                                    R$ {{ number_format($cliente->mov_valor, 2, ',', '.') }}
+                                                    R$&nbsp;{{ number_format($cliente->mov_valor, 2, ',', '.') }}
                                                 </div>
                                                 <div class="text-[11px] mt-0.5 whitespace-nowrap">
                                                     <span style="color:#2563eb" title="Entradas (compras)">↓ {{ number_format($cliente->mov_entradas, 0, ',', '.') }}</span>
@@ -351,16 +351,16 @@
                                             <div class="flex flex-col items-center gap-1" title="{{ $cliente->situacao_cadastral ?? '' }}">
                                                 <div class="flex items-center justify-center gap-1.5 flex-wrap">
                                                     @if(($cliente->situacao_cadastral ?? '') === 'ATIVA')
-                                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857" title="Situação cadastral (Receita Federal)">Ativa</span>
+                                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857" title="Situação cadastral (Receita Federal)">Ativa</span>
                                                     @elseif($cliente->situacao_cadastral)
-                                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #d97706" title="Situação cadastral (Receita Federal)">{{ $cliente->situacao_cadastral }}</span>
+                                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #d97706" title="Situação cadastral (Receita Federal)">{{ $cliente->situacao_cadastral }}</span>
                                                     @else
-                                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #9ca3af" title="Situação cadastral">{{ $cliente->ativo ? 'Ativo' : 'Inativo' }}</span>
+                                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #9ca3af" title="Situação cadastral">{{ $cliente->ativo ? 'Ativo' : 'Inativo' }}</span>
                                                     @endif
                                                     @forelse($cliente->certidoes_badges ?? [] as $b)
-                                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: {{ $b['hex'] }}" title="{{ $b['titulo'] }}: {{ $b['label'] }}">{{ $b['curto'] }}</span>
+                                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: {{ $b['hex'] }}" title="{{ $b['titulo'] }}: {{ $b['label'] }}">{{ $b['curto'] }}</span>
                                                     @empty
-                                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #9ca3af">Sem certidões consultadas</span>
+                                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #9ca3af">Sem certidões consultadas</span>
                                                     @endforelse
                                                 </div>
                                             </div>

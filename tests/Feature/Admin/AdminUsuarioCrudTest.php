@@ -107,8 +107,9 @@ it('admin altera plano local do usuário e o entitlement passa a usar o plano at
             'subscription_plan_id' => $profissional->id,
             'status' => 'ativa',
             'ciclo' => 'mensal',
-            'creditos_inclusos_saldo' => '1100.00',
-            'limite_consumo_automatico' => '500.00',
+            // Digitados em R$ — o controller converte pra unidade do ledger (÷ 0,20).
+            'creditos_inclusos_saldo' => '220.00',
+            'limite_consumo_automatico' => '100.00',
             'assentos_extras' => '1.00',
             'motivo' => 'upgrade manual',
         ])

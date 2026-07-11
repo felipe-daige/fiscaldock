@@ -156,7 +156,7 @@ class CreditService
                 $amount,
                 $freshUser->credits,
                 'trial_bonus',
-                sprintf('Bônus de boas-vindas: %d créditos grátis válidos até %s.', $amount, $expiresAt->format('d/m/Y H:i')),
+                sprintf('Bônus de boas-vindas: R$ %s de saldo grátis válido até %s.', number_format(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($amount), 2, ',', '.'), $expiresAt->format('d/m/Y H:i')),
                 null
             );
         });

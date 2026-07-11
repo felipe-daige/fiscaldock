@@ -126,7 +126,7 @@
                                             @endif
                                         </td>
                                         <td class="right">
-                                            <div style="font-weight:bold;">R$ {{ $it['volume_brl'] }}</div>
+                                            <div style="font-weight:bold;">R$&nbsp;{{ $it['volume_brl'] }}</div>
                                             <div style="background:#f3f4f6;height:5px;width:100%;">
                                                 <div style="background-color:#2563eb;height:5px;width:{{ $maxVol > 0 ? (int) round($it['volume'] / $maxVol * 100) : 0 }}%;"></div>
                                             </div>

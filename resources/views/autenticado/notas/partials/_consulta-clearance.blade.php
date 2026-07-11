@@ -27,7 +27,7 @@
 
     // Helpers de exibição — o snapshot InfoSimples traz cada valor como string crua ("") +
     // uma versão `normalizado_*` numérica. Preferimos a normalizada; caímos na crua.
-    $brl = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
+    $brl = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
     $temTexto = fn ($v) => $v !== null && trim((string) $v) !== '';
     $ov = function ($v, $default = '—') use ($temTexto) { return $temTexto($v) ? $v : $default; };
     $docFmt = function ($doc) {
@@ -145,7 +145,7 @@
     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-2">
         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resultado da Consulta · Clearance {{ ($consulta && $isCte) ? 'CT-e' : 'NF-e' }}</span>
         @if($consulta)
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $situacaoBadge[$status] ?? '#374151' }}">
+            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $situacaoBadge[$status] ?? '#374151' }}">
                 {{ $situacaoLabel[$status] ?? ($status ?: 'Consultada') }}
             </span>
         @else

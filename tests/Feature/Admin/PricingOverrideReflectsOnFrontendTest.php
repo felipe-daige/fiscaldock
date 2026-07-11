@@ -24,16 +24,16 @@ beforeEach(function () {
 it('a landing /precos reflete o depósito mínimo e o preço de produto do override', function () {
     get('/precos')
         ->assertOk()
-        ->assertSee('R$ 80 para ativar o primeiro saldo')
-        ->assertSee('R$ 6,00/consulta')
-        ->assertDontSee('R$ 5,00/consulta');
+        ->assertSee('R$&nbsp;80 para ativar o primeiro saldo', false)
+        ->assertSee("R$\u{A0}6,00/consulta")
+        ->assertDontSee("R$\u{A0}5,00/consulta");
 });
 
 it('a tela /app/consulta/nova reflete o preço de produto do override', function () {
     actingAs(User::factory()->create())
-        ->get('/app/consulta/nova')
+        ->get('/app/consulta/painel')
         ->assertOk()
-        ->assertSee('R$ 6,00')
+        ->assertSee("R$\u{A0}6,00")
         ->assertSee('data-custo="30"', false);
 });
 
@@ -43,6 +43,6 @@ it('a tela /app/planos reflete o preço por crédito do override (via saldo incl
     actingAs(User::factory()->create())
         ->get('/app/planos')
         ->assertOk()
-        ->assertSee('R$ 75,00 em saldo/mês')      // 300 créditos inclusos × R$0,25 (override)
-        ->assertDontSee('R$ 60,00 em saldo/mês');  // valor com o peg padrão R$0,20
+        ->assertSee("R$\u{A0}75,00 em saldo/mês")      // 300 créditos inclusos × R$0,25 (override)
+        ->assertDontSee("R$\u{A0}60,00 em saldo/mês");  // valor com o peg padrão R$0,20
 });

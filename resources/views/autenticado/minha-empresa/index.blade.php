@@ -250,7 +250,7 @@
                 ['label' => 'NATUREZA JURÍDICA', 'valor' => $dadosConsulta['natureza_juridica'] ?? null],
                 ['label' => 'PORTE', 'valor' => $dadosConsulta['porte'] ?? null],
                 ['label' => 'REGIME TRIBUTÁRIO', 'valor' => $dadosConsulta['regime_tributario'] ?? null],
-                ['label' => 'CAPITAL SOCIAL', 'valor' => is_numeric($capital) ? 'R$ '.number_format((float) $capital, 2, ',', '.') : null],
+                ['label' => 'CAPITAL SOCIAL', 'valor' => is_numeric($capital) ? 'R$ '.number_format((float) $capital, 2, ',', '.') : null],
                 ['label' => 'MATRIZ / FILIAL', 'valor' => isset($dadosConsulta['matriz_filial']) ? mb_strtoupper((string) $dadosConsulta['matriz_filial']) : null],
                 ['label' => 'INÍCIO DE ATIVIDADE', 'valor' => ! empty($dadosConsulta['data_inicio_atividade']) ? \Carbon\Carbon::parse($dadosConsulta['data_inicio_atividade'])->format('d/m/Y') : null],
             ], fn ($r) => ! empty($r['valor'])));

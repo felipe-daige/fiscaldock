@@ -75,7 +75,7 @@ class FecharRetryService
                 $lote->user,
                 $estorno,
                 type: 'consulta_retry_refund',
-                description: "Estorno de {$estorno} crédito(s) — reconsulta sem sucesso no lote #{$lote->id}",
+                description: 'Estorno de R$ '.number_format(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($estorno), 2, ',', '.')." — reconsulta sem sucesso no lote #{$lote->id}",
                 source: $lote,
             );
         }

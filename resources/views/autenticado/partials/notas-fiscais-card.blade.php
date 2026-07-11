@@ -117,7 +117,7 @@
                                 </td>
                             @endif
                             <td class="px-2 py-2 text-xs font-semibold text-gray-900 text-right whitespace-nowrap">
-                                R$ {{ number_format($n['valor_total'], 2, ',', '.') }}
+                                R$&nbsp;{{ number_format($n['valor_total'], 2, ',', '.') }}
                             </td>
                             <td class="px-2 py-2 text-center">
                                 <button type="button" class="nf-card-expand-btn inline-flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors p-1" data-origem="{{ $n['origem'] }}" data-id="{{ $n['id'] }}" title="Ver detalhes">
@@ -154,9 +154,9 @@
                 <div class="px-4 py-3 nf-card-mobile cursor-pointer" data-origem="{{ $n['origem'] }}" data-id="{{ $n['id'] }}">
                     <div class="flex items-start justify-between gap-2 mb-2">
                         <div class="flex items-center gap-2 flex-wrap">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: {{ $origemHex }}">{{ $origemLabel }}</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #374151">{{ $modeloLabel }}</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: {{ $tipoHex }}">{{ $tipoLabel }}</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: {{ $origemHex }}">{{ $origemLabel }}</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #374151">{{ $modeloLabel }}</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: {{ $tipoHex }}">{{ $tipoLabel }}</span>
                         </div>
                         <button type="button" class="nf-card-expand-btn text-gray-400 hover:text-gray-700 p-2 -mr-2 min-w-[40px] min-h-[40px] flex items-center justify-center" data-origem="{{ $n['origem'] }}" data-id="{{ $n['id'] }}">
                             <svg class="w-5 h-5 nf-card-expand-icon transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,7 +166,7 @@
                     </div>
                     <div class="flex items-baseline justify-between gap-2 min-w-0">
                         <span class="text-sm font-mono font-medium text-gray-900 truncate">{{ $numero }}{{ $serie }}</span>
-                        <span class="text-sm font-semibold text-gray-900 whitespace-nowrap">R$ {{ number_format($n['valor_total'], 2, ',', '.') }}</span>
+                        <span class="text-sm font-semibold text-gray-900 whitespace-nowrap">R$&nbsp;{{ number_format($n['valor_total'], 2, ',', '.') }}</span>
                     </div>
                     <div class="flex items-center justify-between mt-1 gap-2">
                         <span class="text-xs text-gray-500">{{ $dataFormatada }}</span>

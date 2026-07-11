@@ -77,11 +77,9 @@ class AdminUsuarioAcaoController extends Controller
             'renova_em' => ['nullable', 'date'],
             'proximo_grant_em' => ['nullable', 'date'],
             'ultimo_grant_em' => ['nullable', 'date'],
-            // O PostgreSQL pode devolver esses inteiros como strings decimais (ex.: "0.00")
-            // nas consultas cruas usadas pelo modal da listagem. Aceitar a representação
-            // numérica, mas continuar impedindo valores fracionários.
-            'creditos_inclusos_saldo' => ['nullable', 'numeric', 'min:0', 'multiple_of:1'],
-            'limite_consumo_automatico' => ['nullable', 'numeric', 'min:0', 'multiple_of:1'],
+            // Digitados em R$ no modal — convertidos pra unidade do ledger abaixo.
+            'creditos_inclusos_saldo' => ['nullable', 'numeric', 'min:0'],
+            'limite_consumo_automatico' => ['nullable', 'numeric', 'min:0'],
             'assentos_extras' => ['nullable', 'numeric', 'min:0', 'multiple_of:1'],
             'mp_preapproval_id' => [
                 'nullable',
@@ -91,6 +89,13 @@ class AdminUsuarioAcaoController extends Controller
             ],
             'motivo' => ['required', 'string', 'min:3', 'max:500'],
         ]);
+
+        $precos = app(\App\Services\PricingCatalogService::class);
+        foreach (['creditos_inclusos_saldo', 'limite_consumo_automatico'] as $campoReais) {
+            if (isset($dados[$campoReais])) {
+                $dados[$campoReais] = $precos->currencyToCredits((float) $dados[$campoReais]);
+            }
+        }
 
         $plano = isset($dados['subscription_plan_id'])
             ? SubscriptionPlan::find((int) $dados['subscription_plan_id'])

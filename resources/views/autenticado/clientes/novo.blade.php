@@ -415,12 +415,12 @@
                         {{-- Tipo --}}
                         <div class="flex items-center gap-2">
                             <span id="preview-badge"
-                                class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
+                                class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
                                 style="background-color: {{ $tipoPessoa === 'PJ' ? '#374151' : '#9ca3af' }}">
                                 {{ $tipoPessoa }}
                             </span>
                             <span id="preview-empresa-propria"
-                                class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white {{ ($isEditing && $cliente->is_empresa_propria) ? '' : 'hidden' }}"
+                                class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white {{ ($isEditing && $cliente->is_empresa_propria) ? '' : 'hidden' }}"
                                 style="background-color: #047857">
                                 Empresa Própria
                             </span>
@@ -604,7 +604,7 @@
             nomeRequired.classList.add('hidden');
             docInput.placeholder = '00.000.000/0000-00';
             previewBadge.textContent = 'PJ';
-            previewBadge.className = 'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white';
+            previewBadge.className = 'whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white';
             previewBadge.style.backgroundColor = '#374151';
             pjOnlyFields.forEach(function(id) {
                 var el = document.getElementById(id);
@@ -622,7 +622,7 @@
             nomeRequired.classList.remove('hidden');
             docInput.placeholder = '000.000.000-00';
             previewBadge.textContent = 'PF';
-            previewBadge.className = 'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white';
+            previewBadge.className = 'whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white';
             previewBadge.style.backgroundColor = '#9ca3af';
             pjOnlyFields.forEach(function(id) {
                 var el = document.getElementById(id);

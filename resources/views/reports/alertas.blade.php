@@ -5,7 +5,7 @@
 @section('meta')
     <div>{{ $total }} {{ $total === 1 ? 'alerta' : 'alertas' }}</div>
     @if(($valorRiscoTotal ?? 0) > 0)
-        <div>R$ {{ number_format($valorRiscoTotal, 2, ',', '.') }} em risco</div>
+        <div>R$&nbsp;{{ number_format($valorRiscoTotal, 2, ',', '.') }} em risco</div>
     @endif
 @endsection
 
@@ -19,7 +19,7 @@
         'media' => ['label' => 'Média', 'hex' => ReportTheme::ALERTA],
         'baixa' => ['label' => 'Baixa', 'hex' => ReportTheme::NEUTRO],
     ];
-    $fmtRs = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
+    $fmtRs = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
     $valorRiscoTotal = $valorRiscoTotal ?? 0;
 @endphp
 

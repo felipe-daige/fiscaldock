@@ -45,16 +45,16 @@
                                     <span class="font-semibold text-gray-900">{{ $p->nome }}</span>
                                     <span class="block text-[11px] text-gray-400">{{ $p->codigo }}</span>
                                 </td>
-                                <td class="px-3 py-2.5 text-right text-gray-700" data-label="Mensal">{{ $p->preco_mensal_centavos > 0 ? 'R$ '.number_format($p->preco_mensal_centavos / 100, 2, ',', '.') : '—' }}</td>
+                                <td class="px-3 py-2.5 text-right text-gray-700" data-label="Mensal">{{ $p->preco_mensal_centavos > 0 ? 'R$ '.number_format($p->preco_mensal_centavos / 100, 2, ',', '.') : '—' }}</td>
                                 <td class="px-3 py-2.5 text-right text-gray-700" data-label="Saldo incluso/mês">{{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $p->creditos_inclusos)) }}</td>
                                 <td class="px-3 py-2.5 text-right text-gray-700" data-label="Clientes">{{ $fmtLim($p->limite_clientes) }}</td>
                                 <td class="px-3 py-2.5 text-right text-gray-700" data-label="Monitorados">{{ $fmtLim($p->limite_cnpjs_monitorados) }}</td>
                                 <td class="px-3 py-2.5 text-gray-700" data-label="Profundidade">{{ $p->profundidade_auto_monitor ?? '—' }}</td>
                                 <td class="px-3 py-2.5 text-center" data-label="Ativo">
                                     @if($p->is_active)
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase text-white" style="background-color: #047857">Ativo</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase text-white" style="background-color: #047857">Ativo</span>
                                     @else
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase text-white" style="background-color: #6b7280">Inativo</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase text-white" style="background-color: #6b7280">Inativo</span>
                                     @endif
                                 </td>
                                 <td class="px-3 py-2.5 text-right" data-label="Ações">

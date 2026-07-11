@@ -37,13 +37,13 @@
                             $catLabel = $catLabels[$alerta->categoria ?? ''] ?? \Str::title(str_replace('_', ' ', $alerta->categoria));
                         @endphp
                         
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $sevClass }}">
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $sevClass }}">
                             Severidade {{ $sevLabel }}
                         </span>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
                             {{ $catLabel }}
                         </span>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">
                             {{ $alerta->created_at->format('d/m/Y H:i') }}
                         </span>
                     </div>
@@ -218,7 +218,7 @@
                         <span class="mt-1.5 w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: {{ $hex }}"></span>
                         <div class="min-w-0 flex-1">
                             <div class="flex flex-wrap items-center gap-2">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $hex }}">{{ $ev->acaoLabel() }}</span>
+                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $hex }}">{{ $ev->acaoLabel() }}</span>
                                 <span class="text-[11px] text-gray-500">por <span class="font-medium text-gray-700">{{ $ev->atorLabel() }}</span> · {{ $ev->created_at?->format('d/m/Y H:i') }}</span>
                             </div>
                             @if($ev->notas)
@@ -251,7 +251,7 @@
                             <span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: {{ $hex }}"></span>
                             <span class="text-sm font-medium text-gray-900">{{ $cert['label'] ?? '—' }}</span>
                         </div>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $hex }}">{{ $cert['status'] ?? 'Positiva' }}</span>
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $hex }}">{{ $cert['status'] ?? 'Positiva' }}</span>
                     </div>
                 @endforeach
             </div>
@@ -262,17 +262,17 @@
                 <div class="grid grid-cols-3 gap-3">
                     <div>
                         <p class="text-[10px] text-gray-400 uppercase tracking-wide">Últimos 12 meses</p>
-                        <p class="text-sm font-bold text-gray-900">R$ {{ number_format((float) ($detCert['valor_12m'] ?? 0), 2, ',', '.') }}</p>
+                        <p class="text-sm font-bold text-gray-900">R$&nbsp;{{ number_format((float) ($detCert['valor_12m'] ?? 0), 2, ',', '.') }}</p>
                         <p class="text-[10px] text-gray-400">risco corrente</p>
                     </div>
                     <div>
                         <p class="text-[10px] text-gray-400 uppercase tracking-wide">Últimos 5 anos</p>
-                        <p class="text-sm font-bold" style="color:#b45309;">R$ {{ number_format((float) ($detCert['valor_5anos'] ?? 0), 2, ',', '.') }}</p>
+                        <p class="text-sm font-bold" style="color:#b45309;">R$&nbsp;{{ number_format((float) ($detCert['valor_5anos'] ?? 0), 2, ',', '.') }}</p>
                         <p class="text-[10px] text-gray-400">sujeito a glosa (decadência)</p>
                     </div>
                     <div>
                         <p class="text-[10px] text-gray-400 uppercase tracking-wide">Total histórico</p>
-                        <p class="text-sm font-bold text-gray-900">R$ {{ number_format($vTotal, 2, ',', '.') }}</p>
+                        <p class="text-sm font-bold text-gray-900">R$&nbsp;{{ number_format($vTotal, 2, ',', '.') }}</p>
                         <p class="text-[10px] text-gray-400">{{ (int) ($detCert['qtd_notas'] ?? 0) }} nota(s)</p>
                     </div>
                 </div>
@@ -352,9 +352,9 @@
                     $valStr = (string)$valor;
                     if(strlen($valStr) == 8) {
                         $formatado = preg_replace('/(\d{4})(\d{2})(\d{2})/', '$1.$2.$3', $valStr);
-                        return '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca" title="Nomenclatura Comum do Mercosul">' . $formatado . '</span>';
+                        return '<span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca" title="Nomenclatura Comum do Mercosul">' . $formatado . '</span>';
                     }
-                    return '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">' . $valor . '</span>';
+                    return '<span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">' . $valor . '</span>';
                 }
 
                 // Destaque para descrição de Produto
@@ -485,13 +485,13 @@
                         Registros Afetados
                     </h3>
                     <div class="flex items-center gap-2">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
                             {{ $alerta->total_afetados ?? count($isList ? $dados : [$dados]) }} registro(s)
                         </span>
                         @if($hasImpact)
-                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857" title="Impacto Financeiro Estimado (somatório)">
+                        <span class="whitespace-nowrap inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857" title="Impacto Financeiro Estimado (somatório)">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            R$ {{ number_format($impactoFinanceiro, 2, ',', '.') }}
+                            R$&nbsp;{{ number_format($impactoFinanceiro, 2, ',', '.') }}
                         </span>
                         @endif
                     </div>

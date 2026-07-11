@@ -7,7 +7,7 @@
     $r = $relatorio['resumo'];
     $b = $relatorio['backlog'];
 
-    $brl = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
+    $brl = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
     $int = fn ($v) => number_format((float) $v, 0, ',', '.');
 
     // Formata a célula conforme o formato declarado pela seção (mesma fonte do XLSX).
@@ -64,7 +64,7 @@
             @endif
             @if (($b['notas'] ?? 0) > 0)
                 <span style="color:#92400e;font-size:9px;display:block;">
-                    &#9888; {{ $int($b['notas']) }} nota(s) sem verificação na Receita — verificar todas custa ~{{ $int($b['custo_creditos']) }} créditos ({{ $brl($b['custo_reais']) }}).
+                    &#9888; {{ $int($b['notas']) }} nota(s) sem verificação na Receita — verificar todas custa ~{{ $brl($b['custo_reais']) }}.
                 </span>
             @endif
         </div>

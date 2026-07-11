@@ -69,7 +69,7 @@
                 <div class="p-4 sm:p-6 space-y-4">
                     <div>
                         <p class="text-sm font-semibold text-gray-900">Deposite o valor que fizer sentido agora</p>
-                        <p class="text-sm text-gray-600 mt-1">Mínimo de R$ {{ number_format($pricing['minimum_deposit'] ?? 100, 0, ',', '.') }}. O valor entra como saldo pré-pago e o histórico comprado continua contando para a sua faixa.</p>
+                        <p class="text-sm text-gray-600 mt-1">Mínimo de R$&nbsp;{{ number_format($pricing['minimum_deposit'] ?? 100, 0, ',', '.') }}. O valor entra como saldo pré-pago e o histórico comprado continua contando para a sua faixa.</p>
                     </div>
                     <form method="GET" action="/app/checkout/custom" class="space-y-3">
                         <div>
@@ -113,7 +113,7 @@
                                         <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">{{ $pacote['usage_hint'] ?? 'Oferta' }}</p>
                                         <p class="text-sm font-semibold text-gray-900 mt-1">{{ $pacote['nome'] }}</p>
                                     </div>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ !empty($pacote['featured']) ? '#0f766e' : '#374151' }}">{{ $pacote['badge'] ?? 'Oferta' }}</span>
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ !empty($pacote['featured']) ? '#0f766e' : '#374151' }}">{{ $pacote['badge'] ?? 'Oferta' }}</span>
                                 </div>
                                 <p class="text-2xl font-bold text-gray-900">@brl($pacote['preco'])</p>
                                 <p class="text-[11px] text-gray-500">{{ $pacote['descricao'] ?? 'Saldo pré-pago para uso conforme a necessidade.' }}</p>
@@ -141,9 +141,9 @@
                             quando o saldo cai abaixo de
                             <span class="font-semibold">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $recargaAtual->limite_creditos))</span>.
                             @if($recargaAtual->status === 'inadimplente')
-                                <span class="ml-2 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">Pausada</span>
+                                <span class="whitespace-nowrap ml-2 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">Pausada</span>
                             @else
-                                <span class="ml-2 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Ativa</span>
+                                <span class="whitespace-nowrap ml-2 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Ativa</span>
                             @endif
                         </div>
                         <button type="button" id="recarga-cancelar" class="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancelar recarga</button>
@@ -160,9 +160,9 @@
                         <div class="text-sm text-gray-700">
                             Recompra de <span class="font-semibold">@brl($recargaAtual->valor)</span> todo mês.
                             @if($recargaAtual->status === 'inadimplente')
-                                <span class="ml-2 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">Pagamento pendente</span>
+                                <span class="whitespace-nowrap ml-2 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">Pagamento pendente</span>
                             @else
-                                <span class="ml-2 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Ativa</span>
+                                <span class="whitespace-nowrap ml-2 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Ativa</span>
                             @endif
                         </div>
                         <button type="button" id="recarga-cancelar" class="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancelar recarga</button>
@@ -175,7 +175,7 @@
                             <label for="recarga-pacote" class="block text-[11px] text-gray-500 mb-1">Pacote mensal</label>
                             <select id="recarga-pacote" class="text-[13px] py-2.5 px-3 border border-gray-300 rounded bg-white">
                                 @foreach(($pricing['featured_offers'] ?? []) as $pac)
-                                    <option value="{{ $pac['slug'] }}" data-valor="{{ $pac['preco'] }}">{{ $pac['nome'] }} — R$ {{ number_format($pac['preco'], 0, ',', '.') }}/mês</option>
+                                    <option value="{{ $pac['slug'] }}" data-valor="{{ $pac['preco'] }}">{{ $pac['nome'] }} — R$&nbsp;{{ number_format($pac['preco'], 0, ',', '.') }}/mês</option>
                                 @endforeach
                             </select>
                         </div>
@@ -215,7 +215,7 @@
                                 <tr class="hover:bg-gray-50/50 transition-colors">
                                     <td class="px-3 py-2.5 text-sm text-gray-700 whitespace-nowrap">{{ $tx->created_at->format('d/m/Y H:i') }}</td>
                                     <td class="px-3 py-2.5 text-sm" data-label="Tipo">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badge['hex'] }}">{{ $badge['label'] }}</span>
+                                        <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badge['hex'] }}">{{ $badge['label'] }}</span>
                                     </td>
                                     <td class="px-3 py-2.5 text-sm text-gray-600" data-label="Descrição">{{ $tx->description ?? '-' }}</td>
                                     <td class="px-3 py-2.5 text-sm text-right font-semibold {{ $amountClass }}" data-label="Valor (R$)">{{ $amountPrefix }}@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) abs($tx->amount)))</td>

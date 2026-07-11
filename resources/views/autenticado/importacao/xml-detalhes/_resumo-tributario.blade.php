@@ -10,18 +10,18 @@
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-x divide-y lg:divide-y-0 divide-gray-200 border-b border-gray-200">
         <div class="px-4 py-3">
             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Valor Total</p>
-            <p class="text-lg font-bold text-gray-900">R$ {{ number_format($rt['valor_total'], 2, ',', '.') }}</p>
+            <p class="text-lg font-bold text-gray-900">R$&nbsp;{{ number_format($rt['valor_total'], 2, ',', '.') }}</p>
             <p class="text-[11px] text-gray-500">{{ number_format($rt['qtd']) }} {{ $rt['qtd'] == 1 ? 'nota' : 'notas' }}</p>
         </div>
         <div class="px-4 py-3">
             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Entradas</p>
             <p class="text-lg font-bold text-gray-900">{{ number_format($rt['entradas']) }}</p>
-            <p class="text-[11px] text-gray-500">R$ {{ number_format($rt['valor_entradas'], 2, ',', '.') }}</p>
+            <p class="text-[11px] text-gray-500">R$&nbsp;{{ number_format($rt['valor_entradas'], 2, ',', '.') }}</p>
         </div>
         <div class="px-4 py-3">
             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Saídas</p>
             <p class="text-lg font-bold text-gray-900">{{ number_format($rt['saidas']) }}</p>
-            <p class="text-[11px] text-gray-500">R$ {{ number_format($rt['valor_saidas'], 2, ',', '.') }}</p>
+            <p class="text-[11px] text-gray-500">R$&nbsp;{{ number_format($rt['valor_saidas'], 2, ',', '.') }}</p>
         </div>
         <div class="px-4 py-3">
             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Devoluções</p>
@@ -30,12 +30,12 @@
         </div>
         <div class="px-4 py-3">
             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Ticket Médio</p>
-            <p class="text-lg font-bold text-gray-900">R$ {{ number_format($rt['ticket_medio'], 2, ',', '.') }}</p>
+            <p class="text-lg font-bold text-gray-900">R$&nbsp;{{ number_format($rt['ticket_medio'], 2, ',', '.') }}</p>
             <p class="text-[11px] text-gray-500">por nota</p>
         </div>
         <div class="px-4 py-3">
             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Descontos</p>
-            <p class="text-lg font-bold text-gray-900">R$ {{ number_format($rt['desconto'], 2, ',', '.') }}</p>
+            <p class="text-lg font-bold text-gray-900">R$&nbsp;{{ number_format($rt['desconto'], 2, ',', '.') }}</p>
             <p class="text-[11px] text-gray-500">no lote</p>
         </div>
     </div>
@@ -54,7 +54,7 @@
             ] as [$lbl, $val])
             <div class="flex flex-col">
                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">{{ $lbl }}</p>
-                <p class="text-sm font-bold text-gray-900 font-mono">R$ {{ number_format($val, 2, ',', '.') }}</p>
+                <p class="text-sm font-bold text-gray-900 font-mono">R$&nbsp;{{ number_format($val, 2, ',', '.') }}</p>
             </div>
             @endforeach
         </div>
@@ -74,7 +74,7 @@
                     <div class="h-full" style="background-color: #1f2937; width: {{ round(($row->valor / $ufMax) * 100, 1) }}%"></div>
                 </div>
                 <span class="text-[11px] text-gray-500 w-16 text-right">{{ number_format($row->qtd) }} {{ $row->qtd == 1 ? 'nota' : 'notas' }}</span>
-                <span class="text-xs font-mono text-gray-900 w-28 text-right">R$ {{ number_format($row->valor, 2, ',', '.') }}</span>
+                <span class="text-xs font-mono text-gray-900 w-28 text-right">R$&nbsp;{{ number_format($row->valor, 2, ',', '.') }}</span>
             </div>
             @endforeach
         </div>

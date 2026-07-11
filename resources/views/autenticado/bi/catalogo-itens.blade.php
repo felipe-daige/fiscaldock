@@ -1,5 +1,5 @@
 @php
-    $fmtMoeda = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
+    $fmtMoeda = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
 
     // Renderiza uma lista "a,b,c" como chips que quebram linha (fim da sobreposição de CFOP/CST
     // em coluna table-fixed estreita). CFOP recebe tinta por entrada/saída; cap em $max + "+N".
@@ -264,7 +264,7 @@
         @endphp
         {{-- Sem overflow-hidden (ao contrário de /app/clientes): os dropdowns CFOP/CST/NCM abrem
              painel absoluto que seria cortado. Header arredondado com rounded-t no lugar. --}}
-        <form method="GET" class="bg-white rounded border border-gray-300 mb-4">
+        <form method="GET" class="bg-white rounded border border-gray-300 mb-4" data-mobile-filters>
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 rounded-t">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
             </div>

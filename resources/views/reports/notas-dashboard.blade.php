@@ -8,7 +8,7 @@
     $k = $relatorio['kpis'];
     $s = $relatorio['saldos'];
 
-    $brl = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
+    $brl = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
     $int = fn ($v) => number_format((float) $v, 0, ',', '.');
 
     // Formata a célula conforme o formato declarado pela seção (mesma fonte do XLSX):

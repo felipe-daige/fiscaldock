@@ -16,15 +16,15 @@
  </div>
  <div class="bg-gray-50 rounded px-4 py-3 text-center">
  <p class="text-xs text-gray-500">Base de Cálculo</p>
- <p class="text-sm font-bold text-gray-900">R$ {{ number_format($retencoesFonte->sum('base_calculo'), 2, ',', '.') }}</p>
+ <p class="text-sm font-bold text-gray-900">R$&nbsp;{{ number_format($retencoesFonte->sum('base_calculo'), 2, ',', '.') }}</p>
  </div>
  <div class="bg-gray-50 rounded px-4 py-3 text-center">
  <p class="text-xs text-gray-600">PIS Retido</p>
- <p class="text-sm font-bold text-gray-700">R$ {{ number_format($retencoesFonte->sum('valor_pis'), 2, ',', '.') }}</p>
+ <p class="text-sm font-bold text-gray-700">R$&nbsp;{{ number_format($retencoesFonte->sum('valor_pis'), 2, ',', '.') }}</p>
  </div>
  <div class="bg-gray-50 rounded px-4 py-3 text-center">
  <p class="text-xs text-gray-600">COFINS Retido</p>
- <p class="text-sm font-bold text-gray-700">R$ {{ number_format($retencoesFonte->sum('valor_cofins'), 2, ',', '.') }}</p>
+ <p class="text-sm font-bold text-gray-700">R$&nbsp;{{ number_format($retencoesFonte->sum('valor_cofins'), 2, ',', '.') }}</p>
  </div>
  </div>
 
@@ -48,10 +48,10 @@
  <td class="px-4 py-2.5 text-xs font-mono text-gray-900 whitespace-nowrap">{{ $ret->cnpj_formatado }}</td>
  <td class="px-4 py-2.5 text-xs text-gray-700">{{ $ret->data_retencao?->format('d/m/Y') ?? '—' }}</td>
  <td class="px-4 py-2.5 text-xs text-gray-700">{{ $ret->natureza_formatada }}</td>
- <td class="px-4 py-2.5 text-xs text-right text-gray-700 font-mono">R$ {{ number_format($ret->base_calculo ?? 0, 2, ',', '.') }}</td>
- <td class="px-4 py-2.5 text-xs text-right text-gray-700 font-mono">R$ {{ number_format($ret->valor_pis ?? 0, 2, ',', '.') }}</td>
- <td class="px-4 py-2.5 text-xs text-right text-gray-700 font-mono">R$ {{ number_format($ret->valor_cofins ?? 0, 2, ',', '.') }}</td>
- <td class="px-4 py-2.5 text-xs text-right text-gray-900 font-semibold font-mono">R$ {{ number_format($ret->valor_total ?? 0, 2, ',', '.') }}</td>
+ <td class="px-4 py-2.5 text-xs text-right text-gray-700 font-mono">R$&nbsp;{{ number_format($ret->base_calculo ?? 0, 2, ',', '.') }}</td>
+ <td class="px-4 py-2.5 text-xs text-right text-gray-700 font-mono">R$&nbsp;{{ number_format($ret->valor_pis ?? 0, 2, ',', '.') }}</td>
+ <td class="px-4 py-2.5 text-xs text-right text-gray-700 font-mono">R$&nbsp;{{ number_format($ret->valor_cofins ?? 0, 2, ',', '.') }}</td>
+ <td class="px-4 py-2.5 text-xs text-right text-gray-900 font-semibold font-mono">R$&nbsp;{{ number_format($ret->valor_total ?? 0, 2, ',', '.') }}</td>
  </tr>
  @endforeach
  </tbody>
@@ -68,11 +68,11 @@
  </div>
  <div class="flex justify-between items-center text-xs">
  <span class="text-gray-600">{{ $ret->natureza_formatada }}</span>
- <span class="font-semibold text-gray-900">R$ {{ number_format($ret->valor_total ?? 0, 2, ',', '.') }}</span>
+ <span class="font-semibold text-gray-900">R$&nbsp;{{ number_format($ret->valor_total ?? 0, 2, ',', '.') }}</span>
  </div>
  <div class="flex gap-4 text-xs">
- <span class="text-gray-700">PIS: R$ {{ number_format($ret->valor_pis ?? 0, 2, ',', '.') }}</span>
- <span class="text-gray-700">COFINS: R$ {{ number_format($ret->valor_cofins ?? 0, 2, ',', '.') }}</span>
+ <span class="text-gray-700">PIS: R$&nbsp;{{ number_format($ret->valor_pis ?? 0, 2, ',', '.') }}</span>
+ <span class="text-gray-700">COFINS: R$&nbsp;{{ number_format($ret->valor_cofins ?? 0, 2, ',', '.') }}</span>
  </div>
  </div>
  @endforeach

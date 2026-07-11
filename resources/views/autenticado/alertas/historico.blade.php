@@ -25,7 +25,7 @@
         </div>
 
         {{-- Filtros --}}
-        <form method="GET" action="/app/alertas/historico" class="bg-white rounded border border-gray-300 overflow-hidden mb-5">
+        <form method="GET" action="/app/alertas/historico" class="bg-white rounded border border-gray-300 overflow-hidden mb-5" data-mobile-filters>
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
             </div>
@@ -57,7 +57,7 @@
                         <option value="365" @selected($filtroPeriodo === 365)>Último ano</option>
                     </select>
                 </div>
-                <div class="flex-shrink-0 flex gap-2">
+                <div class="mobile-filter-actions flex-shrink-0 flex gap-2">
                     <button type="submit" class="px-5 py-2 bg-gray-800 text-white text-sm font-medium rounded hover:bg-gray-700 transition-colors">Filtrar</button>
                     <a href="/app/alertas/historico" data-link class="px-4 py-2 bg-white border border-gray-300 text-gray-600 text-sm font-medium rounded hover:bg-gray-50 transition-colors">Limpar</a>
                 </div>
@@ -77,7 +77,7 @@
                     <span class="mt-1.5 w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: {{ $hex }}"></span>
                     <div class="min-w-0 flex-1">
                         <div class="flex flex-wrap items-center gap-2">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $hex }}">{{ $ev->acaoLabel() }}</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $hex }}">{{ $ev->acaoLabel() }}</span>
                             @if($ev->alerta)
                                 <a href="/app/alertas/{{ $ev->alerta_id }}" data-link class="text-sm font-medium text-gray-900 hover:text-gray-600 hover:underline truncate">{{ $ev->alerta->titulo }}</a>
                             @else

@@ -1,5 +1,5 @@
 @php
-    $fmtR = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
+    $fmtR = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
     $fmtN = fn ($v) => number_format((float) $v, 0, ',', '.');
     $periodos = ['30' => '30 dias', '90' => '90 dias', '365' => '12 meses', 'tudo' => 'Tudo'];
 @endphp
@@ -13,7 +13,7 @@
         @include('autenticado.admin.partials.nav', ['tab' => 'visao'])
 
         {{-- Filtro de período --}}
-        <form method="GET" class="mb-4 flex items-center gap-2 text-[13px]">
+        <form method="GET" class="mb-4 flex items-center gap-2 text-[13px]" data-mobile-filters>
             <label class="text-[11px] text-gray-500">Período</label>
             <select name="periodo" onchange="this.form.submit()" class="min-w-0 flex-1 sm:flex-none text-[13px] py-2.5 px-3 border border-gray-300 rounded">
                 @foreach($periodos as $k => $label)

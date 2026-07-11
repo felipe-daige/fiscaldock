@@ -118,7 +118,7 @@
                     <div class="flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 border-b border-gray-200">
                         <span class="text-[11px] font-semibold text-gray-600 uppercase tracking-wide truncate">{{ $bloco['titulo'] }}</span>
                         @if(!empty($bloco['badge']))
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap shrink-0"
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap shrink-0"
                                   style="background-color: {{ $bloco['badge']['hex'] }}"
                                   @if(!empty($bloco['mensagem'])) title="{{ $bloco['mensagem'] }}" @endif>
                                 {{ $bloco['badge']['label'] }}

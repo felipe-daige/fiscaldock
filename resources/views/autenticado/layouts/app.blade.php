@@ -76,5 +76,6 @@
     <script src="{{ asset('js/command-palette.js') }}?v={{ filemtime(public_path('js/command-palette.js')) }}"></script>
     <script src="{{ asset('js/error-inline.js') }}?v={{ filemtime(public_path('js/error-inline.js')) }}"></script>
     <script src="{{ asset('js/nota-catalogo.js') }}?v={{ filemtime(public_path('js/nota-catalogo.js')) }}"></script>
+    <script src="{{ asset('js/mobile-filters.js') }}?v={{ is_file(public_path('js/mobile-filters.js')) ? filemtime(public_path('js/mobile-filters.js')) : 1 }}"></script>
 </body>
 </html>

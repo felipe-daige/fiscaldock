@@ -8,6 +8,8 @@ use function Pest\Laravel\actingAs;
 
 uses(RefreshDatabase::class);
 
+beforeEach(fn () => $this->seed(\Database\Seeders\MonitoramentoPlanoSeeder::class));
+
 it('lista os planos de consulta com a nota do periodo de teste e cobertura atualizada', function () {
     $user = User::factory()->create();
 

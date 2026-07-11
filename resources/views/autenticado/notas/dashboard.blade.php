@@ -58,24 +58,24 @@
         </div>
 
         {{-- Filtros Globais --}}
-        <div class="bg-white rounded border border-gray-300 p-4 sm:p-5 mb-4 sm:mb-6">
-            <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-end gap-3">
+        <div class="bg-white rounded border border-gray-300 p-4 sm:p-5 mb-4 sm:mb-6" data-mobile-filters>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-end">
                 {{-- Periodo Inicio --}}
-                <div class="flex-1 min-w-[140px]">
+                <div>
                     <label for="dnf-periodo-inicio" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Período Início</label>
                     <input type="month" id="dnf-periodo-inicio" value="{{ $filtros['periodo_inicio'] }}"
                            class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                 </div>
 
                 {{-- Periodo Fim --}}
-                <div class="flex-1 min-w-[140px]">
+                <div>
                     <label for="dnf-periodo-fim" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Período Fim</label>
                     <input type="month" id="dnf-periodo-fim" value="{{ $filtros['periodo_fim'] }}"
                            class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                 </div>
 
                 {{-- Cliente --}}
-                <div class="flex-1 min-w-[180px]">
+                <div>
                     <label for="dnf-cliente" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Cliente</label>
                     <select id="dnf-cliente"
                             class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
@@ -90,8 +90,16 @@
                     </select>
                 </div>
 
+            </div>
+
+            <details class="mt-3 border-t border-gray-200 pt-3 group">
+                <summary class="cursor-pointer select-none inline-flex items-center gap-1.5 text-[11px] font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700">
+                    <svg class="w-3.5 h-3.5 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    Filtros avançados
+                </summary>
+                <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {{-- Participante --}}
-                <div class="flex-1 min-w-[200px]">
+                <div>
                     <label for="dnf-participante" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Participante</label>
                     <select id="dnf-participante"
                             class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
@@ -103,7 +111,7 @@
                 </div>
 
                 {{-- Tipo EFD --}}
-                <div class="flex-1 min-w-[160px]">
+                <div>
                     <label for="dnf-tipo-efd" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Tipo EFD</label>
                     <select id="dnf-tipo-efd"
                             class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
@@ -114,7 +122,7 @@
                 </div>
 
                 {{-- Importacao --}}
-                <div class="flex-1 min-w-[200px]">
+                <div>
                     <label for="dnf-importacao" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Importação</label>
                     <select id="dnf-importacao"
                             class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
@@ -127,13 +135,14 @@
                     </select>
                 </div>
 
-                {{-- Botao Filtrar --}}
-                <div class="flex-shrink-0">
-                    <button id="dnf-btn-filtrar"
-                            class="w-full sm:w-auto px-5 py-2 bg-gray-800 text-white text-sm font-medium rounded hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-400 transition-colors">
-                        Filtrar
-                    </button>
                 </div>
+            </details>
+
+            <div class="mt-4 pt-4 border-t border-gray-200">
+                <button id="dnf-btn-filtrar"
+                        class="w-full sm:w-auto min-h-11 px-5 py-2 bg-gray-800 text-white text-sm font-medium rounded hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-400 transition-colors">
+                    Filtrar
+                </button>
             </div>
         </div>
 
@@ -327,7 +336,7 @@
                             <button data-cfop-sort="cfop" class="cfop-sort-btn px-1.5 py-0.5 rounded text-gray-400 hover:text-gray-600">CFOP</button>
                         </div>
                     </div>
-                    <div class="flex gap-1 bg-gray-100 rounded p-0.5" id="dnf-cfop-filtro-local">
+                    <div class="mobile-filter-scroll flex gap-1 bg-gray-100 rounded p-0.5" id="dnf-cfop-filtro-local">
                         <button data-cfop-filtro="todos" class="cfop-filtro-btn px-3 py-1.5 text-xs font-medium rounded-md bg-white text-gray-700 shadow-sm">Todos</button>
                         <button data-cfop-filtro="entrada" class="cfop-filtro-btn px-3 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-gray-700">Entradas</button>
                         <button data-cfop-filtro="saida" class="cfop-filtro-btn px-3 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-gray-700">Saídas</button>
@@ -436,7 +445,7 @@
                     <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
                         <input type="text" id="dnf-part-busca" placeholder="Buscar por nome ou CNPJ..."
                                class="px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 w-full sm:w-56">
-                        <div class="flex gap-1 bg-gray-100 rounded p-0.5" id="dnf-part-filtro-local">
+                        <div class="mobile-filter-scroll flex gap-1 bg-gray-100 rounded p-0.5" id="dnf-part-filtro-local">
                             <button data-part-filtro="todos" class="part-filtro-btn px-3 py-1.5 text-xs font-medium rounded-md bg-white text-gray-700 shadow-sm">Todos</button>
                             <button data-part-filtro="fornecedor" class="part-filtro-btn px-3 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-gray-700">Fornecedores</button>
                             <button data-part-filtro="cliente" class="part-filtro-btn px-3 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-gray-700">Clientes</button>
@@ -707,7 +716,7 @@
             {{-- Filtros locais + Botao lote --}}
             <div class="bg-white rounded border border-gray-300 p-3 sm:p-4 mb-4 sm:mb-6">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div class="flex flex-wrap gap-2" id="dnf-comp-filtro-local">
+                    <div class="mobile-filter-scroll flex gap-2" id="dnf-comp-filtro-local">
                         <button data-filtro="todos" class="px-3 py-1.5 text-xs font-medium rounded text-white" style="background-color: #1f2937">Todos</button>
                         <button data-filtro="regulares" class="px-3 py-1.5 text-xs font-medium rounded bg-white border border-gray-300 text-gray-600 hover:bg-gray-50">Regulares</button>
                         <button data-filtro="irregulares" class="px-3 py-1.5 text-xs font-medium rounded bg-white border border-gray-300 text-gray-600 hover:bg-gray-50">Irregulares</button>
@@ -1468,7 +1477,7 @@
         txt += ' \u00b7 Top 5 clientes = ' + conc.top5_saidas_pct.toFixed(1).replace('.', ',') + '% das saídas';
 
         if (conc.top5_entradas_pct > 80 || conc.top5_saidas_pct > 80) {
-            txt += ' <span class="inline-block ml-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#dc2626">Alta concentração</span>';
+            txt += ' <span class="whitespace-nowrap inline-block ml-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#dc2626">Alta concentração</span>';
         }
 
         el.innerHTML = txt;
@@ -1563,19 +1572,19 @@
             'ambos': ['#4338ca', 'Ambos'],
         };
         const [hex, label] = map[papel] || ['#9ca3af', papel];
-        return '<span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:' + hex + '">' + label + '</span>';
+        return '<span class="whitespace-nowrap inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:' + hex + '">' + label + '</span>';
     }
 
     function situacaoBadge(situacao) {
         if (!situacao) return '<span class="text-gray-300">\u2014</span>';
         const lower = situacao.toLowerCase();
         if (lower === 'ativa') {
-            return '<span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#047857">Ativa</span>';
+            return '<span class="whitespace-nowrap inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#047857">Ativa</span>';
         }
         if (['baixada', 'inapta', 'suspensa', 'nula'].includes(lower)) {
-            return '<span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#dc2626">' + escapeHtml(situacao) + '</span>';
+            return '<span class="whitespace-nowrap inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#dc2626">' + escapeHtml(situacao) + '</span>';
         }
-        return '<span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#9ca3af">' + escapeHtml(situacao) + '</span>';
+        return '<span class="whitespace-nowrap inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#9ca3af">' + escapeHtml(situacao) + '</span>';
     }
 
     function setupPartFiltroLocal() {
@@ -1902,9 +1911,9 @@
             html += '</div>';
             html += '<div class="flex items-center gap-2 flex-shrink-0">';
             if (isPaid) {
-                html += '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#374151">Pro</span>';
+                html += '<span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#374151">Pro</span>';
             }
-            html += '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="' + cfg.badgeStyle + '">' + sevLabel + '</span>';
+            html += '<span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="' + cfg.badgeStyle + '">' + sevLabel + '</span>';
             html += '<svg class="w-4 h-4 text-gray-400 transition-transform dnf-alerta-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
             html += '</div>';
             html += '</button>';

@@ -10,6 +10,7 @@
                     <p class="mt-1 text-xs text-gray-500">Analise o desempenho fiscal e tributário das suas operações.</p>
                 </div>
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3" data-mobile-filters>
                     {{-- Filtro de Cliente --}}
                     <select id="filtro-cliente" class="w-full sm:w-auto px-4 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         <option value="">Todos os Clientes</option>
@@ -29,6 +30,7 @@
                         <option value="3">Últimos 3 meses</option>
                         <option value="1">Este mês</option>
                     </select>
+                    </div>
                     {{-- Botão único Exportar → modal de formato. PDF ENCADEIA no modal de escopo
                          (carteira × cliente + dossiês); XLSX/CSV baixam direto com dossiê padrão
                          (top 20), respeitando os filtros de cliente/período. --}}

@@ -341,6 +341,12 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
 
     // Score Fiscal (Score de Regularidade) — alimentado pelos scores persistidos a cada lote de consulta
     Route::get('app/score-fiscal', [\App\Http\Controllers\Dashboard\RiskScoreController::class, 'index'])->name('app.risk.index');
+    Route::get('app/score-fiscal/exportar-pdf', [\App\Http\Controllers\Dashboard\RiskScoreController::class, 'exportarPdf'])
+        ->middleware(RequiresEntitlement::class.':export')->name('app.risk.exportar-pdf');
+    Route::get('app/score-fiscal/exportar-xlsx', [\App\Http\Controllers\Dashboard\RiskScoreController::class, 'exportarXlsx'])
+        ->middleware(RequiresEntitlement::class.':export,excel')->name('app.risk.exportar-xlsx');
+    Route::get('app/score-fiscal/exportar-csv', [\App\Http\Controllers\Dashboard\RiskScoreController::class, 'exportarCsv'])
+        ->middleware(RequiresEntitlement::class.':export,csv')->name('app.risk.exportar-csv');
     Route::get('app/score-fiscal/participante/{id}', [\App\Http\Controllers\Dashboard\RiskScoreController::class, 'show'])->whereNumber('id')->name('app.risk.show');
     Route::get('app/score-fiscal/participante/{id}/detalhe', [\App\Http\Controllers\Dashboard\RiskScoreController::class, 'detalheParticipante'])->whereNumber('id')->name('app.risk.detalhe');
 

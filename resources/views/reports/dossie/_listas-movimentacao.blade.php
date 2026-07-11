@@ -5,7 +5,7 @@
     'cabecalho' => ['Descrição', 'Valor', 'Qtd'], 'aligns' => ['left', 'right', 'right'],
     'linhas' => collect($top_produtos ?? [])->take(10)->map(fn ($p) => [
         $p['descricao'] ?? $p['cod_item'] ?? '—',
-        'R$ '.number_format((float) ($p['valor'] ?? 0), 2, ',', '.'),
+        'R$ '.number_format((float) ($p['valor'] ?? 0), 2, ',', '.'),
         (string) (int) ($p['qtd'] ?? 0),
     ])->all(),
     'vazio' => 'Sem produtos no acervo.',
@@ -17,7 +17,7 @@
     'linhas' => collect($top_cfops ?? [])->take(10)->map(fn ($c) => [
         (string) ($c['cfop'] ?? '—'),
         $c['descricao'] ?? '',
-        'R$ '.number_format((float) ($c['valor'] ?? 0), 2, ',', '.'),
+        'R$ '.number_format((float) ($c['valor'] ?? 0), 2, ',', '.'),
         (string) (int) ($c['qtd'] ?? 0),
     ])->all(),
     'vazio' => 'Sem CFOPs no acervo.',

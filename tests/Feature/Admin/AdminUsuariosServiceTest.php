@@ -51,7 +51,7 @@ it('detalhe consolida conta, financeiro e uso do usuário', function () {
     ]);
     DB::table('participantes')->insert([
         'user_id' => $u->id,
-        'cnpj' => '11111111000191',
+        'documento' => '11111111000191',
         'razao_social' => 'Fornecedor A',
         'created_at' => now(),
         'updated_at' => now(),

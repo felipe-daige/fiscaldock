@@ -89,7 +89,7 @@
  </div>
  <div class="text-right flex flex-col sm:flex-row sm:items-center justify-end sm:gap-2 min-w-[120px]">
  <span class="text-gray-900 font-medium text-right sm:text-left">{{ $bd['total_notas'] ?? 0 }} {{ $bd['label_count'] ?? 'notas' }}</span>
- <span class="text-gray-600 font-mono text-xs sm:ml-2 text-right">R$ {{ number_format($bd['valor_total'] ?? 0, 2, ',', '.') }}</span>
+ <span class="text-gray-600 font-mono text-xs sm:ml-2 text-right">R$&nbsp;{{ number_format($bd['valor_total'] ?? 0, 2, ',', '.') }}</span>
  <svg class="w-3 h-3 text-gray-300 group-hover/link:text-gray-500 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
  </div>
  </a>
@@ -106,7 +106,7 @@
  </div>
  <div class="text-right flex flex-col sm:flex-row sm:items-center justify-end sm:gap-2">
  <span class="text-gray-900 font-bold text-right sm:text-left">{{ $rf['totais']['notas'] ?? 0 }} notas</span>
- <span class="text-gray-800 font-mono text-xs sm:ml-2 text-right border-t sm:border-0 border-gray-200 pt-0.5 sm:pt-0 mt-0.5 sm:mt-0">R$ {{ number_format($rf['totais']['valor'] ?? 0, 2, ',', '.') }}</span>
+ <span class="text-gray-800 font-mono text-xs sm:ml-2 text-right border-t sm:border-0 border-gray-200 pt-0.5 sm:pt-0 mt-0.5 sm:mt-0">R$&nbsp;{{ number_format($rf['totais']['valor'] ?? 0, 2, ',', '.') }}</span>
  <svg class="w-3 h-3 text-gray-300 group-hover/link:text-gray-500 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
  </div>
  </a>
@@ -154,7 +154,7 @@
  <td class="px-4 py-3 text-right text-xs">
  @if($pr && isset($pr['entradas']))
  <span class="text-gray-700">{{ $pr['entradas']['count'] ?? 0 }}</span>
- <span class="text-gray-400 ml-1">R$ {{ number_format($pr['entradas']['valor'] ?? 0, 2, ',', '.') }}</span>
+ <span class="text-gray-400 ml-1">R$&nbsp;{{ number_format($pr['entradas']['valor'] ?? 0, 2, ',', '.') }}</span>
  @else
  <span class="text-gray-400">—</span>
  @endif
@@ -162,7 +162,7 @@
  <td class="px-4 py-3 text-right text-xs">
  @if($pr && isset($pr['saidas']))
  <span class="text-gray-700">{{ $pr['saidas']['count'] ?? 0 }}</span>
- <span class="text-gray-400 ml-1">R$ {{ number_format($pr['saidas']['valor'] ?? 0, 2, ',', '.') }}</span>
+ <span class="text-gray-400 ml-1">R$&nbsp;{{ number_format($pr['saidas']['valor'] ?? 0, 2, ',', '.') }}</span>
  @else
  <span class="text-gray-400">—</span>
  @endif

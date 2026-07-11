@@ -35,14 +35,14 @@
                 </div>
                 <div class="flex items-center gap-2">
                     @if($validacao['preview'] ?? false)
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
                             Preview
                         </span>
                         <button type="button" id="btn-salvar-validacao" class="px-4 py-2 bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium" data-nota-id="{{ $nota->id }}">
                             Salvar validação
                         </button>
                     @else
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $classificacaoHex }}">
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $classificacaoHex }}">
                             {{ strtoupper($nota->validacao_classificacao_label ?? 'VALIDADA') }}
                         </span>
                     @endif
@@ -109,7 +109,7 @@
                             <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                                 <div class="min-w-0">
                                     <div class="flex flex-wrap items-center gap-2 mb-1">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $nivelHex }}">
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $nivelHex }}">
                                             {{ strtoupper($alerta['nivel']) }}
                                         </span>
                                         <span class="text-[11px] text-gray-400 uppercase tracking-wide">{{ $alerta['categoria'] }}</span>
@@ -176,27 +176,27 @@
                     </div>
                     <div class="flex justify-between gap-3">
                         <dt class="text-gray-500">ICMS</dt>
-                        <dd class="font-medium text-gray-900 font-mono">R$ {{ number_format($nota->icms_valor ?? 0, 2, ',', '.') }}</dd>
+                        <dd class="font-medium text-gray-900 font-mono">R$&nbsp;{{ number_format($nota->icms_valor ?? 0, 2, ',', '.') }}</dd>
                     </div>
                     <div class="flex justify-between gap-3">
                         <dt class="text-gray-500">ICMS-ST</dt>
-                        <dd class="font-medium text-gray-900 font-mono">R$ {{ number_format($nota->icms_st_valor ?? 0, 2, ',', '.') }}</dd>
+                        <dd class="font-medium text-gray-900 font-mono">R$&nbsp;{{ number_format($nota->icms_st_valor ?? 0, 2, ',', '.') }}</dd>
                     </div>
                     <div class="flex justify-between gap-3">
                         <dt class="text-gray-500">PIS</dt>
-                        <dd class="font-medium text-gray-900 font-mono">R$ {{ number_format($nota->pis_valor ?? 0, 2, ',', '.') }}</dd>
+                        <dd class="font-medium text-gray-900 font-mono">R$&nbsp;{{ number_format($nota->pis_valor ?? 0, 2, ',', '.') }}</dd>
                     </div>
                     <div class="flex justify-between gap-3">
                         <dt class="text-gray-500">COFINS</dt>
-                        <dd class="font-medium text-gray-900 font-mono">R$ {{ number_format($nota->cofins_valor ?? 0, 2, ',', '.') }}</dd>
+                        <dd class="font-medium text-gray-900 font-mono">R$&nbsp;{{ number_format($nota->cofins_valor ?? 0, 2, ',', '.') }}</dd>
                     </div>
                     <div class="flex justify-between gap-3">
                         <dt class="text-gray-500">IPI</dt>
-                        <dd class="font-medium text-gray-900 font-mono">R$ {{ number_format($nota->ipi_valor ?? 0, 2, ',', '.') }}</dd>
+                        <dd class="font-medium text-gray-900 font-mono">R$&nbsp;{{ number_format($nota->ipi_valor ?? 0, 2, ',', '.') }}</dd>
                     </div>
                     <div class="flex justify-between gap-3 pt-3 border-t border-gray-200">
                         <dt class="text-gray-700 font-medium">Total tributos</dt>
-                        <dd class="font-bold text-gray-900 font-mono">R$ {{ number_format($nota->tributos_total ?? 0, 2, ',', '.') }}</dd>
+                        <dd class="font-bold text-gray-900 font-mono">R$&nbsp;{{ number_format($nota->tributos_total ?? 0, 2, ',', '.') }}</dd>
                     </div>
                 </dl>
             </div>

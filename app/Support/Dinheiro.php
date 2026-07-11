@@ -6,7 +6,9 @@ final class Dinheiro
 {
     public static function brl(float|int $reais): string
     {
-        return 'R$ '.number_format((float) $reais, 2, ',', '.');
+        // NBSP entre "R$" e o número: valor monetário nunca quebra linha no meio
+        // (mesma convenção do Intl/toLocaleString do JS). deBrl() já o remove.
+        return 'R$'."\u{A0}".number_format((float) $reais, 2, ',', '.');
     }
 
     /**

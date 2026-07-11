@@ -35,7 +35,7 @@
                 <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Resultado da Busca de Nota</h1>
                 <p class="text-xs text-gray-500 mt-1">A consulta abre nesta página e acompanha o processamento até a finalização do DF-e.</p>
             </div>
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white self-start" style="background-color: {{ $statusMeta['hex'] }}">
+            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white self-start" style="background-color: {{ $statusMeta['hex'] }}">
                 {{ $statusMeta['label'] }}
             </span>
         </div>
@@ -95,7 +95,7 @@
             <div class="bg-white rounded border border-gray-300 overflow-hidden">
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                     <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resultado Final</span>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white self-start sm:self-auto" style="background-color: {{ $notaResultado['situacao_hex'] ?? '#374151' }}">
+                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white self-start sm:self-auto" style="background-color: {{ $notaResultado['situacao_hex'] ?? '#374151' }}">
                         {{ $notaResultado['situacao'] ?? 'INDETERMINADO' }}
                     </span>
                 </div>

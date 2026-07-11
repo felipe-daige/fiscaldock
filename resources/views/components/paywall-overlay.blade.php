@@ -51,7 +51,7 @@
                         </svg>
                     </div>
                     <div class="min-w-0">
-                        <span class="inline-block mb-1 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest text-white" style="background-color: #0b1f3a">BI completo</span>
+                        <span class="whitespace-nowrap inline-block mb-1 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest text-white" style="background-color: #0b1f3a">BI completo</span>
                         <h2 class="text-base font-bold text-gray-900 leading-snug">{{ $titulo }}</h2>
                     </div>
                 </div>

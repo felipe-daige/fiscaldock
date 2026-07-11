@@ -719,7 +719,7 @@
                         <div class="border border-gray-200 rounded-lg p-4">
                             <div class="flex items-center justify-between mb-2">
                                 <div class="flex items-center gap-2">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold" style="background-color: #eff6ff; color: #1e4fa0; border: 1px solid #bfdbfe;">NF-e</span>
+                                    <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold" style="background-color: #eff6ff; color: #1e4fa0; border: 1px solid #bfdbfe;">NF-e</span>
                                     <span class="text-[10px] font-semibold uppercase tracking-wider text-gray-500">000.184.923</span>
                                 </div>
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold" style="background-color: #eefbf5; color: #047857; border: 1px solid #c6eed8;">
@@ -737,7 +737,7 @@
                         <div class="border border-gray-200 rounded-lg p-4">
                             <div class="flex items-center justify-between mb-2">
                                 <div class="flex items-center gap-2">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold" style="background-color: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe;">CT-e</span>
+                                    <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold" style="background-color: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe;">CT-e</span>
                                     <span class="text-[10px] font-semibold uppercase tracking-wider text-gray-500">000.047.182</span>
                                 </div>
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold" style="background-color: #fef8ee; color: #b45309; border: 1px solid #f5e6c8;">
@@ -755,7 +755,7 @@
                         <div class="border border-gray-200 rounded-lg p-4">
                             <div class="flex items-center justify-between mb-2">
                                 <div class="flex items-center gap-2">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold" style="background-color: #fff7ed; color: #c2410c; border: 1px solid #fed7aa;">NFS-e</span>
+                                    <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold" style="background-color: #fff7ed; color: #c2410c; border: 1px solid #fed7aa;">NFS-e</span>
                                     <span class="text-[10px] font-semibold uppercase tracking-wider text-gray-500">2026/00389</span>
                                 </div>
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold" style="background-color: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;">

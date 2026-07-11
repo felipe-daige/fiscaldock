@@ -103,6 +103,7 @@ it('Essencial (sem excel) recebe 403 em toda rota de export XLSX', function (str
     ['get', '/app/clearance/dashboard/exportar-xlsx'],
     ['get', '/app/notas/dashboard/exportar-xlsx'],
     ['get', '/app/bi/catalogo-itens/exportar-xlsx'],
+    ['get', '/app/score-fiscal/exportar-xlsx'],
 ]);
 
 it('Free puro recebe 403 nas rotas de export por FORMATO (CSV/XLSX)', function (string $metodo, string $rota) {
@@ -118,6 +119,7 @@ it('Free puro recebe 403 nas rotas de export por FORMATO (CSV/XLSX)', function (
     ['post', '/app/clientes/exportar-csv'],
     ['post', '/app/participantes/exportar-csv'],
     ['get', '/app/importacao/efd/1/exportar'],
+    ['get', '/app/score-fiscal/exportar-csv'],
 ]);
 
 // PDF (export sem formato) é universal — Free recebe com marca d'água, vira canal de aquisição.
@@ -133,6 +135,7 @@ it('Free puro NÃO é barrado no PDF (recebe com marca d\'água)', function (str
     ['get', '/app/alertas/exportar-pdf'],
     ['post', '/app/clientes/exportar-pdf'],
     ['post', '/app/participantes/exportar-pdf'],
+    ['get', '/app/score-fiscal/exportar-pdf'],
 ]);
 
 it('Profissional passa pelo gate nas rotas XLSX (não-403)', function (string $metodo, string $rota) {
@@ -148,6 +151,7 @@ it('Profissional passa pelo gate nas rotas XLSX (não-403)', function (string $m
     ['post', '/app/clientes/exportar-xlsx'],
     ['post', '/app/participantes/exportar-xlsx'],
     ['get', '/app/resumo-fiscal/exportar-xlsx'],
+    ['get', '/app/score-fiscal/exportar-xlsx'],
 ]);
 
 it('Essencial passa pelo gate nas rotas CSV (não-403)', function (string $metodo, string $rota) {
@@ -163,6 +167,7 @@ it('Essencial passa pelo gate nas rotas CSV (não-403)', function (string $metod
     ['post', '/app/clientes/exportar-csv'],
     ['post', '/app/participantes/exportar-csv'],
     ['get', '/app/importacao/efd/1/exportar'],
+    ['get', '/app/score-fiscal/exportar-csv'],
 ]);
 
 // ---- bi_completo: POSTs de alerta do catálogo-itens + Enterprise ----

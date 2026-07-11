@@ -231,7 +231,7 @@
                                         <span class="block text-sm font-bold text-gray-900">NF-e</span>
                                         <span class="block text-[11px] text-gray-500 mt-0.5">Modelo 55</span>
                                     </span>
-                                    <span class="documento-selecionado px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Selecionado</span>
+                                    <span class="whitespace-nowrap documento-selecionado px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Selecionado</span>
                                 </span>
                             </label>
 
@@ -242,7 +242,7 @@
                                         <span class="block text-sm font-bold text-gray-900">CT-e</span>
                                         <span class="block text-[11px] text-gray-500 mt-0.5">Modelo 57</span>
                                     </span>
-                                    <span class="documento-selecionado px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Selecionado</span>
+                                    <span class="whitespace-nowrap documento-selecionado px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Selecionado</span>
                                 </span>
                             </label>
 
@@ -253,7 +253,7 @@
                                         <span class="block text-sm font-bold text-gray-900">NFS-e</span>
                                         <span class="block text-[11px] text-gray-500 mt-0.5">Serviços</span>
                                     </span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Em breve</span>
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Em breve</span>
                                 </span>
                             </label>
                         </div>
@@ -335,7 +335,7 @@
 
                     <div id="bloco-erro" class="hidden border border-red-200 rounded p-4" style="background-color: #fef2f2">
                         <div class="flex items-start gap-2">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white self-start" style="background-color: #dc2626">Erro</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white self-start" style="background-color: #dc2626">Erro</span>
                             <div class="flex-1 min-w-0">
                                 <p id="erro-titulo" class="text-sm font-semibold text-gray-900">Não foi possível consultar</p>
                                 <p id="erro-mensagem" class="text-xs text-gray-700 mt-1">-</p>
@@ -354,7 +354,7 @@
                     <div id="bloco-resultado" class="hidden border border-gray-200 rounded overflow-hidden">
                         <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                             <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resultado da consulta</span>
-                            <span id="resultado-status-badge" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white self-start sm:self-auto" style="background-color: #374151">-</span>
+                            <span id="resultado-status-badge" class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white self-start sm:self-auto" style="background-color: #374151">-</span>
                         </div>
 
                         <div class="p-4 space-y-3">
@@ -412,7 +412,7 @@
                 <section class="bg-white rounded border border-gray-300 overflow-hidden">
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo Operacional</span>
-                        <span id="saldo-badge" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $saldoSuficiente ? '#047857' : '#dc2626' }}">
+                        <span id="saldo-badge" class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $saldoSuficiente ? '#047857' : '#dc2626' }}">
                             {{ $saldoSuficiente ? 'Saldo suficiente' : 'Saldo insuficiente' }}
                         </span>
                     </div>
@@ -437,15 +437,15 @@
                             <div class="space-y-1">
                                 <div class="flex items-center justify-between gap-3">
                                     <span class="text-[11px] text-gray-600">NF-e / NFC-e</span>
-                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Modelo 55 / 65</span>
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Modelo 55 / 65</span>
                                 </div>
                                 <div class="flex items-center justify-between gap-3">
                                     <span class="text-[11px] text-gray-600">CT-e</span>
-                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Modelo 57</span>
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Modelo 57</span>
                                 </div>
                                 <div class="flex items-center justify-between gap-3">
                                     <span class="text-[11px] text-gray-600">NFS-e</span>
-                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Em breve</span>
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Em breve</span>
                                 </div>
                             </div>
                         </div>

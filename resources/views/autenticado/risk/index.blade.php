@@ -45,10 +45,31 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
 
         {{-- Header --}}
-        <div class="mb-4">
-            <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Score Fiscal</h1>
-            <p class="text-xs text-gray-500 mt-1">Avalie o risco fiscal e de compliance dos CNPJs consultados.</p>
+        <div class="mb-4 flex items-start justify-between gap-3">
+            <div>
+                <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Score Fiscal</h1>
+                <p class="text-xs text-gray-500 mt-1">Avalie o risco fiscal e de compliance dos CNPJs consultados.</p>
+            </div>
+            <x-export-menu id="modal-exportar-score" titulo="Exportar Score Fiscal"
+                           descricao="O arquivo inclui todo o recorte filtrado, sem a paginação da tela."
+                           overlay="download-overlay-score" size="lg">
+                <x-export-grupo label="Documento" />
+                <x-export-option format="pdf" modal-id="modal-exportar-score" overlay="download-overlay-score"
+                    path="/app/score-fiscal/exportar-pdf"
+                    :extras="['filtro-classificacao' => 'classificacao', 'busca-participante' => 'busca']"
+                    descricao="Resumo e CNPJs avaliados/não consultados em papel A4 retrato." />
+                <x-export-grupo label="Planilhas" />
+                <x-export-option format="xlsx" modal-id="modal-exportar-score" overlay="download-overlay-score"
+                    path="/app/score-fiscal/exportar-xlsx"
+                    :extras="['filtro-classificacao' => 'classificacao', 'busca-participante' => 'busca']"
+                    descricao="Resumo em uma aba e dados completos em outra, sem corte de linhas." />
+                <x-export-option format="csv" modal-id="modal-exportar-score" overlay="download-overlay-score"
+                    path="/app/score-fiscal/exportar-csv"
+                    :extras="['filtro-classificacao' => 'classificacao', 'busca-participante' => 'busca']"
+                    descricao="Tabela única com todos os campos e sem corte de linhas." />
+            </x-export-menu>
         </div>
+        <x-download-overlay id="download-overlay-score" texto="Gerando relatório…" />
 
         {{-- Como funciona --}}
         <details class="bg-white rounded border border-gray-300 border-l-4 mb-6 group" style="border-left-color: #2563eb;">
@@ -212,7 +233,7 @@
         </details>
 
         {{-- Filtros --}}
-        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6" data-mobile-filters>
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
             </div>
@@ -272,22 +293,22 @@
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Baixo Risco</p>
                     <p class="text-lg font-bold text-gray-900 font-mono">{{ $estatisticas['baixo_risco'] ?? 0 }}</p>
-                    <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">BAIXO</span>
+                    <span class="whitespace-nowrap inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">BAIXO</span>
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Médio Risco</p>
                     <p class="text-lg font-bold text-gray-900 font-mono">{{ $estatisticas['medio_risco'] ?? 0 }}</p>
-                    <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">MÉDIO</span>
+                    <span class="whitespace-nowrap inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">MÉDIO</span>
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Alto Risco</p>
                     <p class="text-lg font-bold text-gray-900 font-mono">{{ $estatisticas['alto_risco'] ?? 0 }}</p>
-                    <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #ea580c">ALTO</span>
+                    <span class="whitespace-nowrap inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #ea580c">ALTO</span>
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Crítico</p>
                     <p class="text-lg font-bold text-gray-900 font-mono">{{ $estatisticas['critico'] ?? 0 }}</p>
-                    <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">CRÍTICO</span>
+                    <span class="whitespace-nowrap inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">CRÍTICO</span>
                 </div>
             </div>
         </div>
@@ -351,9 +372,9 @@
                             </td>
                             <td class="px-3 py-3 whitespace-nowrap">
                                 <div class="flex flex-wrap items-center gap-1">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tb['hex'] }}">{{ $tb['label'] }}</span>
+                                    <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tb['hex'] }}">{{ $tb['label'] }}</span>
                                     @if($sc->participante_id && ($pb = $papelBadge($papeisParticipante[$sc->participante_id] ?? null)))
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $pb['hex'] }}">{{ $pb['label'] }}</span>
+                                        <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $pb['hex'] }}">{{ $pb['label'] }}</span>
                                     @endif
                                 </div>
                             </td>
@@ -368,18 +389,18 @@
                             <td class="px-3 py-3 whitespace-nowrap text-center">
                                 @if(isset($classBadge[$sc->classificacao]))
                                     @php $b = $classBadge[$sc->classificacao]; @endphp
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $b['hex'] }}">
+                                    <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $b['hex'] }}">
                                         {{ $b['label'] }}
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">
+                                    <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">
                                         Não Avaliado
                                     </span>
                                 @endif
                             </td>
                             <td class="px-3 py-3 whitespace-nowrap text-center">
                                 @php $cb = $creditoBadge($sc->score_credito_reforma); @endphp
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cb['hex'] }}">{{ $cb['label'] }}</span>
+                                <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cb['hex'] }}">{{ $cb['label'] }}</span>
                             </td>
                             <td class="px-3 py-3 whitespace-nowrap text-center text-sm text-gray-700 font-mono">
                                 @if($sc->ultima_consulta_em)
@@ -431,18 +452,18 @@
                         </div>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 mt-2">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tb['hex'] }}">{{ $tb['label'] }}</span>
+                        <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tb['hex'] }}">{{ $tb['label'] }}</span>
                         @if($sc->participante_id && ($pb = $papelBadge($papeisParticipante[$sc->participante_id] ?? null)))
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $pb['hex'] }}">{{ $pb['label'] }}</span>
+                            <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $pb['hex'] }}">{{ $pb['label'] }}</span>
                         @endif
                         @if(isset($classBadge[$sc->classificacao]))
                             @php $b = $classBadge[$sc->classificacao]; @endphp
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $b['hex'] }}">{{ $b['label'] }}</span>
+                            <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $b['hex'] }}">{{ $b['label'] }}</span>
                         @else
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Não Avaliado</span>
+                            <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Não Avaliado</span>
                         @endif
                         @php $cb = $creditoBadge($sc->score_credito_reforma); @endphp
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cb['hex'] }}" title="Crédito IBS/CBS na Reforma">Créd: {{ $cb['label'] }}</span>
+                        <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cb['hex'] }}" title="Crédito IBS/CBS na Reforma">Créd: {{ $cb['label'] }}</span>
                         @if($sc->alvo_uf)
                             <span class="text-[11px] text-gray-500">{{ $sc->alvo_uf }}</span>
                         @endif
@@ -513,9 +534,9 @@
                             </td>
                             <td class="px-3 py-3 whitespace-nowrap">
                                 <div class="flex flex-wrap items-center gap-1">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tb['hex'] }}">{{ $tb['label'] }}</span>
+                                    <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tb['hex'] }}">{{ $tb['label'] }}</span>
                                     @if($item->tipo === 'participante' && ($pb = $papelBadge($papeisParticipante[$item->id] ?? null)))
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $pb['hex'] }}">{{ $pb['label'] }}</span>
+                                        <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $pb['hex'] }}">{{ $pb['label'] }}</span>
                                     @endif
                                 </div>
                             </td>
@@ -540,9 +561,9 @@
                             <p class="text-[11px] text-gray-500 font-mono">{{ $fmtCnpj($item->documento) }}</p>
                         </div>
                         <div class="flex-shrink-0 flex flex-col items-end gap-1">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tb['hex'] }}">{{ $tb['label'] }}</span>
+                            <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tb['hex'] }}">{{ $tb['label'] }}</span>
                             @if($item->tipo === 'participante' && ($pb = $papelBadge($papeisParticipante[$item->id] ?? null)))
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $pb['hex'] }}">{{ $pb['label'] }}</span>
+                                <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $pb['hex'] }}">{{ $pb['label'] }}</span>
                             @endif
                         </div>
                     </div>

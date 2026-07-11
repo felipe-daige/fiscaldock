@@ -1,7 +1,7 @@
 @php
     $fmtVal = function ($tipo, $v) {
         if ($v === null) return '—';
-        return $tipo === 'float' ? 'R$ '.number_format((float) $v, 2, ',', '.') : number_format((int) $v, 0, ',', '.');
+        return $tipo === 'float' ? 'R$ '.number_format((float) $v, 2, ',', '.') : number_format((int) $v, 0, ',', '.');
     };
     $inputVal = function ($tipo, $v) {
         if ($v === null) return '';
@@ -41,9 +41,9 @@
                             @endif
                         </div>
                         @if($p['override'] !== null)
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b45309">Customizado</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b45309">Customizado</span>
                         @else
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #6b7280">Padrão</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #6b7280">Padrão</span>
                         @endif
                     </div>
                     <div class="p-4">

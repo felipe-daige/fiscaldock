@@ -42,42 +42,12 @@
         </div>
 
         {{-- Filtros --}}
-        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6" data-mobile-filters>
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
             </div>
-            <div class="p-4 flex flex-wrap items-end gap-3">
-                <div>
-                    <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Tipo</label>
-                    <select id="filtro-tipo" class="px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
-                        <option value="">Todos</option>
-                        <option value="avulso">Avulso</option>
-                        <option value="assinatura">Assinatura</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Status</label>
-                    <select id="filtro-status" class="px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
-                        <option value="">Todos</option>
-                        <option value="sucesso">Sucesso</option>
-                        <option value="pendente">Pendente</option>
-                        <option value="processando">Processando</option>
-                        <option value="erro">Erro</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Plano</label>
-                    <select id="filtro-plano" class="px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
-                        <option value="">Todos</option>
-                        <option value="basico">Básico</option>
-                        <option value="cadastral_plus">Cadastral+</option>
-                        <option value="fiscal_federal">Fiscal Federal</option>
-                        <option value="fiscal_completo">Fiscal Completo</option>
-                        <option value="due_diligence">Due Diligence</option>
-                        <option value="completo">Completo</option>
-                    </select>
-                </div>
-                <div class="flex-1 min-w-[240px]">
+            <div class="p-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-3">
+                <div class="w-full sm:w-auto sm:flex-1 sm:min-w-[240px] sm:order-first">
                     <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Buscar</label>
                     <div class="relative">
                         <input type="text" id="busca-historico" placeholder="Buscar por CNPJ..."
@@ -87,6 +57,44 @@
                         </svg>
                     </div>
                 </div>
+                <details class="w-full border-t border-gray-200 pt-3 group sm:order-last">
+                    <summary class="cursor-pointer select-none inline-flex items-center gap-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700">
+                        <svg class="w-3.5 h-3.5 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        Filtros avançados
+                    </summary>
+                    <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Tipo</label>
+                    <select id="filtro-tipo" class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                        <option value="">Todos</option>
+                        <option value="avulso">Avulso</option>
+                        <option value="assinatura">Assinatura</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Status</label>
+                    <select id="filtro-status" class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                        <option value="">Todos</option>
+                        <option value="sucesso">Sucesso</option>
+                        <option value="pendente">Pendente</option>
+                        <option value="processando">Processando</option>
+                        <option value="erro">Erro</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Plano</label>
+                    <select id="filtro-plano" class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                        <option value="">Todos</option>
+                        <option value="basico">Básico</option>
+                        <option value="cadastral_plus">Cadastral+</option>
+                        <option value="fiscal_federal">Fiscal Federal</option>
+                        <option value="fiscal_completo">Fiscal Completo</option>
+                        <option value="due_diligence">Due Diligence</option>
+                        <option value="completo">Completo</option>
+                    </select>
+                </div>
+                    </div>
+                </details>
             </div>
         </div>
 
@@ -126,20 +134,20 @@
                                 </td>
                                 <td class="px-3 py-3 whitespace-nowrap text-center" data-label="Tipo">
                                     @if($consulta->tipo === 'avulso')
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Avulso</span>
+                                        <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Avulso</span>
                                     @else
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">Assinatura</span>
+                                        <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">Assinatura</span>
                                     @endif
                                 </td>
                                 <td class="px-3 py-3 whitespace-nowrap text-center" data-label="Status">
                                     @if($consulta->status === 'sucesso')
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Sucesso</span>
+                                        <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Sucesso</span>
                                     @elseif($consulta->status === 'pendente')
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">Pendente</span>
+                                        <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">Pendente</span>
                                     @elseif($consulta->status === 'processando')
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">Processando</span>
+                                        <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">Processando</span>
                                     @else
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">Erro</span>
+                                        <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">Erro</span>
                                     @endif
                                 </td>
                                 <td class="px-3 py-3 text-sm text-gray-700 font-mono whitespace-nowrap" data-label="Custo">

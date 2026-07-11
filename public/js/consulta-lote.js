@@ -982,7 +982,7 @@
      */
     function creditosEmBrl(creditos) {
         const reais = Math.round((creditos || 0) * state.creditUnitPrice * 100) / 100;
-        return 'R$ ' + reais.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return 'R$ ' + reais.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     /**
@@ -2075,15 +2075,15 @@
 
         if (origem) {
             const detalhe = origem.detail ? '<span class="ml-1 text-[10px] text-gray-500">' + origem.detail + '</span>' : '';
-            return '<span class="inline-flex items-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + origem.hex + '">' + origem.label + '</span>' + detalhe + '</span>';
+            return '<span class="inline-flex items-center"><span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + origem.hex + '">' + origem.label + '</span>' + detalhe + '</span>';
         }
 
-        return '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">' + String(origemTipo) + '</span>';
+        return '<span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">' + String(origemTipo) + '</span>';
     }
 
     function getSituacaoBadgeHtml(situacao, naoConsultada) {
         if (naoConsultada) {
-            return '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Não consultada</span>';
+            return '<span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Não consultada</span>';
         }
 
         if (!situacao) {
@@ -2102,20 +2102,20 @@
             label = situacao;
         }
 
-        return '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + hex + '">' + escapeHtml(label) + '</span>';
+        return '<span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + hex + '">' + escapeHtml(label) + '</span>';
     }
 
     function getCndBadgeHtml(participante) {
         var motivo = participante.cnd_federal_status_label === 'Indeterminada' && participante.cnd_federal_meta
             ? ' title="' + escapeHtml(String(participante.cnd_federal_meta)) + '"'
             : '';
-        return '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: '
+        return '<span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: '
             + (participante.cnd_federal_status_hex || '#9ca3af') + '"' + motivo + '>'
             + escapeHtml(participante.cnd_federal_status_label || 'Não consultada') + '</span>';
     }
 
     function getConsultaStatusBadgeHtml(participante) {
-        return '<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: '
+        return '<span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: '
             + (participante.consulta_status_hex || '#9ca3af') + '">'
             + escapeHtml(participante.consulta_status_label || 'Nunca foi consultado') + '</span>';
     }
