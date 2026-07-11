@@ -54,12 +54,19 @@ class CndMunicipalFonte extends FonteCertidaoInfoSimples
 
     protected function mapearSucesso(array $data): array
     {
+        // Cada prefeitura InfoSimples tem seu próprio schema no data[0] — os campos
+        // equivalentes vêm com nomes diferentes por município. Coalescer os dialetos
+        // conhecidos (ex: emissao_data/data_emissao, numero_certidao/codigo_controle_certidao).
+        $endereco = is_array($data['endereco'] ?? null) ? $data['endereco'] : [];
+
         return [
-            'uf' => $data['uf'] ?? null,
-            'municipio' => $data['municipio'] ?? ($data['cidade'] ?? null),
+            'uf' => $data['uf'] ?? ($endereco['uf'] ?? null),
+            'municipio' => $data['municipio'] ?? ($data['cidade'] ?? ($endereco['cidade'] ?? null)),
             'status' => $this->statusCertidao($data),
-            'certidao_codigo' => $data['certidao_codigo'] ?? null,
-            'emissao_data' => $data['emissao_data'] ?? null,
+            'certidao_codigo' => $data['certidao_codigo']
+                ?? ($data['numero_certidao'] ?? ($data['codigo_controle_certidao'] ?? null)),
+            'emissao_data' => $data['emissao_data']
+                ?? ($data['data_emissao'] ?? ($data['normalizado_datahora_emissao'] ?? null)),
             'data_validade' => $data['validade_data'] ?? ($data['validade'] ?? null),
             'conseguiu_emitir' => (bool) ($data['conseguiu_emitir_certidao_negativa'] ?? false),
             'mensagem' => $data['mensagem'] ?? null,
