@@ -410,11 +410,17 @@
                     </div>
                     <div>
                         <label class="text-[11px] text-gray-500 block mb-1">Frequência</label>
+                        {{-- Fase 5.1: opções abaixo da frequência mínima do tier ficam travadas
+                             (mesmo padrão do modal do participante); o backend revalida na criação. --}}
                         <select id="mon-frequencia" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded" onchange="monAtualizarCusto()">
-                            <option value="semanal">Semanal</option>
-                            <option value="quinzenal">Quinzenal</option>
+                            <option value="diario" @disabled($freqMinDias > 1)>Diária @if($freqMinDias > 1)— requer plano superior @endif</option>
+                            <option value="semanal" @disabled($freqMinDias > 7)>Semanal @if($freqMinDias > 7)— requer plano superior @endif</option>
+                            <option value="quinzenal" @disabled($freqMinDias > 15)>Quinzenal @if($freqMinDias > 15)— requer plano superior @endif</option>
                             <option value="mensal" selected>Mensal</option>
                         </select>
+                        @if($freqMinDias > 1)
+                            <p class="text-[11px] text-gray-400 mt-1">Seu plano permite monitorar no máximo a cada {{ $freqMinDias }} dias. Faça upgrade para aumentar a frequência.</p>
+                        @endif
                     </div>
                 </div>
                 {{-- Estimador de custo: transparência de preço antes de confirmar. Display-only —

@@ -181,3 +181,45 @@ it('modal novo monitorado expõe o estimador de custo mensal/trimestral', functi
         ->assertSee('data-membros="1"', false)
         ->assertSee('id="form-monitorar" data-credit-unit-price="', false);
 });
+
+// ── Fase 5.1: gating de frequência por tier no modal "Novo monitorado" ──────
+
+it('modal novo monitorado trava frequências acima do tier (Free = mensal apenas)', function () {
+    test()->seed(SubscriptionPlanSeeder::class);
+    $user = User::factory()->create(); // sem assinatura → Free (mínimo 30 dias)
+
+    $resp = actingAs($user)->get(route('app.monitoramento.painel'));
+
+    $resp->assertOk()
+        ->assertSee('requer plano superior')
+        ->assertSee('Seu plano permite monitorar no máximo a cada 30 dias', false)
+        ->assertSee('value="diario" disabled', false)
+        ->assertSee('value="semanal" disabled', false)
+        ->assertSee('value="quinzenal" disabled', false);
+});
+
+it('modal novo monitorado libera quinzenal no tier profissional (mínimo 15 dias) e trava as menores', function () {
+    test()->seed(SubscriptionPlanSeeder::class);
+    $user = User::factory()->create();
+    painelAssinar($user, [
+        'subscription_plan_id' => SubscriptionPlan::where('codigo', 'profissional')->firstOrFail()->id,
+    ]);
+
+    $html = actingAs($user)->get(route('app.monitoramento.painel'))->assertOk()->getContent();
+
+    expect($html)->toContain('value="diario" disabled')
+        ->toContain('value="semanal" disabled')
+        ->not->toContain('value="quinzenal" disabled')
+        ->toContain('Seu plano permite monitorar no máximo a cada 15 dias');
+});
+
+it('modal novo monitorado libera todas as frequências no trial', function () {
+    test()->seed(SubscriptionPlanSeeder::class);
+    $user = User::factory()->trialAtivo()->create();
+
+    $html = actingAs($user)->get(route('app.monitoramento.painel'))->assertOk()->getContent();
+
+    expect($html)->not->toContain('requer plano superior')
+        ->not->toContain('value="diario" disabled')
+        ->not->toContain('Seu plano permite monitorar no máximo');
+});

@@ -199,6 +199,8 @@ class MonitoramentoController extends Controller
             'gruposMonitorados' => $gruposMonitorados,
             'planos' => $planos,
             'credits' => $this->creditService->getBalance($user),
+            // Fase 5.1: frequência mínima do tier gateia as opções do modal (backend revalida).
+            'freqMinDias' => $this->entitlements->frequenciaMinimaMonitoramento($user),
             // null quando dentro do cap; senão { cap, ocupados, excedente } → dispara o modal
             // de reconciliação (usuário escolhe quais manter ativos) após downgrade.
             'reconciliacaoDowngrade' => $this->entitlements->excedeLimiteMonitoramento($user),
