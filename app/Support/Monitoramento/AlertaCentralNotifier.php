@@ -26,7 +26,7 @@ class AlertaCentralNotifier implements MonitoramentoNotifier
             'tipo' => 'monitoramento_pausado_saldo',
             'severidade' => 'alta',
             'titulo' => 'Monitoramento pausado por saldo insuficiente',
-            'descricao' => "O monitoramento contínuo de {$nome} foi pausado porque não havia créditos suficientes para o ciclo. Recarregue créditos e reative a assinatura.",
+            'descricao' => "O monitoramento contínuo de {$nome} foi pausado porque não havia saldo suficiente para o ciclo. Adicione saldo e reative a assinatura.",
             'participante_id' => $assinatura->participante_id,
             'cliente_id' => $assinatura->cliente_id,
         ]);

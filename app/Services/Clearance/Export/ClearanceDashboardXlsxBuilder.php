@@ -102,7 +102,6 @@ class ClearanceDashboardXlsxBuilder
 
         $xlsx->linhaKV('', '');
         $xlsx->linhaKV('Backlog — notas a verificar', (int) $b['notas'], XlsxReport::FMT_INT);
-        $xlsx->linhaKV('Backlog — custo (créditos)', (int) $b['custo_creditos'], XlsxReport::FMT_INT);
         $xlsx->linhaKV('Backlog — custo estimado (R$)', (float) $b['custo_reais'], XlsxReport::FMT_BRL);
     }
 

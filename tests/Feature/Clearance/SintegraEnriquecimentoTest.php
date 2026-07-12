@@ -6,7 +6,7 @@ use App\Models\EfdImportacao;
 use App\Models\EfdNota;
 use App\Models\Participante;
 use App\Models\User;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 
@@ -109,18 +109,18 @@ it('preview conta só participantes sem IE do lote e calcula custo', function ()
         ]);
 });
 
-it('executar debita créditos e despacha batch sintegra-only', function () use (&$testUserIds) {
+it('executar debita saldo e despacha batch sintegra-only', function () use (&$testUserIds) {
     Bus::fake();
     [$user, $lote, $semIeId] = sintegraCenario($testUserIds);
-    app(CreditService::class)->add($user, 100, 'manual_add');
-    $saldoAntes = app(CreditService::class)->getBalance($user);
+    app(SaldoService::class)->add($user, 100, 'manual_add');
+    $saldoAntes = app(SaldoService::class)->getBalance($user);
 
     actingAs($user)
         ->postJson('/app/clearance/sintegra/executar', ['lote_id' => $lote->id, 'tab_id' => 'tab-sint'])
         ->assertOk()
         ->assertJson(['success' => true, 'total' => 1, 'custo_creditos' => 2, 'participante_ids' => [$semIeId]]);
 
-    expect(app(CreditService::class)->getBalance($user))->toBe($saldoAntes - 2);
+    expect(app(SaldoService::class)->getBalance($user))->toBe($saldoAntes - 2);
     Bus::assertBatched(fn ($batch) => str_starts_with($batch->name, 'sintegra-ie-') && $batch->jobs->count() === 1);
 });
 
@@ -128,9 +128,9 @@ it('executar recusa quando saldo insuficiente', function () use (&$testUserIds) 
     Bus::fake();
     [$user, $lote] = sintegraCenario($testUserIds);
     // zera saldo
-    $saldo = app(CreditService::class)->getBalance($user);
+    $saldo = app(SaldoService::class)->getBalance($user);
     if ($saldo > 0) {
-        app(CreditService::class)->deduct($user, $saldo, 'manual_add');
+        app(SaldoService::class)->deduct($user, $saldo, 'manual_add');
     }
 
     actingAs($user)

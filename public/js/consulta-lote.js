@@ -90,8 +90,7 @@
         mensagemAtual: '',
         etapaLabelAtual: '',
         eventSource: null,
-        credits: window.consultaData?.credits || 0,
-        creditUnitPrice: window.consultaData?.creditUnitPrice || 0.20,
+        saldoReais: window.consultaData?.saldoReais || 0,
         isExecuting: false,
         activeAlertTooltipId: null,
         alertTooltipCloseTimer: null,
@@ -228,7 +227,7 @@
             resumoCustoUnitario: document.getElementById('resumo-custo-unitario'),
             resumoCustoTotal: document.getElementById('resumo-custo-total'),
             resumoSaldo: document.getElementById('resumo-saldo'),
-            alertaCreditosInsuficientes: document.getElementById('alerta-creditos-insuficientes'),
+            alertaSaldoInsuficiente: document.getElementById('alerta-saldo-insuficiente'),
 
             // Progresso inline
             consultaInlineErrorRegion: document.getElementById('consulta-inline-error-region'),
@@ -978,10 +977,10 @@
     }
 
     /**
-     * Converte CRÉDITOS pra R$ formatado (espelha PricingCatalogService::creditsToCurrency).
+     * Formata um valor monetário em reais.
      */
-    function creditosEmBrl(creditos) {
-        const reais = Math.round((creditos || 0) * state.creditUnitPrice * 100) / 100;
+    function valorEmBrl(valor) {
+        const reais = Math.round((valor || 0) * 100) / 100;
         return 'R$ ' + reais.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
@@ -996,10 +995,10 @@
         // Total de alvos (cada um é uma consulta) define o custo.
         const totalParticipantes = numParticipantes + numEmpresaPropria + numClientes;
         const planoSelecionado = document.querySelector('input[name="plano_id"]:checked');
-        const custoUnitario = planoSelecionado ? parseInt(planoSelecionado.dataset.custo) : 0;
+        const custoUnitario = planoSelecionado ? Number(planoSelecionado.dataset.custo) : 0;
         const isGratuito = planoSelecionado && planoSelecionado.dataset.gratuito === '1';
         const custoTotal = isGratuito ? 0 : totalParticipantes * custoUnitario;
-        const creditosSuficientes = isGratuito || state.credits >= custoTotal;
+        const saldoSuficiente = isGratuito || state.saldoReais >= custoTotal;
 
         if (elements.resumoParticipantes) elements.resumoParticipantes.textContent = numParticipantes;
         if (elements.resumoEmpresaPropria) elements.resumoEmpresaPropria.textContent = numEmpresaPropria;
@@ -1011,21 +1010,18 @@
             if (elements.resumoCustoUnitario) elements.resumoCustoUnitario.textContent = 'Gratis';
             if (elements.resumoCustoTotal) elements.resumoCustoTotal.textContent = 'Gratis';
         } else {
-            // custo* está em CRÉDITOS — converter pra R$ na exibição (créditos × creditUnitPrice),
-            // igual aos badges dos planos (creditsToCurrency no blade). Antes colava "R$" no número
-            // de créditos cru e inflava o preço exibido (Compliance 25 créditos virava "R$ 25,00").
-            if (elements.resumoCustoUnitario) elements.resumoCustoUnitario.textContent = creditosEmBrl(custoUnitario);
-            if (elements.resumoCustoTotal) elements.resumoCustoTotal.textContent = creditosEmBrl(custoTotal);
+            if (elements.resumoCustoUnitario) elements.resumoCustoUnitario.textContent = valorEmBrl(custoUnitario);
+            if (elements.resumoCustoTotal) elements.resumoCustoTotal.textContent = valorEmBrl(custoTotal);
         }
 
-        // Alerta de creditos insuficientes
-        if (elements.alertaCreditosInsuficientes) {
-            elements.alertaCreditosInsuficientes.classList.toggle('hidden', creditosSuficientes);
+        // Alerta de saldo insuficiente
+        if (elements.alertaSaldoInsuficiente) {
+            elements.alertaSaldoInsuficiente.classList.toggle('hidden', saldoSuficiente);
         }
 
         // Habilitar/desabilitar botao
         if (elements.btnGerarRelatorio) {
-            const shouldDisable = totalParticipantes === 0 || !creditosSuficientes;
+            const shouldDisable = totalParticipantes === 0 || !saldoSuficiente;
             elements.btnGerarRelatorio.disabled = shouldDisable;
 
             // Atualizar estilos inline do botao
@@ -1115,9 +1111,8 @@
                 return;
             }
 
-            state.credits = data.novo_saldo;
-            // novo_saldo vem em CRÉDITOS — converter pra R$ como no render inicial do blade.
-            if (elements.resumoSaldo) elements.resumoSaldo.textContent = creditosEmBrl(data.novo_saldo || 0);
+            state.saldoReais = data.novo_saldo_reais;
+            if (elements.resumoSaldo) elements.resumoSaldo.textContent = valorEmBrl(data.novo_saldo_reais || 0);
 
             const redirectUrl = data.redirect_url || ('/app/consulta/lote/' + data.consulta_lote_id);
             if (redirectUrl) {
@@ -3830,7 +3825,7 @@
                 var pd = planosData[idx];
                 if (!pd) return;
                 if (pd.locked) {
-                    window.location.href = '/app/creditos';
+                    window.location.href = '/app/saldo';
                     return;
                 }
 
@@ -3882,7 +3877,7 @@
         state.expandedClienteDetailsId = null;
         state.expandedClienteId = null;
         voltarParaFormulario();
-        state.credits = window.consultaData?.credits || 0;
+        state.saldoReais = window.consultaData?.saldoReais || 0;
 
         init();
         initCarouselPlanos();

@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\CreditTransaction;
+use App\Models\SaldoTransacao;
 use App\Models\MonitoramentoPlano;
 use App\Models\User;
 use App\Support\Monitoramento\PlanoCatalog;
@@ -78,7 +78,7 @@ class PricingCatalogService
 
     public function userHasFirstPurchase(User $user): bool
     {
-        return CreditTransaction::query()
+        return SaldoTransacao::query()
             ->where('user_id', $user->id)
             ->where('type', 'purchase')
             ->where('amount', '>', 0)
@@ -281,12 +281,12 @@ class PricingCatalogService
 
     public function getPaidCreditsForUser(User $user): int
     {
-        $purchased = (int) CreditTransaction::query()
+        $purchased = (int) SaldoTransacao::query()
             ->where('user_id', $user->id)
             ->where('type', 'purchase')
             ->sum('amount');
 
-        $refunded = (int) abs(CreditTransaction::query()
+        $refunded = (int) abs(SaldoTransacao::query()
             ->where('user_id', $user->id)
             ->where('type', 'purchase_refund')
             ->sum('amount'));

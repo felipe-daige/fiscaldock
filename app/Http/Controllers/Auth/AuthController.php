@@ -8,7 +8,7 @@ use App\Models\ConsentLog;
 use App\Models\LandingLead;
 use App\Models\User;
 use App\Notifications\BoasVindasNotification;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use App\Services\Lgpd\ConsentLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,7 +22,7 @@ use Illuminate\Validation\ValidationException;
 class AuthController extends Controller
 {
     public function __construct(
-        protected CreditService $creditService
+        protected SaldoService $saldoService
     ) {}
 
     public function showLogin(Request $request)
@@ -397,7 +397,7 @@ class AuthController extends Controller
                 'is_empresa_propria' => true,
             ]);
 
-            $this->creditService->grantTrial(
+            $this->saldoService->grantTrial(
                 $user,
                 app(\App\Services\PricingCatalogService::class)->currencyToCredits((float) config('trial.saldo_reais')),
                 now()->addDays((int) config('trial.validade_dias'))

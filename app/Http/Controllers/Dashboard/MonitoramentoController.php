@@ -10,7 +10,7 @@ use App\Models\MonitoramentoConsulta;
 use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Models\ParticipanteGrupo;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use App\Services\Entitlements\EntitlementService;
 use App\Services\PricingCatalogService;
 use App\Support\CndFederal;
@@ -31,7 +31,7 @@ class MonitoramentoController extends Controller
     private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
 
     public function __construct(
-        protected CreditService $creditService,
+        protected SaldoService $saldoService,
         protected PricingCatalogService $pricingCatalogService,
         protected EntitlementService $entitlements,
     ) {}
@@ -54,7 +54,7 @@ class MonitoramentoController extends Controller
         $user = Auth::user();
 
         $data = [
-            'credits' => $this->creditService->getBalance($user),
+            'saldoReais' => $this->pricingCatalogService->creditsToCurrency($this->saldoService->getBalance($user)),
             'planos' => MonitoramentoPlano::ativos(),
             'hasMadeFirstPurchase' => $this->pricingCatalogService->userHasFirstPurchase($user),
             'firstPurchaseLockedProducts' => $this->pricingCatalogService->getFirstPurchaseLockedProducts(),
@@ -98,7 +98,7 @@ class MonitoramentoController extends Controller
         $data = [
             'consultas' => $consultas,
             'planos' => MonitoramentoPlano::ativos(),
-            'credits' => $this->creditService->getBalance($user),
+            'saldoReais' => $this->pricingCatalogService->creditsToCurrency($this->saldoService->getBalance($user)),
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -198,7 +198,7 @@ class MonitoramentoController extends Controller
             'grupos' => $grupos,
             'gruposMonitorados' => $gruposMonitorados,
             'planos' => $planos,
-            'credits' => $this->creditService->getBalance($user),
+            'saldoReais' => $this->pricingCatalogService->creditsToCurrency($this->saldoService->getBalance($user)),
             // Fase 5.1: frequência mínima do tier gateia as opções do modal (backend revalida).
             'freqMinDias' => $this->entitlements->frequenciaMinimaMonitoramento($user),
             // null quando dentro do cap; senão { cap, ocupados, excedente } → dispara o modal
@@ -741,7 +741,7 @@ class MonitoramentoController extends Controller
     }
 
     /**
-     * Freio de consumo do auto-monitor (§6.2): o contador define o teto de créditos que o
+     * Freio de consumo do auto-monitor (§6.2): o contador define o teto de saldo que o
      * monitoramento automático pode gastar por ciclo. Armazenado em
      * account_subscriptions.limite_consumo_automatico (null = volta ao default do plano).
      */

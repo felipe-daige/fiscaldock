@@ -5,7 +5,7 @@ use App\Models\User;
 use App\Services\Consultas\Dto\ResultadoFonte;
 use App\Services\Consultas\FecharLoteService;
 use App\Services\Consultas\Persistencia\PersistenciaCnpj;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use Illuminate\Support\Facades\Cache;
 
 uses(Illuminate\Foundation\Testing\RefreshDatabase::class);
@@ -28,11 +28,11 @@ it('estorna a soma do estorno por alvo (cache) das fontes que falharam', functio
     Cache::put("consulta_estorno:{$loteId}:participante:{$participanteId}", 4, 600);
 
     $user = User::find($userId);
-    $saldoAntes = app(CreditService::class)->getBalance($user);
+    $saldoAntes = app(SaldoService::class)->getBalance($user);
 
     app(FecharLoteService::class)->fechar($loteId, resumo: []);
 
-    expect(app(CreditService::class)->getBalance($user->refresh()))->toBe($saldoAntes + 4);
+    expect(app(SaldoService::class)->getBalance($user->refresh()))->toBe($saldoAntes + 4);
 });
 
 it('não estorna quando não houve falha estornável', function () {
@@ -40,9 +40,9 @@ it('não estorna quando não houve falha estornável', function () {
     app(PersistenciaCnpj::class)->gravar($loteId, 'participante', $participanteId, new ResultadoFonte('cadastro', ['razao_social' => 'X'], 'sucesso', 0));
 
     $user = User::find($userId);
-    $saldoAntes = app(CreditService::class)->getBalance($user);
+    $saldoAntes = app(SaldoService::class)->getBalance($user);
 
     app(FecharLoteService::class)->fechar($loteId, resumo: []);
 
-    expect(app(CreditService::class)->getBalance($user->refresh()))->toBe($saldoAntes);
+    expect(app(SaldoService::class)->getBalance($user->refresh()))->toBe($saldoAntes);
 });

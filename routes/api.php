@@ -38,7 +38,7 @@ Route::post('/importacao/efd/finalizar', [DataReceiverController::class, 'finali
 // ============================================
 
 // Sem auth de sessão: valida assinatura HMAC x-signature internamente.
-// Nunca credita pelo corpo; consulta a API do MP e libera créditos idempotentemente.
+// Nunca movimenta saldo pelo corpo; consulta a API do MP e libera saldo idempotentemente.
 Route::post('/mercado-pago/webhook', MercadoPagoWebhookController::class)
     ->name('api.mercadopago.webhook');
 

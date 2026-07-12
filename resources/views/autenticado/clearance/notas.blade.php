@@ -132,7 +132,7 @@
     data-saldo-atual="{{ $saldoAtual }}"
     data-custo-basico="{{ $custosTiers['basico'] }}"
     data-custo-full="{{ $custosTiers['full'] }}"
-    data-credit-unit-price="{{ app(\App\Services\PricingCatalogService::class)->creditUnitPrice() }}">
+    data-saldo-unit-price="{{ app(\App\Services\PricingCatalogService::class)->creditUnitPrice() }}">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div class="mb-4 sm:mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -762,7 +762,7 @@
             </div>
             <div class="border border-gray-200 rounded px-3 py-3" style="background-color: #ecfdf5">
                 <p class="text-[10px] font-semibold uppercase tracking-wide" style="color: #047857">Valor debitado</p>
-                <p class="text-lg font-bold mt-0.5" style="color: #047857"><span id="modal-sucesso-creditos">R$ 0,00</span></p>
+                <p class="text-lg font-bold mt-0.5" style="color: #047857"><span id="modal-sucesso-valor">R$ 0,00</span></p>
             </div>
         </div>
         <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-end">

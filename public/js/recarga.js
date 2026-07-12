@@ -86,7 +86,7 @@ window.initRecarga = function () {
         if (!sel) return null;
         var opt = sel.options[sel.selectedIndex];
         var limiteEl = document.getElementById('recarga-saldo-limite');
-        // Input agora é em R$; backend espera créditos (peg R$0,20). Converte no submit.
+        // Input e exibição usam R$; o backend normaliza o valor no submit.
         var limiteReais = parseFloat(limiteEl ? limiteEl.value : '') || 10;
         return { slug: sel.value, valor: parseFloat(opt.getAttribute('data-valor')) || 0, limite: Math.round(limiteReais / 0.20) };
     }

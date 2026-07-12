@@ -218,7 +218,7 @@ test('signup retorna creditos e validade do config (nao hardcoded)', function ()
     $response->assertStatus(200);
     $response->assertJson([
         'success' => true,
-        'creditos' => (int) config('trial.creditos'),
+        'saldo_reais' => (float) config('trial.saldo_reais'),
         'validade_dias' => (int) config('trial.validade_dias'),
     ]);
 });

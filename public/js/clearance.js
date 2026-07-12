@@ -10,6 +10,9 @@
     let currentImportacaoId = null;
     let currentNotaIds = [];
     let currentTipo = 'completa';
+    const unitPrice = Number(window.CLEARANCE_UNIT_PRICE || 0.20);
+    const brl = (unidades) => 'R$\u00a0' + (Number(unidades || 0) * unitPrice)
+        .toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     // DOM Elements
     const modal = document.getElementById('modal-validacao');
@@ -105,19 +108,19 @@
                         <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Tipo de Validacao</label>
                         <select id="select-tipo-validacao" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400 focus:outline-none bg-white">
                             <option value="local">Regras Locais (Gratis)</option>
-                            <option value="completa" selected>Validacao Completa (${custo.participantes_unicos} cr)</option>
-                            <option value="deep">Deep Analysis (${custo.participantes_unicos * 3} cr)</option>
+                            <option value="completa" selected>Validacao Completa (${brl(custo.participantes_unicos)})</option>
+                            <option value="deep">Deep Analysis (${brl(custo.participantes_unicos * 3)})</option>
                         </select>
                     </div>
 
                     <div class="border-t border-gray-200 pt-4">
                         <div class="flex justify-between text-sm">
                             <span class="text-gray-600">Custo:</span>
-                            <span id="custo-display" class="font-semibold text-gray-900">${custo.custo_total} creditos</span>
+                            <span id="custo-display" class="font-semibold text-gray-900">${brl(custo.custo_total)}</span>
                         </div>
                         <div class="flex justify-between text-sm mt-1">
                             <span class="text-gray-600">Seu saldo:</span>
-                            <span class="font-semibold ${suficiente ? 'text-green-600' : 'text-red-600'}">${saldo} creditos</span>
+                            <span class="font-semibold ${suficiente ? 'text-green-600' : 'text-red-600'}">${brl(saldo)}</span>
                         </div>
                     </div>
             `;
@@ -125,7 +128,7 @@
             if (!suficiente && custo.custo_total > 0) {
                 html += `
                     <div class="bg-white border border-gray-300 rounded p-3 border-l-4" style="border-left-color: #dc2626;">
-                        <p class="text-sm text-red-700">Creditos insuficientes para a opcao selecionada.</p>
+                        <p class="text-sm text-red-700">Saldo insuficiente para a opção selecionada.</p>
                     </div>
                 `;
             }
@@ -155,7 +158,7 @@
                     }
 
                     if (custoDisplay) {
-                        custoDisplay.textContent = `${novoCusto} creditos`;
+                        custoDisplay.textContent = brl(novoCusto);
                     }
                 });
             }

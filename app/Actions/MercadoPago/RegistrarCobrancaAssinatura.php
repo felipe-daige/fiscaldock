@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
 /**
  * Processa um authorized_payment de assinatura (cada cobrança recorrente).
  *
- * NÃO concede crédito (concessão é do scheduler assinatura:conceder-creditos).
+ * NÃO concede saldo (concessão é do scheduler assinatura:conceder-saldo).
  * Aqui: registra a cobrança (auditoria/idempotência) e trata dunning —
  * approved mantém ativa + avança renova_em; rejected/cancelled → inadimplente.
  */

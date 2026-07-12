@@ -64,7 +64,7 @@ class AdminUsuariosController extends Controller
     {
         $dados = $this->validarUsuario($request);
 
-        // Saldo inicial é digitado em R$ — o ledger fala créditos (peg 0,20, override admin).
+        // Saldo inicial é digitado em R$ e normalizado para a unidade física do ledger.
         if (isset($dados['credits'])) {
             $dados['credits'] = app(\App\Services\PricingCatalogService::class)->currencyToCredits((float) $dados['credits']);
         }

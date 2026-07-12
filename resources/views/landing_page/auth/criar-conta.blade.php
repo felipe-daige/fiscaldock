@@ -17,10 +17,10 @@
                             <div>
                                 <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Trial FiscalDock</p>
                                 <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide mt-1">Criar conta grátis</h1>
-                                <p class="text-xs text-gray-500 mt-1">Receba @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(config('trial.creditos'))) de saldo grátis para usar em até {{ config('trial.validade_dias') }} dias.</p>
+                                <p class="text-xs text-gray-500 mt-1">Receba @brl(config('trial.saldo_reais')) de saldo grátis para usar em até {{ config('trial.validade_dias') }} dias.</p>
                             </div>
                             <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">
-                                @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(config('trial.creditos')))
+                                @brl(config('trial.saldo_reais'))
                             </span>
                         </div>
                     </div>
@@ -204,7 +204,7 @@
                     <div class="p-4 space-y-4 text-sm text-gray-700">
                         <div class="border border-gray-200 rounded p-4">
                             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Bônus inicial</p>
-                            <p class="text-lg font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(config('trial.creditos'))) de saldo grátis</p>
+                            <p class="text-lg font-bold text-gray-900">@brl(config('trial.saldo_reais')) de saldo grátis</p>
                             <p class="text-xs text-gray-500 mt-1">Liberados automaticamente na criação da conta.</p>
                         </div>
                         <div class="border border-gray-200 rounded p-4">
@@ -239,7 +239,7 @@
     <div id="signup-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
         <div class="bg-white rounded-lg border border-gray-300 shadow-xl w-full max-w-md overflow-hidden">
 
-            {{-- Etapa 1 — boas-vindas + créditos --}}
+            {{-- Etapa 1 — boas-vindas + saldo --}}
             <div data-step="1">
                 <div class="bg-gray-50 px-5 py-3 border-b border-gray-200">
                     <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Bem-vindo à FiscalDock</p>
@@ -248,7 +248,7 @@
                 <div class="p-5 space-y-4 text-sm text-gray-700">
                     <div class="border border-gray-200 rounded p-4 text-center">
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Bônus de boas-vindas</p>
-                        <p class="text-2xl font-bold text-gray-900 mt-1">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(config('trial.creditos'))) de saldo grátis</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">@brl(config('trial.saldo_reais')) de saldo grátis</p>
                         <p class="text-xs text-gray-500 mt-1">válidos por {{ config('trial.validade_dias') }} dias</p>
                     </div>
                     <div>

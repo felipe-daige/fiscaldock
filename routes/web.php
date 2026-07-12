@@ -3,7 +3,7 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\PasswordResetController;
-use App\Http\Controllers\CreditController;
+use App\Http\Controllers\SaldoController;
 use App\Http\Controllers\Dashboard\BiController;
 use App\Http\Controllers\Dashboard\CatalogoController;
 use App\Http\Controllers\Dashboard\ClearanceController;
@@ -128,7 +128,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     Route::get('/app/faixa-comercial', [DashboardController::class, 'meuPlano'])->name('app.faixa-comercial');
     Route::get('/app/planos', [DashboardController::class, 'planos'])->name('app.planos');
     Route::get('/app/checkout/{pacote}', [DashboardController::class, 'checkout'])->name('app.checkout');
-    Route::get('/app/creditos', [DashboardController::class, 'creditos'])->name('app.creditos');
+    Route::get('/app/saldo', [DashboardController::class, 'saldo'])->name('app.saldo');
 
     // Mercado Pago — cria o pagamento do pacote (front Bricks envia o meio de pagamento).
     Route::post('/app/pagamento/mercado-pago', [\App\Http\Controllers\Dashboard\PagamentoMercadoPagoController::class, 'criar'])
@@ -142,7 +142,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     Route::post('/app/assinatura/cancelar', [\App\Http\Controllers\Dashboard\AssinaturaController::class, 'cancelar'])
         ->name('app.assinatura.cancelar');
 
-    // Recarga automática por tempo (preapproval recorrente de um pacote de créditos).
+    // Recarga automática por tempo (preapproval recorrente de saldo).
     Route::post('/app/recarga-automatica', [\App\Http\Controllers\Dashboard\RecargaController::class, 'criar'])
         ->name('app.recarga.criar');
     Route::post('/app/recarga-automatica/saldo', [\App\Http\Controllers\Dashboard\RecargaController::class, 'criarPorSaldo'])
@@ -150,9 +150,9 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     Route::post('/app/recarga-automatica/cancelar', [\App\Http\Controllers\Dashboard\RecargaController::class, 'cancelar'])
         ->name('app.recarga.cancelar');
 
-    // Rotas de créditos
-    Route::prefix('app/credits')->name('app.credits.')->group(function () {
-        Route::get('/balance', [CreditController::class, 'balance'])->name('balance');
+    // Consulta de saldo
+    Route::prefix('app/saldo')->name('app.saldo.')->group(function () {
+        Route::get('/balance', [SaldoController::class, 'balance'])->name('balance');
     });
 
     // Rota de Novo Cliente (formulário de cadastro)

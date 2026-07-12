@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\CreditTransaction;
+use App\Models\SaldoTransacao;
 use App\Models\MercadoPagoPayment;
 use App\Models\RecargaAutomatica;
 use App\Models\User;
@@ -29,7 +29,7 @@ function assinaturaValidaRecarga(string $dataId, string $requestId, string $secr
     return "ts={$ts},v1={$v1}";
 }
 
-it('criar recarga usa valor/créditos do catálogo (não do front) e persiste pendente', function () {
+it('criar recarga usa valor/saldo do catálogo (não do front) e persiste pendente', function () {
     Http::fake(['api.mercadopago.com/preapproval' => Http::response(['id' => 'PRE-R1', 'status' => 'pending'], 201)]);
 
     $user = User::factory()->create();
@@ -109,7 +109,7 @@ it('webhook authorized_payment approved credita o pacote 1× (idempotente)', fun
     $enviar()->assertOk(); // reentrega
 
     expect($user->fresh()->credits)->toBe(1000); // creditou 1× só
-    expect(CreditTransaction::where('user_id', $user->id)->where('type', 'purchase')->count())->toBe(1);
+    expect(SaldoTransacao::where('user_id', $user->id)->where('type', 'purchase')->count())->toBe(1);
     expect(MercadoPagoPayment::where('tipo', 'recarga')->count())->toBe(1);
 });
 
@@ -136,13 +136,13 @@ it('webhook authorized_payment rejected marca a recarga inadimplente e não cred
     expect(RecargaAutomatica::first()->status)->toBe('inadimplente');
 });
 
-it('a página /app/creditos renderiza o opt-in de recarga com SDK e public key', function () {
+it('a página /app/saldo renderiza o opt-in de recarga com SDK e public key', function () {
     config(['services.mercadopago.public_key' => 'TEST-PK-RECARGA']);
 
     $user = User::factory()->create();
     actingAs($user);
 
-    $html = \Pest\Laravel\get('/app/creditos')->assertOk()->getContent();
+    $html = \Pest\Laravel\get('/app/saldo')->assertOk()->getContent();
 
     expect($html)->toContain('Recarga automática');
     expect($html)->toContain('recarga-ativar');           // botão de opt-in

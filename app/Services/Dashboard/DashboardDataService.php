@@ -10,7 +10,7 @@ use App\Models\User;
 use App\Models\XmlImportacao;
 use App\Services\AlertaCentralService;
 use App\Services\BiService;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use App\Services\EfdAgregadorService;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\DB;
 class DashboardDataService
 {
     public function __construct(
-        protected CreditService $creditService,
+        protected SaldoService $saldoService,
         protected AlertaCentralService $alertaCentralService,
         protected EfdAgregadorService $efd,
         protected BiService $bi
@@ -67,7 +67,7 @@ class DashboardDataService
             ->count();
 
         // Créditos
-        $creditos = $this->creditService->getBalance($user);
+        $creditos = $this->saldoService->getBalance($user);
         $creditosConsultas = (int) ConsultaLote::where('user_id', $userId)
             ->whereIn('status', ConsultaLote::successfulStatuses())
             ->whereBetween('created_at', [$mesInicio, $mesFim])
@@ -171,7 +171,7 @@ class DashboardDataService
         return [
             'volume' => ['notas' => $volNotas, 'valor' => $volValor],
             'saude' => ['total' => $alertasTotal, 'alertas_alta' => $alertasAlta, 'risco' => $risco],
-            'creditos' => ['saldo' => $this->creditService->getBalance($user), 'usados_mes' => $this->creditosUsadosMes($userId)],
+            'saldo' => ['disponivel' => $this->saldoService->getBalance($user), 'usado_mes' => $this->creditosUsadosMes($userId)],
         ];
     }
 
@@ -244,7 +244,7 @@ class DashboardDataService
 
         $kpis = $bloco(
             fn () => $this->getCockpitKpis($userId, $user, $clienteId, $dataInicio, $dataFim),
-            ['volume' => ['notas' => 0, 'valor' => 0.0], 'saude' => ['total' => 0, 'alertas_alta' => 0, 'risco' => 0], 'creditos' => ['saldo' => 0, 'usados_mes' => 0]]
+            ['volume' => ['notas' => 0, 'valor' => 0.0], 'saude' => ['total' => 0, 'alertas_alta' => 0, 'risco' => 0], 'saldo' => ['disponivel' => 0, 'usado_mes' => 0]]
         );
 
         $triagem = $bloco(fn () => $this->getTriagem($userId, $clienteId), []);

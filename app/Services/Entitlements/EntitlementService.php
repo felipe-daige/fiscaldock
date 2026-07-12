@@ -43,7 +43,7 @@ class EntitlementService
      * Gate efetivo de acesso a um recurso pago.
      *
      * Política (definida 2026-06-16): **trial ativo libera tudo** — durante o
-     * trial o usuário experimenta os recursos pagos gastando créditos do trial;
+     * trial o usuário experimenta os recursos pagos consumindo o saldo promocional;
      * quando o trial expira e ele vira Free puro, o gate volta a valer pelo plano.
      * `export` não é booleana (é lista de formatos) → permitida se houver ≥1 formato.
      */
@@ -159,7 +159,7 @@ class EntitlementService
         return $this->cicloInicioMonitoramento($user)->copy()->addMonth();
     }
 
-    /** Créditos já consumidos pelo auto-monitor no ciclo corrente (deduções type=monitoramento_assinatura). */
+    /** Saldo já consumido pelo auto-monitor no ciclo corrente (deduções type=monitoramento_assinatura). */
     public function consumoMonitoramentoNoCiclo(User $user): int
     {
         $desde = $this->cicloInicioMonitoramento($user);

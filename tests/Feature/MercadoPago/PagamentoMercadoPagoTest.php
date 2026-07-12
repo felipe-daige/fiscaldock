@@ -32,7 +32,7 @@ function assinaturaValida(string $dataId, string $requestId, string $secret): st
     return "ts={$ts},v1={$v1}";
 }
 
-it('cria pagamento pending com valor/créditos do catálogo backend (não do front)', function () {
+it('cria pagamento pending com valor/saldo do catálogo backend (não do front)', function () {
     Http::fake([
         'api.mercadopago.com/v1/payments' => Http::response([
             'id' => 9001,
@@ -45,7 +45,7 @@ it('cria pagamento pending com valor/créditos do catálogo backend (não do fro
     $user = User::factory()->create();
     actingAs($user);
 
-    // Front tenta adulterar o amount; backend ignora e usa o catálogo (business = R$200 / 1000 cr).
+    // Front tenta adulterar o amount; backend ignora e usa o catálogo (Business = R$ 200).
     $resp = postJson(route('app.pagamento.mercadopago.criar'), [
         'pacote' => 'business',
         'amount' => 1.00,
@@ -53,7 +53,7 @@ it('cria pagamento pending com valor/créditos do catálogo backend (não do fro
     ])->assertOk();
 
     $resp->assertJsonPath('status', 'pending')
-        ->assertJsonPath('creditos', 1000)
+        ->assertJsonPath('saldo_adicionado_reais', 200)
         ->assertJsonPath('valor', '200.00');
 
     $payment = MercadoPagoPayment::first();
@@ -104,7 +104,7 @@ it('recusa pacote inválido', function () {
     expect(MercadoPagoPayment::count())->toBe(0);
 });
 
-it('webhook approved com assinatura válida credita 1× (idempotente em reentrega)', function () {
+it('webhook approved com assinatura válida libera saldo 1× (idempotente em reentrega)', function () {
     $user = User::factory()->create(['credits' => 10]);
 
     $payment = MercadoPagoPayment::create([
@@ -145,7 +145,7 @@ it('webhook approved com assinatura válida credita 1× (idempotente em reentreg
     expect($payment->fresh()->status)->toBe('approved');
     expect($payment->fresh()->credited_at)->not->toBeNull();
 
-    expect(\App\Models\CreditTransaction::where('user_id', $user->id)->where('type', 'purchase')->count())
+    expect(\App\Models\SaldoTransacao::where('user_id', $user->id)->where('type', 'purchase')->count())
         ->toBe(1);
 });
 

@@ -24,9 +24,9 @@ beforeEach(function () {
 it('a landing /precos reflete o depósito mínimo e o preço de produto do override', function () {
     get('/precos')
         ->assertOk()
-        ->assertSee('R$&nbsp;80 para ativar o primeiro saldo', false)
-        ->assertSee("R$\u{A0}6,00/consulta")
-        ->assertDontSee("R$\u{A0}5,00/consulta");
+        ->assertSee('Recarga mínima de R$&nbsp;80', false)
+        ->assertSee('R$&nbsp;6,00', false)
+        ->assertDontSee('R$&nbsp;5,00', false);
 });
 
 it('a tela /app/consulta/nova reflete o preço de produto do override', function () {

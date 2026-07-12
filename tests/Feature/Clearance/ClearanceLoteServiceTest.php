@@ -47,7 +47,7 @@ it('cria lote, debita N×tier e despacha um batch com N jobs', function () {
     $cte = loteSvcNota($user, ['chave_acesso' => '51240146970030000474570010000016901000685610', 'modelo' => '57', 'numero' => 1690]);
 
     $unit = ValidacaoContabilService::custoUnitarioPorTier('basico');
-    $saldoAntes = app(\App\Services\CreditService::class)->getBalance($user);
+    $saldoAntes = app(\App\Services\SaldoService::class)->getBalance($user);
 
     $r = app(ClearanceLoteService::class)->iniciar(
         [$nfe->id, $cte->id], [$nfe->id => 'efd', $cte->id => 'efd'], 'basico', $user->id, 'tab-lote'
@@ -61,7 +61,7 @@ it('cria lote, debita N×tier e despacha um batch com N jobs', function () {
     expect($lote->status)->toBe(ConsultaLote::STATUS_PROCESSANDO);
     expect($lote->creditos_cobrados)->toBe(2 * $unit);
 
-    expect(app(\App\Services\CreditService::class)->getBalance($user->fresh()))->toBe($saldoAntes - 2 * $unit);
+    expect(app(\App\Services\SaldoService::class)->getBalance($user->fresh()))->toBe($saldoAntes - 2 * $unit);
     expect(Cache::get("clearance_lote_chaves:{$lote->id}"))->toHaveCount(2);
 
     Bus::assertBatched(fn ($batch) => count($batch->jobs) === 2
@@ -78,7 +78,7 @@ it('mapeia modelo 57 para tipo cte e 55 para nfe', function () {
     Bus::assertBatched(fn ($batch) => $batch->jobs->first()->tipoDocumento === 'cte');
 });
 
-it('créditos insuficientes: não debita nem despacha', function () {
+it('saldo insuficiente: não debita nem despacha', function () {
     Bus::fake();
     $user = User::factory()->create(['credits' => 1]);
     $nfe = loteSvcNota($user);

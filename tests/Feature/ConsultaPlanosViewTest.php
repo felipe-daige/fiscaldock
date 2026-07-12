@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\CreditTransaction;
+use App\Models\SaldoTransacao;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -25,7 +25,7 @@ it('lista os planos de consulta com a nota do periodo de teste e cobertura atual
 
 it('nao mostra a nota de teste apos a primeira compra', function () {
     $user = User::factory()->create();
-    CreditTransaction::create([
+    SaldoTransacao::create([
         'user_id' => $user->id, 'amount' => 250, 'balance_after' => 250, 'type' => 'purchase',
     ]);
 

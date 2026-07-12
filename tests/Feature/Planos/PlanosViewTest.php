@@ -12,7 +12,7 @@ beforeEach(function () {
     $this->seed(SubscriptionPlanSeeder::class);
 });
 
-it('renderiza os 5 tiers do seeder com preços e créditos inclusos da doc CFO', function () {
+it('renderiza os 5 tiers do seeder com preços e saldo incluso da doc CFO', function () {
     $user = User::factory()->create();
     actingAs($user);
 
@@ -23,7 +23,7 @@ it('renderiza os 5 tiers do seeder com preços e créditos inclusos da doc CFO',
         expect($html)->toContain($nome);
     }
 
-    // Preços e créditos inclusos canônicos (CFO). Preço vem hardcoded na view
+    // Preços e saldo incluso canônicos (CFO). Preço vem hardcoded na view
     // como "R$&nbsp;{n}"; saldo/mês vem de Dinheiro::brl (NBSP real).
     expect($html)->toContain('R$&nbsp;99');
     expect($html)->toContain('R$&nbsp;299');

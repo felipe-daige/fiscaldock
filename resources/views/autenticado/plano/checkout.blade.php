@@ -9,7 +9,7 @@
      data-mp-endpoint="{{ route('app.pagamento.mercadopago.criar') }}"
      data-mp-pacote="{{ $pacote['slug'] }}"
      data-mp-amount="{{ number_format($pacote['preco'], 2, '.', '') }}"
-     data-mp-creditos="{{ (int) $pacote['creditos'] }}">
+     data-mp-saldo="{{ number_format((float) $pacote['preco'], 2, '.', '') }}">
     <div class="max-w-lg mx-auto px-3 sm:px-6 py-5 sm:py-10">
 
         <style>
@@ -176,7 +176,7 @@ window.initCheckout = function() {
         var poi = d.point_of_interaction;
         var pix = poi && poi.transaction_data;
         if (pix && (pix.qr_code || pix.qr_code_base64)) {
-            // Pix: renderiza QR + copia-e-cola; crédito entra via webhook após pagar.
+            // Pix: renderiza QR + copia-e-cola; saldo entra via webhook após pagar.
             hide('paymentBrick_container');
             if (pix.qr_code_base64) {
                 document.getElementById('ck-pix-qr').src = 'data:image/png;base64,' + pix.qr_code_base64;

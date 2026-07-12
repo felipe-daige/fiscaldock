@@ -212,7 +212,7 @@
                         <div class="p-4">
                             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Saldo atual</p>
                             <p class="text-lg font-bold text-gray-900">{{ $fmtR($pricing->creditsToCurrency((int) $usuario->credits)) }}</p>
-                            <p class="text-[11px] text-gray-500">Campo legado `credits`: {{ $fmtN($usuario->credits) }}</p>
+                            <p class="text-[11px] text-gray-500">Saldo disponível para uso</p>
                         </div>
                         <div class="p-4">
                             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Pago aprovado</p>

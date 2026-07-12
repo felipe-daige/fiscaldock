@@ -7,7 +7,7 @@ use Illuminate\Console\Command;
 
 /**
  * Smoke test do clearance SEFAZ numa ÚNICA chave: chama o InfoSimples de verdade (1 consulta paga),
- * normaliza e imprime o resultado cru. NÃO debita créditos nem persiste snapshot (não cria lote).
+ * normaliza e imprime o resultado cru. NÃO debita saldo nem persiste snapshot (não cria lote).
  * Use para validar o pipeline/param antes de rodar em lote pela UI.
  *
  * Ex: php artisan clearance:smoke 50240243648971004576550010001117211468024730 nfe
@@ -29,7 +29,7 @@ class ClearanceSmokeCommand extends Command
             return self::FAILURE;
         }
 
-        $this->warn('⚠️  Isto faz 1 consulta PAGA ao InfoSimples (~R$0,26). Não persiste nem cobra créditos.');
+        $this->warn('⚠️  Isto faz 1 consulta PAGA ao InfoSimples (~R$0,26). Não persiste nem cobra saldo.');
         $this->line("Chave: {$chave} | tipo: {$tipo} | modelo: ".substr($chave, 20, 2));
 
         try {

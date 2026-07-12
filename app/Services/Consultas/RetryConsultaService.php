@@ -8,7 +8,7 @@ use App\Models\ConsultaLote;
 use App\Models\ConsultaResultado;
 use App\Models\Participante;
 use App\Services\Consultas\Persistencia\PersistenciaCnpj;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
 
@@ -28,7 +28,7 @@ class RetryConsultaService
     public function __construct(
         private FonteRegistry $registry,
         private PersistenciaCnpj $persistencia,
-        private CreditService $credits,
+        private SaldoService $credits,
     ) {}
 
     /**

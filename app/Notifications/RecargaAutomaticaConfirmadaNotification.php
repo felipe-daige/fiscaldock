@@ -34,7 +34,7 @@ class RecargaAutomaticaConfirmadaNotification extends Notification implements Sh
         return $mail
             ->subject('Recarga automática · '.Blocos::brl($this->valor).' adicionados ao saldo')
             ->greeting('Recarregamos seu saldo automaticamente.')
-            ->line('Cobramos o cartão cadastrado e o crédito já entrou. Suas consultas e o **monitoramento contínuo** seguem rodando sem interrupção.')
+            ->line('Cobramos o cartão cadastrado e o saldo já entrou. Suas consultas e o **monitoramento contínuo** seguem rodando sem interrupção.')
             ->line(Blocos::hero(
                 Blocos::brl($this->valor),
                 'Saldo adicionado',
@@ -48,7 +48,7 @@ class RecargaAutomaticaConfirmadaNotification extends Notification implements Sh
                 'Data' => now()->format('d/m/Y \à\s H:i'),
                 'Referência' => $this->mpPaymentId,
             ], 'Comprovante'))
-            ->action('Ver meu saldo', url('/app/creditos'))
+            ->action('Ver meu saldo', url('/app/saldo'))
             ->line('Você define o gatilho e o valor do pacote — e desliga quando quiser. Sem essa configuração ativa, nada é cobrado.')
             ->salutation('Guarde este e-mail — ele é o seu comprovante.');
     }

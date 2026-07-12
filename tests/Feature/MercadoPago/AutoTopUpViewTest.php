@@ -13,7 +13,7 @@ it('mostra o opt-in de auto top-up por saldo com input de limite e rota', functi
     $user = User::factory()->create();
     actingAs($user);
 
-    $html = get('/app/creditos')->assertOk()->getContent();
+    $html = get('/app/saldo')->assertOk()->getContent();
 
     expect($html)->toContain('Auto top-up por saldo');
     expect($html)->toContain('recarga-saldo-limite');     // input do limite
@@ -30,6 +30,6 @@ it('mostra banner de inadimplente quando a recarga por saldo está pausada', fun
     ]);
     actingAs($user);
 
-    $html = get('/app/creditos')->assertOk()->getContent();
+    $html = get('/app/saldo')->assertOk()->getContent();
     expect($html)->toContain('recarga pausada');
 });

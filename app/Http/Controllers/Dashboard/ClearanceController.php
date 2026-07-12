@@ -18,7 +18,7 @@ use App\Services\Clearance\ClearanceLoteService;
 use App\Services\Clearance\DivergenciaService;
 use App\Services\Clearance\RelatorioExecutivoService;
 use App\Services\Consultas\FecharLoteService;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use App\Services\NotaFiscalService;
 use App\Services\ValidacaoContabilService;
 use App\Support\PdfReport;
@@ -49,7 +49,7 @@ class ClearanceController extends Controller
 
     public function __construct(
         protected ValidacaoContabilService $validacaoService,
-        protected CreditService $creditService,
+        protected SaldoService $saldoService,
         protected NotaFiscalService $notaFiscalService,
         protected ReconciliacaoXmlEfdService $reconciliacaoService
     ) {}
@@ -70,7 +70,7 @@ class ClearanceController extends Controller
             'kpis' => $this->validacaoService->getKpisStatusReceita($userId),
             'notasBloqueantes' => $this->validacaoService->getNotasComSituacaoBloqueante($userId, 5),
             'ultimasVerificacoes' => $this->validacaoService->getUltimasVerificacoes($userId, 10),
-            'saldoCreditos' => $this->creditService->getBalance($user),
+            'saldoCreditos' => $this->saldoService->getBalance($user),
             // Verificação em lote (na Listagem de Notas): básico/completo por documento.
             // Verificação avulsa por chave (botão "Verificar nota"): custo próprio.
             'custosTiers' => [
@@ -157,7 +157,7 @@ class ClearanceController extends Controller
             'clientes' => $clientes,
             'filtros' => $filtros,
             'escopoNotas' => $this->buildEscopoNotasResumo($userId),
-            'saldoAtual' => $this->creditService->getBalance(Auth::user()),
+            'saldoAtual' => $this->saldoService->getBalance(Auth::user()),
             'custosTiers' => [
                 'basico' => ValidacaoContabilService::custoUnitarioPorTier('basico'),
                 'full' => ValidacaoContabilService::custoUnitarioPorTier('full'),
@@ -238,7 +238,7 @@ class ClearanceController extends Controller
         }
 
         $data = [
-            'saldoAtual' => $this->creditService->getBalance(Auth::user()),
+            'saldoAtual' => $this->saldoService->getBalance(Auth::user()),
             'custoEstimadoCreditos' => self::CLEARANCE_NFE_AVULSA_CUSTO,
             'clientes' => Cliente::where('user_id', Auth::id())
                 ->orderByDesc('is_empresa_propria')
@@ -536,7 +536,7 @@ class ClearanceController extends Controller
 
     /**
      * Busca avulsa de DF-e por chave (atrás da feature flag clearance.busca_avulsa.habilitada;
-     * desabilitada → 503). Valida input, deduplica contra acervo/snapshot, debita créditos e
+     * desabilitada → 503). Valida input, deduplica contra acervo/snapshot, debita saldo e
      * processa no Laravel (InfoSimples). Sem n8n — despacho desligado no cutover de 2026-06-07.
      */
     public function consultarNfe(Request $request)
@@ -753,7 +753,7 @@ class ClearanceController extends Controller
                 'success' => true,
                 'resultado_url' => route('app.clearance.buscar.resultado-local', ['token' => $token]),
                 'mensagem' => 'Todas as chaves já estavam no acervo.',
-                'novo_saldo' => $this->creditService->getBalance($user),
+                'novo_saldo' => $this->saldoService->getBalance($user),
                 'total_itens' => $quantidadeItens,
                 'total_existentes' => $quantidadeExistentes,
                 'total_consultadas' => 0,
@@ -1418,7 +1418,7 @@ class ClearanceController extends Controller
         return $this->comTokenDownload($zip->download($relatorio, 'panorama-clearance-csv.zip'), $request);
     }
 
-    /** Custo em créditos de UMA consulta SINTEGRA (fonte paga). */
+    /** Custo interno de uma consulta SINTEGRA (fonte paga). */
     private function custoSintegraUnitario(): int
     {
         return (int) config('consultas.fontes.sintegra', 2);
@@ -1484,14 +1484,14 @@ class ClearanceController extends Controller
 
         $total = $participantes->count();
         $custo = $total * $this->custoSintegraUnitario();
-        $saldo = $this->creditService->getBalance(Auth::user());
+        $saldo = $this->saldoService->getBalance(Auth::user());
 
         return response()->json([
             'success' => true,
             'total' => $total,
             'participante_ids' => $participantes->pluck('id')->values()->all(),
-            'custo_creditos' => $custo,
-            'saldo' => $saldo,
+            'valor_reais' => $this->pricingCatalogService->creditsToCurrency($custo),
+            'saldo_reais' => $this->pricingCatalogService->creditsToCurrency($saldo),
             'suficiente' => $saldo >= $custo,
         ]);
     }
@@ -1534,19 +1534,19 @@ class ClearanceController extends Controller
         $total = $participantes->count();
         $custoTotal = $total * $this->custoSintegraUnitario();
 
-        if (! $this->creditService->hasEnough($user, $custoTotal)) {
+        if (! $this->saldoService->hasEnough($user, $custoTotal)) {
             return response()->json([
                 'success' => false,
                 'error' => 'Saldo insuficiente.',
                 'creditos_necessarios' => $custoTotal,
-                'creditos_disponiveis' => $this->creditService->getBalance($user),
+                'creditos_disponiveis' => $this->saldoService->getBalance($user),
             ], Response::HTTP_PAYMENT_REQUIRED);
         }
 
         $tabId = $validated['tab_id'] ?: (string) Str::uuid();
 
         try {
-            if (! $this->creditService->deduct($user, $custoTotal, 'consulta_lote', "SINTEGRA IE — {$total} participante(s)")) {
+            if (! $this->saldoService->deduct($user, $custoTotal, 'consulta_lote', "SINTEGRA IE — {$total} participante(s)")) {
                 return response()->json(['success' => false, 'error' => 'Falha ao debitar o saldo.'], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
@@ -1588,13 +1588,13 @@ class ClearanceController extends Controller
                 'lote_id' => $lote->id,
                 'total' => $total,
                 'participante_ids' => $participantes->pluck('id')->values()->all(),
-                'custo_creditos' => $custoTotal,
-                'novo_saldo' => $this->creditService->getBalance($user),
+                'valor_reais' => $this->pricingCatalogService->creditsToCurrency($custoTotal),
+                'novo_saldo_reais' => $this->pricingCatalogService->creditsToCurrency($this->saldoService->getBalance($user)),
             ]);
         } catch (\Throwable $e) {
             if (isset($lote)) {
                 $lote->update(['status' => ConsultaLote::STATUS_ERRO, 'error_code' => 'INTERNAL_ERROR', 'error_message' => $e->getMessage()]);
-                $this->creditService->add($user, $custoTotal, 'consulta_refund', "Estorno SINTEGRA IE lote #{$lote->id}");
+                $this->saldoService->add($user, $custoTotal, 'consulta_refund', "Estorno SINTEGRA IE lote #{$lote->id}");
             }
             Log::error('Clearance SINTEGRA IE: exceção', ['user_id' => $userId, 'error' => $e->getMessage()]);
 
@@ -2048,7 +2048,7 @@ class ClearanceController extends Controller
         }
 
         $custo = $this->validacaoService->calcularCusto($notaIds, $origens, $userId, $tipo);
-        $saldoAtual = $this->creditService->getBalance(Auth::user());
+        $saldoAtual = $this->saldoService->getBalance(Auth::user());
 
         return response()->json([
             'success' => true,

@@ -152,7 +152,7 @@ use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Models\User;
 use App\Services\Consultas\FecharRetryService;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
 
@@ -178,19 +178,19 @@ it('executar (sem seleção) debita plano×50% por CNPJ e reconsulta só as font
     Bus::fake();
     config()->set('consultas.retry.desconto_pct', 50);
     [$lote, $p, $user] = montarLoteComPlano('compliance');
-    app(CreditService::class)->add($user, 100);
+    app(SaldoService::class)->add($user, 100);
     // cnd_federal falhou (elegível); cndt já deu certo (não está em _fontes_erro).
     gravarFontesErro($lote->id, $p->id, [
         'cnd_federal' => ['origem' => 'integracao', 'status' => 'retry', 'codigo' => 615, 'tentativas' => 0],
     ]);
 
     $precoPlano = (int) ceil($lote->plano->custo_creditos * 0.5);
-    $saldoAntes = app(CreditService::class)->getBalance($user);
+    $saldoAntes = app(SaldoService::class)->getBalance($user);
 
     // Backend-autoritativo: sem argumento de seleção.
     app(RetryConsultaService::class)->executar($lote->fresh());
 
-    expect(app(CreditService::class)->getBalance($user->fresh()))->toBe($saldoAntes - $precoPlano);
+    expect(app(SaldoService::class)->getBalance($user->fresh()))->toBe($saldoAntes - $precoPlano);
 
     // reconsulta SÓ as fontes com erro (não o plano inteiro).
     Bus::assertBatched(fn ($batch) => collect($batch->jobs)->contains(
@@ -208,7 +208,7 @@ it('executar (sem seleção) debita plano×50% por CNPJ e reconsulta só as font
 it('executar não cobra nem reconsulta CNPJ que só tem fonte inelegível (fatal)', function () {
     Bus::fake();
     [$lote, $p, $user] = montarLoteComPlano('compliance');
-    app(CreditService::class)->add($user, 100);
+    app(SaldoService::class)->add($user, 100);
     gravarFontesErro($lote->id, $p->id, [
         'cndt' => ['origem' => 'integracao', 'status' => 'fatal', 'codigo' => 602, 'tentativas' => 0],
     ]);
@@ -227,14 +227,14 @@ it('settlement estorna o valor cheio do CNPJ quando NENHUMA fonte reconsultada t
         'cnd_federal' => ['origem' => 'integracao', 'status' => 'retry', 'codigo' => 615, 'tentativas' => 1],
         'sintegra' => ['origem' => 'integracao', 'status' => 'retry', 'codigo' => 605, 'tentativas' => 1],
     ]);
-    $saldoAntes = app(CreditService::class)->getBalance($user);
+    $saldoAntes = app(SaldoService::class)->getBalance($user);
 
     app(FecharRetryService::class)->fechar($lote->id, [
         ['alvo_tipo' => 'participante', 'alvo_id' => $p->id, 'fonte' => 'cnd_federal'],
         ['alvo_tipo' => 'participante', 'alvo_id' => $p->id, 'fonte' => 'sintegra'],
     ]);
 
-    expect(app(CreditService::class)->getBalance($user->fresh()))->toBe($saldoAntes + $precoPlano);
+    expect(app(SaldoService::class)->getBalance($user->fresh()))->toBe($saldoAntes + $precoPlano);
 });
 
 it('settlement estorna a soma de TODOS os CNPJs que re-falharam (multi-alvo, espelha lote 215)', function () {
@@ -252,7 +252,7 @@ it('settlement estorna a soma de TODOS os CNPJs que re-falharam (multi-alvo, esp
         ]);
         Cache::put("consulta_retry_charge:{$lote->id}:{$tipo}:{$id}", $precoPlano, 86400);
     }
-    $saldoAntes = app(CreditService::class)->getBalance($user);
+    $saldoAntes = app(SaldoService::class)->getBalance($user);
 
     app(FecharRetryService::class)->fechar($lote->id, [
         ['alvo_tipo' => 'participante', 'alvo_id' => $p->id, 'fonte' => 'cnd_federal'],
@@ -261,7 +261,7 @@ it('settlement estorna a soma de TODOS os CNPJs que re-falharam (multi-alvo, esp
     ]);
 
     // 3 CNPJs × preço do plano c/ desconto (não menos).
-    expect(app(CreditService::class)->getBalance($user->fresh()))->toBe($saldoAntes + ($precoPlano * 3));
+    expect(app(SaldoService::class)->getBalance($user->fresh()))->toBe($saldoAntes + ($precoPlano * 3));
 });
 
 it('settlement NÃO estorna se ao menos uma fonte do CNPJ voltou com sucesso', function () {
@@ -277,14 +277,14 @@ it('settlement NÃO estorna se ao menos uma fonte do CNPJ voltou com sucesso', f
             '_fontes_erro' => ['cnd_federal' => ['origem' => 'integracao', 'status' => 'retry', 'codigo' => 615, 'tentativas' => 1]],
         ],
     ]);
-    $saldoAntes = app(CreditService::class)->getBalance($user);
+    $saldoAntes = app(SaldoService::class)->getBalance($user);
 
     app(FecharRetryService::class)->fechar($lote->id, [
         ['alvo_tipo' => 'participante', 'alvo_id' => $p->id, 'fonte' => 'cnd_federal'],
         ['alvo_tipo' => 'participante', 'alvo_id' => $p->id, 'fonte' => 'sintegra'],
     ]);
 
-    expect(app(CreditService::class)->getBalance($user->fresh()))->toBe($saldoAntes); // receita mantida (1 sucesso)
+    expect(app(SaldoService::class)->getBalance($user->fresh()))->toBe($saldoAntes); // receita mantida (1 sucesso)
 });
 
 it('settlement NÃO estorna re-falha erro_participante — fonte faturada pelo provedor (espelha lote 220)', function () {
@@ -297,13 +297,13 @@ it('settlement NÃO estorna re-falha erro_participante — fonte faturada pelo p
     gravarFontesErro($lote->id, $p->id, [
         'crf_fgts' => ['origem' => 'integracao', 'status' => 'erro_participante', 'codigo' => 620, 'tentativas' => 1],
     ]);
-    $saldoAntes = app(CreditService::class)->getBalance($user);
+    $saldoAntes = app(SaldoService::class)->getBalance($user);
 
     app(FecharRetryService::class)->fechar($lote->id, [
         ['alvo_tipo' => 'participante', 'alvo_id' => $p->id, 'fonte' => 'crf_fgts'],
     ]);
 
-    expect(app(CreditService::class)->getBalance($user->fresh()))->toBe($saldoAntes); // sem estorno
+    expect(app(SaldoService::class)->getBalance($user->fresh()))->toBe($saldoAntes); // sem estorno
 });
 
 it('settlement misto (re-falha retry + re-falha erro_participante) mantém a cobrança do CNPJ', function () {
@@ -317,14 +317,14 @@ it('settlement misto (re-falha retry + re-falha erro_participante) mantém a cob
         'cnd_federal' => ['origem' => 'integracao', 'status' => 'retry', 'codigo' => 618, 'tentativas' => 1],
         'crf_fgts' => ['origem' => 'integracao', 'status' => 'erro_participante', 'codigo' => 620, 'tentativas' => 1],
     ]);
-    $saldoAntes = app(CreditService::class)->getBalance($user);
+    $saldoAntes = app(SaldoService::class)->getBalance($user);
 
     app(FecharRetryService::class)->fechar($lote->id, [
         ['alvo_tipo' => 'participante', 'alvo_id' => $p->id, 'fonte' => 'cnd_federal'],
         ['alvo_tipo' => 'participante', 'alvo_id' => $p->id, 'fonte' => 'crf_fgts'],
     ]);
 
-    expect(app(CreditService::class)->getBalance($user->fresh()))->toBe($saldoAntes); // sem estorno
+    expect(app(SaldoService::class)->getBalance($user->fresh()))->toBe($saldoAntes); // sem estorno
 });
 
 // ---------------------------------------------------------------------------
@@ -333,7 +333,7 @@ it('settlement misto (re-falha retry + re-falha erro_participante) mantém a cob
 
 it('GET retry/pendentes lista elegíveis e saldo do dono', function () {
     [$lote, $p, $user] = montarLoteComPlano();
-    app(CreditService::class)->add($user, 50);
+    app(SaldoService::class)->add($user, 50);
     gravarFontesErro($lote->id, $p->id, [
         'cnd_federal' => ['origem' => 'integracao', 'status' => 'retry', 'codigo' => 600, 'tentativas' => 0],
     ]);
@@ -372,7 +372,7 @@ it('POST retry feliz cobra, despacha e responde novo saldo', function () {
     Bus::fake();
     config()->set('consultas.retry.desconto_pct', 50);
     [$lote, $p, $user] = montarLoteComPlano();
-    app(CreditService::class)->add($user, 100);
+    app(SaldoService::class)->add($user, 100);
     gravarFontesErro($lote->id, $p->id, [
         'cnd_federal' => ['origem' => 'integracao', 'status' => 'retry', 'codigo' => 600, 'tentativas' => 0],
     ]);
@@ -411,20 +411,20 @@ it('POST retry com lock ativo (duplo-clique) responde 409 sem cobrar duas vezes'
     Bus::fake();
     config()->set('consultas.retry.desconto_pct', 50);
     [$lote, $p, $user] = montarLoteComPlano();
-    app(CreditService::class)->add($user, 100);
+    app(SaldoService::class)->add($user, 100);
     gravarFontesErro($lote->id, $p->id, [
         'cnd_federal' => ['origem' => 'integracao', 'status' => 'retry', 'codigo' => 600, 'tentativas' => 0],
     ]);
 
     // simula a 1ª requisição ainda processando: lock já tomado
     Cache::lock("consulta_retry_lock:{$user->id}:{$lote->id}", 10)->get();
-    $saldoAntes = app(CreditService::class)->getBalance($user);
+    $saldoAntes = app(SaldoService::class)->getBalance($user);
 
     $this->actingAs($user)
         ->postJson("/app/consulta/lote/{$lote->id}/retry")
         ->assertStatus(409);
 
-    expect(app(CreditService::class)->getBalance($user->fresh()))->toBe($saldoAntes); // não cobrou
+    expect(app(SaldoService::class)->getBalance($user->fresh()))->toBe($saldoAntes); // não cobrou
     Bus::assertNothingBatched();
 });
 
@@ -536,7 +536,7 @@ it('não inclui fontes inelegíveis no agregado de motivos', function () {
 it('executar vira o lote para processando com tab_id novo (liga a tela de progresso)', function () {
     Bus::fake();
     [$lote, $p, $user] = montarLoteComPlano('compliance');
-    app(CreditService::class)->add($user, 100);
+    app(SaldoService::class)->add($user, 100);
     gravarFontesErro($lote->id, $p->id, [
         'cnd_federal' => ['origem' => 'integracao', 'status' => 'retry', 'codigo' => 615, 'tentativas' => 0],
     ]);
@@ -568,7 +568,7 @@ it('executar NÃO vira status nem cobra quando falta saldo (402)', function () {
 it('executar NÃO vira status quando não há CNPJ elegível (422)', function () {
     Bus::fake();
     [$lote, $p, $user] = montarLoteComPlano('compliance');
-    app(CreditService::class)->add($user, 100);
+    app(SaldoService::class)->add($user, 100);
     gravarFontesErro($lote->id, $p->id, [
         'cndt' => ['origem' => 'integracao', 'status' => 'fatal', 'codigo' => 602, 'tentativas' => 0],
     ]);
@@ -582,11 +582,11 @@ it('executar NÃO vira status quando não há CNPJ elegível (422)', function ()
 
 it('reverte status e estorna se o dispatch do batch falhar (lote não fica preso)', function () {
     [$lote, $p, $user] = montarLoteComPlano('compliance');
-    app(CreditService::class)->add($user, 100);
+    app(SaldoService::class)->add($user, 100);
     gravarFontesErro($lote->id, $p->id, [
         'cnd_federal' => ['origem' => 'integracao', 'status' => 'retry', 'codigo' => 615, 'tentativas' => 0],
     ]);
-    $saldoAntes = app(CreditService::class)->getBalance($user);
+    $saldoAntes = app(SaldoService::class)->getBalance($user);
 
     // força o despacho do batch a explodir DEPOIS do deduct + flip de status.
     Bus::shouldReceive('batch')->andThrow(new \RuntimeException('falha de fila'));
@@ -596,7 +596,7 @@ it('reverte status e estorna se o dispatch do batch falhar (lote não fica preso
 
     $fresh = $lote->fresh();
     expect(ConsultaLote::normalizeStatus($fresh->status))->toBe(ConsultaLote::STATUS_FINALIZADO); // restaurado
-    expect(app(CreditService::class)->getBalance($user->fresh()))->toBe($saldoAntes); // estornado
+    expect(app(SaldoService::class)->getBalance($user->fresh()))->toBe($saldoAntes); // estornado
 });
 
 it('fechar restaura o status do lote para finalizado após o settlement', function () {

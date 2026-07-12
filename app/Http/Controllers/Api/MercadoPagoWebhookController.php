@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
  *
  * Sem auth de sessão (endpoint público) — a autenticidade vem da assinatura HMAC
  * `x-signature`. NUNCA credita pelo corpo do webhook: delega ao action que consulta
- * o pagamento na API do MP (fonte de verdade) e libera créditos idempotentemente.
+ * o pagamento na API do MP (fonte de verdade) e adiciona saldo idempotentemente.
  */
 class MercadoPagoWebhookController extends Controller
 {
@@ -58,7 +58,7 @@ class MercadoPagoWebhookController extends Controller
             $type === 'subscription_authorized_payment' => tap(
                 response()->json(['status' => 'ok'], 200),
                 function () use ($resourceId) {
-                    // Assinatura de tier (audit, sem crédito) OU recarga automática (credita o pacote).
+                    // Assinatura de tier (auditoria, sem saldo avulso) ou recarga automática.
                     if ($this->registrarCobranca->execute($resourceId) === null) {
                         $this->cobrarRecarga->execute($resourceId);
                     }

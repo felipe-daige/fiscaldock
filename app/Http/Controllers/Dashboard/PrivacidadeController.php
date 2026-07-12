@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Models\ConsentLog;
 use App\Models\ConsultaLote;
-use App\Models\CreditTransaction;
+use App\Models\SaldoTransacao;
 use App\Models\EfdImportacao;
 use App\Models\Participante;
 use App\Models\User;
@@ -117,14 +117,16 @@ class PrivacidadeController extends Controller
                     'em' => optional($l->created_at)->toIso8601String(),
                 ]),
             'titularidade' => $this->titularidade($user->id),
-            'creditos' => [
-                'saldo' => (float) $user->credits,
-                'transacoes' => CreditTransaction::where('user_id', $user->id)
+            'saldo' => [
+                'valor_reais' => app(\App\Services\PricingCatalogService::class)
+                    ->creditsToCurrency((float) $user->credits),
+                'transacoes' => SaldoTransacao::where('user_id', $user->id)
                     ->orderBy('created_at')
                     ->get(['type', 'amount', 'description', 'created_at'])
                     ->map(fn ($t) => [
                         'tipo' => $t->type,
-                        'valor' => (float) $t->amount,
+                        'valor_reais' => app(\App\Services\PricingCatalogService::class)
+                            ->creditsToCurrency((float) $t->amount),
                         'descricao' => $t->description,
                         'em' => optional($t->created_at)->toIso8601String(),
                     ]),

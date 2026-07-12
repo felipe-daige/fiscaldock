@@ -152,7 +152,7 @@ function initCriarConta() {
         submitBtn.innerHTML = originalButtonHTML;
     }
 
-    // Modal de boas-vindas (bloqueante, 2 etapas): créditos -> confirmação de termos.
+    // Modal de boas-vindas (bloqueante, 2 etapas): saldo -> confirmação de termos.
     // O aceite legal já ocorreu no form; a etapa 2 reconfirma e registra consent_log.
     // Só redireciona pro painel ao concluir. Best-effort: se o POST falhar, segue mesmo assim.
     function abrirModalBoasVindas(redirect) {

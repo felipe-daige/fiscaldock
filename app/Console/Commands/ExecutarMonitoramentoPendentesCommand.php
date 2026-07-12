@@ -6,7 +6,7 @@ use App\Actions\Monitoramento\DispararConsultaMonitoramento;
 use App\Models\MonitoramentoAssinatura;
 use App\Models\MonitoramentoConsulta;
 use App\Models\User;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use App\Services\Entitlements\EntitlementService;
 use App\Support\Monitoramento\MonitoramentoNotifier;
 use Illuminate\Console\Command;
@@ -23,14 +23,14 @@ class ExecutarMonitoramentoPendentesCommand extends Command
 
     public function handle(
         DispararConsultaMonitoramento $disparar,
-        CreditService $creditService,
+        SaldoService $saldoService,
         MonitoramentoNotifier $notifier,
         EntitlementService $entitlements,
     ): int {
         $this->adiadasPorUsuario = [];
 
-        $this->executarVencidas($disparar, $creditService, $notifier, $entitlements);
-        $this->executarRetries($disparar, $creditService, $notifier, $entitlements);
+        $this->executarVencidas($disparar, $saldoService, $notifier, $entitlements);
+        $this->executarRetries($disparar, $saldoService, $notifier, $entitlements);
         $this->notificarFreio($notifier, $entitlements);
 
         return self::SUCCESS;
@@ -38,7 +38,7 @@ class ExecutarMonitoramentoPendentesCommand extends Command
 
     private function executarVencidas(
         DispararConsultaMonitoramento $disparar,
-        CreditService $creditService,
+        SaldoService $saldoService,
         MonitoramentoNotifier $notifier,
         EntitlementService $entitlements,
     ): void {
@@ -54,7 +54,7 @@ class ExecutarMonitoramentoPendentesCommand extends Command
                 continue;
             }
 
-            if (! $creditService->hasEnough($assinatura->user, $custo)) {
+            if (! $saldoService->hasEnough($assinatura->user, $custo)) {
                 $assinatura->pausar('saldo');
                 $notifier->assinaturaPausadaSemSaldo($assinatura);
                 $this->warn("Assinatura #{$assinatura->id} pausada — saldo insuficiente.");
@@ -72,7 +72,7 @@ class ExecutarMonitoramentoPendentesCommand extends Command
 
     private function executarRetries(
         DispararConsultaMonitoramento $disparar,
-        CreditService $creditService,
+        SaldoService $saldoService,
         MonitoramentoNotifier $notifier,
         EntitlementService $entitlements,
     ): void {
@@ -113,7 +113,7 @@ class ExecutarMonitoramentoPendentesCommand extends Command
                 continue;
             }
 
-            if (! $creditService->hasEnough($assinatura->user, $custo)) {
+            if (! $saldoService->hasEnough($assinatura->user, $custo)) {
                 $assinatura->pausar('saldo');
                 $notifier->assinaturaPausadaSemSaldo($assinatura);
                 $this->warn("Assinatura #{$assinatura->id} pausada no retry — saldo insuficiente.");

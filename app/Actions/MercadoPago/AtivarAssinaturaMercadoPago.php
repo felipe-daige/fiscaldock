@@ -4,7 +4,7 @@ namespace App\Actions\MercadoPago;
 
 use App\Models\AccountSubscription;
 use App\Services\MercadoPago\MercadoPagoClient;
-use App\Services\Subscription\ConcederCreditosService;
+use App\Services\Subscription\ConcederSaldoService;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -19,7 +19,7 @@ class AtivarAssinaturaMercadoPago
 {
     public function __construct(
         private MercadoPagoClient $client = new MercadoPagoClient,
-        private ConcederCreditosService $conceder = new ConcederCreditosService,
+        private ConcederSaldoService $conceder = new ConcederSaldoService,
     ) {}
 
     public function execute(string $preapprovalId): ?AccountSubscription

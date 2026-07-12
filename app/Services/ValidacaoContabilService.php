@@ -137,7 +137,7 @@ class ValidacaoContabilService
      */
     public static function custoUnitarioPorTier(string $tipo): int
     {
-        // Clearance SEFAZ por documento. Custo InfoSimples ~1,3 créditos (básico) / ~3,9 (full,
+        // Clearance SEFAZ por documento. Custo InfoSimples expresso no ledger interno,
         // +CND Federal +CNDT). Preço >2x: básico 3 (2,3x), full 8 (~2,05x). Calibrado em 2026-06-07.
         return match ($tipo) {
             'full' => 8,

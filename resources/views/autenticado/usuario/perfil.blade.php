@@ -181,7 +181,7 @@
                             <div class="flex justify-between"><dt class="text-gray-500">Marketing</dt><dd class="text-gray-900">{{ $user->marketing_opt_in ? 'Inscrito' : 'Não' }}</dd></div>
                         </dl>
                         <div class="grid grid-cols-1 gap-2 pt-2">
-                            <a href="/app/creditos" data-link class="text-center px-3 py-2 text-[13px] font-medium text-white rounded" style="background-color: #1f2937">Adicionar saldo</a>
+                            <a href="/app/saldo" data-link class="text-center px-3 py-2 text-[13px] font-medium text-white rounded" style="background-color: #1f2937">Adicionar saldo</a>
                             <a href="/app/planos" data-link class="text-center px-3 py-2 text-[13px] font-medium text-gray-700 border border-gray-300 rounded">Meu plano</a>
                             <a href="/app/configuracoes" data-link class="text-center px-3 py-2 text-[13px] font-medium text-gray-700 border border-gray-300 rounded">Notificações</a>
                             <a href="/app/privacidade" data-link class="text-center px-3 py-2 text-[13px] font-medium text-gray-700 border border-gray-300 rounded">Privacidade &amp; excluir conta</a>

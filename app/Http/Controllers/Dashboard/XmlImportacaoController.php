@@ -8,7 +8,7 @@ use App\Models\Cliente;
 use App\Models\Participante;
 use App\Models\XmlImportacao;
 use App\Models\XmlNota;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use App\Services\Entitlements\EntitlementService;
 use App\Services\Xml\NfeXmlParser;
 use Illuminate\Http\JsonResponse;
@@ -31,7 +31,7 @@ class XmlImportacaoController extends Controller
     private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
 
     public function __construct(
-        protected CreditService $creditService,
+        protected SaldoService $saldoService,
         protected \App\Services\Xml\ExcluirImportacaoXmlService $excluir,
         protected \App\Services\Xml\DefinirClienteXmlService $definirClienteService,
         protected EntitlementService $entitlements = new EntitlementService,

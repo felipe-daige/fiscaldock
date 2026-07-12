@@ -10,7 +10,7 @@ use RuntimeException;
 
 /**
  * Cobra um auto top-up por saldo: gera um token do cartão salvo (MIT) e cria um
- * pagamento avulso (/v1/payments) do pacote fixo. O CRÉDITO é liberado pelo webhook
+ * pagamento avulso (/v1/payments) da oferta fixa. O saldo é liberado pelo webhook
  * `payment` → ProcessarPagamentoMercadoPago (idempotente), não aqui.
  */
 class CobrarAutoTopUp
@@ -54,7 +54,7 @@ class CobrarAutoTopUp
             'transaction_amount' => $valor,
             'token' => $tokenId,
             'installments' => 1,
-            'description' => "FiscalDock — auto top-up ({$creditos} créditos)",
+            'description' => 'FiscalDock — recarga automática de '.\App\Support\Dinheiro::brl($valor),
             'external_reference' => (string) $payment->id,
             'notification_url' => route('api.mercadopago.webhook'),
             'payer' => ['type' => 'customer', 'id' => $recarga->mp_customer_id],

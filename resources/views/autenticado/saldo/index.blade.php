@@ -73,11 +73,11 @@
                     </div>
                     <form method="GET" action="/app/checkout/custom" class="space-y-3">
                         <div>
-                            <label for="credit-custom-amount" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Quanto deseja pagar</label>
+                            <label for="saldo-custom-amount" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Quanto deseja pagar</label>
                             <div class="flex items-center rounded border border-gray-300 bg-white">
                                 <span class="px-3 text-sm text-gray-500">R$</span>
                                 <input
-                                    id="credit-custom-amount"
+                                    id="saldo-custom-amount"
                                     name="amount"
                                     type="number"
                                     min="{{ (int) ($pricing['minimum_deposit'] ?? 100) }}"
@@ -152,7 +152,7 @@
                         <div class="mt-3 rounded px-3 py-2 text-[13px]" style="background-color:#fef2f2; color:#991b1b;">
                             Sua recarga pausada — o cartão foi recusado ou o limite diário foi atingido. Reative atualizando o cartão abaixo.
                         </div>
-                        <div class="mt-4">@include('autenticado.creditos.partials.recarga-saldo-form')</div>
+                        <div class="mt-4">@include('autenticado.saldo.partials.recarga-saldo-form')</div>
                     @endif
                 @elseif($recargaAtual && in_array($recargaAtual->status, ['ativa', 'inadimplente']))
                     {{-- Estado ativo: recarga por tempo (mensal) --}}
@@ -182,7 +182,7 @@
                         <button type="button" id="recarga-ativar" class="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-white rounded" style="background-color: #1f2937">Ativar recarga automática</button>
                     </div>
                     @if(config('services.mercadopago.auto_topup.habilitado'))
-                        <div class="mt-6 border-t border-gray-100 pt-6">@include('autenticado.creditos.partials.recarga-saldo-form')</div>
+                        <div class="mt-6 border-t border-gray-100 pt-6">@include('autenticado.saldo.partials.recarga-saldo-form')</div>
                     @endif
                 @endif
             </div>
@@ -193,7 +193,7 @@
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Histórico de transações</span>
                 <a href="/app/faixa-comercial" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Ver extrato completo</a>
             </div>
-            @if($historicoCreditos->count() > 0)
+            @if($historicoSaldo->count() > 0)
                 <div class="overflow-x-auto">
                     <table class="min-w-full tabela-cards">
                         <thead>
@@ -206,7 +206,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
-                            @foreach($historicoCreditos as $tx)
+                            @foreach($historicoSaldo as $tx)
                                 @php
                                     $badge = $tipoBadgeMap[$tx->type] ?? ['label' => ucfirst($tx->type ?? 'Outro'), 'hex' => '#9ca3af'];
                                     $amountClass = $tx->amount >= 0 ? 'text-emerald-600' : 'text-red-600';

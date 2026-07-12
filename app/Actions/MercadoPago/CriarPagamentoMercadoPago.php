@@ -10,9 +10,9 @@ use Illuminate\Support\Str;
 use RuntimeException;
 
 /**
- * Cria um pagamento no Mercado Pago para um pacote de créditos.
+ * Cria um pagamento no Mercado Pago para adicionar saldo.
  *
- * Regra dura: valor e créditos vêm SEMPRE do catálogo do backend
+ * Regra dura: valor e saldo vêm SEMPRE do catálogo do backend
  * (PricingCatalogService) — nunca do front. O front só informa o meio de
  * pagamento (token do cartão / Pix) coletado pelo Brick.
  */
@@ -31,7 +31,7 @@ class CriarPagamentoMercadoPago
         $pacote = $this->catalog->resolveCheckoutSelection($slug, $amount);
 
         if ($pacote === null) {
-            throw new RuntimeException('Pacote de créditos inválido.');
+            throw new RuntimeException('Oferta de saldo inválida.');
         }
 
         $valor = round((float) $pacote['preco'], 2);
@@ -51,7 +51,7 @@ class CriarPagamentoMercadoPago
 
         $body = [
             'transaction_amount' => $valor,
-            'description' => "FiscalDock — {$pacote['nome']} ({$creditos} créditos)",
+            'description' => 'FiscalDock — '.$pacote['nome'].' (saldo '.\App\Support\Dinheiro::brl($valor).')',
             'external_reference' => (string) $payment->id,
             'notification_url' => route('api.mercadopago.webhook'),
             'metadata' => [

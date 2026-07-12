@@ -41,7 +41,7 @@ class PaletteRegistry
             ['label' => 'Privacidade', 'href' => '/app/privacidade', 'grupo' => 'Conta', 'keywords' => ['lgpd', 'dados', 'exclusao']],
             ['label' => 'Suporte', 'href' => '/app/suporte', 'grupo' => 'Conta', 'keywords' => ['ajuda', 'whatsapp', 'contato']],
             ['label' => 'Planos', 'href' => '/app/planos', 'grupo' => 'Financeiro', 'keywords' => ['assinatura', 'upgrade', 'precos']],
-            ['label' => 'Saldo', 'href' => '/app/creditos', 'grupo' => 'Financeiro', 'keywords' => ['creditos', 'recarga', 'extrato']],
+            ['label' => 'Saldo', 'href' => '/app/saldo', 'grupo' => 'Financeiro', 'keywords' => ['creditos', 'recarga', 'extrato']],
             ['label' => 'Faixa Comercial', 'href' => '/app/faixa-comercial', 'grupo' => 'Financeiro', 'keywords' => ['preco', 'desconto']],
         ];
 

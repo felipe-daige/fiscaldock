@@ -48,7 +48,7 @@
                 <div class="bg-white rounded border border-gray-300 overflow-hidden">
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Histórico de consumo</span>
-                        <a href="/app/creditos" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Ver recargas</a>
+                        <a href="/app/saldo" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Ver recargas</a>
                     </div>
                     @if($ultimasTransacoes->count() > 0)
                         <div class="overflow-x-auto">

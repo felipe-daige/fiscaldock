@@ -11,7 +11,7 @@ use Illuminate\Notifications\Notification;
 /**
  * Boas-vindas ao novo usuário (signup com trial).
  * Disparada de AuthController::createTrialAccount DEPOIS do DB::commit().
- * Valores sempre em R$ — "crédito" não existe no produto.
+ * Valores comerciais sempre em R$.
  */
 class BoasVindasNotification extends Notification implements ShouldQueue
 {

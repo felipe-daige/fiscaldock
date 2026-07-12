@@ -194,8 +194,8 @@
             };
             set('volume', fmtN(kpis.volume?.notas), fmtR(kpis.volume?.valor));
             set('saude', fmtN(kpis.saude?.total), Number(kpis.saude?.total || 0) > 0 ? 'pontos de atenção' : 'tudo em dia');
-            // saldo/usados_mes vêm em crédito interno (peg R$0,20); exibe em R$
-            set('creditos', fmtR((kpis.creditos?.saldo || 0) * 0.20), fmtR((kpis.creditos?.usados_mes || 0) * 0.20) + ' usados este mês');
+            // saldo/usados_mes são exibidos em R$.
+            set('saldo', fmtR((kpis.saldo?.disponivel || 0) * 0.20), fmtR((kpis.saldo?.usado_mes || 0) * 0.20) + ' usados este mês');
         }
 
         // Espelha resources/views/autenticado/dashboard/partials/triagem.blade.php — manter os dois em sincronia.

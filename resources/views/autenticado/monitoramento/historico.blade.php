@@ -214,6 +214,7 @@
 </div>
 
 <script>
+    const saldoUnitPrice = Number(@json(app(\App\Services\PricingCatalogService::class)->creditUnitPrice()));
 (function() {
     'use strict';
 
@@ -401,7 +402,7 @@
             // Metadados
             html += '<div class="border-t border-gray-200 pt-4 text-xs text-gray-500">';
             html += '<p>Consulta realizada em: ' + (data.executado_em || data.created_at || '-') + '</p>';
-            html += '<p>Creditos utilizados: ' + (data.creditos_cobrados || 0) + '</p>';
+            html += '<p>Valor utilizado: R$ ' + ((Number(data.creditos_cobrados || 0) * saldoUnitPrice).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })) + '</p>';
             html += '</div>';
 
             html += '</div>';

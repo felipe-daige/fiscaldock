@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Mail;
  *
  * Sob lock: re-checa gatilho/status/saldo/flag/cooldown e o teto diário (defesa em
  * profundidade contra runaway). Só então marca "em voo" e dispara a cobrança via
- * CobrarAutoTopUp. O crédito em si vem pelo webhook `payment` (idempotente).
+ * CobrarAutoTopUp. O saldo entra pelo webhook `payment` (idempotente).
  */
 class ProcessarAutoTopUpJob implements ShouldQueue
 {

@@ -4,8 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class CreditTransaction extends Model
+class SaldoTransacao extends Model
 {
+    protected $table = 'credit_transactions';
+
     protected $fillable = [
         'user_id',
         'amount',

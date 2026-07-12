@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class CreditController extends Controller
+class SaldoController extends Controller
 {
     public function __construct(
-        protected CreditService $creditService
+        protected SaldoService $saldoService
     ) {}
 
     /**
-     * Retorna o saldo de créditos do usuário autenticado.
+     * Retorna o saldo em reais do usuário autenticado.
      */
     public function balance(Request $request)
     {
@@ -29,7 +29,8 @@ class CreditController extends Controller
 
         return response()->json([
             'success' => true,
-            'credits' => $this->creditService->getBalance($user),
+            'saldo_reais' => app(\App\Services\PricingCatalogService::class)
+                ->creditsToCurrency($this->saldoService->getBalance($user)),
         ]);
     }
 }

@@ -6,7 +6,7 @@ use App\Mail\RecargaAutomaticaPausada;
 use App\Models\MercadoPagoPayment;
 use App\Models\RecargaAutomatica;
 use App\Notifications\RecargaAutomaticaConfirmadaNotification;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use App\Services\MercadoPago\MercadoPagoClient;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -14,8 +14,8 @@ use Illuminate\Support\Facades\Mail;
 /**
  * Processa uma cobrança recorrente (authorized_payment) de uma recarga automática.
  *
- * Diferente da assinatura de tier (onde o crédito é do scheduler), aqui CADA cobrança
- * aprovada LIBERA os créditos do pacote — de forma idempotente (1 linha por
+ * Diferente da assinatura de tier (onde o saldo é liberado pelo scheduler), aqui CADA cobrança
+ * aprovada LIBERA o saldo da oferta — de forma idempotente (1 linha por
  * authorized_payment em mercado_pago_payments, credited_at trava liberação dupla).
  *
  * Retorna null quando o authorized_payment não pertence a uma recarga (deixa o webhook
@@ -25,7 +25,7 @@ class CobrarRecargaMercadoPago
 {
     public function __construct(
         private MercadoPagoClient $client = new MercadoPagoClient,
-        private CreditService $credits = new CreditService,
+        private SaldoService $credits = new SaldoService,
     ) {}
 
     public function execute(string $authorizedPaymentId): ?MercadoPagoPayment
@@ -62,13 +62,13 @@ class CobrarRecargaMercadoPago
             }
             $pagamento->fill(['status' => $status ?? 'unknown', 'payload' => $dados])->save();
 
-            // Libera créditos só uma vez, só quando aprovado.
+            // Libera saldo só uma vez, somente quando aprovado.
             if ($status === 'approved' && ! $pagamento->jaCreditado()) {
                 $this->credits->add(
                     $recarga->user,
                     (float) $recarga->creditos,
                     'purchase',
-                    "Recarga automática — {$recarga->creditos} créditos (Mercado Pago #{$authorizedPaymentId})",
+                    'Recarga automática — '.\App\Support\Dinheiro::brl((float) $recarga->valor)." (Mercado Pago #{$authorizedPaymentId})",
                     $pagamento,
                 );
                 $pagamento->credited_at = now();

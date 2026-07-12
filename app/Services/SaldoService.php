@@ -2,17 +2,17 @@
 
 namespace App\Services;
 
-use App\Models\CreditTransaction;
+use App\Models\SaldoTransacao;
 use App\Models\User;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class CreditService
+class SaldoService
 {
     /**
-     * Retorna o saldo atual de creditos do usuario.
+     * Retorna o saldo atual do usuário na unidade interna do ledger.
      */
     public function getBalance(User $user): int
     {
@@ -20,7 +20,7 @@ class CreditService
     }
 
     /**
-     * Verifica se o usuario tem creditos suficientes.
+     * Verifica se o usuário tem saldo suficiente.
      */
     public function hasEnough(User $user, float $amount): bool
     {
@@ -28,7 +28,7 @@ class CreditService
     }
 
     /**
-     * Desconta creditos do usuario.
+     * Desconta saldo do usuário.
      * Retorna true se a operacao foi bem-sucedida, false caso contrario.
      */
     public function deduct(User $user, float $amount, string $type = 'consulta_lote', ?string $description = null, ?Model $source = null): bool
@@ -40,9 +40,9 @@ class CreditService
         }
 
         if (! $this->hasEnough($user, $amount)) {
-            Log::warning('Tentativa de desconto de creditos insuficientes', [
+            Log::warning('Tentativa de desconto com saldo insuficiente', [
                 'user_id' => $user->id,
-                'credits_atual' => $user->credits,
+                'saldo_atual' => $user->credits,
                 'amount_solicitado' => $amount,
             ]);
 
@@ -69,7 +69,7 @@ class CreditService
 
             $this->logTransaction($user, (int) -$amount, $freshUser->credits, $type, $description, $source);
 
-            Log::info('Creditos descontados com sucesso', [
+            Log::info('Saldo descontado com sucesso', [
                 'user_id' => $user->id,
                 'amount' => $amount,
                 'novo_saldo' => $freshUser->credits,
@@ -87,7 +87,7 @@ class CreditService
     }
 
     /**
-     * Adiciona creditos ao usuario.
+     * Adiciona saldo ao usuário.
      */
     public function add(User $user, float $amount, string $type = 'manual_add', ?string $description = null, ?Model $source = null): void
     {
@@ -111,7 +111,7 @@ class CreditService
 
             $this->logTransaction($user, (int) $amount, $freshUser->credits, $type, $description, $source);
 
-            Log::info('Creditos adicionados com sucesso', [
+            Log::info('Saldo adicionado com sucesso', [
                 'user_id' => $user->id,
                 'amount' => $amount,
                 'novo_saldo' => $freshUser->credits,
@@ -162,7 +162,7 @@ class CreditService
         });
     }
 
-    public function expireTrialCredits(User $user): int
+    public function expireTrialBalance(User $user): int
     {
         return DB::transaction(function () use ($user) {
             $freshUser = User::lockForUpdate()->find($user->id);
@@ -211,7 +211,7 @@ class CreditService
      */
     private function logTransaction(User $user, int $amount, int $balanceAfter, string $type, ?string $description = null, ?Model $source = null): void
     {
-        CreditTransaction::create([
+        SaldoTransacao::create([
             'user_id' => $user->id,
             'amount' => $amount,
             'balance_after' => $balanceAfter,

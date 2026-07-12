@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Recarga automática por tempo (Fase 2): recompra recorrente de um pacote de créditos
+ * Recarga automática por tempo (Fase 2): recompra recorrente de uma oferta de saldo
  * via preapproval do Mercado Pago. A cada cobrança aprovada (subscription_authorized_payment),
- * os créditos do pacote são liberados (idempotente por authorized_payment).
+ * o saldo da oferta é liberado (idempotente por authorized_payment).
  */
 class RecargaAutomatica extends Model
 {

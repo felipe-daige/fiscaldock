@@ -2477,7 +2477,7 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
 
                 <!-- Frase de apoio -->
                 <p class="mt-3 text-sm text-white/80 max-w-2xl">
-                    Você começa com <strong class="text-white">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(config('trial.creditos'))) de saldo grátis</strong> — sem cartão de crédito, sem mensalidade. Dá para importar e auditar clientes reais.
+                    Você começa com <strong class="text-white">@brl(config('trial.saldo_reais')) de saldo grátis</strong> — sem cartão de crédito, sem mensalidade. Dá para importar e auditar clientes reais.
                 </p>
 
                 <!-- Prova visual compacta para mobile/tablet (os floaties do mockup só aparecem >=1024px) -->
@@ -2496,7 +2496,7 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
                 <div class="mt-8 lg:mb-16">
                     <div class="hero-facts">
                         <div class="hero-fact">
-                            <span class="hero-fact-num">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(config('trial.creditos'))) <span class="hero-gratis-tag">grátis</span></span>
+                            <span class="hero-fact-num">@brl(config('trial.saldo_reais')) <span class="hero-gratis-tag">grátis</span></span>
                             <span class="hero-fact-label">já entram na sua conta ao se cadastrar — sem pagar nada, válidos por {{ config('trial.validade_dias') }} dias</span>
                         </div>
                         <div class="hero-fact">
@@ -3006,7 +3006,7 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
                             </li>
                             <li class="flex items-start text-xs text-gray-600">
                                 <svg class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" style="color: #1e4fa0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                Estorno automático de crédito quando uma fonte oficial falha
+                                Estorno automático do valor quando uma fonte oficial falha
                             </li>
                         </ul>
                         <div class="flex flex-wrap gap-2" style="margin-top: auto; padding-top: 1.25rem; border-top: 1px solid #e5e7eb;">
@@ -3399,7 +3399,7 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
                 <div class="persona-ficha">
                     <div class="persona-row">
                         <span class="persona-key">modelo</span><span class="persona-dots"></span>
-                        <span class="persona-val">créditos pré-pagos, sem mensalidade</span>
+                        <span class="persona-val">saldo pré-pago em reais, sem mensalidade</span>
                     </div>
                     <div class="persona-row">
                         <span class="persona-key">uso</span><span class="persona-dots"></span>
@@ -3702,7 +3702,7 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
                         <span class="faq-icon" aria-hidden="true"></span>
                     </summary>
                     <div class="faq-a">
-                        Sim. Ao criar a conta você recebe @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(config('trial.creditos'))) de saldo grátis, válido por {{ config('trial.validade_dias') }} dias — sem cartão de crédito. Dá para importar SPEDs reais, ver os participantes extraídos, explorar os dashboards e rodar consultas de verdade. Quando o saldo acabar, você adiciona mais só se fizer sentido.
+                        Sim. Ao criar a conta você recebe @brl(config('trial.saldo_reais')) de saldo grátis, válido por {{ config('trial.validade_dias') }} dias — sem cartão de crédito. Dá para importar SPEDs reais, ver os participantes extraídos, explorar os dashboards e rodar consultas de verdade. Quando o saldo acabar, você adiciona mais só se fizer sentido.
                     </div>
                 </details>
             </div>
@@ -3720,7 +3720,7 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
         </h2>
         <p class="text-base max-w-2xl mx-auto mb-8" style="color: rgba(255,255,255,0.85);">
             Crie a conta, importe um SPED real e veja o diagnóstico em minutos — com
-            <strong class="text-white">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(config('trial.creditos'))) de saldo grátis</strong>
+            <strong class="text-white">@brl(config('trial.saldo_reais')) de saldo grátis</strong>
             para testar por {{ config('trial.validade_dias') }} dias.
         </p>
 
@@ -3755,7 +3755,7 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
             </span>
             <span class="contato-chip">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(config('trial.creditos'))) grátis no cadastro
+                @brl(config('trial.saldo_reais')) grátis no cadastro
             </span>
         </div>
 

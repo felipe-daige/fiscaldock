@@ -11,7 +11,7 @@ it('mostra o pacote avulso como "Volume" (sem colidir com o tier Enterprise)', f
     $user = User::factory()->create();
     actingAs($user);
 
-    $html = get('/app/creditos')->assertOk()->getContent();
+    $html = get('/app/saldo')->assertOk()->getContent();
 
     expect($html)->toContain('Volume');
     // O card de oferta não deve mais exibir o nome "Enterprise" (que agora é tier de assinatura).
@@ -24,7 +24,7 @@ it('usa a validade do trial do config (não hardcoda 30 dias)', function () {
     $user = User::factory()->create();
     actingAs($user);
 
-    $html = get('/app/creditos')->assertOk()->getContent();
+    $html = get('/app/saldo')->assertOk()->getContent();
 
     expect($html)->toContain('expira em 60 dias');
     expect($html)->not->toContain('expira em 30 dias');

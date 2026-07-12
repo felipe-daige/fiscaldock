@@ -7,7 +7,7 @@ use App\Models\MercadoPagoPayment;
 use App\Models\RecargaAutomatica;
 use App\Notifications\CompraConfirmadaNotification;
 use App\Notifications\RecargaAutomaticaConfirmadaNotification;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use App\Services\MercadoPago\MercadoPagoClient;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -16,14 +16,14 @@ use Illuminate\Support\Facades\Mail;
  * Processa uma notificação de pagamento do Mercado Pago.
  *
  * Fonte de verdade: consulta o pagamento na API do MP (nunca confia no corpo do
- * webhook). Se `approved` e ainda não creditado, libera os créditos do pacote
- * de forma IDEMPOTENTE — o webhook pode chegar N vezes e credita 1×.
+ * webhook). Se `approved` e ainda não processado, libera o saldo da oferta
+ * de forma IDEMPOTENTE — o webhook pode chegar N vezes e movimenta o saldo 1×.
  */
 class ProcessarPagamentoMercadoPago
 {
     public function __construct(
         private MercadoPagoClient $client = new MercadoPagoClient,
-        private CreditService $credits = new CreditService,
+        private SaldoService $credits = new SaldoService,
     ) {}
 
     public function execute(string $mpPaymentId): ?MercadoPagoPayment
@@ -55,7 +55,7 @@ class ProcessarPagamentoMercadoPago
                 'payload' => $dadosMp,
             ]);
 
-            // Libera créditos só uma vez, só quando aprovado.
+            // Libera saldo só uma vez, somente quando aprovado.
             if ($status === MercadoPagoPayment::STATUS_APPROVED && ! $payment->jaCreditado()) {
                 $this->credits->add(
                     $payment->user,

@@ -56,7 +56,7 @@
             </div>
         </div>
 
-        {{-- Uso do produto + Consumo de créditos --}}
+        {{-- Uso do produto + consumo de saldo --}}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div class="bg-white rounded border border-gray-300 p-4">
                 <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Uso do produto (período)</p>

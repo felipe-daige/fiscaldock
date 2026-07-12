@@ -34,7 +34,7 @@ class CompraConfirmadaNotification extends Notification implements ShouldQueue
         return $mail
             ->subject('Pagamento confirmado · '.Blocos::brl($this->valor).' em saldo liberado')
             ->greeting('Seu saldo já está na conta.')
-            ->line('O pagamento foi aprovado e o crédito **entrou na hora** — você não precisa esperar compensação para voltar a consultar.')
+            ->line('O pagamento foi aprovado e o saldo **entrou na hora** — você não precisa esperar compensação para voltar a consultar.')
             ->line(Blocos::hero(
                 Blocos::brl($this->valor),
                 'Saldo liberado',
@@ -48,7 +48,7 @@ class CompraConfirmadaNotification extends Notification implements ShouldQueue
                 'Data' => now()->format('d/m/Y \à\s H:i'),
                 'Referência' => $this->mpPaymentId,
             ], 'Comprovante'))
-            ->action('Ver meu saldo', url('/app/creditos'))
+            ->action('Ver meu saldo', url('/app/saldo'))
             ->line('O saldo serve para tudo: consulta de CNPJ, certidões, clearance de notas e monitoramento contínuo.')
             ->salutation('Guarde este e-mail — ele é o seu comprovante.');
     }

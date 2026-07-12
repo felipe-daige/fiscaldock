@@ -16,7 +16,7 @@ use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Models\XmlNota;
 use App\Services\Consultas\ResultadoDetalhePresenter;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use App\Services\NotaFiscalService;
 use App\Services\ParecerFiscalService;
 use Carbon\Carbon;
@@ -48,7 +48,7 @@ class ParticipanteController extends Controller
     ];
 
     public function __construct(
-        protected CreditService $creditService,
+        protected SaldoService $saldoService,
         protected NotaFiscalService $notaFiscalService,
         protected ResultadoDetalhePresenter $detalhePresenter,
     ) {}
@@ -74,7 +74,7 @@ class ParticipanteController extends Controller
 
         $data = [
             'clientes' => $clientes,
-            'credits' => $this->creditService->getBalance($user),
+            'credits' => $this->saldoService->getBalance($user),
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -244,7 +244,7 @@ class ParticipanteController extends Controller
         $data = [
             'participante' => $participante,
             'clientes' => $clientes,
-            'credits' => $this->creditService->getBalance($user),
+            'credits' => $this->saldoService->getBalance($user),
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -700,7 +700,7 @@ class ParticipanteController extends Controller
                 'monitorado' => $monitorado,
                 'ordem' => $ordem,
             ],
-            'credits' => $this->creditService->getBalance($user),
+            'credits' => $this->saldoService->getBalance($user),
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -833,7 +833,7 @@ class ParticipanteController extends Controller
             ->where('user_id', $userId)->where('status', 'sucesso')->count();
         $monitoramentoErro = MonitoramentoConsulta::where('participante_id', $participante->id)
             ->where('user_id', $userId)->where('status', 'erro')->count();
-        $monitoramentoCreditos = MonitoramentoConsulta::where('participante_id', $participante->id)
+        $monitoramentoSaldoUnidades = MonitoramentoConsulta::where('participante_id', $participante->id)
             ->where('user_id', $userId)->sum('creditos_cobrados');
 
         // Consultas em lote (sistema novo)
@@ -846,11 +846,11 @@ class ParticipanteController extends Controller
             ->whereHas('lote', fn ($q) => $q->where('user_id', $userId))
             ->whereIn('status', ['erro', 'timeout'])->count();
 
-        // Crédito gasto no sistema novo (lotes). Cada lote cobra por N participantes, então
-        // atribui a fração deste participante (creditos_cobrados / total_participantes).
+        // Valor gasto no sistema novo (lotes). Cada lote cobra por N participantes, então
+        // atribui a fração deste participante conforme o total persistido do lote.
         // Pós-cutover (2026-06-07) toda consulta de CNPJ roda em lote; sem isto o "Valor gasto"
         // ficava preso só no MonitoramentoConsulta legado (vazio) e nunca atualizava.
-        $loteCreditos = ConsultaLote::whereHas('participantes', fn ($q) => $q->where('participantes.id', $participante->id))
+        $loteSaldoUnidades = ConsultaLote::whereHas('participantes', fn ($q) => $q->where('participantes.id', $participante->id))
             ->where('user_id', $userId)
             ->get(['creditos_cobrados', 'total_participantes'])
             ->sum(fn ($l) => ((int) $l->creditos_cobrados) / max(1, (int) $l->total_participantes));
@@ -859,7 +859,8 @@ class ParticipanteController extends Controller
             'total_consultas' => $monitoramentoTotal + $consultaLoteTotal,
             'consultas_sucesso' => $monitoramentoSucesso + $consultaLoteSucesso,
             'consultas_erro' => $monitoramentoErro + $consultaLoteErro,
-            'creditos_utilizados' => $monitoramentoCreditos + $loteCreditos,
+            'valor_utilizado_reais' => app(\App\Services\PricingCatalogService::class)
+                ->creditsToCurrency($monitoramentoSaldoUnidades + $loteSaldoUnidades),
         ];
 
         // Buscar última consulta com sucesso para o participante (sistema de consultas em lote)
@@ -931,8 +932,8 @@ class ParticipanteController extends Controller
             }
         }
 
-        // Saldo de créditos do usuário
-        $credits = $this->creditService->getBalance($user);
+        $saldoReais = app(\App\Services\PricingCatalogService::class)
+            ->creditsToCurrency($this->saldoService->getBalance($user));
         $returnToUrl = $this->resolveReturnToUrl($request, (string) $request->query('return_to', ''));
 
         $data = [
@@ -941,7 +942,7 @@ class ParticipanteController extends Controller
             'assinaturaAtiva' => $assinaturaAtiva,
             'planos' => $planos,
             'estatisticas' => $estatisticas,
-            'credits' => $credits,
+            'saldoReais' => $saldoReais,
             'notasFiscais' => $notasFiscais,
             'totalNotasFiscais' => $totalNotasFiscais,
             'notasAjaxUrl' => "/app/participante/{$id}/notas",

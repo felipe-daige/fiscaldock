@@ -10,9 +10,9 @@ use RuntimeException;
 
 /**
  * Cria uma recarga automática por tempo (Fase 2): preapproval recorrente do Mercado
- * Pago que recompra um pacote de créditos numa frequência fixa (mensal por padrão).
+ * Recompra uma oferta de saldo numa frequência fixa (mensal por padrão).
  *
- * Regra dura: valor e créditos vêm SEMPRE do catálogo backend (PricingCatalogService),
+ * Regra dura: valor e saldo vêm SEMPRE do catálogo backend (PricingCatalogService),
  * nunca do front. O front só envia o card_token do Brick.
  */
 class CriarRecargaAutomatica
@@ -54,7 +54,7 @@ class CriarRecargaAutomatica
         );
 
         $resp = $this->client->criarPreapproval([
-            'reason' => "FiscalDock — recarga automática ({$creditos} créditos)",
+            'reason' => 'FiscalDock — recarga automática de '.\App\Support\Dinheiro::brl($valor),
             'payer_email' => $user->email,
             'card_token_id' => $cardToken,
             'auto_recurring' => [
@@ -63,7 +63,7 @@ class CriarRecargaAutomatica
                 'transaction_amount' => $valor,
                 'currency_id' => 'BRL',
             ],
-            'back_url' => url('/app/creditos'),
+            'back_url' => url('/app/saldo'),
             'status' => 'authorized',
             'external_reference' => 'recarga:'.$recarga->id,
         ]);

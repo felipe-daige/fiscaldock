@@ -371,7 +371,7 @@
                                             <strong>{{ $a['cnpj'] }}</strong> <span class="text-gray-500">({{ $a['razao'] }})</span>
                                             <span class="block text-[11px] text-gray-400 mt-0.5">Reconsultaremos: {{ implode(', ', $a['fontes']) }}</span>
                                         </div>
-                                        <span class="text-amber-700 font-medium whitespace-nowrap">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $a['preco_creditos'])) }}</span>
+                                        <span class="text-amber-700 font-medium whitespace-nowrap">{{ \App\Support\Dinheiro::brl($a['valor_reais']) }}</span>
                                     </div>
                                 @endforeach
                                 @foreach($retryPendentes['inelegiveis'] as $i)
@@ -381,12 +381,11 @@
                                     </div>
                                 @endforeach
                                 @php
-                                    $pricing = app(\App\Services\PricingCatalogService::class);
-                                    $custoRetryCreditos = (int) $retryPendentes['total_preco_creditos'];
-                                    $saldoAposCreditos = (int) $credits - $custoRetryCreditos;
+                                    $valorRetryReais = (float) $retryPendentes['valor_total_reais'];
+                                    $saldoAposReais = (float) $saldoReais - $valorRetryReais;
                                 @endphp
                                 <div class="border-t border-gray-200 pt-3 text-xs text-gray-600">
-                                    Custo: <strong>{{ \App\Support\Dinheiro::brl($pricing->creditsToCurrency($custoRetryCreditos)) }}</strong> · Saldo: {{ \App\Support\Dinheiro::brl($pricing->creditsToCurrency((int) $credits)) }} <span class="text-gray-400">→</span> <strong style="color: {{ $saldoAposCreditos < 0 ? '#dc2626' : '#047857' }}">{{ \App\Support\Dinheiro::brl($pricing->creditsToCurrency($saldoAposCreditos)) }}</strong>
+                                    Custo: <strong>{{ \App\Support\Dinheiro::brl($valorRetryReais) }}</strong> · Saldo: {{ \App\Support\Dinheiro::brl($saldoReais) }} <span class="text-gray-400">→</span> <strong style="color: {{ $saldoAposReais < 0 ? '#dc2626' : '#047857' }}">{{ \App\Support\Dinheiro::brl($saldoAposReais) }}</strong>
                                 </div>
                                 <div class="flex justify-end gap-2">
                                     <button type="button" onclick="document.getElementById('modal-retry-{{ $lote->id }}').classList.add('hidden')" class="text-xs px-3 py-1.5 text-gray-600">Cancelar</button>
@@ -474,14 +473,14 @@
                                     <label class="text-[11px] text-gray-500 block mb-1">Plano</label>
                                     <select id="select-reconsulta-plano-{{ $lote->id }}" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
                                         @foreach($reconsultaTudo['planos'] as $pl)
-                                            <option value="{{ $pl['id'] }}"{{ $pl['id'] === (int) $lote->plano_id ? ' selected' : '' }} data-creditos="{{ $pl['creditos_unit'] }}" data-rotulo="{{ $pl['rotulo_preco'] }}">
+                                            <option value="{{ $pl['id'] }}"{{ $pl['id'] === (int) $lote->plano_id ? ' selected' : '' }} data-valor="{{ $pl['valor_unitario_reais'] }}" data-rotulo="{{ $pl['rotulo_preco'] }}">
                                                 {{ $pl['nome'] }} — {{ $pl['rotulo_preco'] }}/CNPJ
                                             </option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <div class="border-t border-gray-200 pt-3 text-xs text-gray-600">
-                                    Custo: <strong id="custo-reconsulta-{{ $lote->id }}"></strong> · Saldo: {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $credits)) }}
+                                    Custo: <strong id="custo-reconsulta-{{ $lote->id }}"></strong> · Saldo: {{ \App\Support\Dinheiro::brl($saldoReais) }}
                                 </div>
                                 <div class="flex justify-end gap-2">
                                     <button type="button" onclick="document.getElementById('modal-reconsulta-{{ $lote->id }}').classList.add('hidden')" class="text-xs px-3 py-1.5 text-gray-600">Cancelar</button>
@@ -499,14 +498,12 @@
                         var totalAlvos = {{ (int) $reconsultaTudo['total_alvos'] }};
                         var sel = document.getElementById('select-reconsulta-plano-{{ $lote->id }}');
                         var custoEl = document.getElementById('custo-reconsulta-{{ $lote->id }}');
-                        var unitPrice = {{ app(\App\Services\PricingCatalogService::class)->creditUnitPrice() }};
-                        function brl(creditos) {
-                            var reais = Math.round(creditos * unitPrice * 100) / 100;
-                            return 'R$ ' + reais.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        function brl(valor) {
+                            return 'R$ ' + Number(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                         }
                         function atualizaCusto() {
                             var opt = sel.options[sel.selectedIndex];
-                            var unit = parseInt(opt.dataset.creditos || '0', 10);
+                            var unit = Number(opt.dataset.valor || '0');
                             custoEl.textContent = totalAlvos + ' × ' + opt.dataset.rotulo + ' = ' + brl(totalAlvos * unit);
                         }
                         sel.addEventListener('change', atualizaCusto);

@@ -77,7 +77,6 @@ class ClearanceDashboardCsvZipBuilder
         $linhas[] = ['Notas bloqueantes', (int) $r['notas_bloqueantes']];
         $linhas[] = ['Exposição bloqueante (R$)', (float) $r['valor_bloqueante']];
         $linhas[] = ['Backlog — notas a verificar', (int) $b['notas']];
-        $linhas[] = ['Backlog — custo (créditos)', (int) $b['custo_creditos']];
         $linhas[] = ['Backlog — custo estimado (R$)', (float) $b['custo_reais']];
 
         return $linhas;

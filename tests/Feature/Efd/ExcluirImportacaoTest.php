@@ -152,13 +152,13 @@ it('execute remove efd_catalogo_historico e nao estorna creditos nem apaga clien
         'campo' => 'cod_ncm', 'valor_anterior' => '1', 'valor_novo' => '2',
         'importacao_id' => $imp->id, 'changed_at' => now(),
     ]);
-    $saldoAntes = app(\App\Services\CreditService::class)->getBalance($user->fresh());
+    $saldoAntes = app(\App\Services\SaldoService::class)->getBalance($user->fresh());
 
     app(ExcluirImportacaoService::class)->execute($imp->fresh(), excluirParticipantes: true);
 
     expect(\Illuminate\Support\Facades\DB::table('efd_catalogo_historico')->where('importacao_id', $imp->id)->count())->toBe(0)
         ->and(Cliente::find($cliente->id))->not->toBeNull()
-        ->and(app(\App\Services\CreditService::class)->getBalance($user->fresh()))->toBe($saldoAntes);
+        ->and(app(\App\Services\SaldoService::class)->getBalance($user->fresh()))->toBe($saldoAntes);
 });
 
 it('destroy bloqueia importacao em processando (409)', function () {

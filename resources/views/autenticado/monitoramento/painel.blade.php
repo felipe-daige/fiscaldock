@@ -299,7 +299,7 @@
                 </div>
                 <div id="consumo-ciclo-progresso" class="mb-4{{ $capEfetivo > 0 ? '' : ' hidden' }}">
                     <div class="flex items-center justify-between text-[11px] text-gray-500 mb-1">
-                        <span>Consumo do ciclo: <span id="consumo-ciclo-percentual" data-consumo-creditos="{{ (int) $consumoCiclo }}">{{ $pctConsumo }}%</span></span>
+                        <span>Consumo do ciclo: <span id="consumo-ciclo-percentual" data-consumo-unidades="{{ (int) $consumoCiclo }}">{{ $pctConsumo }}%</span></span>
                         <span>Projetado até o fim do ciclo: {{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $projecaoCiclo)) }}</span>
                     </div>
                     <div class="w-full h-2 rounded bg-gray-200 overflow-hidden">
@@ -309,11 +309,11 @@
                 <div class="flex flex-wrap items-end gap-3">
                     <div>
                         <label class="block text-[11px] text-gray-500 mb-1">Teto personalizado (R$)</label>
-                        {{-- O usuário digita R$; o JS converte pra créditos (unidade interna do backend) no envio. --}}
+                        {{-- O usuário digita e visualiza o teto em R$. --}}
                         <input type="text" id="input-limite-consumo" inputmode="decimal" autocomplete="off"
                                value="{{ $limiteAtual !== null && $limiteAtual !== '' ? number_format($precos->creditsToCurrency((int) $limiteAtual), 2, ',', '.') : '' }}"
-                               data-credit-unit-price="{{ $precos->creditUnitPrice() }}"
-                               data-max-credits="1000000" aria-describedby="limite-feedback"
+                               data-saldo-unit-price="{{ $precos->creditUnitPrice() }}"
+                               data-max-unidades="1000000" aria-describedby="limite-feedback"
                                placeholder="Padrão do plano" class="text-[13px] py-2.5 px-3 border border-gray-300 rounded w-48">
                     </div>
                     <button id="btn-salvar-limite" type="button" class="px-3 py-2.5 rounded bg-gray-800 hover:bg-gray-700 text-white text-[13px] font-semibold transition">Salvar</button>
@@ -361,7 +361,7 @@
                 <span class="text-sm font-semibold text-gray-800">Novo monitorado</span>
                 <button type="button" onclick="document.getElementById('modal-monitorar').classList.add('hidden')" class="text-gray-400 text-xl leading-none">&times;</button>
             </div>
-            <form id="form-monitorar" data-credit-unit-price="{{ $precos->creditUnitPrice() }}" class="p-4 space-y-3">
+            <form id="form-monitorar" data-saldo-unit-price="{{ $precos->creditUnitPrice() }}" class="p-4 space-y-3">
                 <div>
                     <label class="text-[11px] text-gray-500 block mb-1">Buscar em</label>
                     <select id="mon-tipo" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded" onchange="painelTipoChange()">
@@ -602,9 +602,9 @@
             return;
         }
         var freqDias = { diario: 1, semanal: 7, quinzenal: 15, mensal: 30 }[document.getElementById('mon-frequencia').value] || 30;
-        var unitPrice = parseFloat(document.getElementById('form-monitorar').dataset.creditUnitPrice) || 0.20;
-        var brlFmt = function (creditos) {
-            return 'R$ ' + (creditos * unitPrice).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        var unitPrice = parseFloat(document.getElementById('form-monitorar').dataset.saldoUnitPrice) || 0.20;
+        var brlFmt = function (unidades) {
+            return 'R$ ' + (unidades * unitPrice).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         };
         var ciclo = nAlvos * custoCreditos;
         box.textContent = 'Custo estimado: ' + brlFmt(Math.round(ciclo * 30 / freqDias)) + '/mês · '
@@ -879,15 +879,15 @@
         if (!btn || !input) { return; }
 
         var token = document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '';
-        // Input em R$; backend fala créditos → converter na ida (÷ preço unitário) e na volta (×).
-        var unitPrice = parseFloat(input.dataset.creditUnitPrice) || 0.20;
-        var maxCredits = parseInt(input.dataset.maxCredits, 10) || 1000000;
+        // Input e retorno são apresentados em R$.
+        var unitPrice = parseFloat(input.dataset.saldoUnitPrice) || 0.20;
+        var maxUnidades = parseInt(input.dataset.maxUnidades, 10) || 1000000;
         var consumoCreditos = percentual ? parseInt(percentual.dataset.consumoCreditos, 10) || 0 : 0;
         var numeroBrl = function (valor) {
             return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         };
-        var brl = function (creditos) {
-            return 'R$ ' + numeroBrl(Math.round(creditos * unitPrice * 100) / 100);
+        var brl = function (unidades) {
+            return 'R$ ' + numeroBrl(Math.round(unidades * unitPrice * 100) / 100);
         };
         var filtrarMoeda = function (valor) {
             var limpo = String(valor || '').replace(/[^\d,.]/g, '');
@@ -940,7 +940,7 @@
         btn.addEventListener('click', function () {
             var valor = parseMoeda(input.value);
             var limite = valor === null ? null : Math.round(valor / unitPrice);
-            if (limite !== null && (isNaN(limite) || limite < 0 || limite > maxCredits)) {
+            if (limite !== null && (isNaN(limite) || limite < 0 || limite > maxUnidades)) {
                 feedback.textContent = 'Valor inválido.';
                 feedback.style.color = '#dc2626';
                 return;

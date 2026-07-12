@@ -39,7 +39,7 @@ interface Fonte
      */
     public function normalizar(array $raw, string $status = 'sucesso'): array;
 
-    /** Custo em créditos desta fonte (0 = grátis, ex: cadastro/minhareceita). */
+    /** Custo interno desta fonte (0 = grátis, ex.: cadastro/minhareceita). */
     public function custoCreditos(): int;
 
     /**

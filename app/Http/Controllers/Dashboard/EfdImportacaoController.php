@@ -9,7 +9,7 @@ use App\Models\EfdImportacao;
 use App\Models\EfdNota;
 use App\Models\Participante;
 use App\Models\XmlImportacao;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use App\Services\EfdProgressoBuilder;
 use App\Services\Entitlements\EntitlementService;
 use App\Services\SpedDetectorService;
@@ -30,7 +30,7 @@ class EfdImportacaoController extends Controller
     private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
 
     public function __construct(
-        protected CreditService $creditService,
+        protected SaldoService $saldoService,
         protected SpedDetectorService $spedDetector,
         protected \App\Services\Efd\EfdImportacaoDuplicidadeService $duplicidade,
         protected \App\Services\Efd\ExcluirImportacaoService $excluir,
@@ -63,7 +63,7 @@ class EfdImportacaoController extends Controller
             ->withQueryString();
 
         $data = [
-            'credits' => $this->creditService->getBalance($user),
+            'credits' => $this->saldoService->getBalance($user),
             'importacoes' => $importacoes,
             'totalParticipantes' => Participante::where('user_id', $userId)->count(),
             'totalNotas' => EfdNota::where('user_id', $userId)->count(),

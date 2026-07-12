@@ -9,10 +9,10 @@ use Illuminate\Http\Request;
 use RuntimeException;
 
 /**
- * Cria pagamentos de pacotes de crédito via Mercado Pago (Checkout Bricks).
+ * Cria pagamentos para adicionar saldo via Mercado Pago (Checkout Bricks).
  *
  * O front (Payment Brick) coleta o meio de pagamento (token do cartão ou Pix) e
- * envia para cá. Valor/créditos são resolvidos no backend pelo catálogo — o front
+ * envia para cá. Valor/saldo são resolvidos no backend pelo catálogo — o front
  * só informa o pacote escolhido e o meio de pagamento.
  */
 class PagamentoMercadoPagoController extends Controller
@@ -51,7 +51,8 @@ class PagamentoMercadoPagoController extends Controller
             'status' => $payment->status,
             'status_detail' => $payment->status_detail,
             'pacote' => $payment->pacote,
-            'creditos' => $payment->creditos,
+            'saldo_adicionado_reais' => app(\App\Services\PricingCatalogService::class)
+                ->creditsToCurrency((float) $payment->creditos),
             'valor' => $payment->valor,
             // Para Pix: o front renderiza o QR a partir do payload do MP.
             'point_of_interaction' => data_get($payment->payload, 'point_of_interaction'),

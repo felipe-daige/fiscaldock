@@ -1,11 +1,11 @@
 <?php
 
 use App\Models\AccountSubscription;
-use App\Models\CreditTransaction;
+use App\Models\SaldoTransacao;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
-use App\Services\CreditService;
-use App\Services\Subscription\ConcederCreditosService;
+use App\Services\SaldoService;
+use App\Services\Subscription\ConcederSaldoService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 
@@ -59,7 +59,7 @@ it('a troca grava o marker de proration com a fração restante do ciclo', funct
 it('a 1ª concessão pós-troca expira o incluso antigo pro-rata e concede o novo pro-rata', function () {
     $prof = SubscriptionPlan::where('codigo', 'profissional')->first(); // 1100 inclusos
     $user = User::factory()->create();
-    app(CreditService::class)->add($user, 300, 'subscription_credit');
+    app(SaldoService::class)->add($user, 300, 'subscription_credit');
 
     $sub = AccountSubscription::create([
         'user_id' => $user->id,
@@ -70,7 +70,7 @@ it('a 1ª concessão pós-troca expira o incluso antigo pro-rata e concede o nov
         'proration_pendente' => ['fracao_restante' => 0.5],
     ]);
 
-    app(ConcederCreditosService::class)->conceder($sub);
+    app(ConcederSaldoService::class)->conceder($sub);
 
     $user->refresh();
     $sub->refresh();
@@ -79,13 +79,13 @@ it('a 1ª concessão pós-troca expira o incluso antigo pro-rata e concede o nov
     expect($user->credits)->toBe(700);
     expect($sub->creditos_inclusos_saldo)->toBe(700);
     expect($sub->proration_pendente)->toBeNull();
-    expect(CreditTransaction::where('user_id', $user->id)->where('type', 'subscription_proration')->count())->toBe(2);
+    expect(SaldoTransacao::where('user_id', $user->id)->where('type', 'subscription_proration')->count())->toBe(2);
 });
 
 it('proration de downgrade concede menos (novo tier menor que o antigo)', function () {
     $ess = SubscriptionPlan::where('codigo', 'essencial')->first(); // destino: 300 inclusos
     $user = User::factory()->create();
-    app(CreditService::class)->add($user, 1100, 'subscription_credit'); // vinha do profissional
+    app(SaldoService::class)->add($user, 1100, 'subscription_credit'); // vinha do profissional
 
     $sub = AccountSubscription::create([
         'user_id' => $user->id,
@@ -96,7 +96,7 @@ it('proration de downgrade concede menos (novo tier menor que o antigo)', functi
         'proration_pendente' => ['fracao_restante' => 0.5],
     ]);
 
-    app(ConcederCreditosService::class)->conceder($sub);
+    app(ConcederSaldoService::class)->conceder($sub);
 
     $user->refresh();
     // expira 550 (1100×0,5) e concede 150 (300×0,5) → 1100 − 550 + 150 = 700
@@ -107,7 +107,7 @@ it('proration de downgrade concede menos (novo tier menor que o antigo)', functi
 it('a expiração pro-rata é limitada ao saldo real (usuário já gastou parte)', function () {
     $prof = SubscriptionPlan::where('codigo', 'profissional')->first(); // 1100
     $user = User::factory()->create();
-    app(CreditService::class)->add($user, 100, 'subscription_credit'); // bucket 300 mas só 100 sobrou
+    app(SaldoService::class)->add($user, 100, 'subscription_credit'); // bucket 300 mas só 100 sobrou
 
     $sub = AccountSubscription::create([
         'user_id' => $user->id,
@@ -118,7 +118,7 @@ it('a expiração pro-rata é limitada ao saldo real (usuário já gastou parte)
         'proration_pendente' => ['fracao_restante' => 0.5],
     ]);
 
-    app(ConcederCreditosService::class)->conceder($sub);
+    app(ConcederSaldoService::class)->conceder($sub);
 
     // expira min(150, 100)=100 → 0; concede 550 → 550
     expect($user->refresh()->credits)->toBe(550);
@@ -184,10 +184,10 @@ it('concessão normal sem marker concede o mensal cheio (rollover cap)', functio
         'creditos_inclusos_saldo' => 0,
     ]);
 
-    app(ConcederCreditosService::class)->conceder($sub, primeiraComoCompra: true);
+    app(ConcederSaldoService::class)->conceder($sub, primeiraComoCompra: true);
 
     $user->refresh();
     expect($user->credits)->toBe(300);
-    expect(CreditTransaction::where('user_id', $user->id)->where('type', 'purchase')->count())->toBe(1);
-    expect(CreditTransaction::where('user_id', $user->id)->where('type', 'subscription_proration')->count())->toBe(0);
+    expect(SaldoTransacao::where('user_id', $user->id)->where('type', 'purchase')->count())->toBe(1);
+    expect(SaldoTransacao::where('user_id', $user->id)->where('type', 'subscription_proration')->count())->toBe(0);
 });

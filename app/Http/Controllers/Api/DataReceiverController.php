@@ -7,7 +7,7 @@ use App\Models\Cliente;
 use App\Models\EfdDivergencia;
 use App\Models\EfdImportacao;
 use App\Models\Participante;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use App\Services\EfdResumoBuilder;
 use App\Support\SystemCriticalError;
 use Illuminate\Http\JsonResponse;
@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
 class DataReceiverController extends Controller
 {
     public function __construct(
-        protected CreditService $creditService,
+        protected SaldoService $saldoService,
         protected SystemCriticalError $systemCriticalError
     ) {}
 

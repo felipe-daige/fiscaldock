@@ -40,7 +40,7 @@ function cgAssinaturaGrupo(User $user, int $membros): MonitoramentoAssinatura
 it('ciclo de grupo cria lote com N membros atuais e N jobs, deduct único N×plano', function () {
     Bus::fake();
     $user = User::factory()->create();
-    app(\App\Services\CreditService::class)->add($user, 1000, type: 'manual_add', description: 'seed teste');
+    app(\App\Services\SaldoService::class)->add($user, 1000, type: 'manual_add', description: 'seed teste');
     $ass = cgAssinaturaGrupo($user, 2);
 
     $consulta = app(DispararConsultaMonitoramento::class)->execute($ass);

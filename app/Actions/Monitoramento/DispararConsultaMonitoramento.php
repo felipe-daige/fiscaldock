@@ -7,7 +7,7 @@ use App\Models\ConsultaLote;
 use App\Models\MonitoramentoAssinatura;
 use App\Models\MonitoramentoConsulta;
 use App\Services\Consultas\FecharLoteService;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Str;
 
@@ -19,7 +19,7 @@ use Illuminate\Support\Str;
  */
 class DispararConsultaMonitoramento
 {
-    public function __construct(private CreditService $creditService) {}
+    public function __construct(private SaldoService $saldoService) {}
 
     public function execute(MonitoramentoAssinatura $assinatura, ?MonitoramentoConsulta $parent = null): MonitoramentoConsulta
     {
@@ -52,7 +52,7 @@ class DispararConsultaMonitoramento
             return $consulta;
         }
 
-        if ($custo > 0 && ! $this->creditService->deduct($user, $custo, 'monitoramento_assinatura', "Monitoramento contínuo — assinatura #{$assinatura->id}", $consulta)) {
+        if ($custo > 0 && ! $this->saldoService->deduct($user, $custo, 'monitoramento_assinatura', "Monitoramento contínuo — assinatura #{$assinatura->id}", $consulta)) {
             $consulta->marcarErro('saldo_insuficiente', 'Saldo insuficiente no disparo do ciclo.');
 
             return $consulta;

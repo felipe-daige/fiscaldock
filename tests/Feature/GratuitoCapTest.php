@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\ConsultaLote;
-use App\Models\CreditTransaction;
+use App\Models\SaldoTransacao;
 use App\Models\MonitoramentoPlano;
 use App\Models\User;
 use App\Services\PricingCatalogService;
@@ -32,7 +32,7 @@ it('bloqueia 4a gratuita sem compra', function () {
 
 it('libera gratuito apos compra', function () {
     $user = User::factory()->create();
-    CreditTransaction::create(['user_id' => $user->id, 'type' => 'purchase', 'amount' => 500, 'balance_after' => 500]);
+    SaldoTransacao::create(['user_id' => $user->id, 'type' => 'purchase', 'amount' => 500, 'balance_after' => 500]);
     criarLoteGratuito($user, 1);
     criarLoteGratuito($user, 1);
     criarLoteGratuito($user, 1);

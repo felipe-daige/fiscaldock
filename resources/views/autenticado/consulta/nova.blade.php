@@ -44,7 +44,7 @@
                     <strong>Plano Gratuito:</strong>
                     {{ $gratuitoCap['usados'] }} de {{ $gratuitoCap['limite'] }} consultas gratuitas usadas.
                     @if($gratuitoCap['bloqueado'])
-                        <a href="/app/creditos" class="font-semibold underline" data-link>Adicione saldo para continuar.</a>
+                        <a href="/app/saldo" class="font-semibold underline" data-link>Adicione saldo para continuar.</a>
                     @else
                         {{ $gratuitoCap['restantes'] }} restante{{ $gratuitoCap['restantes'] !== 1 ? 's' : '' }}.
                     @endif
@@ -112,7 +112,7 @@
                     $planosDetalhados[] = [
                         'codigo' => $p->codigo,
                         'nome' => $p->nome,
-                        'creditos' => $pricingCatalog->getProductCreditsByPlan($p, auth()->user()),
+                        'valor_reais' => $pricingCatalog->creditsToCurrency($pricingCatalog->getProductCreditsByPlan($p, auth()->user())),
                         'descricao' => $p->descricao,
                         'cor' => $meta['cor'],
                         'icone' => $meta['icone'],
@@ -210,7 +210,7 @@
                                                 @if ($pd['gratuito'])
                                                     Gratuito
                                                 @else
-                                                    {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) $pd['creditos'])) }}/CNPJ
+                                                    {{ \App\Support\Dinheiro::brl($pd['valor_reais']) }}/CNPJ
                                                 @endif
                                             </td>
                                             <td class="py-2 px-3 text-gray-500" data-label="Quando usar">{{ $pd['casos_uso'][0] ?? '—' }}</td>
@@ -236,11 +236,11 @@
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div class="border border-gray-300 rounded p-3">
                                 <p class="text-sm font-semibold text-gray-900">Preço por CNPJ consultado</p>
-                                {{-- Escada derivada dos planos reais (custo em créditos → R$) — antes eram literais desatualizados. --}}
+                                {{-- Escada derivada dos preços vigentes em R$. --}}
                                 @php
                                     $escadaTxt = collect($planosDetalhados)
                                         ->filter(fn ($x) => ! $x['gratuito'] && ! ($x['coming_soon'] ?? false))
-                                        ->map(fn ($x) => $x['nome'].' '.\App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $x['creditos'])))
+                                        ->map(fn ($x) => $x['nome'].' '.\App\Support\Dinheiro::brl($x['valor_reais']))
                                         ->implode(', ');
                                 @endphp
                                 <p class="text-[11px] text-gray-500 mt-1">Escada comercial atual: {{ $escadaTxt }} por CNPJ.</p>
@@ -312,7 +312,7 @@
                             <p class="text-[10px] font-semibold uppercase tracking-wide" style="color: #047857">Saldo</p>
                             <span class="text-[9px] font-bold uppercase tracking-wide text-white px-1.5 py-0.5 rounded" style="background-color: #047857">Saldo</span>
                         </div>
-                        <p class="text-xl font-bold mt-0.5" style="color: #047857">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) ($credits ?? 0))) }}</p>
+                        <p class="text-xl font-bold mt-0.5" style="color: #047857">{{ \App\Support\Dinheiro::brl($saldoReais ?? 0) }}</p>
                         <p class="text-[11px] mt-1" style="color: #065f46">Disponível para consulta</p>
                     </div>
                 </div>
@@ -782,7 +782,7 @@
                                     $isLocked = $pd['locked'] ?? false;
                                 @endphp
                                 <label class="flex items-center gap-2 px-3 py-2 border rounded transition plano-label {{ $isLocked ? 'border-gray-200 bg-gray-50 opacity-75 cursor-not-allowed' : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50 cursor-pointer' }}" data-plano-id="{{ $planosAtivos[$idx]->id }}" data-locked="{{ $isLocked ? '1' : '0' }}">
-                                    <input type="radio" name="plano_id" value="{{ $planosAtivos[$idx]->id }}" class="w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0" data-custo="{{ $pd['creditos'] }}" data-gratuito="{{ $pd['gratuito'] ? '1' : '0' }}" {{ $idx === 0 ? 'checked' : '' }} {{ $isLocked ? 'disabled' : '' }}>
+                                    <input type="radio" name="plano_id" value="{{ $planosAtivos[$idx]->id }}" class="w-4 h-4 text-gray-600 border-gray-300 flex-shrink-0" data-custo="{{ $pd['valor_reais'] }}" data-gratuito="{{ $pd['gratuito'] ? '1' : '0' }}" {{ $idx === 0 ? 'checked' : '' }} {{ $isLocked ? 'disabled' : '' }}>
                                     <div class="flex-shrink-0 w-6 h-6 rounded {{ $isLocked ? 'bg-gray-200' : 'bg-gray-100' }} flex items-center justify-center">
                                         <svg class="w-3 h-3 {{ $isLocked ? 'text-gray-500' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             @if($isLocked)
@@ -798,7 +798,7 @@
                                     @elseif($isLocked)
                                         <span class="whitespace-nowrap flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Bloq.</span>
                                     @else
-                                        <span class="whitespace-nowrap flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeHex }}">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) $pd['creditos'])) }}</span>
+                                        <span class="whitespace-nowrap flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeHex }}">{{ \App\Support\Dinheiro::brl($pd['valor_reais']) }}</span>
                                     @endif
                                     @if(!empty($pd['trial_aplicavel']))
                                         <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap"
@@ -846,12 +846,12 @@
                                 </div>
                                 <div class="flex justify-between items-center pt-2 border-t border-gray-100">
                                     <span class="text-gray-500">Seu saldo</span>
-                                    <span id="resumo-saldo" class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) $credits)) }}</span>
+                                    <span id="resumo-saldo" class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">{{ \App\Support\Dinheiro::brl($saldoReais) }}</span>
                                 </div>
                             </div>
 
                             {{-- Alerta saldo --}}
-                            <div id="alerta-creditos-insuficientes" class="hidden mt-3 bg-white rounded border border-gray-300 p-3 border-l-4 border-l-red-500 text-sm text-gray-700">
+                            <div id="alerta-saldo-insuficiente" class="hidden mt-3 bg-white rounded border border-gray-300 p-3 border-l-4 border-l-red-500 text-sm text-gray-700">
                                 Saldo insuficiente
                             </div>
 
@@ -1034,9 +1034,9 @@
                                                     @elseif($pd['gratuito'])
                                                         <span class="whitespace-nowrap flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
                                                     @elseif($pd['promo'])
-                                                        <span class="whitespace-nowrap flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b45309">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) $pd['creditos'])) }}</span>
+                                                        <span class="whitespace-nowrap flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b45309">{{ \App\Support\Dinheiro::brl($pd['valor_reais']) }}</span>
                                                     @else
-                                                        <span class="whitespace-nowrap flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeHex }}">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) $pd['creditos'])) }}</span>
+                                                        <span class="whitespace-nowrap flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeHex }}">{{ \App\Support\Dinheiro::brl($pd['valor_reais']) }}</span>
                                                     @endif
                                                 </div>
                                                 <p class="text-sm text-gray-700">{{ $pd['descricao'] }}</p>
@@ -1045,14 +1045,14 @@
                                                     <div class="mt-3 bg-white rounded border border-gray-300 border-l-4 p-3 text-sm text-gray-700" style="border-left-color: #9ca3af">
                                                         <div class="flex items-center justify-between gap-3">
                                                             <span>Disponível após a primeira recarga.</span>
-                                                            <a href="/app/creditos" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline whitespace-nowrap">Adicionar saldo</a>
+                                                            <a href="/app/saldo" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline whitespace-nowrap">Adicionar saldo</a>
                                                         </div>
                                                     </div>
                                                 @endif
 
                                                 @if($pd['promo'])
                                                     <div class="mt-3 bg-white rounded border border-gray-300 border-l-4 p-3 text-sm text-gray-700" style="border-left-color: #b45309">
-                                                        Promoção: de {{ $pd['preco_original'] }} por {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $pd['creditos'])) }}/CNPJ
+                                                        Promoção: de {{ $pd['preco_original'] }} por {{ \App\Support\Dinheiro::brl($pd['valor_reais']) }}/CNPJ
                                                     </div>
                                                 @endif
                                             </div>
@@ -1159,10 +1159,7 @@
 @endphp
 <script>
     window.consultaData = {
-        credits: {{ $credits ?? 0 }},
-        // Preço do crédito em R$ (override admin §6.1 ou default 0,20). O JS precisa dele pra
-        // exibir custo/saldo em R$ — `credits` e `data-custo` são CRÉDITOS, nunca reais.
-        creditUnitPrice: {{ app(\App\Services\PricingCatalogService::class)->creditUnitPrice() }},
+        saldoReais: {{ $saldoReais ?? 0 }},
         csrfToken: '{{ csrf_token() }}',
         routes: {
             getParticipantes: '/app/consulta/nova/participantes',

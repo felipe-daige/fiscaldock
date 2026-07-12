@@ -59,7 +59,7 @@
                     <div class="bg-white rounded border border-gray-300 p-4 mb-6 border-l-4 border-l-blue-500">
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Quando falar com a FiscalDock</p>
                         <ul class="space-y-2 text-sm text-gray-700">
-                            <li>Entender quantos créditos e qual faixa combinam com o seu volume e rotina fiscal.</li>
+                            <li>Entender qual plano e qual saldo combinam com o seu volume e rotina fiscal.</li>
                             <li>Tirar dúvidas sobre SPED, monitoramento, consultas e compliance.</li>
                             <li>Solicitar uma conversa comercial por WhatsApp.</li>
                         </ul>

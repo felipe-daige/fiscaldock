@@ -132,7 +132,7 @@ it('rejeita escopo cliente quando o plano não migrou (n8n não suporta)', funct
     $licitacao = MonitoramentoPlano::where('codigo', 'licitacao')->firstOrFail();
 
     $user = User::factory()->create();
-    app(App\Services\CreditService::class)->add($user, 100, 'manual_add');
+    app(App\Services\SaldoService::class)->add($user, 100, 'manual_add');
     $clienteId = DB::table('clientes')->insertGetId([
         'user_id' => $user->id, 'razao_social' => 'EMP', 'documento' => '19131243000197',
         'is_empresa_propria' => true, 'created_at' => now(), 'updated_at' => now(),

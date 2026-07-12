@@ -3,21 +3,21 @@
 namespace App\Console\Commands;
 
 use App\Models\AccountSubscription;
-use App\Services\Subscription\ConcederCreditosService;
+use App\Services\Subscription\ConcederSaldoService;
 use Illuminate\Console\Command;
 
 /**
- * Concede os créditos inclusos mensais das assinaturas ativas cujo proximo_grant_em
+ * Concede o saldo incluso mensal das assinaturas ativas cujo proximo_grant_em
  * já venceu. Roda pra mensal E anual (anual recebe 12 concessões ao longo do ano).
- * Idempotente: ConcederCreditosService avança proximo_grant_em a cada concessão.
+ * Idempotente: ConcederSaldoService avança proximo_grant_em a cada concessão.
  */
-class AssinaturaConcederCreditos extends Command
+class AssinaturaConcederSaldo extends Command
 {
-    protected $signature = 'assinatura:conceder-creditos';
+    protected $signature = 'assinatura:conceder-saldo';
 
-    protected $description = 'Concede os créditos inclusos mensais das assinaturas ativas vencidas';
+    protected $description = 'Concede o saldo incluso mensal das assinaturas ativas vencidas';
 
-    public function handle(ConcederCreditosService $conceder): int
+    public function handle(ConcederSaldoService $conceder): int
     {
         $assinaturas = AccountSubscription::query()
             ->where('status', AccountSubscription::STATUS_ATIVA)
@@ -27,7 +27,7 @@ class AssinaturaConcederCreditos extends Command
 
         foreach ($assinaturas as $sub) {
             $conceder->conceder($sub, primeiraComoCompra: false);
-            $this->info("✓ assinatura #{$sub->id} (user {$sub->user_id}) — créditos concedidos");
+            $this->info("✓ assinatura #{$sub->id} (user {$sub->user_id}) — saldo concedido");
         }
 
         $this->line("Concessões: {$assinaturas->count()}");

@@ -7,7 +7,7 @@ use App\Models\ConsultaLote;
 use App\Models\EfdNota;
 use App\Models\User;
 use App\Models\XmlNota;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use App\Services\ValidacaoContabilService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
@@ -16,13 +16,13 @@ use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Orquestra o clearance SEFAZ em lote: resolve as chaves do acervo, debita créditos,
+ * Orquestra o clearance SEFAZ em lote: resolve as chaves do acervo, debita saldo,
  * cria o ConsultaLote e dispara um ProcessarClearanceJob por documento via Bus::batch.
  * Substitui o despacho ao webhook n8n (desligado no cutover de 2026-06-07).
  */
 class ClearanceLoteService
 {
-    public function __construct(private CreditService $creditService) {}
+    public function __construct(private SaldoService $saldoService) {}
 
     /**
      * @param  array<int>  $notaIds
@@ -89,17 +89,17 @@ class ClearanceLoteService
         $user = User::findOrFail($userId);
         $custoTotal = $itens->count() * $custoUnit;
 
-        if (! $this->creditService->hasEnough($user, $custoTotal)) {
+        if (! $this->saldoService->hasEnough($user, $custoTotal)) {
             return [
                 'success' => false,
                 'http_status' => Response::HTTP_PAYMENT_REQUIRED,
                 'error' => 'Saldo insuficiente.',
                 'custo_necessario' => $custoTotal,
-                'saldo_atual' => $this->creditService->getBalance($user),
+                'saldo_atual' => $this->saldoService->getBalance($user),
             ];
         }
 
-        $this->creditService->deduct($user, $custoTotal, 'clearance_lote', $descricaoDebito);
+        $this->saldoService->deduct($user, $custoTotal, 'clearance_lote', $descricaoDebito);
 
         $lote = null;
 
@@ -110,7 +110,8 @@ class ClearanceLoteService
                 'plano_id' => null,
                 'status' => ConsultaLote::STATUS_PROCESSANDO,
                 'total_participantes' => $itens->count(),
-                'creditos_cobrados' => $custoTotal,
+                'valor_cobrado_reais' => app(\App\Services\PricingCatalogService::class)
+                    ->creditsToCurrency($custoTotal),
                 'tab_id' => $tabId,
             ]);
 
@@ -142,9 +143,12 @@ class ClearanceLoteService
                 'consulta_lote_id' => $lote->id,
                 'tab_id' => $tabId,
                 'total_notas' => $total,
-                'creditos_cobrados' => $custoTotal,
-                'creditos_utilizados' => $custoTotal,
-                'novo_saldo' => $this->creditService->getBalance($user),
+                'valor_cobrado_reais' => app(\App\Services\PricingCatalogService::class)
+                    ->creditsToCurrency($custoTotal),
+                'valor_utilizado_reais' => app(\App\Services\PricingCatalogService::class)
+                    ->creditsToCurrency($custoTotal),
+                'novo_saldo_reais' => app(\App\Services\PricingCatalogService::class)
+                    ->creditsToCurrency($this->saldoService->getBalance($user)),
                 'resultado_url' => route($resultadoRouteName, ['consultaLoteId' => $lote->id]),
             ];
         } catch (\Throwable $e) {
@@ -156,7 +160,7 @@ class ClearanceLoteService
                 ]);
             }
 
-            $this->creditService->add($user, $custoTotal, 'clearance_refund', 'Estorno · falha ao iniciar clearance');
+            $this->saldoService->add($user, $custoTotal, 'clearance_refund', 'Estorno · falha ao iniciar clearance');
 
             Log::error('Clearance: exceção ao iniciar', ['user_id' => $userId, 'error' => $e->getMessage()]);
 

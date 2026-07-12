@@ -9,8 +9,8 @@ let validarUrl = '';
 let temMaisPagina = false;
 let saldoAtual = 0;
 let custos = { basico: 10, full: 20 };
-// Preço do crédito em R$ — vem do backend (data-credit-unit-price, respeita override do admin).
-let creditUnitPrice = 0.20;
+// Conversão monetária vinda do backend; toda exibição é em R$.
+let saldoUnitPrice = 0.20;
 
 let selecionados = new Set();
 let origens = new Map();
@@ -20,9 +20,9 @@ let currentSseTimeout = null;
 
 function $(id) { return document.getElementById(id); }
 
-// Converte CRÉDITOS pra R$ formatado (espelha PricingCatalogService::creditsToCurrency).
-function brl(creditos) {
-    const reais = Math.round((creditos || 0) * creditUnitPrice * 100) / 100;
+// Formata o valor monetário em R$.
+function brl(unidades) {
+    const reais = Math.round((unidades || 0) * saldoUnitPrice * 100) / 100;
     return 'R$ ' + reais.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
@@ -442,7 +442,7 @@ async function executarClearance() {
             status: resp.status,
             ok: resp.ok,
             webhook_disparado: data?.webhook_disparado,
-            creditos_utilizados: data?.creditos_utilizados,
+            valor_utilizado_reais: data?.valor_utilizado_reais,
             data,
         });
         if (resp.ok) {
@@ -458,8 +458,8 @@ async function executarClearance() {
                 abrirSseProgresso(data.tab_id || tabId);
             } else {
                 const modalSucesso = $('modal-sucesso-validacao');
-                const modalSucessoCreditos = $('modal-sucesso-creditos');
-                if (modalSucessoCreditos) modalSucessoCreditos.textContent = brl(data.creditos_utilizados ?? 0);
+                const modalSucessoValor = $('modal-sucesso-valor');
+                if (modalSucessoValor) modalSucessoValor.textContent = `R$\u00a0${Number(data.valor_utilizado_reais ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                 abrirModal(modalSucesso);
             }
         } else if (resp.status === 402) {
@@ -653,7 +653,7 @@ function initClearanceNotas() {
     validarUrl = root.dataset.validarUrl || '';
     temMaisPagina = root.dataset.temMaisPagina === '1';
     saldoAtual = parseInt(root.dataset.saldoAtual || '0', 10);
-    creditUnitPrice = parseFloat(root.dataset.creditUnitPrice) || 0.20;
+    saldoUnitPrice = parseFloat(root.dataset.saldoUnitPrice) || 0.20;
     custos = {
         basico: parseInt(root.dataset.custoBasico || '10', 10),
         full: parseInt(root.dataset.custoFull || '20', 10),

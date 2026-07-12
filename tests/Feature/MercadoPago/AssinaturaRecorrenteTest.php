@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\AccountSubscription;
-use App\Models\CreditTransaction;
+use App\Models\SaldoTransacao;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
@@ -219,7 +219,7 @@ it('webhook preapproval authorized ativa a assinatura e concede o 1º mês como 
     $user->refresh();
     expect($user->credits)->toBe(300);
     expect($sub->fresh()->status)->toBe('ativa');
-    expect(CreditTransaction::where('type', 'purchase')->count())->toBe(1); // destrava 1ª compra
+    expect(SaldoTransacao::where('type', 'purchase')->count())->toBe(1); // destrava 1ª compra
 });
 
 it('webhook preapproval cancelled marca a assinatura cancelada (sem apagar saldo)', function () {
@@ -247,7 +247,7 @@ it('webhook preapproval cancelled marca a assinatura cancelada (sem apagar saldo
     expect($user->fresh()->credits)->toBe(300); // saldo preservado (guardrail)
 });
 
-it('webhook authorized_payment approved registra a cobrança e NÃO concede crédito', function () {
+it('webhook authorized_payment approved registra a cobrança e NÃO concede saldo', function () {
     $plan = SubscriptionPlan::where('codigo', 'essencial')->first();
     $user = User::factory()->create(['credits' => 300]);
     $sub = AccountSubscription::create([
@@ -296,7 +296,7 @@ it('webhook authorized_payment rejected marca inadimplente', function () {
     expect($sub->fresh()->status)->toBe('inadimplente');
 });
 
-it('scheduler concede créditos só de assinaturas ativas com proximo_grant vencido (idempotente)', function () {
+it('scheduler concede saldo só de assinaturas ativas com proximo_grant vencido (idempotente)', function () {
     $plan = SubscriptionPlan::where('codigo', 'essencial')->first();
 
     $userVencido = User::factory()->create(['credits' => 0]);
@@ -320,16 +320,16 @@ it('scheduler concede créditos só de assinaturas ativas com proximo_grant venc
         'creditos_inclusos_saldo' => 0, 'proximo_grant_em' => now()->subDay(),
     ]);
 
-    $this->artisan('assinatura:conceder-creditos')->assertExitCode(0);
+    $this->artisan('assinatura:conceder-saldo')->assertExitCode(0);
 
     expect($userVencido->fresh()->credits)->toBe(300);     // concedeu
     expect($userFuturo->fresh()->credits)->toBe(0);        // ainda não vence
     expect($userInadimplente->fresh()->credits)->toBe(0);  // não ativa
 
     // Re-rodar não concede de novo (proximo_grant avançou pro futuro).
-    $this->artisan('assinatura:conceder-creditos')->assertExitCode(0);
+    $this->artisan('assinatura:conceder-saldo')->assertExitCode(0);
     expect($userVencido->fresh()->credits)->toBe(300);
-    expect(CreditTransaction::where('type', 'subscription_credit')->count())->toBe(1);
+    expect(SaldoTransacao::where('type', 'subscription_credit')->count())->toBe(1);
 });
 
 it('cancelar chama o MP e marca a assinatura cancelada (mantém saldo até o fim do ciclo)', function () {

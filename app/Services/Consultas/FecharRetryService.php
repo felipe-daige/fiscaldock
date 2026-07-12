@@ -5,7 +5,7 @@ namespace App\Services\Consultas;
 use App\Models\ConsultaLote;
 use App\Models\ConsultaResultado;
 use App\Services\Consultas\Persistencia\PersistenciaCnpj;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Cache;
 class FecharRetryService
 {
     public function __construct(
-        private CreditService $creditService,
+        private SaldoService $saldoService,
         private FecharLoteService $fecharLote,
         private PersistenciaCnpj $persistencia,
     ) {}
@@ -71,7 +71,7 @@ class FecharRetryService
         }
 
         if ($estorno > 0) {
-            $this->creditService->add(
+            $this->saldoService->add(
                 $lote->user,
                 $estorno,
                 type: 'consulta_retry_refund',

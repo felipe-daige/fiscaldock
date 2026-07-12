@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Ciclo de vida da recarga automática (preapproval). Consulta o MP como fonte de
- * verdade. NÃO concede crédito aqui — a concessão é por cobrança (authorized_payment).
+ * verdade. NÃO concede saldo aqui — a concessão é por cobrança (authorized_payment).
  *
  * Retorna null quando o preapproval não pertence a uma recarga (deixa o webhook
  * tentar outros donos, ex.: assinatura de tier).

@@ -162,7 +162,7 @@
             </div>
             <div class="bg-white rounded border border-gray-300 p-4 space-y-1">
                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Avulso</p>
-                <p class="text-sm text-gray-700">Sem assinatura? <a href="/app/creditos" data-link class="text-gray-900 underline hover:text-gray-600">Adicione saldo avulso</a> e use quando precisar.</p>
+                <p class="text-sm text-gray-700">Sem assinatura? <a href="/app/saldo" data-link class="text-gray-900 underline hover:text-gray-600">Adicione saldo avulso</a> e use quando precisar.</p>
             </div>
         </div>
 

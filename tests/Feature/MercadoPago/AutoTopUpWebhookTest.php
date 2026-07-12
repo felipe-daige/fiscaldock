@@ -1,7 +1,7 @@
 <?php
 
 use App\Mail\RecargaAutomaticaPausada;
-use App\Models\CreditTransaction;
+use App\Models\SaldoTransacao;
 use App\Models\MercadoPagoPayment;
 use App\Models\RecargaAutomatica;
 use App\Models\User;
@@ -48,7 +48,7 @@ it('webhook payment approved de auto_topup credita 1x e marca recarga ativa', fu
     $enviar()->assertOk(); // reentrega
 
     expect($user->fresh()->credits)->toBe(1000);
-    expect(CreditTransaction::where('user_id', $user->id)->where('type', 'purchase')->count())->toBe(1);
+    expect(SaldoTransacao::where('user_id', $user->id)->where('type', 'purchase')->count())->toBe(1);
     $recarga->refresh();
     expect($recarga->status)->toBe('ativa');
     expect($recarga->cobranca_em_andamento)->toBeFalse();

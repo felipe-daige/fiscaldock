@@ -12,7 +12,7 @@ use RuntimeException;
  * Setup do auto top-up por saldo baixo: salva o cartão do usuário no vault do MP
  * (Customers + Cards) e grava a config exclusiva com gatilho=saldo.
  *
- * Regra dura: valor/créditos vêm do catálogo backend; o pacote tem que SUPERAR o
+ * Regra dura: valor e saldo vêm do catálogo backend; a oferta tem que superar o
  * limite (senão a recarga cairia abaixo do próprio gatilho → loop). Exclusividade:
  * se havia recarga por tempo (preapproval), cancela antes.
  */

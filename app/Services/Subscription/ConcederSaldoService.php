@@ -4,24 +4,24 @@ namespace App\Services\Subscription;
 
 use App\Models\AccountSubscription;
 use App\Models\User;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Concede os créditos inclusos de uma assinatura, espelhando o mecanismo de trial
- * do CreditService: aplica o rollover cap (expira o excedente não-bancado do ciclo
- * anterior) e então credita o mês corrente.
+ * Concede o saldo incluso de uma assinatura, espelhando o mecanismo de trial
+ * do SaldoService: aplica o rollover cap (expira o excedente não-bancado do ciclo
+ * anterior) e então adiciona o valor do mês corrente.
  *
  * - 1ª concessão (ativação): type=purchase (amount>0) → satisfaz "1ª compra" e
  *   destrava Compliance/DD (mesmo critério de credit_transactions.type=purchase).
  * - Concessões seguintes: type=subscription_credit.
  * - Expiração do excedente: type=subscription_expiration (débito).
  *
- * O bucket de créditos inclusos vive em account_subscriptions.creditos_inclusos_saldo.
+ * O bucket interno de saldo incluso vive em account_subscriptions.creditos_inclusos_saldo.
  */
-class ConcederCreditosService
+class ConcederSaldoService
 {
-    public function __construct(private CreditService $credits = new CreditService) {}
+    public function __construct(private SaldoService $saldo = new SaldoService) {}
 
     public function conceder(AccountSubscription $sub, bool $primeiraComoCompra = false): void
     {
@@ -49,9 +49,9 @@ class ConcederCreditosService
                 $saldoBucket = (int) $sub->creditos_inclusos_saldo;
                 if ($saldoBucket > $capBancado) {
                     $excedente = $saldoBucket - $capBancado;
-                    $expira = min($excedente, $this->credits->getBalance($user));
+                    $expira = min($excedente, $this->saldo->getBalance($user));
                     if ($expira > 0) {
-                        $this->credits->deduct(
+                        $this->saldo->deduct(
                             $user,
                             $expira,
                             'subscription_expiration',
@@ -64,7 +64,7 @@ class ConcederCreditosService
 
                 // 2) Concede o mês corrente.
                 if ($mensal > 0) {
-                    $this->credits->add(
+                    $this->saldo->add(
                         $user,
                         $mensal,
                         $primeiraComoCompra ? 'purchase' : 'subscription_credit',
@@ -102,9 +102,9 @@ class ConcederCreditosService
         float $fracao,
     ): void {
         $saldoBucket = (int) $sub->creditos_inclusos_saldo;
-        $expira = min((int) round($saldoBucket * $fracao), $this->credits->getBalance($user));
+        $expira = min((int) round($saldoBucket * $fracao), $this->saldo->getBalance($user));
         if ($expira > 0) {
-            $this->credits->deduct(
+            $this->saldo->deduct(
                 $user,
                 $expira,
                 'subscription_proration',
@@ -116,11 +116,11 @@ class ConcederCreditosService
 
         $concede = (int) round($mensal * $fracao);
         if ($concede > 0) {
-            $this->credits->add(
+            $this->saldo->add(
                 $user,
                 $concede,
                 'subscription_proration',
-                "Ajuste pro-rata da troca de plano: concede {$concede} créditos inclusos do plano {$plan->nome} pelos dias restantes do ciclo.",
+                'Ajuste pro-rata da troca de plano: adiciona R$ '.number_format(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($concede), 2, ',', '.')." de saldo incluso do plano {$plan->nome} pelos dias restantes do ciclo.",
                 $sub,
             );
             $sub->creditos_inclusos_saldo = (int) $sub->creditos_inclusos_saldo + $concede;

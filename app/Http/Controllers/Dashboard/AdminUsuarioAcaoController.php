@@ -22,7 +22,7 @@ class AdminUsuarioAcaoController extends Controller
         ]);
         $alvo = User::findOrFail($id);
 
-        // Movimento digitado em R$ — converte pra créditos do ledger preservando o sinal.
+        // Movimento digitado em R$ — converte para a unidade do ledger preservando o sinal.
         $reais = (float) $dados['valor'];
         $creditos = ($reais < 0 ? -1 : 1) * app(\App\Services\PricingCatalogService::class)->currencyToCredits(abs($reais));
 

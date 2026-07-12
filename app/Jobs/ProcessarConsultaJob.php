@@ -282,7 +282,7 @@ class ProcessarConsultaJob implements ShouldQueue
      * recuperada deixa de ser estornada; re-falha não conta duas vezes.
      *
      * @param  array<int, array{fonte: Fonte, falhouEm: float}>  $retentaveis
-     * @return int créditos falhos ajustados
+     * @return int unidades internas do valor a estornar
      */
     private function retentarFontes(array $retentaveis, array $alvo, ThrottleProvider $throttle, PersistenciaCnpj $persistencia, int $creditosFalhos, int $totalFontes, int $totalEtapas): int
     {

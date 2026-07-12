@@ -23,7 +23,7 @@ return [
 
     // GUARD DE TESTE: se NÃO vazio, só estes CNPJs (14 dígitos, CSV) realmente chamam o
     // InfoSimples — qualquer outro é bloqueado ANTES da chamada (sem cobrança). Use durante os
-    // testes pagos p/ não queimar crédito por engano. Vazio = produção normal (todos passam).
+    // testes pagos p/ não consumir saldo por engano. Vazio = produção normal (todos passam).
     // ENV: CONSULTAS_INFOSIMPLES_TESTE_CNPJS.
     'infosimples_teste_cnpjs' => array_values(array_filter(array_map(
         fn ($c) => preg_replace('/[^0-9]/', '', (string) $c),
@@ -188,14 +188,13 @@ return [
         ],
     ],
 
-    // Custo em créditos por fonte paga (usado no estorno preciso). 1 crédito = R$ 0,20.
+    // Custo monetário por fonte paga, usado no estorno preciso.
     'fontes' => [
         'cnd_federal' => (int) env('CONSULTA_CREDITOS_CND_FEDERAL', 2),
         'cndt' => (int) env('CONSULTA_CREDITOS_CNDT', 2),
         'crf_fgts' => (int) env('CONSULTA_CREDITOS_CRF_FGTS', 2),
         'cnd_estadual' => (int) env('CONSULTA_CREDITOS_CND_ESTADUAL', 2),
-        // SINTEGRA: 2 créditos (R$0,40) cobre o custo InfoSimples R$0,27 com margem ~48%.
-        // Antes 1 crédito (R$0,20) dava prejuízo de R$0,07/chamada.
+        // SINTEGRA: R$ 0,40 cobre o custo InfoSimples de R$ 0,27 com margem ~48%.
         'sintegra' => (int) env('CONSULTA_CREDITOS_SINTEGRA', 2),
         'cnd_municipal' => (int) env('CONSULTA_CREDITOS_CND_MUNICIPAL', 2),
     ],

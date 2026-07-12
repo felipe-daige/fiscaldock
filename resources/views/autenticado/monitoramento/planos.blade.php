@@ -53,7 +53,7 @@
         $planosDetalhados[] = [
             'codigo' => $p->codigo,
             'nome' => $p->nome,
-            'creditos' => $p->custo_creditos,
+            'valor_reais' => app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $p->custo_creditos),
             'descricao' => $p->descricao,
             'cor' => $meta['cor'],
             'icone' => $meta['icone'],
@@ -174,9 +174,9 @@
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857">R$ 0,00</span>
                                     @elseif($plano['promo'])
                                         <div class="text-gray-400 line-through text-[11px] whitespace-nowrap">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($plano['preco_original'] ?? 0)))</div>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap mt-1" style="background-color: #b45309">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $plano['creditos']))</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap mt-1" style="background-color: #b45309">@brl($plano['valor_reais'])</span>
                                     @else
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #374151">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $plano['creditos']))</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #374151">@brl($plano['valor_reais'])</span>
                                     @endif
                                 </td>
                                 <td class="px-3 py-3 align-top">
@@ -220,7 +220,7 @@
                                     @if($isEmBreve)
                                         <span class="text-xs text-gray-400 whitespace-nowrap">Em breve</span>
                                     @elseif($plano['locked'] ?? false)
-                                        <a href="/app/creditos" data-link class="text-xs text-gray-900 hover:text-gray-600 hover:underline">Adicionar saldo</a>
+                                        <a href="/app/saldo" data-link class="text-xs text-gray-900 hover:text-gray-600 hover:underline">Adicionar saldo</a>
                                     @elseif($plano['coming_soon'])
                                         <span class="text-xs text-gray-400">Indisponível</span>
                                     @else
@@ -275,9 +275,9 @@
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857">R$ 0,00</span>
                                     @elseif($plano['promo'])
                                         <span class="text-gray-400 line-through text-[11px] whitespace-nowrap">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($plano['preco_original'] ?? 0)))</span>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap mt-1" style="background-color: #b45309">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $plano['creditos']))</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap mt-1" style="background-color: #b45309">@brl($plano['valor_reais'])</span>
                                     @else
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #374151">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $plano['creditos']))</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #374151">@brl($plano['valor_reais'])</span>
                                     @endif
                                 </p>
                             </div>
@@ -321,7 +321,7 @@
                                 @if($isEmBreve)
                                     <span class="text-xs text-gray-400 whitespace-nowrap">Em breve</span>
                                 @elseif($plano['locked'] ?? false)
-                                    <a href="/app/creditos" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Adicionar saldo</a>
+                                    <a href="/app/saldo" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Adicionar saldo</a>
                                 @elseif($plano['coming_soon'])
                                     <span class="text-xs text-gray-400">Indisponível</span>
                                 @else
@@ -373,8 +373,8 @@
                             class="w-full px-3 py-2 border border-gray-300 rounded text-sm text-gray-700 focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                         >
                             @foreach($planosAtivos as $plano)
-                                <option value="{{ $plano['creditos'] }}" {{ $plano['codigo'] === 'licitacao' ? 'selected' : '' }}>
-                                    {{ $plano['nome'] }} ({{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $plano['creditos'])) }}/CNPJ)
+                                <option value="{{ $plano['valor_reais'] }}" {{ $plano['codigo'] === 'licitacao' ? 'selected' : '' }}>
+                                    {{ $plano['nome'] }} ({{ \App\Support\Dinheiro::brl($plano['valor_reais']) }}/CNPJ)
                                 </option>
                             @endforeach
                         </select>
@@ -383,7 +383,7 @@
                     <div class="border border-gray-300 rounded px-4 py-3">
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Custo mensal</p>
                         <div class="flex items-baseline gap-2 mt-1">
-                            <span class="text-lg font-bold text-gray-900" id="calc-creditos">—</span>
+                            <span class="text-lg font-bold text-gray-900" id="calc-valor">—</span>
                             <span class="text-[11px] text-gray-500">/mês</span>
                         </div>
                     </div>
@@ -391,7 +391,7 @@
 
                 <div class="mt-4 pt-3 border-t border-gray-200 text-sm text-gray-600">
                     O custo depende do plano selecionado, da quantidade de CNPJs e da frequência de consulta.
-                    <a href="/app/creditos" data-link class="text-gray-900 hover:text-gray-600 hover:underline">Adicionar saldo</a>
+                    <a href="/app/saldo" data-link class="text-gray-900 hover:text-gray-600 hover:underline">Adicionar saldo</a>
                 </div>
             </div>
         </div>
@@ -412,18 +412,15 @@
         const calcCnpjs = document.getElementById('calc-cnpjs');
         const calcFrequencia = document.getElementById('calc-frequencia');
         const calcPlano = document.getElementById('calc-plano');
-        const calcCreditos = document.getElementById('calc-creditos');
-
-        // Valores em CRÉDITOS internamente; a exibição é sempre em R$ (créditos × preço unitário).
-        const unitPrice = {{ app(\App\Services\PricingCatalogService::class)->creditUnitPrice() }};
+        const calcValor = document.getElementById('calc-valor');
 
         function calcular() {
             const cnpjs = parseInt(calcCnpjs.value, 10) || 0;
             const frequencia = parseInt(calcFrequencia.value, 10) || 1;
-            const plano = parseInt(calcPlano.value, 10) || 0;
-            const totalReais = Math.round(cnpjs * frequencia * plano * unitPrice * 100) / 100;
+            const plano = Number(calcPlano.value) || 0;
+            const totalReais = Math.round(cnpjs * frequencia * plano * 100) / 100;
 
-            calcCreditos.textContent = 'R$ ' + totalReais.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            calcValor.textContent = 'R$ ' + totalReais.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
         if (calcCnpjs) calcCnpjs.addEventListener('input', calcular);

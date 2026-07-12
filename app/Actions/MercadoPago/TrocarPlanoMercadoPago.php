@@ -60,10 +60,10 @@ class TrocarPlanoMercadoPago
         $snapshot = $atual->only(['subscription_plan_id', 'status', 'ciclo', 'mp_preapproval_id', 'proration_pendente']);
         $preapprovalAntigo = $atual->mp_preapproval_id;
 
-        // Proration (reconciliação em créditos): registra a fração do ciclo corrente ainda não
+        // Proration de saldo: registra a fração do ciclo corrente ainda não
         // consumida. A concessão do tier destino (no webhook de ativação) usa esse marker pra
-        // expirar o incluso antigo pro-rata e conceder o novo pro-rata. Sem risco de crédito
-        // prematuro — nada é debitado/creditado aqui, só o marker é persistido.
+        // expirar o incluso antigo pro-rata e conceder o novo pro-rata. Sem risco de saldo
+        // prematuro — nada é movimentado aqui, só o marker é persistido.
         $fracaoRestante = $this->fracaoCicloRestante($atual);
         if ($fracaoRestante > 0) {
             $atual->update(['proration_pendente' => [

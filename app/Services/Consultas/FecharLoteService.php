@@ -4,7 +4,7 @@ namespace App\Services\Consultas;
 
 use App\Models\ConsultaLote;
 use App\Models\ConsultaResultado;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use App\Services\RiskScoreService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 class FecharLoteService
 {
     public function __construct(
-        private CreditService $creditService,
+        private SaldoService $saldoService,
         private RiskScoreService $riskScoreService,
         private AtualizarFichaCadastralService $fichaCadastral,
     ) {}
@@ -43,18 +43,20 @@ class FecharLoteService
             $lote->save();
 
             if ($creditosFalhos > 0) {
-                $this->creditService->add(
+                $valorEstorno = app(\App\Services\PricingCatalogService::class)
+                    ->creditsToCurrency($creditosFalhos);
+                $this->saldoService->add(
                     $lote->user,
                     $creditosFalhos,
                     type: 'consulta_refund',
-                    description: "Estorno de {$creditosFalhos} crédito(s) — fontes com falha no lote #{$lote->id}",
+                    description: 'Estorno de R$ '.number_format($valorEstorno, 2, ',', '.')." — fontes com falha no lote #{$lote->id}",
                     source: $lote,
                 );
             }
         });
 
         // Score Fiscal: recalcula/persiste o score de cada participante consultado a partir
-        // do resultado_dados. Fora da transação de crédito — falha aqui nunca desfaz o estorno.
+        // do resultado_dados. Fora da transação monetária — falha aqui nunca desfaz o estorno.
         $this->persistirScores($loteId);
     }
 

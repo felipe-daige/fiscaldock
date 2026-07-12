@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * Pagamento via Mercado Pago (Fase 1 — fundação de pagamentos + pacote avulso).
  *
- * Estados: pending -> approved (credita) | rejected | cancelled | refunded (futuro).
- * Idempotência: UNIQUE em mp_payment_id + idempotency_key; credited_at trava liberação dupla.
+ * Estados: pending -> approved (libera saldo) | rejected | cancelled | refunded (futuro).
+ * Idempotência: UNIQUE em mp_payment_id + idempotency_key; o timestamp de processamento trava liberação dupla.
  */
 class MercadoPagoPayment extends Model
 {
@@ -63,7 +63,7 @@ class MercadoPagoPayment extends Model
     }
 
     /**
-     * Já liberou créditos? (guard de idempotência da liberação).
+     * Já liberou saldo? (guard de idempotência da liberação).
      */
     public function jaCreditado(): bool
     {

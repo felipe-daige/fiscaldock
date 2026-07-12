@@ -13,7 +13,7 @@ Interrompemos a recarga automática do seu saldo. Motivo informado pelo provedor
 as consultas e o **monitoramento contínuo** dos seus CNPJs param de rodar — e uma mudança de
 situação cadastral pode passar despercebida.
 
-<x-mail::button :url="url('/app/creditos')">
+<x-mail::button :url="url('/app/saldo')">
 Atualizar forma de pagamento
 </x-mail::button>
 

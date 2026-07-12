@@ -8,7 +8,7 @@ use App\Models\Alerta;
 use App\Models\Cliente;
 use App\Models\ConsultaLote;
 use App\Models\ConsultaResultado;
-use App\Models\CreditTransaction;
+use App\Models\SaldoTransacao;
 use App\Models\EfdImportacao;
 use App\Models\Participante;
 use App\Services\AlertaCentralService;
@@ -1385,7 +1385,7 @@ class DashboardController extends Controller
         ], $data));
     }
 
-    public function creditos(Request $request)
+    public function saldo(Request $request)
     {
         if (! Auth::check()) {
             if ($this->isAjaxRequest($request)) {
@@ -1404,32 +1404,32 @@ class DashboardController extends Controller
 
         $saldoAtual = (float) $user->credits;
 
-        $totalRecebido = (int) CreditTransaction::where('user_id', $user->id)
+        $totalRecebido = (int) SaldoTransacao::where('user_id', $user->id)
             ->where('amount', '>', 0)
             ->sum('amount');
 
-        $totalConsumido = (int) abs(CreditTransaction::where('user_id', $user->id)
+        $totalConsumido = (int) abs(SaldoTransacao::where('user_id', $user->id)
             ->where('amount', '<', 0)
             ->sum('amount'));
 
-        $ultimaEntrada = CreditTransaction::where('user_id', $user->id)
+        $ultimaEntrada = SaldoTransacao::where('user_id', $user->id)
             ->where('amount', '>', 0)
             ->orderBy('created_at', 'desc')
             ->first();
 
-        $historicoCreditos = CreditTransaction::where('user_id', $user->id)
+        $historicoSaldo = SaldoTransacao::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
             ->limit(30)
             ->get();
 
-        $creditosView = self::AUTH_VIEW_PREFIX.'creditos.index';
+        $saldoView = self::AUTH_VIEW_PREFIX.'saldo.index';
 
         $data = [
             'saldoAtual' => $saldoAtual,
             'totalRecebido' => $totalRecebido,
             'totalConsumido' => $totalConsumido,
             'ultimaEntrada' => $ultimaEntrada,
-            'historicoCreditos' => $historicoCreditos,
+            'historicoSaldo' => $historicoSaldo,
             'pacotes' => $this->pricingCatalogService->getPackages(),
             'pricing' => $pricing,
             'trialResumo' => $this->buildTrialResumo($user),
@@ -1438,11 +1438,11 @@ class DashboardController extends Controller
         ];
 
         if ($this->isAjaxRequest($request)) {
-            return view($creditosView, $data);
+            return view($saldoView, $data);
         }
 
         return view(self::AUTH_LAYOUT_VIEW, array_merge([
-            'initialView' => $creditosView,
+            'initialView' => $saldoView,
         ], $data));
     }
 
@@ -1488,7 +1488,7 @@ class DashboardController extends Controller
 
         if (! $dados) {
             return redirect()
-                ->route('app.creditos')
+                ->route('app.saldo')
                 ->withErrors([
                     'amount' => 'Informe um valor válido a partir de R$ '.number_format($this->pricingCatalogService->getMinimumDeposit(), 0, ',', '.').'.',
                 ]);

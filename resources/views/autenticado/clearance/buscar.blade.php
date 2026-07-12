@@ -616,7 +616,7 @@
 <script>
     window.BUSCAR_NFE_CONFIG = {
         custo: {{ $custoEstimadoCreditos }},
-        creditUnitPrice: {{ app(\App\Services\PricingCatalogService::class)->creditUnitPrice() }},
+        saldoUnitPrice: {{ app(\App\Services\PricingCatalogService::class)->creditUnitPrice() }},
         endpoints: {
             consultar: '{{ route('app.clearance.buscar.consultar') }}',
             precheck: '{{ route('app.clearance.buscar.precheck') }}',

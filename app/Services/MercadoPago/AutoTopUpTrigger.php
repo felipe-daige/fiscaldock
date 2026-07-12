@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Gatilho leve do auto top-up por saldo. Chamado por CreditService::deduct APÓS um
+ * Gatilho leve do auto top-up por saldo. Chamado por SaldoService::deduct APÓS um
  * débito bem-sucedido, como efeito colateral. Nunca bloqueia, nunca lança — qualquer
  * erro é logado e engolido para não afetar a consulta em curso.
  */

@@ -6,9 +6,9 @@ function initClearanceBuscar() {
 
     const config = window.BUSCAR_NFE_CONFIG || {};
     const CUSTO = Number(config.custo || 14);
-    // Preço do crédito em R$ — vem do backend (respeita override do admin). CUSTO é em créditos.
-    const CREDIT_UNIT_PRICE = Number(config.creditUnitPrice || 0.20);
-    const brl = (creditos) => 'R$ ' + (Math.round((creditos || 0) * CREDIT_UNIT_PRICE * 100) / 100)
+    // Conversão monetária definida pelo backend; toda exibição é em R$.
+    const SALDO_UNIT_PRICE = Number(config.saldoUnitPrice || 0.20);
+    const brl = (unidades) => 'R$ ' + (Math.round((unidades || 0) * SALDO_UNIT_PRICE * 100) / 100)
         .toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const ENDPOINTS = config.endpoints || {};
     const BADGE_CORES = config.cores || {};

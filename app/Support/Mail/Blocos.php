@@ -307,7 +307,7 @@ class Blocos
         );
     }
 
-    /** Formata R$ — o produto é precificado em dinheiro, "crédito" não existe pro usuário. */
+    /** Formata valores monetários do produto em R$. */
     public static function brl(float $valor): string
     {
         return 'R$ '.number_format($valor, 2, ',', '.');

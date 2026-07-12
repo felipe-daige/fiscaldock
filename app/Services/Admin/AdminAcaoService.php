@@ -6,7 +6,7 @@ use App\Models\AccountSubscription;
 use App\Models\AdminActionLog;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -19,7 +19,7 @@ class AdminAcaoService
         AccountSubscription::STATUS_CANCELADA,
     ];
 
-    public function __construct(private CreditService $credit) {}
+    public function __construct(private SaldoService $credit) {}
 
     public function registrar(User $admin, ?User $alvo, string $acao, string $motivo, array $detalhe = []): AdminActionLog
     {

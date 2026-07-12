@@ -3,7 +3,7 @@
 namespace App\Services\Clearance;
 
 use App\Models\ConsultaLote;
-use App\Services\CreditService;
+use App\Services\SaldoService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
  */
 class FecharClearanceLoteService
 {
-    public function __construct(private CreditService $creditService) {}
+    public function __construct(private SaldoService $saldoService) {}
 
     public function fechar(int $loteId, array $resumo = []): void
     {
@@ -35,7 +35,7 @@ class FecharClearanceLoteService
             $lote->save();
 
             if ($estorno > 0) {
-                $this->creditService->add(
+                $this->saldoService->add(
                     $lote->user,
                     $estorno,
                     'clearance_refund',

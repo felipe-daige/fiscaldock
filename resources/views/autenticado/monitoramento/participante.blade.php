@@ -1067,7 +1067,7 @@
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Valor gasto</span>
-                            <span class="text-sm font-semibold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) ($estatisticas['creditos_utilizados'] ?? 0)))</span>
+                            <span class="text-sm font-semibold text-gray-900">@brl($estatisticas['valor_utilizado_reais'] ?? 0)</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Notas fiscais</span>
@@ -1090,11 +1090,11 @@
                         </div>
                         <div>
                             <p class="text-sm text-gray-500">Saldo disponível</p>
-                            <p class="text-xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) ($credits ?? 0)))</p>
+                            <p class="text-xl font-bold text-gray-900">@brl($saldoReais ?? 0)</p>
                         </div>
                     </div>
                     <a
-                        href="/app/creditos"
+                        href="/app/saldo"
                         class="block w-full text-center px-4 py-2 rounded bg-gray-800 text-white text-sm font-semibold transition hover:bg-gray-700"
                         data-link
                     >
@@ -1127,7 +1127,7 @@
                     <select name="plano_id" id="select-plano-assinatura" class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-gray-400 focus:border-gray-400" required>
                         <option value="">Selecione...</option>
                         @foreach($planos as $plano)
-                            <option value="{{ $plano->id }}" data-creditos="{{ $plano->custo_creditos }}">
+                            <option value="{{ $plano->id }}">
                                 {{ $plano->nome }} ({{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) $plano->custo_creditos)) }}/consulta)
                             </option>
                         @endforeach
