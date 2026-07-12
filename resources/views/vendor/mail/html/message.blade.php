@@ -1,9 +1,8 @@
+@props(['logo' => null])
 <x-mail::layout>
-{{-- Header --}}
+{{-- Header — a logo vem da view raiz (único ponto que enxerga $message p/ o CID). --}}
 <x-slot:header>
-<x-mail::header :url="config('app.url')">
-{{ config('app.name') }}
-</x-mail::header>
+<x-mail::header :url="config('app.url')" :logo="$logo" />
 </x-slot:header>
 
 {{-- Body --}}
@@ -20,8 +19,6 @@
 
 {{-- Footer --}}
 <x-slot:footer>
-<x-mail::footer>
-© {{ date('Y') }} {{ config('app.name') }}. Todos os direitos reservados.
-</x-mail::footer>
+<x-mail::footer />
 </x-slot:footer>
 </x-mail::layout>

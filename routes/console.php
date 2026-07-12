@@ -17,3 +17,5 @@ Schedule::command('monitoramento:executar-pendentes')->dailyAt('04:00')->without
 // LGPD fase 2.3: DRY-RUN diário (sem --force) — só lista/loga quem seria anonimizado.
 // A anonimização real é irreversível em prod, então continua manual (`--force`) de propósito.
 Schedule::command('lgpd:processar-exclusoes')->dailyAt('05:30');
+// Resumo semanal: segunda 08:00, depois do recalcular de 06:00 daquele dia.
+Schedule::command('alertas:enviar-resumo-semanal')->weeklyOn(1, '08:00')->withoutOverlapping();

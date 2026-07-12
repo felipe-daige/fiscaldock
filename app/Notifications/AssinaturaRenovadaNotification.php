@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Support\Mail\Blocos;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -28,20 +29,25 @@ class AssinaturaRenovadaNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $valorFmt = 'R$ '.number_format($this->valor, 2, ',', '.');
-
-        $msg = (new MailMessage)
-            ->subject('Assinatura renovada — '.$this->plano)
-            ->greeting('Olá, '.$notifiable->name.'!')
-            ->line('Sua assinatura do plano **'.$this->plano.'** foi renovada com sucesso.')
-            ->line('**Valor cobrado:** '.$valorFmt);
+        $dados = [
+            'Plano' => $this->plano,
+            'Valor cobrado' => Blocos::brl($this->valor),
+            'Data' => now()->format('d/m/Y \à\s H:i'),
+        ];
 
         if ($this->proximaRenovacao !== null) {
-            $msg->line('**Próxima renovação:** '.$this->proximaRenovacao);
+            $dados['Próxima renovação'] = $this->proximaRenovacao;
         }
 
-        return $msg
+        $mail = Blocos::comEtiqueta(new MailMessage, 'Assinatura renovada', Blocos::VERDE);
+
+        return $mail
+            ->subject('Assinatura renovada · '.$this->plano)
+            ->greeting('Sua assinatura foi renovada.')
+            ->line('A cobrança do plano **'.$this->plano.'** foi aprovada e o saldo do ciclo já entrou na conta. Nada muda no seu acesso.')
+            ->line(Blocos::ficha($dados, 'Comprovante'))
             ->action('Ver minha assinatura', url('/app/plano'))
-            ->line('Obrigado por continuar com o FiscalDock.');
+            ->line('Saldo não usado do ciclo anterior é acumulado, não perdido. Você pode trocar de plano ou cancelar a qualquer momento, sem multa.')
+            ->salutation('Guarde este e-mail — ele é o comprovante da cobrança.');
     }
 }

@@ -6,6 +6,7 @@ use App\Models\Alerta;
 use App\Models\Participante;
 use App\Models\ParticipanteScore;
 use App\Models\User;
+use App\Notifications\AlertaImediatoNotification;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -159,26 +160,7 @@ class AlertaCentralService
                 'cliente_id' => $clienteUnicoNotas,
             ];
 
-            $existing = Alerta::where('user_id', $userId)->where('hash', $hash)->first();
-
-            if ($existing) {
-                $updateData = $data;
-                // "Resolvido" REATIVA se o problema persiste nos dados (o usuário achou que
-                // resolveu, mas o detector ainda o encontra) — impede esconder problema real.
-                // Só "Ignorado" é silêncio permanente (dispensa deliberada).
-                if ($existing->status !== 'ignorado') {
-                    $updateData['status'] = 'ativo';
-                }
-                $existing->update($updateData);
-                $atualizados++;
-            } else {
-                Alerta::create(array_merge($data, [
-                    'user_id' => $userId,
-                    'hash' => $hash,
-                    'status' => 'ativo',
-                ]));
-                $novos++;
-            }
+            $this->upsertAlerta($userId, $hash, $data)->wasRecentlyCreated ? $novos++ : $atualizados++;
         }
 
         // 2. Alertas de compliance por participante (acionáveis, 1 por CNPJ).
@@ -198,24 +180,7 @@ class AlertaCentralService
 
                 $data = $this->buildComplianceAlertData($tipo, $p);
 
-                $existing = Alerta::where('user_id', $userId)->where('hash', $hash)->first();
-
-                if ($existing) {
-                    $updateData = $data;
-                    // Resolvido reativa se ainda detectado; só Ignorado é permanente.
-                    if ($existing->status !== 'ignorado') {
-                        $updateData['status'] = 'ativo';
-                    }
-                    $existing->update($updateData);
-                    $atualizados++;
-                } else {
-                    Alerta::create(array_merge($data, [
-                        'user_id' => $userId,
-                        'hash' => $hash,
-                        'status' => 'ativo',
-                    ]));
-                    $novos++;
-                }
+                $this->upsertAlerta($userId, $hash, $data)->wasRecentlyCreated ? $novos++ : $atualizados++;
             }
         }
 
@@ -240,26 +205,7 @@ class AlertaCentralService
                 ])->values()->all(),
             ];
 
-            $existing = Alerta::where('user_id', $userId)->where('hash', $hash)->first();
-
-            if ($existing) {
-                $updateData = $data;
-                // "Resolvido" REATIVA se o problema persiste nos dados (o usuário achou que
-                // resolveu, mas o detector ainda o encontra) — impede esconder problema real.
-                // Só "Ignorado" é silêncio permanente (dispensa deliberada).
-                if ($existing->status !== 'ignorado') {
-                    $updateData['status'] = 'ativo';
-                }
-                $existing->update($updateData);
-                $atualizados++;
-            } else {
-                Alerta::create(array_merge($data, [
-                    'user_id' => $userId,
-                    'hash' => $hash,
-                    'status' => 'ativo',
-                ]));
-                $novos++;
-            }
+            $this->upsertAlerta($userId, $hash, $data)->wasRecentlyCreated ? $novos++ : $atualizados++;
         }
 
         // 3. Alertas de risco BI (fornecedores irregulares com notas, gap de importações)
@@ -290,26 +236,7 @@ class AlertaCentralService
                 ],
             ];
 
-            $existing = Alerta::where('user_id', $userId)->where('hash', $hash)->first();
-
-            if ($existing) {
-                $updateData = $data;
-                // "Resolvido" REATIVA se o problema persiste nos dados (o usuário achou que
-                // resolveu, mas o detector ainda o encontra) — impede esconder problema real.
-                // Só "Ignorado" é silêncio permanente (dispensa deliberada).
-                if ($existing->status !== 'ignorado') {
-                    $updateData['status'] = 'ativo';
-                }
-                $existing->update($updateData);
-                $atualizados++;
-            } else {
-                Alerta::create(array_merge($data, [
-                    'user_id' => $userId,
-                    'hash' => $hash,
-                    'status' => 'ativo',
-                ]));
-                $novos++;
-            }
+            $this->upsertAlerta($userId, $hash, $data)->wasRecentlyCreated ? $novos++ : $atualizados++;
         }
 
         // 3b. Certidões positivas (fornecedores E clientes) — 1 alerta por CNPJ, agrupando
@@ -323,26 +250,7 @@ class AlertaCentralService
 
             $data = $this->buildCertidaoPositivaAlertData($alvo);
 
-            $existing = Alerta::where('user_id', $userId)->where('hash', $hash)->first();
-
-            if ($existing) {
-                $updateData = $data;
-                // "Resolvido" REATIVA se o problema persiste nos dados (o usuário achou que
-                // resolveu, mas o detector ainda o encontra) — impede esconder problema real.
-                // Só "Ignorado" é silêncio permanente (dispensa deliberada).
-                if ($existing->status !== 'ignorado') {
-                    $updateData['status'] = 'ativo';
-                }
-                $existing->update($updateData);
-                $atualizados++;
-            } else {
-                Alerta::create(array_merge($data, [
-                    'user_id' => $userId,
-                    'hash' => $hash,
-                    'status' => 'ativo',
-                ]));
-                $novos++;
-            }
+            $this->upsertAlerta($userId, $hash, $data)->wasRecentlyCreated ? $novos++ : $atualizados++;
         }
 
         // 3c. Certidões REGULARES vencendo (≤30 dias) ou já vencidas — 1 alerta por CNPJ.
@@ -354,23 +262,7 @@ class AlertaCentralService
 
             $data = $this->buildCertidaoVencendoAlertData($alvo);
 
-            $existing = Alerta::where('user_id', $userId)->where('hash', $hash)->first();
-
-            if ($existing) {
-                $updateData = $data;
-                if ($existing->status !== 'ignorado') {
-                    $updateData['status'] = 'ativo';
-                }
-                $existing->update($updateData);
-                $atualizados++;
-            } else {
-                Alerta::create(array_merge($data, [
-                    'user_id' => $userId,
-                    'hash' => $hash,
-                    'status' => 'ativo',
-                ]));
-                $novos++;
-            }
+            $this->upsertAlerta($userId, $hash, $data)->wasRecentlyCreated ? $novos++ : $atualizados++;
         }
 
         $gapImportacoes = $this->detectarGapImportacoes($userId);
@@ -392,26 +284,7 @@ class AlertaCentralService
                 ],
             ];
 
-            $existing = Alerta::where('user_id', $userId)->where('hash', $hash)->first();
-
-            if ($existing) {
-                $updateData = $data;
-                // "Resolvido" REATIVA se o problema persiste nos dados (o usuário achou que
-                // resolveu, mas o detector ainda o encontra) — impede esconder problema real.
-                // Só "Ignorado" é silêncio permanente (dispensa deliberada).
-                if ($existing->status !== 'ignorado') {
-                    $updateData['status'] = 'ativo';
-                }
-                $existing->update($updateData);
-                $atualizados++;
-            } else {
-                Alerta::create(array_merge($data, [
-                    'user_id' => $userId,
-                    'hash' => $hash,
-                    'status' => 'ativo',
-                ]));
-                $novos++;
-            }
+            $this->upsertAlerta($userId, $hash, $data)->wasRecentlyCreated ? $novos++ : $atualizados++;
         }
 
         // 4. Auto-resolver alertas que não foram mais detectados. Save por-modelo (não bulk
@@ -433,6 +306,74 @@ class AlertaCentralService
             'atualizados' => $atualizados,
             'resolvidos' => $resolvidos,
         ];
+    }
+
+    /**
+     * Ponto ÚNICO de criação/atualização de alerta — e, por isso, o único lugar que
+     * decide se sai e-mail. `wasRecentlyCreated` distingue novo × atualizado.
+     *
+     * "Resolvido" REATIVA se o problema persiste nos dados (o usuário achou que resolveu,
+     * mas o detector ainda o encontra) — impede esconder problema real. Só "Ignorado" é
+     * silêncio permanente (dispensa deliberada).
+     */
+    private function upsertAlerta(int $userId, string $hash, array $data): Alerta
+    {
+        $existing = Alerta::where('user_id', $userId)->where('hash', $hash)->first();
+
+        if ($existing) {
+            $updateData = $data;
+            if ($existing->status !== 'ignorado') {
+                $updateData['status'] = 'ativo';
+            }
+            $existing->update($updateData);
+            $this->notificarSeRelevante($existing);
+
+            return $existing;
+        }
+
+        $alerta = Alerta::create(array_merge($data, [
+            'user_id' => $userId,
+            'hash' => $hash,
+            'status' => 'ativo',
+        ]));
+
+        $this->notificarSeRelevante($alerta);
+
+        return $alerta;
+    }
+
+    /**
+     * Gate de e-mail imediato: só alerta ATIVO de severidade alta/média, com o toggle
+     * do usuário ligado e ainda NÃO notificado.
+     *
+     * `notificado_em` é a guarda de idempotência — `alertas:recalcular` roda diário e faz
+     * upsert por hash; sem essa guarda, um alerta ainda ativo reenviaria e-mail todo dia.
+     * Severidade baixa nunca dispara imediato (só o centro de alertas + resumo semanal).
+     */
+    private function notificarSeRelevante(Alerta $alerta): void
+    {
+        if ($alerta->status !== 'ativo'
+            || ! in_array($alerta->severidade, ['alta', 'media'], true)
+            || $alerta->notificado_em !== null) {
+            return;
+        }
+
+        $user = User::find($alerta->user_id);
+
+        if (! $user) {
+            return;
+        }
+
+        $toggle = $alerta->categoria === 'monitoramento' ? 'alertas_monitoramento' : 'alertas_operacionais';
+
+        if (! $user->{$toggle}) {
+            return;
+        }
+
+        $user->notify(new AlertaImediatoNotification($alerta));
+
+        $alerta->notificado_em = now();
+        $alerta->saveQuietly();
     }
 
     /**
@@ -1290,22 +1231,6 @@ class AlertaCentralService
             'detalhes' => $consultaId ? ['monitoramento_consulta_id' => $consultaId] : null,
         ];
 
-        $existing = Alerta::where('user_id', $userId)->where('hash', $hash)->first();
-
-        if ($existing) {
-            // Mudança de situação re-detectada reativa "resolvido"; só "ignorado" é permanente.
-            if ($existing->status !== 'ignorado') {
-                $data['status'] = 'ativo';
-            }
-            $existing->update($data);
-
-            return $existing;
-        }
-
-        return Alerta::create(array_merge($data, [
-            'user_id' => $userId,
-            'hash' => $hash,
-            'status' => 'ativo',
-        ]));
+        return $this->upsertAlerta($userId, $hash, $data);
     }
 }

@@ -7,6 +7,7 @@ use App\Models\Cliente;
 use App\Models\ConsentLog;
 use App\Models\LandingLead;
 use App\Models\User;
+use App\Notifications\BoasVindasNotification;
 use App\Services\CreditService;
 use App\Services\Lgpd\ConsentLogService;
 use Illuminate\Http\JsonResponse;
@@ -410,8 +411,14 @@ class AuthController extends Controller
 
             $creditos = (int) config('trial.creditos');
             $validadeDias = (int) config('trial.validade_dias');
-            $bonusReais = 'R$ '.number_format(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($creditos), 2, ',', '.');
+            $saldoTrial = (float) app(\App\Services\PricingCatalogService::class)->creditsToCurrency($creditos);
+            $bonusReais = 'R$ '.number_format($saldoTrial, 2, ',', '.');
             $message = "Conta criada com sucesso. Você recebeu {$bonusReais} de saldo grátis por {$validadeDias} dias.";
+
+            // Boas-vindas + verificação de e-mail só depois do commit (o envio não pode
+            // vazar de uma transação que pode dar rollback).
+            $user->notify(new BoasVindasNotification($saldoTrial, $validadeDias));
+            $user->sendEmailVerificationNotification();
 
             if ($request->ajax()) {
                 return response()->json([

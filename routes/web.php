@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\CreditController;
 use App\Http\Controllers\Dashboard\BiController;
@@ -68,6 +69,14 @@ Route::post('/esqueci-senha', [PasswordResetController::class, 'enviarLinkReset'
 Route::get('/redefinir-senha/{token}', [PasswordResetController::class, 'mostrarFormularioReset'])->name('password.reset');
 Route::post('/redefinir-senha', [PasswordResetController::class, 'resetar'])->middleware('throttle:5,10')->name('password.reset.post');
 
+// Verificação e troca de e-mail — os dois links são ASSINADOS e públicos de propósito:
+// a posse do link (entregue na caixa alvo) é a prova; exigir sessão só quebraria quem
+// abre o e-mail em outro navegador.
+Route::get('/email/verificar/{id}/{hash}', [EmailVerificationController::class, 'verificar'])
+    ->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
+Route::get('/perfil/email/confirmar/{user}/{hash}', [EmailVerificationController::class, 'confirmarTroca'])
+    ->middleware(['signed', 'throttle:6,1'])->name('perfil.email.confirmar');
+
 Route::post('/lead/banner-contato', [LandingPageController::class, 'capturarLead'])
     ->name('landing.lead.banner');
 
@@ -93,6 +102,9 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     Route::get('/app/perfil', [DashboardController::class, 'perfil'])->name('app.perfil');
     Route::patch('/app/perfil', [DashboardController::class, 'atualizarPerfil'])->name('app.perfil.update');
     Route::put('/app/perfil/senha', [DashboardController::class, 'atualizarSenha'])->name('app.perfil.senha.update');
+    Route::patch('/app/perfil/email', [EmailVerificationController::class, 'solicitarTroca'])->middleware('throttle:5,10')->name('app.perfil.email.trocar');
+    Route::delete('/app/perfil/email', [EmailVerificationController::class, 'cancelarTroca'])->name('app.perfil.email.cancelar');
+    Route::post('/app/perfil/email/reenviar', [EmailVerificationController::class, 'reenviar'])->middleware('throttle:5,10')->name('verification.send');
 
     Route::get('/app/alertas', [DashboardController::class, 'alertas'])->name('app.alertas');
     Route::get('/app/alertas/dados', [DashboardController::class, 'alertasDados'])->name('app.alertas.dados');

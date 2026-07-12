@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Support\Mail\Blocos;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -28,16 +29,27 @@ class CompraConfirmadaNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $valorFmt = 'R$ '.number_format($this->valor, 2, ',', '.');
+        $mail = Blocos::comEtiqueta(new MailMessage, 'Pagamento aprovado', Blocos::VERDE);
 
-        return (new MailMessage)
-            ->subject('Pagamento confirmado — saldo liberado')
-            ->greeting('Olá, '.$notifiable->name.'!')
-            ->line('Recebemos seu pagamento e o saldo já está disponível na sua conta.')
-            ->line('**Pacote:** '.$this->pacote)
-            ->line('**Valor pago:** '.$valorFmt)
+        return $mail
+            ->subject('Pagamento confirmado · '.Blocos::brl($this->valor).' em saldo liberado')
+            ->greeting('Seu saldo já está na conta.')
+            ->line('O pagamento foi aprovado e o crédito **entrou na hora** — você não precisa esperar compensação para voltar a consultar.')
+            ->line(Blocos::hero(
+                Blocos::brl($this->valor),
+                'Saldo liberado',
+                'Não expira · vale para qualquer consulta',
+                Blocos::VERDE
+            ))
+            ->line(Blocos::ficha([
+                'Pacote' => $this->pacote,
+                'Valor pago' => Blocos::brl($this->valor),
+                'Forma' => 'Mercado Pago',
+                'Data' => now()->format('d/m/Y \à\s H:i'),
+                'Referência' => $this->mpPaymentId,
+            ], 'Comprovante'))
             ->action('Ver meu saldo', url('/app/creditos'))
-            ->line('Obrigado por usar o FiscalDock.')
-            ->salutation('Referência do pagamento: '.$this->mpPaymentId);
+            ->line('O saldo serve para tudo: consulta de CNPJ, certidões, clearance de notas e monitoramento contínuo.')
+            ->salutation('Guarde este e-mail — ele é o seu comprovante.');
     }
 }

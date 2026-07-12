@@ -24,6 +24,13 @@
             <p class="text-xs text-gray-500 mt-1">Gerencie seus dados, senha e informações da conta.</p>
         </div>
 
+        @if(session('success'))
+            <div class="rounded px-3 py-2 text-[12px]" style="background-color: #ecfdf5; color: #047857">{{ session('success') }}</div>
+        @endif
+        @if(session('error'))
+            <div class="rounded px-3 py-2 text-[12px]" style="background-color: #fef2f2; color: #b91c1c">{{ session('error') }}</div>
+        @endif
+
         {{-- Hero --}}
         <div class="bg-white rounded border border-gray-300 overflow-hidden">
             <div class="px-4 py-5 flex items-center gap-4">
@@ -65,15 +72,62 @@
                                 <label class="text-[11px] text-gray-500 block mb-1">Telefone</label>
                                 <input name="telefone" value="{{ $user->telefone ?? '' }}" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
                             </div>
-                            <div>
-                                <label class="text-[11px] text-gray-500 block mb-1">E-mail (não editável)</label>
-                                <input value="{{ $user->email ?? '' }}" disabled class="w-full text-[13px] py-2.5 px-3 border border-gray-200 rounded bg-gray-100 text-gray-500">
-                            </div>
                         </div>
                         <div class="flex justify-end">
                             <button type="submit" class="px-4 py-2 text-sm font-medium text-white rounded" style="background-color: #1f2937">Salvar</button>
                         </div>
                     </form>
+                </div>
+
+                {{-- E-mail de acesso --}}
+                <div class="bg-white rounded border border-gray-300 overflow-hidden">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">E-mail de acesso</span>
+                        @if($user->hasVerifiedEmail())
+                            <span class="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded text-white" style="background-color: #047857">Verificado</span>
+                        @else
+                            <span class="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded text-white" style="background-color: #b45309">Não verificado</span>
+                        @endif
+                    </div>
+                    <div class="px-4 py-5 space-y-4">
+                        <div id="msg-email" class="hidden text-[12px] rounded px-3 py-2"></div>
+
+                        <div class="flex items-center justify-between gap-3 flex-wrap">
+                            <div>
+                                <p class="text-[13px] text-gray-900 font-medium">{{ $user->email }}</p>
+                                @unless($user->hasVerifiedEmail())
+                                    <p class="text-[11px] text-gray-500 mt-0.5">Confirme seu e-mail para receber avisos de pagamento, alertas e monitoramento.</p>
+                                @endunless
+                            </div>
+                            @unless($user->hasVerifiedEmail())
+                                <button type="button" id="btn-reenviar-verificacao" class="px-3 py-2 text-[12px] font-medium text-gray-700 border border-gray-300 rounded">Reenviar verificação</button>
+                            @endunless
+                        </div>
+
+                        @if($user->pending_email)
+                            <div class="rounded px-3 py-2 text-[12px] flex items-center justify-between gap-3 flex-wrap" style="background-color: #fffbeb; color: #92400e">
+                                <span>Troca pendente para <strong>{{ $user->pending_email }}</strong> — confirme pelo link enviado a esse endereço. Até lá, o e-mail atual continua valendo.</span>
+                                <button type="button" id="btn-cancelar-troca-email" class="px-2 py-1 text-[11px] font-medium border rounded" style="border-color: #92400e">Cancelar</button>
+                            </div>
+                        @endif
+
+                        <form id="form-email" class="space-y-4 pt-2 border-t border-gray-100">
+                            <p class="text-[11px] text-gray-500 pt-3">Trocar o e-mail exige confirmação no endereço NOVO. Nada muda até você clicar no link que enviarmos para lá.</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-[11px] text-gray-500 block mb-1">Novo e-mail</label>
+                                    <input type="email" name="email" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded" required>
+                                </div>
+                                <div>
+                                    <label class="text-[11px] text-gray-500 block mb-1">Senha atual</label>
+                                    <input type="password" name="current_password" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded" required>
+                                </div>
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="submit" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded">Enviar confirmação</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
 
                 {{-- Segurança --}}
@@ -169,7 +223,7 @@
                 return r.json().then(function (data) { return { ok: r.ok, data: data }; });
             }).then(function (res) {
                 if (res.ok && res.data.success) {
-                    showMsg(msgEl, true, 'Salvo com sucesso.');
+                    showMsg(msgEl, true, res.data.message || 'Salvo com sucesso.');
                     if (onOk) onOk();
                 } else {
                     var first = res.data.errors ? Object.values(res.data.errors)[0][0] : (res.data.message || 'Erro ao salvar.');
@@ -187,6 +241,41 @@
     var formSenha = document.getElementById('form-senha');
     if (formSenha) submitForm(formSenha, '/app/perfil/senha', 'PUT', document.getElementById('msg-senha'), function () {
         formSenha.reset();
+    });
+
+    var msgEmail = document.getElementById('msg-email');
+
+    var formEmail = document.getElementById('form-email');
+    if (formEmail) submitForm(formEmail, '/app/perfil/email', 'PATCH', msgEmail, function () {
+        formEmail.reset();
+    });
+
+    function acaoEmail(url, method) {
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).then(function (r) {
+            return r.json().then(function (data) { return { ok: r.ok, data: data }; });
+        }).then(function (res) {
+            showMsg(msgEmail, res.ok && res.data.success, res.data.message || 'Erro na operação.');
+        }).catch(function () {
+            showMsg(msgEmail, false, 'Falha de conexão.');
+        });
+    }
+
+    var btnReenviar = document.getElementById('btn-reenviar-verificacao');
+    if (btnReenviar) btnReenviar.addEventListener('click', function () {
+        acaoEmail('/app/perfil/email/reenviar', 'POST');
+    });
+
+    var btnCancelarTroca = document.getElementById('btn-cancelar-troca-email');
+    if (btnCancelarTroca) btnCancelarTroca.addEventListener('click', function () {
+        acaoEmail('/app/perfil/email', 'DELETE');
     });
 })();
 </script>

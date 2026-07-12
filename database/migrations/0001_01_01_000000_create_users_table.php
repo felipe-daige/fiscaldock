@@ -18,6 +18,9 @@ return new class extends Migration
             $table->string('telefone');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
+            // Troca de e-mail no perfil: só vira `email` depois de confirmado no e-mail NOVO
+            // (link assinado). Até lá o e-mail antigo continua válido pra login.
+            $table->string('pending_email')->nullable();
             $table->string('password');
             $table->rememberToken();
             $table->decimal('credits', 12, 2)->default(0);

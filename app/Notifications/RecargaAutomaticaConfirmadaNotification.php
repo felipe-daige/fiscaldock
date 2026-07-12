@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Support\Mail\Blocos;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -28,16 +29,27 @@ class RecargaAutomaticaConfirmadaNotification extends Notification implements Sh
 
     public function toMail(object $notifiable): MailMessage
     {
-        $valorFmt = 'R$ '.number_format($this->valor, 2, ',', '.');
+        $mail = Blocos::comEtiqueta(new MailMessage, 'Recarga automática', Blocos::VERDE);
 
-        return (new MailMessage)
-            ->subject('Recarga automática concluída')
-            ->greeting('Olá, '.$notifiable->name.'!')
-            ->line('Sua recarga automática por saldo baixo foi processada e o saldo já está disponível.')
-            ->line('**Pacote:** '.$this->pacote)
-            ->line('**Valor cobrado:** '.$valorFmt)
+        return $mail
+            ->subject('Recarga automática · '.Blocos::brl($this->valor).' adicionados ao saldo')
+            ->greeting('Recarregamos seu saldo automaticamente.')
+            ->line('Cobramos o cartão cadastrado e o crédito já entrou. Suas consultas e o **monitoramento contínuo** seguem rodando sem interrupção.')
+            ->line(Blocos::hero(
+                Blocos::brl($this->valor),
+                'Saldo adicionado',
+                'Cobrado no cartão cadastrado',
+                Blocos::VERDE
+            ))
+            ->line(Blocos::ficha([
+                'Pacote' => $this->pacote,
+                'Valor cobrado' => Blocos::brl($this->valor),
+                'Forma' => 'Mercado Pago',
+                'Data' => now()->format('d/m/Y \à\s H:i'),
+                'Referência' => $this->mpPaymentId,
+            ], 'Comprovante'))
             ->action('Ver meu saldo', url('/app/creditos'))
-            ->line('Você pode ajustar ou desativar a recarga automática a qualquer momento.')
-            ->salutation('Referência do pagamento: '.$this->mpPaymentId);
+            ->line('Você define o gatilho e o valor do pacote — e desliga quando quiser. Sem essa configuração ativa, nada é cobrado.')
+            ->salutation('Guarde este e-mail — ele é o seu comprovante.');
     }
 }

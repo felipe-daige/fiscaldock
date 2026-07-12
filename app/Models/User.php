@@ -3,12 +3,18 @@
 namespace App\Models;
 
 use App\Notifications\ResetPasswordQueued;
+use App\Notifications\VerifyEmailQueued;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+/**
+ * MustVerifyEmail é SOFT: não existe middleware `verified` em /app/* (não adiciona
+ * fricção ao funil de trial). A verificação só gateia a troca de e-mail no perfil.
+ */
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable;
 
@@ -16,6 +22,8 @@ class User extends Authenticatable
         'name',
         'sobrenome',
         'email',
+        'pending_email',
+        'email_verified_at',
         'password',
         'telefone',
         'credits',
@@ -80,12 +88,12 @@ class User extends Authenticatable
 
     public const DASHBOARD_PREFS_DEFAULT = [
         'cards' => [
-            'tendencia'    => ['visivel' => true, 'ordem' => 0],
-            'risco'        => ['visivel' => true, 'ordem' => 1],
-            'triagem'      => ['visivel' => true, 'ordem' => 2],
+            'tendencia' => ['visivel' => true, 'ordem' => 0],
+            'risco' => ['visivel' => true, 'ordem' => 1],
+            'triagem' => ['visivel' => true, 'ordem' => 2],
             'fornecedores' => ['visivel' => true, 'ordem' => 3],
-            'atividade'    => ['visivel' => true, 'ordem' => 4],
-            'atalhos'      => ['visivel' => true, 'ordem' => 5],
+            'atividade' => ['visivel' => true, 'ordem' => 4],
+            'atalhos' => ['visivel' => true, 'ordem' => 5],
         ],
         'atalhos_fixos' => ['consulta_nova', 'importar_efd', 'verificar_notas', 'bi_dashboard'],
         'atalhos_ordem' => ['consulta_nova', 'importar_efd', 'verificar_notas', 'bi_dashboard'],
@@ -163,5 +171,10 @@ class User extends Authenticatable
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new ResetPasswordQueued($token));
+    }
+
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new VerifyEmailQueued);
     }
 }
