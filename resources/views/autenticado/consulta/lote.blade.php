@@ -39,16 +39,32 @@
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 @if($statusLote === 'finalizado')
-                    {{-- Exports — <x-download-button> (iframe nativo + spinner, igual BI) --}}
-                    @if($lote->hasResultados())
-                        <x-download-button path="/app/consulta/lote/{{ $lote->id }}/baixar" query="formato=pdf"
-                                           filename="consulta_lote_{{ $lote->id }}.pdf"
-                                           overlay="download-overlay-lote"
-                                           class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium">PDF</x-download-button>
-                    @endif
-                    <button type="button"
-                            onclick="document.getElementById('modal-export-lote').classList.remove('hidden')"
-                            class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium">Planilha</button>
+                    {{-- Export — padrão canônico x-export-menu (mesmo das telas de BI/Clearance) --}}
+                    <x-export-menu id="modal-export-lote" titulo="Exportar consulta"
+                                   descricao="Resultado deste lote de consultas — mesmo conteúdo da tela."
+                                   overlay="download-overlay-lote">
+                        @if($lote->hasResultados())
+                            <x-export-grupo label="Documento" />
+                            <x-export-option format="pdf"
+                                path="/app/consulta/lote/{{ $lote->id }}/baixar" query="formato=pdf"
+                                modalId="modal-export-lote"
+                                overlay="download-overlay-lote"
+                                descricao="Relatório do lote com o parecer por CNPJ — pronto para enviar." />
+                        @endif
+                        <x-export-grupo label="Planilhas" />
+                        @if($lote->hasResultados())
+                            <x-export-option format="xlsx"
+                                path="/app/consulta/lote/{{ $lote->id }}/baixar" query="formato=xlsx"
+                                modalId="modal-export-lote"
+                                overlay="download-overlay-lote"
+                                descricao="Relatório completo do lote em planilha." />
+                        @endif
+                        <x-export-option format="csv"
+                            path="/app/consulta/lote/{{ $lote->id }}/baixar" query="formato=csv"
+                            modalId="modal-export-lote"
+                            overlay="download-overlay-lote"
+                            descricao="Separador ; com BOM UTF-8 (compatível com Excel)." />
+                    </x-export-menu>
                 @endif
                 <a href="/app/consulta/nova" data-link class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium">Nova consulta</a>
                 <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusMeta['hex'] }}">
@@ -58,33 +74,8 @@
         </div>
 
         @if($statusLote === 'finalizado')
-            {{-- Overlay de download (spinner) — compartilhado pelos botões de export --}}
+            {{-- Overlay de download (spinner) — compartilhado pelas opções do export --}}
             <x-download-overlay id="download-overlay-lote" texto="Gerando relatório…" />
-
-            {{-- Modal de export de planilha (XLSX completo ou CSV) --}}
-            <x-modal id="modal-export-lote" titulo="Exportar planilha">
-                <p class="text-[13px] text-gray-600 mb-4">Escolha o formato.</p>
-                <div class="space-y-2">
-                    @if($lote->hasResultados())
-                        <x-download-button path="/app/consulta/lote/{{ $lote->id }}/baixar" query="formato=xlsx"
-                                           filename="consulta_lote_{{ $lote->id }}.xlsx"
-                                           overlay="download-overlay-lote"
-                                           extraOnDone="document.getElementById('modal-export-lote').classList.add('hidden');"
-                                           class="block w-full text-left px-4 py-3 rounded border border-gray-300 hover:bg-gray-50">
-                            <span class="block text-sm font-semibold text-gray-900">Excel (XLSX)</span>
-                            <span class="block text-[12px] text-gray-500">Relatório completo do lote em planilha.</span>
-                        </x-download-button>
-                    @endif
-                    <x-download-button path="/app/consulta/lote/{{ $lote->id }}/baixar" query="formato=csv"
-                                       filename="consulta_lote_{{ $lote->id }}.csv"
-                                       overlay="download-overlay-lote"
-                                       extraOnDone="document.getElementById('modal-export-lote').classList.add('hidden');"
-                                       class="block w-full text-left px-4 py-3 rounded border border-gray-300 hover:bg-gray-50">
-                        <span class="block text-sm font-semibold text-gray-900">CSV</span>
-                        <span class="block text-[12px] text-gray-500">Separador ; com BOM UTF-8 (compatível com Excel).</span>
-                    </x-download-button>
-                </div>
-            </x-modal>
         @endif
 
         <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
