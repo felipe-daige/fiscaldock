@@ -294,6 +294,50 @@ it('detalhe explica o piso quando a classificação persistida supera a faixa nu
         ->assertSee('Classificação elevada por irregularidade conhecida');
 });
 
+it('origem NULL com notas EFD vinculadas exibe "EFD (SPED importado)" e o card explica o cálculo', function () {
+    $user = User::factory()->create();
+    $cliente = \App\Models\Cliente::create([
+        'user_id' => $user->id, 'is_empresa_propria' => true, 'tipo_pessoa' => 'PJ',
+        'documento' => '00000000000191', 'razao_social' => 'Propria',
+    ]);
+    // origem_tipo NULL = como a extração EFD (n8n) cria
+    $part = Participante::create([
+        'user_id' => $user->id, 'documento' => '11222333000181', 'razao_social' => 'FORN EFD LTDA',
+        'regime_tributario' => 'MEI',
+    ]);
+    \App\Models\EfdImportacao::create([
+        'user_id' => $user->id, 'cliente_id' => $cliente->id, 'tipo_efd' => 'EFD ICMS/IPI', 'status' => 'concluido',
+    ]);
+    \App\Models\EfdNota::create([
+        'user_id' => $user->id, 'cliente_id' => $cliente->id, 'participante_id' => $part->id,
+        'importacao_id' => \App\Models\EfdImportacao::first()->id,
+        'chave_acesso' => str_pad('77', 44, '0', STR_PAD_LEFT), 'modelo' => '55', 'numero' => 77, 'serie' => '0',
+        'data_emissao' => '2026-01-15', 'tipo_operacao' => 'entrada', 'valor_total' => 1000,
+        'valor_desconto' => 0, 'origem_arquivo' => 'fiscal', 'metadados' => [],
+    ]);
+
+    actingAs($user)
+        ->get("/app/score-fiscal/participante/{$part->id}")
+        ->assertOk()
+        ->assertSee('EFD (SPED importado)')
+        ->assertSee('Como é calculado')
+        ->assertSee('Crédito potencial')
+        // MEI: fator 0 → em risco = 100% do potencial (1000 × 28,5% = 285)
+        ->assertSee('R$ 285,00');
+});
+
+it('origem NULL sem vínculo EFD segue exibindo traço', function () {
+    $user = User::factory()->create();
+    $part = Participante::create([
+        'user_id' => $user->id, 'documento' => '11222333000181', 'razao_social' => 'AVULSO LTDA',
+    ]);
+
+    actingAs($user)
+        ->get("/app/score-fiscal/participante/{$part->id}")
+        ->assertOk()
+        ->assertDontSee('EFD (SPED importado)');
+});
+
 it('o dashboard mostra o explicador de Crédito IBS/CBS da Reforma', function () {
     $user = User::factory()->create();
 

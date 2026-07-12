@@ -241,9 +241,37 @@ class RiskScoreController extends Controller
             // Certidões/blocos da última consulta renderizados server-side (mesmo partial do
             // "Ver detalhes" da Consulta CNPJ) — substitui o dump JSON de dados_consultados.
             'detalheConsultaHtml' => $this->htmlDetalheUltimaConsulta($participante),
+            'origemLabel' => $this->origemLabel($participante),
         ];
 
         return $this->render($request, 'show', $data);
+    }
+
+    /**
+     * Rótulo legível da origem do participante. A extração EFD (n8n) não preenche
+     * origem_tipo — NULL com notas/registro EFD vinculado é, por construção, importado
+     * do SPED: deriva "EFD (SPED)" em vez de exibir traço.
+     */
+    private function origemLabel(Participante $participante): string
+    {
+        $tipo = strtoupper((string) $participante->origem_tipo);
+
+        if ($tipo !== '') {
+            return match ($tipo) {
+                'NFE' => 'Clearance (NF-e consultada)',
+                'CTE' => 'Clearance (CT-e consultado)',
+                'XML' => 'Importação XML',
+                'PROPRIO' => 'Empresa própria',
+                'MANUAL' => 'Cadastro manual',
+                default => $participante->origem_tipo,
+            };
+        }
+
+        $temEfd = \App\Models\EfdNota::where('user_id', $participante->user_id)
+            ->where('participante_id', $participante->id)
+            ->exists();
+
+        return $temEfd ? 'EFD (SPED importado)' : '—';
     }
 
     /**
