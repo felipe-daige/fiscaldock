@@ -46,17 +46,17 @@ class EmailVerificationController extends Controller
         $user = User::find($id);
 
         if (! $user || ! hash_equals(sha1($user->getEmailForVerification()), $hash)) {
-            return redirect('/app/perfil')->with('error', 'Link de verificação inválido ou já utilizado.');
+            return $this->redirectConfirmacao('error', 'Link de verificação inválido ou já utilizado.');
         }
 
         if ($user->hasVerifiedEmail()) {
-            return redirect('/app/perfil')->with('success', 'Seu e-mail já estava verificado.');
+            return $this->redirectConfirmacao('success', 'Seu e-mail já estava verificado.');
         }
 
         $user->markEmailAsVerified();
         event(new Verified($user));
 
-        return redirect('/app/perfil')->with('success', 'E-mail verificado com sucesso.');
+        return $this->redirectConfirmacao('success', 'E-mail verificado com sucesso.');
     }
 
     /**
@@ -117,14 +117,14 @@ class EmailVerificationController extends Controller
         $alvo = User::find($user);
 
         if (! $alvo || ! $alvo->pending_email || ! hash_equals(sha1($alvo->pending_email), $hash)) {
-            return redirect('/app/perfil')->with('error', 'Link de confirmação inválido, expirado ou substituído por um pedido mais recente.');
+            return $this->redirectConfirmacao('error', 'Link de confirmação inválido, expirado ou substituído por um pedido mais recente.');
         }
 
         if (User::where('email', $alvo->pending_email)->where('id', '!=', $alvo->id)->exists()) {
             $alvo->pending_email = null;
             $alvo->save();
 
-            return redirect('/app/perfil')->with('error', 'Este e-mail foi cadastrado por outra conta enquanto você não confirmava. Escolha outro.');
+            return $this->redirectConfirmacao('error', 'Este e-mail foi cadastrado por outra conta enquanto você não confirmava. Escolha outro.');
         }
 
         $alvo->email = $alvo->pending_email;
@@ -132,7 +132,26 @@ class EmailVerificationController extends Controller
         $alvo->email_verified_at = now();
         $alvo->save();
 
-        return redirect('/app/perfil')->with('success', 'E-mail de acesso atualizado para '.$alvo->email.'.');
+        return $this->redirectConfirmacao('success', 'E-mail de acesso atualizado para '.$alvo->email.'.');
+    }
+
+    /**
+     * Destino dos links de e-mail (públicos): se o usuário está logado, cai no perfil
+     * (que exibe success/error); se está deslogado — caso comum de abrir o link em
+     * outro aparelho/navegador — cai no /login, que exibe `session('status')`. Sem
+     * isto, o redirect pro /app/perfil autenticado bounce pro /login e o flash some.
+     */
+    private function redirectConfirmacao(string $tipo, string $mensagem)
+    {
+        if (Auth::check()) {
+            return redirect('/app/perfil')->with($tipo, $mensagem);
+        }
+
+        // Deslogado: o /login exibe `status`; `status_ok` diz se pinta de verde (sucesso)
+        // ou vermelho (link inválido/erro), pra um erro não aparecer como sucesso.
+        return redirect('/login')
+            ->with('status', $mensagem)
+            ->with('status_ok', $tipo === 'success');
     }
 
     private function resposta(Request $request, bool $ok, string $mensagem, int $statusErro = 200)

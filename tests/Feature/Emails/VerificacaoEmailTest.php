@@ -63,8 +63,22 @@ it('link assinado de verificacao marca o e-mail como verificado', function () {
         'hash' => sha1($user->email),
     ]);
 
-    $this->get($url)->assertRedirect('/app/perfil');
+    $this->actingAs($user)->get($url)->assertRedirect('/app/perfil');
 
+    expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
+});
+
+it('link de verificacao aberto DESLOGADO cai no /login com aviso (nao some o flash)', function () {
+    $user = User::factory()->unverified()->create();
+
+    $url = URL::temporarySignedRoute('verification.verify', now()->addMinutes(60), [
+        'id' => $user->id,
+        'hash' => sha1($user->email),
+    ]);
+
+    // Sem actingAs: link aberto em outro aparelho/navegador. Aplica a verificação e
+    // manda pro /login (que exibe session('status')), não pro /app/perfil autenticado.
+    $this->get($url)->assertRedirect('/login')->assertSessionHas('status');
     expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
 });
 
@@ -76,7 +90,7 @@ it('link de verificacao adulterado e rejeitado', function () {
         'hash' => sha1('outro@email.com'),
     ]);
 
-    $this->get($url)->assertRedirect('/app/perfil')->assertSessionHas('error');
+    $this->actingAs($user)->get($url)->assertRedirect('/app/perfil')->assertSessionHas('error');
     expect($user->fresh()->hasVerifiedEmail())->toBeFalse();
 });
 
@@ -151,7 +165,7 @@ it('confirmar troca aplica o novo e-mail e marca verificado', function () {
         'hash' => sha1('novo@exemplo.com'),
     ]);
 
-    $this->get($url)->assertRedirect('/app/perfil')->assertSessionHas('success');
+    $this->actingAs($user)->get($url)->assertRedirect('/app/perfil')->assertSessionHas('success');
 
     $user->refresh();
     expect($user->email)->toBe('novo@exemplo.com');
@@ -170,7 +184,7 @@ it('link velho e rejeitado depois de um pedido de troca mais novo', function () 
     // Pedido novo substitui o pendente.
     $user->update(['pending_email' => 'segundo@exemplo.com']);
 
-    $this->get($urlVelho)->assertRedirect('/app/perfil')->assertSessionHas('error');
+    $this->actingAs($user)->get($urlVelho)->assertRedirect('/app/perfil')->assertSessionHas('error');
     expect($user->fresh()->email)->toBe('antigo@exemplo.com');
 });
 
@@ -184,7 +198,7 @@ it('e-mail tomado por outra conta no meio-tempo rejeita a confirmacao', function
 
     User::factory()->create(['email' => 'disputado@exemplo.com']);
 
-    $this->get($url)->assertRedirect('/app/perfil')->assertSessionHas('error');
+    $this->actingAs($user)->get($url)->assertRedirect('/app/perfil')->assertSessionHas('error');
 
     $user->refresh();
     expect($user->email)->toBe('antigo@exemplo.com');

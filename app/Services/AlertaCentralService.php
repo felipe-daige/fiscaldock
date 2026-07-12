@@ -13,6 +13,7 @@ use Carbon\CarbonPeriod;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AlertaCentralService
 {
@@ -412,7 +413,26 @@ class AlertaCentralService
             return;
         }
 
-        $user->notify(new AlertaImediatoNotification($alerta));
+        // Falha de e-mail não pode abortar a detecção (o alerta já está persistido).
+        $this->enviarSemFalhar($user, new AlertaImediatoNotification($alerta));
+    }
+
+    /**
+     * Dispara a notificação isolando qualquer erro da fila/mailer: os alertas já foram
+     * gravados; um problema no envio vira log, não uma exceção que sobe pelo recalcular
+     * (que perderia os counts e marcaria o usuário como "erro ao recalcular").
+     */
+    private function enviarSemFalhar(User $user, $notificacao): void
+    {
+        try {
+            $user->notify($notificacao);
+        } catch (\Throwable $e) {
+            Log::warning('Falha ao enfileirar e-mail de alerta', [
+                'user_id' => $user->id,
+                'notificacao' => $notificacao::class,
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -435,7 +455,7 @@ class AlertaCentralService
             return;
         }
 
-        $user->notify(count($alertas) === 1
+        $this->enviarSemFalhar($user, count($alertas) === 1
             ? new AlertaImediatoNotification($alertas[0])
             : new AlertaDigestNotification($alertas));
     }

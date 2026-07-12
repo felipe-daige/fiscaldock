@@ -130,7 +130,7 @@ class AuthController extends Controller
             'initialView' => 'auth.criar-conta',
             'seo' => [
                 'title' => 'Criar Conta Grátis — FiscalDock',
-                'description' => 'Crie sua conta FiscalDock e receba '.(int) config('trial.creditos').' créditos grátis para usar em até '.(int) config('trial.validade_dias').' dias.',
+                'description' => 'Crie sua conta FiscalDock e receba '.\App\Support\Dinheiro::brl((float) config('trial.saldo_reais')).' de saldo grátis para usar em até '.(int) config('trial.validade_dias').' dias.',
                 'canonical' => 'https://fiscaldock.com/criar-conta',
                 'robots' => 'index,follow',
                 'og_type' => 'website',
@@ -399,7 +399,7 @@ class AuthController extends Controller
 
             $this->creditService->grantTrial(
                 $user,
-                (int) config('trial.creditos'),
+                app(\App\Services\PricingCatalogService::class)->currencyToCredits((float) config('trial.saldo_reais')),
                 now()->addDays((int) config('trial.validade_dias'))
             );
 
@@ -409,22 +409,30 @@ class AuthController extends Controller
 
             DB::commit();
 
-            $creditos = (int) config('trial.creditos');
+            $saldoTrial = (float) config('trial.saldo_reais');
             $validadeDias = (int) config('trial.validade_dias');
-            $saldoTrial = (float) app(\App\Services\PricingCatalogService::class)->creditsToCurrency($creditos);
-            $bonusReais = 'R$ '.number_format($saldoTrial, 2, ',', '.');
+            $bonusReais = \App\Support\Dinheiro::brl($saldoTrial);
             $message = "Conta criada com sucesso. Você recebeu {$bonusReais} de saldo grátis por {$validadeDias} dias.";
 
             // Boas-vindas + verificação de e-mail só depois do commit (o envio não pode
-            // vazar de uma transação que pode dar rollback).
-            $user->notify(new BoasVindasNotification($saldoTrial, $validadeDias));
-            $user->sendEmailVerificationNotification();
+            // vazar de uma transação que pode dar rollback). try/catch PRÓPRIO: uma falha
+            // no dispatch da fila NÃO pode cair no catch de baixo (que faria rollBack numa
+            // transação já commitada e diria "conta não criada" para uma conta que existe).
+            try {
+                $user->notify(new BoasVindasNotification($saldoTrial, $validadeDias));
+                $user->sendEmailVerificationNotification();
+            } catch (\Throwable $e) {
+                Log::warning('Falha ao enfileirar e-mails de boas-vindas/verificação', [
+                    'user_id' => $user->id,
+                    'message' => $e->getMessage(),
+                ]);
+            }
 
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
                     'message' => $message,
-                    'creditos' => $creditos,
+                    'saldo_reais' => $saldoTrial,
                     'validade_dias' => $validadeDias,
                     'redirect' => '/app/dashboard',
                 ]);

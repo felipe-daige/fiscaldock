@@ -22,7 +22,10 @@ class EnviarResumoSemanalCommand extends Command
 
         $query = User::where('resumo_periodico', true)
             ->whereNull('anonimizado_em')
-            ->whereNull('bloqueado_em');
+            ->whereNull('bloqueado_em')
+            // Quem pediu exclusão de conta (LGPD) não deve mais receber e-mail, mesmo
+            // antes de a anonimização rodar.
+            ->whereNull('deletion_requested_at');
 
         if ($this->option('user')) {
             $query->where('id', (int) $this->option('user'));

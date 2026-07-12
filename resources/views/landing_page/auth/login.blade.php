@@ -24,6 +24,14 @@
                         <p class="text-xs text-gray-500 mt-3">Informe seu e-mail corporativo e senha para acessar o ambiente autenticado.</p>
                     </div>
 
+                    {{-- Aviso de sucesso vindo de fluxo público (ex.: verificação/troca de e-mail
+                         confirmada com o usuário deslogado — o link cai aqui, não no /app/perfil). --}}
+                    @if (session('status'))
+                        <div class="mb-4 bg-white rounded border border-gray-300 p-3 border-l-4 {{ session('status_ok', true) ? 'border-l-green-600' : 'border-l-red-500' }} text-sm text-gray-700">
+                            <p>{{ session('status') }}</p>
+                        </div>
+                    @endif
+
                     {{-- Erro de credencial (genérico, anti-enumeração) aparece neste alerta inline.
                          Erros de formato de campo aparecem abaixo de cada campo (.field-error). --}}
                     <div id="login-alert" class="mb-4 hidden bg-white rounded border border-gray-300 p-3 border-l-4 border-l-red-500 text-sm text-gray-700"></div>

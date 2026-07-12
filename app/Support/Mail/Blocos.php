@@ -92,9 +92,10 @@ class Blocos
      * Renderizado pela view raiz a partir de `viewData['etiqueta']`; use `comEtiqueta()`
      * pra setar, não chame isto direto na notification (senão sai DEPOIS do título).
      */
-    public static function etiqueta(string $texto, string $cor = self::OURO): HtmlString
+    // Default NAVY casa com comEtiqueta() e o fallback do email.blade — o kicker sai da
+    // MESMA cor por qualquer caminho de chamada (antes divergia: aqui OURO, lá NAVY).
+    public static function etiqueta(string $texto, string $cor = self::NAVY): HtmlString
     {
-        // Marca dourada + label — o kicker é onde o acento de marca aparece.
         return new HtmlString(
             '<table cellpadding="0" cellspacing="0" role="presentation" style="margin: 0 0 14px 0;"><tr>'
             .'<td style="width: 22px; padding-right: 9px; vertical-align: middle;">'

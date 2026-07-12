@@ -45,7 +45,7 @@ it('alerta alta dispara e-mail imediato e grava notificado_em', function () {
     $alerta = registrarAlerta($user, 'alta');
 
     Notification::assertSentTo($user, AlertaImediatoNotification::class,
-        fn ($n) => $n->alerta->id === $alerta->id);
+        fn ($n) => $n->alertaId === $alerta->id);
 
     expect($alerta->fresh()->notificado_em)->not->toBeNull();
 });
@@ -125,6 +125,18 @@ it('resumo semanal nao vai pra quem nao teve alerta nem atividade', function () 
 it('resumo semanal respeita o toggle resumo_periodico', function () {
     $user = User::factory()->create(['resumo_periodico' => false]);
     criarAlerta($user, 'alta');
+
+    $this->artisan('alertas:enviar-resumo-semanal')->assertSuccessful();
+
+    Notification::assertNotSentTo($user, ResumoSemanalNotification::class);
+});
+
+it('resumo semanal NÃO vai para quem pediu exclusão de conta (LGPD)', function () {
+    $user = User::factory()->create([
+        'resumo_periodico' => true,
+        'deletion_requested_at' => now()->subDay(),
+    ]);
+    criarAlerta($user, 'alta', 5000);
 
     $this->artisan('alertas:enviar-resumo-semanal')->assertSuccessful();
 
