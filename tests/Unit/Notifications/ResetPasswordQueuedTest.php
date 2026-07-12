@@ -15,7 +15,7 @@ test('ResetPasswordQueued herda a customização pt-BR/marca do toMailUsing', fu
 
     $mail = (new ResetPasswordQueued('token-abc-123'))->toMail($user);
 
-    expect($mail->subject)->toBe('Redefinir sua senha — FiscalDock');
-    expect($mail->greeting)->toBe('Olá, Maria!');
+    expect($mail->subject)->toBe('Redefinir a senha da sua conta');
+    expect($mail->greeting)->toBe('Olá, Maria.');
     expect($mail->actionUrl)->toContain('/redefinir-senha/token-abc-123');
 });
