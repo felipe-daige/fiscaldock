@@ -238,9 +238,45 @@ class RiskScoreController extends Controller
             'detalhamento' => $detalhamento,
             'volumeEfd' => $volumeEfd,
             'creditoReforma' => $this->creditoReforma->creditoParticipante($participante, $volumeEfd, $participante->score?->score_credito_reforma),
+            // Certidões/blocos da última consulta renderizados server-side (mesmo partial do
+            // "Ver detalhes" da Consulta CNPJ) — substitui o dump JSON de dados_consultados.
+            'detalheConsultaHtml' => $this->htmlDetalheUltimaConsulta($participante),
         ];
 
         return $this->render($request, 'show', $data);
+    }
+
+    /**
+     * HTML dos blocos de certidões da última consulta bem-sucedida do participante,
+     * via ResultadoDetalhePresenter + partial detalhe-blocos (fonte única com a
+     * Consulta CNPJ e com o detalhe AJAX da listagem). Null = sem consulta.
+     */
+    private function htmlDetalheUltimaConsulta(Participante $participante): ?string
+    {
+        $ultima = ConsultaResultado::where('participante_id', $participante->id)
+            ->where('status', ConsultaResultado::STATUS_SUCESSO)
+            ->with('lote.plano')
+            ->orderByDesc('consultado_em')
+            ->first();
+
+        if (! $ultima) {
+            return null;
+        }
+
+        $presenter = app(ResultadoDetalhePresenter::class);
+        $esperadas = $presenter->esperadasDoResultado($ultima);
+
+        return view('autenticado.consulta.partials.detalhe-blocos', [
+            'blocos' => $presenter->blocos($ultima, $esperadas),
+            'resumo' => $presenter->resumoTextual($ultima),
+            'certidoes' => $presenter->certidoes($ultima, $esperadas),
+            'cabecalho' => [
+                'razao' => $participante->razao_social,
+                'documento' => $participante->cnpj_formatado ?? $participante->documento,
+                'uf' => $participante->uf,
+                'situacao' => $participante->situacao_cadastral,
+            ],
+        ])->render();
     }
 
     /**

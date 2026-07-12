@@ -237,6 +237,63 @@ it('o detalhe do participante mostra subscores avaliados', function () {
         ->assertSee('Situação Cadastral');
 });
 
+it('detalhe exibe certidões estruturadas da última consulta (não JSON cru) e badge de situação', function () {
+    $user = User::factory()->create();
+    $part = Participante::create([
+        'user_id' => $user->id, 'documento' => '11222333000181', 'razao_social' => 'ACME LTDA',
+        'situacao_cadastral' => 'BAIXADA',
+    ]);
+
+    $lote = ConsultaLote::create([
+        'user_id' => $user->id,
+        'plano_id' => MonitoramentoPlano::porCodigo('due_diligence')->id,
+        'status' => ConsultaLote::STATUS_PROCESSANDO,
+        'total_participantes' => 1,
+        'creditos_cobrados' => 35,
+        'tab_id' => (string) Str::uuid(),
+    ]);
+    ConsultaResultado::create([
+        'consulta_lote_id' => $lote->id,
+        'participante_id' => $part->id,
+        'status' => ConsultaResultado::STATUS_SUCESSO,
+        'resultado_dados' => [
+            'situacao_cadastral' => 'BAIXADA',
+            'cnd_federal' => ['status' => 'Negativa'],
+        ],
+    ]);
+    app(FecharLoteService::class)->fechar($lote->id);
+
+    $resp = actingAs($user)
+        ->get("/app/score-fiscal/participante/{$part->id}")
+        ->assertOk()
+        ->assertSee('Última Consulta — Certidões e Cadastro')
+        ->assertSee('BAIXADA')          // badge de situação
+        ->assertSee('Ficha completa');  // link pra ficha do participante
+
+    // JSON cru de dados_consultados não aparece mais
+    expect($resp->getContent())->not->toContain('JSON_PRETTY_PRINT')
+        ->and($resp->getContent())->not->toContain('"situacao_cadastral":');
+});
+
+it('detalhe explica o piso quando a classificação persistida supera a faixa numérica', function () {
+    $user = User::factory()->create();
+    $part = Participante::create([
+        'user_id' => $user->id, 'documento' => '11222333000181', 'razao_social' => 'PISO LTDA',
+    ]);
+    // Score numérico baixo (14) mas classificação persistida 'alto' (piso por CND positiva)
+    \App\Models\ParticipanteScore::create([
+        'participante_id' => $part->id, 'user_id' => $user->id,
+        'score_cadastral' => 0, 'score_cnd_federal' => 70,
+        'score_total' => 14, 'classificacao' => 'alto', 'ultima_consulta_em' => now(),
+    ]);
+
+    actingAs($user)
+        ->get("/app/score-fiscal/participante/{$part->id}")
+        ->assertOk()
+        ->assertSee('Alto Risco')
+        ->assertSee('Classificação elevada por irregularidade conhecida');
+});
+
 it('o dashboard mostra o explicador de Crédito IBS/CBS da Reforma', function () {
     $user = User::factory()->create();
 

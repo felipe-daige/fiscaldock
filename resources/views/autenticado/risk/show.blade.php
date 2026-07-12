@@ -1,16 +1,22 @@
 {{-- Risk Score - Detalhes do Participante (DANFE Modernizado) --}}
 @php
-    $scoreColor = function($s) {
-        if ($s >= 80) return '#b91c1c';
-        if ($s >= 50) return '#ea580c';
-        if ($s >= 20) return '#d97706';
-        return '#047857';
+    // Cor/label vêm da CLASSIFICAÇÃO PERSISTIDA (RiskScoreService), não da faixa numérica:
+    // o piso por certidão positiva/situação baixada pode elevar a classificação acima do
+    // que o score numérico sugere — a view precisa refletir o mesmo veredito da listagem.
+    $riskSvc = app(\App\Services\RiskScoreService::class);
+    $situacaoUpper = strtoupper((string) ($participante->situacao_cadastral ?? ''));
+    $situacaoBadge = match($situacaoUpper) {
+        'ATIVA', '02' => ['label' => 'ATIVA', 'hex' => '#047857'],
+        'INAPTA', 'SUSPENSA', 'NULA' => ['label' => $situacaoUpper, 'hex' => '#dc2626'],
+        'BAIXADA' => ['label' => 'BAIXADA', 'hex' => '#9ca3af'],
+        default => $situacaoUpper ? ['label' => $situacaoUpper, 'hex' => '#6b7280'] : null,
     };
-    $scoreLabel = function($s) {
-        if ($s >= 80) return 'CRÍTICO';
-        if ($s >= 50) return 'ALTO';
-        if ($s >= 20) return 'MÉDIO';
-        return 'BAIXO';
+    $regimeUpper = strtoupper((string) ($participante->regime_tributario ?? ''));
+    $regimeBadge = match($regimeUpper) {
+        'SIMPLES NACIONAL', 'SIMPLES' => ['label' => $regimeUpper, 'hex' => '#0f766e'],
+        'LUCRO PRESUMIDO' => ['label' => $regimeUpper, 'hex' => '#d97706'],
+        'LUCRO REAL' => ['label' => $regimeUpper, 'hex' => '#374151'],
+        default => $regimeUpper ? ['label' => $regimeUpper, 'hex' => '#6b7280'] : null,
     };
 @endphp
 <div class="min-h-screen bg-gray-100" id="risk-detail-container">
@@ -35,19 +41,35 @@
                     @if($participante->nome_fantasia)
                         <p class="text-sm text-gray-600">{{ $participante->nome_fantasia }}</p>
                     @endif
-                    <p class="mt-1 text-xs text-gray-500 font-mono">CNPJ: {{ $participante->cnpj_formatado }}</p>
+                    <div class="mt-1 flex items-center gap-2 flex-wrap">
+                        <p class="text-xs text-gray-500 font-mono">CNPJ: {{ $participante->cnpj_formatado }}</p>
+                        @if($situacaoBadge)
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $situacaoBadge['hex'] }}">{{ $situacaoBadge['label'] }}</span>
+                        @endif
+                        @if($regimeBadge)
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $regimeBadge['hex'] }}">{{ $regimeBadge['label'] }}</span>
+                        @endif
+                    </div>
                 </div>
                 <div class="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
-                    @if($score && $score->score_total !== null)
-                        @php $inconclusivo = $score->classificacao === 'inconclusivo'; @endphp
-                        @php $hex = $inconclusivo ? '#9ca3af' : $scoreColor($score->score_total); @endphp
+                    @if($score && ($score->score_total !== null || in_array($score->classificacao, ['medio','alto','critico'], true)))
+                        @php
+                            $classif = $score->classificacao ?? 'nao_avaliado';
+                            $inconclusivo = $classif === 'inconclusivo';
+                            $hex = $riskSvc->getCorClassificacao($classif);
+                            // Piso aplicado: classificação persistida acima da faixa numérica do total.
+                            $classifNumerica = $riskSvc->classificar($score->score_total);
+                            $pisoAplicado = ! $inconclusivo && $score->score_total !== null && $classif !== $classifNumerica;
+                        @endphp
                         <div class="text-center flex-shrink-0">
-                            <div class="text-3xl font-bold font-mono" style="color: {{ $hex }}">{{ $inconclusivo ? '—' : $score->score_total }}</div>
+                            <div class="text-3xl font-bold font-mono" style="color: {{ $hex }}">{{ $inconclusivo || $score->score_total === null ? '—' : $score->score_total }}</div>
                             <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white mt-1" style="background-color: {{ $hex }}">
-                                {{ $inconclusivo ? 'NÃO CONCLUSIVO' : $scoreLabel($score->score_total) }}
+                                {{ $riskSvc->getLabelClassificacao($classif) }}
                             </span>
                             @if($inconclusivo)
                                 <p class="mt-1 text-[10px] text-gray-500 leading-tight max-w-[190px]">Cobertura insuficiente — exige CND Federal + 2 certidões avaliadas.</p>
+                            @elseif($pisoAplicado)
+                                <p class="mt-1 text-[10px] leading-tight max-w-[190px]" style="color: {{ $hex }}">Classificação elevada por irregularidade conhecida (certidão positiva ou situação cadastral) — o piso vence a média.</p>
                             @endif
                         </div>
                     @else
@@ -58,13 +80,18 @@
                             </span>
                         </div>
                     @endif
-                    <a href="/app/consulta" data-link class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition flex-shrink-0">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                        </svg>
-                        <span class="hidden sm:inline">Atualizar via Consulta</span>
-                        <span class="sm:hidden">Consultar</span>
-                    </a>
+                    <div class="flex flex-col gap-2 flex-shrink-0">
+                        <a href="/app/consulta" data-link class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            <span class="hidden sm:inline">Atualizar via Consulta</span>
+                            <span class="sm:hidden">Consultar</span>
+                        </a>
+                        <a href="/app/participante/{{ $participante->id }}" data-link class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-xs font-semibold transition">
+                            Ficha completa
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -79,7 +106,13 @@
                     <dl class="divide-y divide-gray-100">
                         <div class="px-4 py-3">
                             <dt class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Situação Cadastral</dt>
-                            <dd class="text-sm text-gray-700 mt-0.5">{{ $participante->situacao_cadastral ?? 'Não informado' }}</dd>
+                            <dd class="text-sm text-gray-700 mt-0.5">
+                                @if($situacaoBadge)
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $situacaoBadge['hex'] }}">{{ $situacaoBadge['label'] }}</span>
+                                @else
+                                    Não informado
+                                @endif
+                            </dd>
                         </div>
                         <div class="px-4 py-3">
                             <dt class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Regime Tributário</dt>
@@ -113,6 +146,9 @@
                         <div class="px-4 py-3">
                             <dt class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Movimentado em notas (EFD)</dt>
                             <dd class="text-sm font-semibold text-gray-900 font-mono mt-0.5">R$&nbsp;{{ number_format($volumeEfd ?? 0, 2, ',', '.') }}</dd>
+                            @if(($volumeEfd ?? 0) > 0)
+                                <a href="/app/participante/{{ $participante->id }}/notas" data-link class="mt-1 inline-block text-[11px] text-gray-600 hover:text-gray-900 hover:underline">Ver notas do participante</a>
+                            @endif
                         </div>
                     </dl>
                 </div>
@@ -195,15 +231,17 @@
                     </div>
                 </div>
 
+                {{-- Certidões e blocos da última consulta — mesmo partial do "Ver detalhes"
+                     da Consulta CNPJ (substitui o dump JSON de dados_consultados). --}}
                 <div class="bg-white rounded border border-gray-300 overflow-hidden">
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Dados da Última Consulta</span>
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Última Consulta — Certidões e Cadastro</span>
                     </div>
                     <div class="p-5">
-                        @if($score && $score->dados_consultados)
-                            <pre class="text-[11px] sm:text-xs bg-gray-50 border border-gray-200 p-3 sm:p-4 rounded overflow-x-auto whitespace-pre-wrap break-words">{{ json_encode($score->dados_consultados, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+                        @if(!empty($detalheConsultaHtml))
+                            {!! $detalheConsultaHtml !!}
                         @else
-                            <p class="text-sm text-gray-500">Nenhuma consulta realizada ainda.</p>
+                            <p class="text-sm text-gray-500">Nenhuma consulta de certidões realizada ainda. <a href="/app/consulta" data-link class="text-gray-700 underline hover:text-gray-900">Consultar agora</a>.</p>
                         @endif
                     </div>
                 </div>
