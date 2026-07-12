@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Landing;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Dashboard\ClearanceController;
 use App\Models\LandingLead;
+use App\Models\SubscriptionPlan;
 use App\Services\PricingCatalogService;
+use App\Services\ValidacaoContabilService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -32,11 +35,11 @@ class LandingPageController extends Controller
     public function solucoes(Request $request)
     {
         return $this->renderLanding($request, 'solucoes.index', [
-            'title' => 'Soluções — FiscalDock | Importação SPED, Monitoramento, BI Fiscal',
-            'description' => 'Seis módulos num só radar fiscal: importação SPED/EFD, monitoramento de participantes, consultas CNPJ, BI fiscal, clearance de notas e central de alertas. Conheça os produtos.',
+            'title' => 'Soluções — FiscalDock | SPED, BI, Compliance e Reforma Tributária',
+            'description' => 'Do SPED à decisão: importação EFD/XML, BI Fiscal, consultas e monitoramento CNPJ, Score, Clearance, alertas e planejamento de crédito IBS/CBS na Reforma Tributária.',
             'canonical' => self::BASE_URL . '/solucoes',
             'og_type' => 'website',
-            'og_title' => 'Seis produtos. Um só radar fiscal — FiscalDock',
+            'og_title' => 'Toda a operação fiscal, do arquivo à decisão — FiscalDock',
             'og_image' => self::BASE_URL . '/binary_files/logo/Logo FiscalDock.png',
         ]);
     }
@@ -56,14 +59,21 @@ class LandingPageController extends Controller
     public function precos(Request $request, PricingCatalogService $pricingCatalogService)
     {
         return $this->renderLanding($request, 'paginas.precos', [
-            'title' => 'Preços — FiscalDock | Consultas de CNPJ em Reais',
-            'description' => 'Pré-pago em reais, sem assinatura: adicione saldo e pague um preço fixo por consulta de CNPJ (Validação, Licitação, Compliance) e Clearance.',
+            'title' => 'Preços — FiscalDock | Planos, Consultas e Saldo em Reais',
+            'description' => 'Compare os planos FiscalDock, preços por consulta CNPJ e Clearance de documentos. Comece com R$ 20 de saldo grátis, sem cartão.',
             'canonical' => self::BASE_URL . '/precos',
             'og_type' => 'website',
-            'og_title' => 'Preços em reais por consulta — FiscalDock',
+            'og_title' => 'Planos e preços transparentes — FiscalDock',
             'og_image' => self::BASE_URL . '/binary_files/logo/Logo FiscalDock.png',
         ], [
             'pricingData' => $pricingCatalogService->getLandingPricingData(),
+            'subscriptionPlans' => SubscriptionPlan::allActive(),
+            'clearancePricing' => [
+                'batch_basic' => $pricingCatalogService->creditsToCurrency(ValidacaoContabilService::custoUnitarioPorTier('basico')),
+                'search' => $pricingCatalogService->creditsToCurrency(ClearanceController::CLEARANCE_NFE_AVULSA_CUSTO),
+                'search_enabled' => (bool) config('clearance.busca_avulsa.habilitada'),
+                'full_enabled' => (bool) config('clearance.full.habilitado'),
+            ],
         ]);
     }
 

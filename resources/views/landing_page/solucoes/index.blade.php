@@ -1,925 +1,647 @@
+@php
+    $trialBalance = (float) config('trial.saldo_reais');
+    $trialDays = (int) config('trial.validade_dias');
+    $reformRates = (array) config('reforma.aliquotas_por_fase', []);
+    $fullReformRate = (float) config('reforma.aliquota_referencia', 0.285);
+    $activeCnpjSources = 7; // Minha Receita + as 6 fontes InfoSimples operacionais.
+
+    $solutionCatalog = [
+        ['name' => 'Importação EFD e XML', 'description' => 'EFD ICMS/IPI, EFD PIS/COFINS e XML de NF-e com extração e histórico.', 'anchor' => 'documentos'],
+        ['name' => 'Acervo e catálogo fiscal', 'description' => 'Notas unificadas, itens, NCM, CFOP, CST e histórico do cadastro 0200.', 'anchor' => 'documentos'],
+        ['name' => 'Resumo e BI Fiscal', 'description' => 'Competências, apurações, faturamento, compras, tributos e cruzamentos.', 'anchor' => 'inteligencia'],
+        ['name' => 'Consultas e monitoramento CNPJ', 'description' => 'Regularidade cadastral, fiscal e trabalhista em consultas avulsas ou recorrentes.', 'anchor' => 'risco'],
+        ['name' => 'Score Fiscal', 'description' => 'Leitura consolidada da regularidade e dos sinais de risco de cada contraparte.', 'anchor' => 'risco'],
+        ['name' => 'Reforma Tributária e crédito IBS/CBS', 'description' => 'Estimativa de crédito potencial, aproveitável e em risco por fornecedor.', 'anchor' => 'reforma'],
+        ['name' => 'Clearance de NF-e e CT-e', 'description' => 'Confronto entre documento declarado e snapshot oficial por chave.', 'anchor' => 'clearance'],
+        ['name' => 'Alertas, dossiês e exportações', 'description' => 'Fila de trabalho, histórico, relatórios PDF, XLSX e CSV.', 'anchor' => 'acao'],
+    ];
+@endphp
+
 @push('structured-data')
-<script type="application/ld+json">
-{!! json_encode([
-    '@context' => 'https://schema.org',
-    '@type' => 'BreadcrumbList',
-    'itemListElement' => [
-        ['@type' => 'ListItem', 'position' => 1, 'name' => 'Início', 'item' => url('/')],
-        ['@type' => 'ListItem', 'position' => 2, 'name' => 'Soluções', 'item' => url('/solucoes')],
+@include('landing_page.partials.breadcrumb-schema', [
+    'trail' => [
+        ['name' => 'Início', 'url' => url('/')],
+        ['name' => 'Soluções', 'url' => url('/solucoes')],
     ],
-], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
-</script>
+])
 <script type="application/ld+json">
 {!! json_encode([
     '@context' => 'https://schema.org',
     '@type' => 'ItemList',
-    'name' => 'Produtos FiscalDock',
-    'itemListElement' => [
-        ['@type' => 'ListItem', 'position' => 1, 'name' => 'Importação SPED/EFD', 'description' => 'Importe arquivos SPED Fiscal e Contribuições e extraia notas, participantes e apurações automaticamente.', 'url' => url('/solucoes#produto-sped')],
-        ['@type' => 'ListItem', 'position' => 2, 'name' => 'Monitoramento de Participantes', 'description' => 'Acompanhe situação cadastral, regime tributário e regularidade dos seus fornecedores.', 'url' => url('/solucoes#produto-monitoramento')],
-        ['@type' => 'ListItem', 'position' => 3, 'name' => 'Consultas CNPJ', 'description' => 'Consultas tributárias de CNPJ em lote, pré-pago em reais.', 'url' => url('/solucoes#produto-consultas')],
-        ['@type' => 'ListItem', 'position' => 4, 'name' => 'BI Fiscal', 'description' => 'Dashboards de notas, CFOP, participantes e apuração tributária.', 'url' => url('/solucoes#produto-bi')],
-        ['@type' => 'ListItem', 'position' => 5, 'name' => 'Clearance de Notas', 'description' => 'Validação de NF-e/CT-e/NFS-e contra SEFAZ (em construção).', 'url' => url('/solucoes#produto-clearance')],
-        ['@type' => 'ListItem', 'position' => 6, 'name' => 'Central de Alertas', 'description' => 'Alertas fiscais consolidados e priorizados por risco.', 'url' => url('/solucoes#produto-alertas')],
-    ],
+    'name' => 'Soluções FiscalDock',
+    'itemListElement' => collect($solutionCatalog)->map(fn ($solution, $index) => [
+        '@type' => 'ListItem',
+        'position' => $index + 1,
+        'name' => $solution['name'],
+        'description' => $solution['description'],
+        'url' => url('/solucoes#'.$solution['anchor']),
+    ])->all(),
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
 </script>
 @endpush
 
 <style>
-    .sol-hero-gradient {
-        background: linear-gradient(135deg, #0b1f3a 0%, #1e4fa0 50%, #133a73 100%);
+    .solutions-page {
+        --sol-ink: #0b1424;
+        --sol-navy: #10233f;
+        --sol-blue: #1e4fa0;
+        --sol-sky: #dcecff;
+        --sol-paper: #f7f4ed;
+        --sol-soft: #f5f7fa;
+        --sol-line: #dfe5ec;
+        --sol-muted: #5f6b7a;
+        --sol-yellow: #facc15;
+        --sol-green: #047857;
+        color: #111827;
+        background: #fff;
+        overflow: clip;
     }
-
-    .sol-fade-in-up {
-        animation: solFadeInUp 0.6s ease-out forwards;
-        opacity: 0;
+    .solutions-page *, .solutions-page *::before, .solutions-page *::after { box-sizing: border-box; }
+    .sol-shell { width: min(100% - 2rem, 80rem); margin-inline: auto; }
+    .sol-serif { font-family: 'Fraunces', Georgia, serif; font-optical-sizing: auto; letter-spacing: -.025em; }
+    .sol-kicker {
+        display: inline-flex; align-items: center; gap: .65rem;
+        font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+        font-size: .67rem; font-weight: 700; letter-spacing: .2em; line-height: 1.25;
+        text-transform: uppercase; color: #728095;
     }
-
-    @keyframes solFadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to   { opacity: 1; transform: translateY(0); }
+    .sol-kicker::before { content: ''; width: 1.65rem; height: 1px; background: currentColor; opacity: .5; }
+    .sol-kicker--light { color: rgba(255,255,255,.62); }
+    .sol-heading {
+        margin-top: .9rem; font-family: 'Fraunces', Georgia, serif;
+        font-size: clamp(2.25rem, 4.6vw, 4rem); font-weight: 600; line-height: 1.03;
+        letter-spacing: -.038em; color: var(--sol-ink);
     }
+    .sol-lead { margin-top: 1rem; max-width: 44rem; font-size: 1rem; line-height: 1.75; color: var(--sol-muted); }
 
-    .sol-section-fade-in {
-        opacity: 0;
-        transform: translateY(30px);
-        transition: all 0.6s ease;
+    .sol-hero {
+        position: relative; isolation: isolate;
+        padding: clamp(4.5rem, 9vw, 7.5rem) 0 clamp(4rem, 8vw, 7rem);
+        color: #fff;
+        background:
+            radial-gradient(circle at 83% 18%, rgba(55,116,198,.25), transparent 30rem),
+            linear-gradient(145deg, #081322 0%, #10233f 62%, #0d1c32 100%);
     }
-
-    .sol-section-fade-in.visible {
-        opacity: 1;
-        transform: translateY(0);
+    .sol-hero::before, .sol-dark-grid::before {
+        content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+        background-image:
+            linear-gradient(to right, rgba(148,197,255,.055) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(148,197,255,.055) 1px, transparent 1px);
+        background-size: 46px 46px;
+        -webkit-mask-image: radial-gradient(100% 100% at 70% 15%, #000 10%, transparent 78%);
+        mask-image: radial-gradient(100% 100% at 70% 15%, #000 10%, transparent 78%);
     }
-
-    .sol-anchor-nav {
-        position: sticky;
-        top: 0;
-        z-index: 30;
-        backdrop-filter: saturate(180%) blur(8px);
+    .sol-hero-grid { display: grid; grid-template-columns: minmax(0,1.05fr) minmax(23rem,.8fr); gap: clamp(2.5rem,7vw,6rem); align-items: center; }
+    .sol-hero h1 { margin-top: 1.15rem; max-width: 48rem; font-size: clamp(2.9rem,6vw,5.45rem); font-weight: 600; line-height: .97; color: #fff; }
+    .sol-hero h1 em { color: #fde68a; font-style: normal; }
+    .sol-hero-copy { margin-top: 1.35rem; max-width: 42rem; font-size: clamp(1rem,1.45vw,1.16rem); line-height: 1.75; color: rgba(255,255,255,.72); }
+    .sol-hero-actions { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 1.8rem; }
+    .sol-btn-secondary {
+        display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 48px;
+        padding: .875rem 1.35rem; border: 1px solid rgba(255,255,255,.27); border-radius: 8px;
+        color: #fff; font-size: .94rem; font-weight: 700; text-decoration: none; transition: .18s ease;
     }
+    .sol-btn-secondary:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.5); }
+    .sol-hero-facts { display: flex; flex-wrap: wrap; gap: .7rem 1.35rem; margin-top: 1.6rem; }
+    .sol-hero-fact { display: inline-flex; align-items: center; gap: .45rem; font-size: .75rem; color: rgba(255,255,255,.66); }
+    .sol-hero-fact::before { content: ''; width: .42rem; height: .42rem; border-radius: 50%; background: #fde68a; }
 
-    .sol-anchor-nav::-webkit-scrollbar { display: none; }
-    .sol-anchor-nav { scrollbar-width: none; }
-
-    .sol-pill {
-        white-space: nowrap;
-        transition: all 0.2s ease;
-        background-color: #f3f4f6;
-        color: #0b1f3a;
-        border: 1px solid #e5e7eb;
+    .sol-radar {
+        position: relative; border: 1px solid rgba(255,255,255,.15); border-radius: 1.3rem;
+        padding: 1rem; background: rgba(7,17,31,.64); box-shadow: 0 36px 80px -40px rgba(0,0,0,.75);
+        backdrop-filter: blur(14px);
     }
+    .sol-radar-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .2rem .25rem 1rem; }
+    .sol-radar-label { font-family: ui-monospace, monospace; font-size: .61rem; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.47); }
+    .sol-radar-live { display: inline-flex; align-items: center; gap: .4rem; font-size: .65rem; font-weight: 700; color: #bbf7d0; }
+    .sol-radar-live::before { content: ''; width: .42rem; height: .42rem; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 4px rgba(52,211,153,.12); }
+    .sol-radar-stage { border: 1px solid rgba(255,255,255,.09); border-radius: .85rem; padding: 1rem; background: rgba(255,255,255,.045); }
+    .sol-radar-stage + .sol-radar-stage { margin-top: .55rem; }
+    .sol-radar-stage-head { display: flex; align-items: center; justify-content: space-between; gap: .8rem; }
+    .sol-radar-stage-head span:first-child { font-family: ui-monospace, monospace; font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.5); }
+    .sol-radar-stage-head strong { font-size: .72rem; color: #fff; }
+    .sol-radar-track { height: 4px; margin-top: .7rem; border-radius: 999px; background: rgba(255,255,255,.1); overflow: hidden; }
+    .sol-radar-track i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#fde68a,#34d399); }
+    .sol-radar-output { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .55rem; margin-top: .7rem; }
+    .sol-radar-kpi { border-radius: .65rem; padding: .75rem; color: var(--sol-ink); background: linear-gradient(145deg,#fffef8,#f7edcf); }
+    .sol-radar-kpi small { display: block; font-family: ui-monospace, monospace; font-size: .53rem; letter-spacing: .1em; text-transform: uppercase; color: #747b86; }
+    .sol-radar-kpi strong { display: block; margin-top: .35rem; font-family: 'Fraunces',Georgia,serif; font-size: 1.25rem; color: var(--sol-ink); }
 
-    .sol-pill:hover {
-        background-color: #0b1f3a;
-        color: #ffffff;
-        border-color: #0b1f3a;
+    .sol-anchor-nav { position: sticky; top: 0; z-index: 35; border-bottom: 1px solid rgba(207,216,227,.9); background: rgba(255,255,255,.91); backdrop-filter: blur(14px) saturate(150%); }
+    .sol-anchor-list { display: flex; gap: .25rem; align-items: center; overflow-x: auto; padding: .65rem 0; scrollbar-width: none; }
+    .sol-anchor-list::-webkit-scrollbar { display: none; }
+    .sol-anchor-link { flex: 0 0 auto; border-radius: .55rem; padding: .62rem .78rem; color: #687386; font-size: .7rem; font-weight: 700; text-decoration: none; transition: .15s ease; }
+    .sol-anchor-link:hover, .sol-anchor-link.is-active { color: #fff; background: var(--sol-ink); }
+
+    .sol-section { padding: clamp(4.75rem,8vw,7.5rem) 0; }
+    .sol-section--soft { background: var(--sol-soft); }
+    .sol-section--paper { background: var(--sol-paper); }
+    .sol-section-head { display: flex; align-items: end; justify-content: space-between; gap: 2rem; margin-bottom: 2.2rem; }
+    .sol-section-head > p { max-width: 31rem; font-size: .82rem; line-height: 1.65; color: #667085; }
+
+    .sol-journey { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); border: 1px solid var(--sol-line); border-radius: 1rem; background: #fff; overflow: hidden; }
+    .sol-journey-step { position: relative; min-height: 13rem; padding: 1.25rem; }
+    .sol-journey-step + .sol-journey-step { border-left: 1px solid var(--sol-line); }
+    .sol-journey-num { font-family: ui-monospace, monospace; font-size: .6rem; font-weight: 700; letter-spacing: .14em; color: #8b96a5; }
+    .sol-journey-step h3 { margin-top: 1.35rem; font-family: 'Fraunces',Georgia,serif; font-size: 1.25rem; font-weight: 650; color: var(--sol-ink); }
+    .sol-journey-step p { margin-top: .6rem; font-size: .73rem; line-height: 1.55; color: #667085; }
+    .sol-journey-token { position: absolute; right: 1rem; bottom: 1rem; display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: .65rem; color: var(--sol-blue); background: #edf4fd; }
+    .sol-journey-token svg { width: 1.05rem; height: 1.05rem; }
+
+    .sol-chapter { display: grid; grid-template-columns: minmax(17rem,.58fr) minmax(0,1.42fr); gap: clamp(2.5rem,6vw,5.5rem); align-items: start; }
+    .sol-chapter-intro { position: sticky; top: 5rem; }
+    .sol-chapter-index { display: inline-flex; align-items: center; justify-content: center; width: 3rem; height: 3rem; border: 1px solid #d6e0eb; border-radius: .75rem; font-family: ui-monospace, monospace; font-size: .72rem; font-weight: 700; color: var(--sol-blue); background: #f8fbff; }
+    .sol-chapter h2 { margin-top: 1rem; font-family: 'Fraunces',Georgia,serif; font-size: clamp(2rem,3.5vw,3.15rem); font-weight: 600; line-height: 1.04; letter-spacing: -.034em; color: var(--sol-ink); }
+    .sol-chapter-intro p { margin-top: 1rem; font-size: .9rem; line-height: 1.72; color: #667085; }
+    .sol-text-link { display: inline-flex; align-items: center; gap: .4rem; margin-top: 1.25rem; color: var(--sol-blue); font-size: .78rem; font-weight: 750; text-decoration: none; }
+    .sol-text-link:hover { text-decoration: underline; }
+
+    .sol-feature-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .85rem; }
+    .sol-feature-card { display: flex; min-height: 13.5rem; flex-direction: column; border: 1px solid var(--sol-line); border-radius: .95rem; padding: 1.25rem; background: #fff; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+    .sol-feature-card:hover { transform: translateY(-3px); border-color: #b9c9da; box-shadow: 0 22px 45px -34px rgba(15,35,65,.5); }
+    .sol-feature-top { display: flex; align-items: center; justify-content: space-between; gap: .8rem; }
+    .sol-feature-icon { display: grid; place-items: center; width: 2.45rem; height: 2.45rem; border-radius: .7rem; color: var(--sol-blue); background: #edf4fd; }
+    .sol-feature-icon svg { width: 1.15rem; height: 1.15rem; }
+    .sol-feature-state { display: inline-flex; align-items: center; gap: .35rem; font-family: ui-monospace, monospace; font-size: .55rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--sol-green); }
+    .sol-feature-state::before { content: ''; width: .38rem; height: .38rem; border-radius: 50%; background: #10b981; }
+    .sol-feature-card h3 { margin-top: 1rem; font-family: 'Fraunces',Georgia,serif; font-size: 1.25rem; font-weight: 650; color: var(--sol-ink); }
+    .sol-feature-card p { margin-top: .55rem; font-size: .75rem; line-height: 1.6; color: #667085; }
+    .sol-feature-meta { margin-top: auto; padding-top: 1rem; font-family: ui-monospace, monospace; font-size: .57rem; line-height: 1.5; letter-spacing: .07em; text-transform: uppercase; color: #8a94a3; }
+    .sol-feature-card--wide { grid-column: span 2; min-height: auto; }
+
+    .sol-credit-bridge { border-color: #182c49; color: #fff; background: linear-gradient(145deg,#0b1729,#132a49); box-shadow: 0 25px 55px -38px rgba(11,20,36,.72); }
+    .sol-credit-bridge:hover { border-color: #294b78; }
+    .sol-credit-bridge .sol-feature-state { color: #a7f3d0; }
+    .sol-credit-bridge h3 { color: #fff; }
+    .sol-credit-bridge > p { max-width: 48rem; color: rgba(255,255,255,.65); }
+    .sol-bridge-flow { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .55rem; margin-top: 1rem; }
+    .sol-bridge-step { border: 1px solid rgba(255,255,255,.1); border-radius: .7rem; padding: .8rem; background: rgba(255,255,255,.045); }
+    .sol-bridge-step small { display: block; font-family: ui-monospace, monospace; font-size: .5rem; letter-spacing: .11em; text-transform: uppercase; color: rgba(255,255,255,.4); }
+    .sol-bridge-step strong { display: block; margin-top: .35rem; font-size: .7rem; line-height: 1.42; color: #fff; }
+    .sol-bridge-note { margin-top: .8rem; border-left: 2px solid rgba(253,230,138,.45); padding-left: .75rem; font-size: .62rem; line-height: 1.55; color: rgba(255,255,255,.5); }
+
+    .sol-console { border: 1px solid #d6deea; border-radius: 1rem; overflow: hidden; background: #fff; box-shadow: 0 28px 65px -45px rgba(15,35,65,.45); }
+    .sol-console-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .75rem 1rem; border-bottom: 1px solid #e5e9ef; background: #f8fafc; }
+    .sol-console-dots { display: flex; gap: .35rem; }
+    .sol-console-dots i { width: .48rem; height: .48rem; border-radius: 50%; background: #cbd5e1; }
+    .sol-console-bar span { font-family: ui-monospace, monospace; font-size: .58rem; letter-spacing: .1em; text-transform: uppercase; color: #7a8594; }
+    .sol-console-body { padding: 1.2rem; }
+    .sol-console-kpis { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .65rem; }
+    .sol-console-kpi { border: 1px solid #e1e6ed; border-radius: .7rem; padding: .85rem; }
+    .sol-console-kpi small { display: block; font-size: .58rem; text-transform: uppercase; color: #8993a1; }
+    .sol-console-kpi strong { display: block; margin-top: .35rem; font-family: 'Fraunces',Georgia,serif; font-size: 1.35rem; color: var(--sol-ink); }
+    .sol-console-chart { display: grid; grid-template-columns: minmax(0,1.35fr) minmax(12rem,.65fr); gap: .75rem; margin-top: .75rem; }
+    .sol-chart-box, .sol-list-box { border: 1px solid #e1e6ed; border-radius: .75rem; padding: 1rem; }
+    .sol-chart-bars { display: flex; height: 8.5rem; align-items: end; gap: .55rem; padding-top: 1rem; }
+    .sol-chart-bars i { flex: 1; min-height: 12%; border-radius: .35rem .35rem 0 0; background: linear-gradient(180deg,#4b82cb,#1e4fa0); }
+    .sol-list-row { display: grid; grid-template-columns: auto 1fr auto; gap: .5rem; align-items: center; padding: .6rem 0; font-size: .66rem; color: #536071; }
+    .sol-list-row + .sol-list-row { border-top: 1px solid #edf0f4; }
+    .sol-list-row::before { content: ''; width: .4rem; height: .4rem; border-radius: 50%; background: #10b981; }
+
+    .sol-source-cloud { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+    .sol-source-chip { display: inline-flex; align-items: center; gap: .4rem; border: 1px solid #d7e1ec; border-radius: 999px; padding: .5rem .65rem; background: #fff; font-size: .64rem; font-weight: 650; color: #3f4a59; }
+    .sol-source-chip::before { content: ''; width: .38rem; height: .38rem; border-radius: 50%; background: #10b981; box-shadow: 0 0 0 3px #d1fae5; }
+
+    .sol-cnpj-workspace { display: grid; grid-template-columns: minmax(20rem,.78fr) minmax(0,1.22fr); gap: .8rem; border: 1px solid #d8e0e9; border-radius: 1.15rem; padding: .8rem; background: #f4f7fa; box-shadow: 0 30px 70px -48px rgba(15,35,65,.55); }
+    .sol-cnpj-file { display: flex; flex-direction: column; min-width: 0; border: 1px solid #dbe2ea; border-radius: .9rem; padding: 1.15rem; background: #fff; }
+    .sol-cnpj-file-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #e8ecf1; }
+    .sol-cnpj-file-label { font-family: ui-monospace, monospace; font-size: .56rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #8a94a3; }
+    .sol-cnpj-file h3 { margin-top: .45rem; font-family: 'Fraunces',Georgia,serif; font-size: 1.3rem; font-weight: 650; color: var(--sol-ink); }
+    .sol-cnpj-doc { display: block; margin-top: .25rem; font-family: ui-monospace, monospace; font-size: .62rem; color: #788391; }
+    .sol-cnpj-badge { display: inline-flex; flex: 0 0 auto; align-items: center; gap: .35rem; border-radius: 999px; padding: .38rem .55rem; font-size: .57rem; font-weight: 750; text-transform: uppercase; color: #047857; background: #ecfdf5; }
+    .sol-cnpj-badge::before { content: ''; width: .38rem; height: .38rem; border-radius: 50%; background: #10b981; }
+    .sol-cnpj-score { display: grid; grid-template-columns: auto 1fr; gap: 1rem; align-items: center; margin-top: 1rem; border-radius: .8rem; padding: 1rem; color: #fff; background: var(--sol-ink); }
+    .sol-score-dial { position: relative; display: grid; place-items: center; width: 4.5rem; height: 4.5rem; border-radius: 50%; background: conic-gradient(#34d399 0 18%, rgba(255,255,255,.12) 18%); }
+    .sol-score-dial::before { content: ''; position: absolute; inset: .38rem; border-radius: 50%; background: var(--sol-ink); }
+    .sol-score-dial strong { position: relative; font-family: 'Fraunces',Georgia,serif; font-size: 1.45rem; color: #fff; }
+    .sol-score-copy small { display: block; font-family: ui-monospace, monospace; font-size: .54rem; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.42); }
+    .sol-score-copy strong { display: block; margin-top: .35rem; font-size: .78rem; color: #a7f3d0; }
+    .sol-score-copy span { display: block; margin-top: .25rem; font-size: .62rem; line-height: 1.4; color: rgba(255,255,255,.52); }
+    .sol-cnpj-signals { margin-top: .65rem; }
+    .sol-cnpj-signal { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: .55rem; align-items: center; padding: .65rem 0; font-size: .67rem; color: #4d5968; }
+    .sol-cnpj-signal + .sol-cnpj-signal { border-top: 1px solid #edf0f4; }
+    .sol-cnpj-signal::before { content: ''; width: .42rem; height: .42rem; border-radius: 50%; background: #10b981; box-shadow: 0 0 0 3px #d1fae5; }
+    .sol-cnpj-signal--warning::before { background: #f59e0b; box-shadow: 0 0 0 3px #fef3c7; }
+    .sol-cnpj-signal strong { font-size: .61rem; font-weight: 750; color: #344054; }
+    .sol-cnpj-file-foot { margin-top: auto; padding-top: .8rem; border-top: 1px dashed #dce2e9; font-family: ui-monospace, monospace; font-size: .55rem; line-height: 1.5; text-transform: uppercase; color: #8a94a3; }
+    .sol-cnpj-analysis { min-width: 0; border: 1px solid #dbe2ea; border-radius: .9rem; padding: 1.15rem; background: #fff; }
+    .sol-cnpj-analysis-head { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
+    .sol-cnpj-analysis-head h3 { font-family: 'Fraunces',Georgia,serif; font-size: 1.35rem; font-weight: 650; color: var(--sol-ink); }
+    .sol-cnpj-analysis-head p { max-width: 23rem; font-size: .66rem; line-height: 1.5; text-align: right; color: #7a8594; }
+    .sol-cnpj-layers { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .6rem; margin-top: 1rem; }
+    .sol-cnpj-layer { position: relative; min-height: 9rem; border: 1px solid #e1e6ec; border-radius: .75rem; padding: .9rem; overflow: hidden; }
+    .sol-cnpj-layer::after { content: attr(data-layer); position: absolute; right: .65rem; bottom: -.3rem; font-family: 'Fraunces',Georgia,serif; font-size: 3.6rem; font-weight: 650; line-height: 1; color: #f0f3f7; pointer-events: none; }
+    .sol-cnpj-layer small { position: relative; z-index: 1; font-family: ui-monospace, monospace; font-size: .52rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--sol-blue); }
+    .sol-cnpj-layer h4 { position: relative; z-index: 1; margin-top: .6rem; font-size: .76rem; font-weight: 750; color: #202938; }
+    .sol-cnpj-layer p { position: relative; z-index: 1; margin-top: .35rem; max-width: 14rem; font-size: .62rem; line-height: 1.48; color: #667085; }
+    .sol-cnpj-actions { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .5rem; margin-top: .65rem; }
+    .sol-cnpj-action { display: grid; grid-template-columns: auto 1fr; gap: .55rem; align-items: center; border: 1px solid #dbe3ec; border-radius: .7rem; padding: .72rem; background: #f8fafc; }
+    .sol-cnpj-action i { display: grid; place-items: center; width: 1.7rem; height: 1.7rem; border-radius: .5rem; font-style: normal; font-size: .61rem; font-weight: 800; color: var(--sol-blue); background: #eaf2fc; }
+    .sol-cnpj-action small { display: block; font-size: .54rem; color: #8a94a3; }
+    .sol-cnpj-action strong { display: block; margin-top: .15rem; font-size: .63rem; color: #344054; }
+    .sol-cnpj-sources { display: grid; grid-template-columns: auto 1fr; gap: 1rem; align-items: start; margin-top: .8rem; border-top: 1px solid #e8ecf1; padding-top: .8rem; }
+    .sol-cnpj-sources > span { padding-top: .45rem; font-family: ui-monospace, monospace; font-size: .53rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #8a94a3; }
+
+    .sol-reform { position: relative; isolation: isolate; color: #fff; background: linear-gradient(145deg,#081322,#10233f 64%,#0d1c32); }
+    .sol-reform .sol-heading { color: #fff; max-width: 55rem; }
+    .sol-reform .sol-lead { color: rgba(255,255,255,.68); }
+    .sol-reform-grid { display: grid; grid-template-columns: minmax(0,.8fr) minmax(24rem,1.2fr); gap: clamp(2.5rem,7vw,6rem); align-items: center; }
+    .sol-reform-bullets { display: grid; gap: .7rem; margin-top: 1.4rem; }
+    .sol-reform-bullet { display: grid; grid-template-columns: auto 1fr; gap: .65rem; align-items: start; font-size: .8rem; line-height: 1.55; color: rgba(255,255,255,.73); }
+    .sol-reform-bullet::before { content: '✓'; color: #fde68a; font-weight: 800; }
+    .sol-credit-sheet { border: 1px solid rgba(255,255,255,.15); border-radius: 1.15rem; padding: 1rem; background: rgba(7,17,31,.62); backdrop-filter: blur(14px); }
+    .sol-credit-sheet-head { display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: .25rem .25rem 1rem; }
+    .sol-credit-sheet-head span { font-family: ui-monospace, monospace; font-size: .59rem; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.48); }
+    .sol-credit-sheet-head strong { font-size: .66rem; color: #a7f3d0; }
+    .sol-credit-formula { border-radius: .85rem; padding: 1.2rem; color: var(--sol-ink); background: linear-gradient(145deg,#fffef8,#f7edcf); }
+    .sol-credit-formula small { font-family: ui-monospace, monospace; font-size: .58rem; letter-spacing: .12em; text-transform: uppercase; color: #7b8491; }
+    .sol-credit-formula strong { display: block; margin-top: .6rem; font-family: 'Fraunces',Georgia,serif; font-size: clamp(1.45rem,3vw,2.25rem); font-weight: 650; line-height: 1.1; color: var(--sol-ink); }
+    .sol-credit-steps { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .55rem; margin-top: .65rem; }
+    .sol-credit-step { border: 1px solid rgba(255,255,255,.1); border-radius: .7rem; padding: .8rem; background: rgba(255,255,255,.045); }
+    .sol-credit-step small { display: block; font-family: ui-monospace, monospace; font-size: .52rem; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.43); }
+    .sol-credit-step strong { display: block; margin-top: .35rem; font-size: .74rem; line-height: 1.4; color: #fff; }
+    .sol-transition { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .5rem; margin-top: .65rem; }
+    .sol-transition-year { border-top: 2px solid rgba(253,230,138,.45); padding: .7rem .15rem 0; }
+    .sol-transition-year strong { display: block; font-family: 'Fraunces',Georgia,serif; font-size: 1.05rem; color: #fde68a; }
+    .sol-transition-year span { display: block; margin-top: .25rem; font-size: .57rem; line-height: 1.4; color: rgba(255,255,255,.5); }
+    .sol-reform-note { margin-top: 1rem; border-left: 2px solid rgba(253,230,138,.45); padding-left: .85rem; font-size: .67rem; line-height: 1.55; color: rgba(255,255,255,.5); }
+
+    .sol-clearance-grid { display: grid; grid-template-columns: minmax(0,.75fr) minmax(0,1.25fr); gap: clamp(2.5rem,7vw,6rem); align-items: center; }
+    .sol-compare { border: 1px solid #d9e1ea; border-radius: 1rem; padding: 1rem; background: #fff; box-shadow: 0 28px 65px -45px rgba(15,35,65,.45); }
+    .sol-compare-head { display: grid; grid-template-columns: 1fr auto 1fr; gap: .6rem; align-items: center; padding: .35rem .2rem 1rem; }
+    .sol-compare-head span { font-family: ui-monospace, monospace; font-size: .58rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #7c8796; }
+    .sol-compare-head span:last-child { text-align: right; }
+    .sol-compare-head i { width: 2rem; height: 1px; background: #cbd5e1; }
+    .sol-compare-row { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: .75rem; align-items: center; border: 1px solid #e2e7ed; border-radius: .7rem; padding: .75rem; }
+    .sol-compare-row + .sol-compare-row { margin-top: .5rem; }
+    .sol-compare-value { font-size: .69rem; line-height: 1.4; color: #3f4a59; }
+    .sol-compare-value:last-child { text-align: right; }
+    .sol-match { display: grid; place-items: center; width: 1.7rem; height: 1.7rem; border-radius: 50%; font-size: .7rem; font-weight: 800; color: var(--sol-green); background: #ecfdf5; }
+    .sol-match--alert { color: #b45309; background: #fffbeb; }
+
+    .sol-atlas { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .75rem; }
+    .sol-atlas-card { min-height: 10.5rem; border: 1px solid var(--sol-line); border-radius: .85rem; padding: 1rem; background: #fff; }
+    .sol-atlas-card span { font-family: ui-monospace, monospace; font-size: .56rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--sol-blue); }
+    .sol-atlas-card h3 { margin-top: .75rem; font-family: 'Fraunces',Georgia,serif; font-size: 1.08rem; font-weight: 650; color: var(--sol-ink); }
+    .sol-atlas-card p { margin-top: .45rem; font-size: .7rem; line-height: 1.55; color: #667085; }
+
+    .sol-final { position: relative; isolation: isolate; padding: clamp(4.5rem,8vw,7rem) 0; text-align: center; color: #fff; background: var(--sol-ink); }
+    .sol-final h2 { max-width: 55rem; margin: 1rem auto 0; font-family: 'Fraunces',Georgia,serif; font-size: clamp(2.35rem,5vw,4.25rem); font-weight: 600; line-height: 1.04; letter-spacing: -.038em; }
+    .sol-final p { max-width: 42rem; margin: 1rem auto 0; font-size: .95rem; line-height: 1.7; color: rgba(255,255,255,.67); }
+    .sol-final-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .8rem; margin-top: 1.6rem; }
+
+    [data-sol-reveal] { opacity: 1; transform: none; }
+    .js .solutions-page [data-sol-reveal] { opacity: 0; transform: translateY(18px); transition: opacity .55s ease, transform .55s ease; }
+    .js .solutions-page [data-sol-reveal].is-visible { opacity: 1; transform: none; }
+
+    @media (max-width: 1080px) {
+        .sol-journey { grid-template-columns: repeat(3,minmax(0,1fr)); }
+        .sol-journey-step + .sol-journey-step { border-left: 0; }
+        .sol-journey-step { border: 1px solid var(--sol-line); margin: -1px 0 0 -1px; }
+        .sol-atlas { grid-template-columns: repeat(2,minmax(0,1fr)); }
     }
-
-    .sol-cta-primary {
-        background-color: #facc15;
-        color: #0b1f3a;
-        transition: all 0.2s ease;
-        box-shadow: 0 10px 20px -10px rgba(234, 179, 8, 0.6);
+    @media (max-width: 900px) {
+        .sol-hero-grid, .sol-reform-grid, .sol-clearance-grid, .sol-chapter { grid-template-columns: 1fr; }
+        .sol-cnpj-workspace { grid-template-columns: 1fr; }
+        .sol-chapter-intro { position: static; }
+        .sol-section-head { display: grid; }
+        .sol-console-kpis { grid-template-columns: repeat(2,minmax(0,1fr)); }
     }
-
-    .sol-cta-primary:hover {
-        background-color: #eab308;
-        transform: translateY(-1px);
+    @media (max-width: 680px) {
+        .sol-shell { width: min(100% - 1.25rem,80rem); }
+        .sol-hero { padding-top: 3.5rem; }
+        .sol-hero h1 { font-size: clamp(2.65rem,13vw,3.7rem); }
+        .sol-hero-copy { font-size: .95rem; line-height: 1.65; }
+        .sol-hero-actions, .sol-final-actions { display: grid; grid-template-columns: 1fr; }
+        .sol-hero-actions > *, .sol-final-actions > * { width: 100%; }
+        .sol-hero-facts { display: grid; gap: .65rem; }
+        .sol-radar { padding: .75rem; border-radius: 1rem; }
+        .sol-radar-output, .sol-credit-steps, .sol-transition { grid-template-columns: 1fr; }
+        .sol-anchor-list { margin-inline: -.625rem; padding-inline: .625rem; }
+        .sol-section { padding: 4.5rem 0; }
+        .sol-heading { font-size: 2.35rem; }
+        .sol-journey, .sol-feature-grid, .sol-atlas { grid-template-columns: 1fr; }
+        .sol-journey-step { min-height: 10.5rem; }
+        .sol-feature-card--wide { grid-column: auto; }
+        .sol-bridge-flow { grid-template-columns: 1fr; }
+        .sol-feature-card { min-height: auto; }
+        .sol-feature-meta { margin-top: 1rem; }
+        .sol-console-kpis, .sol-console-chart { grid-template-columns: 1fr; }
+        .sol-chart-bars { height: 6rem; }
+        .sol-source-cloud { display: grid; grid-template-columns: 1fr; }
+        .sol-source-chip { border-radius: .65rem; }
+        .sol-cnpj-analysis-head { display: grid; }
+        .sol-cnpj-analysis-head p { text-align: left; }
+        .sol-cnpj-layers, .sol-cnpj-actions { grid-template-columns: 1fr; }
+        .sol-cnpj-layer { min-height: 8.4rem; }
+        .sol-cnpj-sources { grid-template-columns: 1fr; gap: .25rem; }
+        .sol-cnpj-sources .sol-source-cloud { margin-top: .35rem; }
+        .sol-credit-sheet { padding: .75rem; }
+        .sol-transition-year { display: grid; grid-template-columns: 4rem 1fr; gap: .6rem; align-items: center; }
+        .sol-transition-year span { margin-top: 0; }
     }
-
-    .sol-cta-secondary {
-        border: 1px solid rgba(255,255,255,0.4);
-        color: #ffffff;
-        transition: all 0.2s ease;
-    }
-
-    .sol-cta-secondary:hover {
-        background-color: rgba(255,255,255,0.08);
-        border-color: rgba(255,255,255,0.7);
-    }
-
-    .sol-link-cta {
-        color: #1e4fa0;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        transition: gap 0.2s ease;
-    }
-
-    .sol-link-cta:hover { gap: 10px; }
-
-    .sol-mockup {
-        border-radius: 1rem;
-        border: 1px solid #e5e7eb;
-        background-color: #ffffff;
-        box-shadow: 0 25px 50px -20px rgba(11, 31, 58, 0.25), 0 10px 20px -10px rgba(11, 31, 58, 0.15);
-        overflow: hidden;
-    }
-
-    .sol-mockup-header {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        padding: 10px 14px;
-        background-color: #f8fafc;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .sol-mockup-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 999px;
-    }
-
-    .sol-bar-track {
-        width: 100%;
-        height: 6px;
-        border-radius: 999px;
-        background-color: #e5e7eb;
-        overflow: hidden;
-    }
-
-    .sol-bar-fill {
-        height: 100%;
-        border-radius: 999px;
-        background: linear-gradient(90deg, #1e4fa0 0%, #3b82f6 100%);
-    }
-
-    .sol-score {
-        width: 44px;
-        height: 44px;
-        border-radius: 999px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 14px;
-        color: #ffffff;
-    }
-
-    .sol-kpi {
-        border: 1px solid #e5e7eb;
-        border-radius: 10px;
-        padding: 12px 14px;
-        background-color: #ffffff;
-    }
-
-    .sol-bar-chart {
-        display: flex;
-        align-items: flex-end;
-        gap: 10px;
-        height: 100px;
-        padding-top: 8px;
-    }
-
-    .sol-bar-chart > div {
-        flex: 1;
-        border-radius: 6px 6px 0 0;
-        background: linear-gradient(180deg, #3b82f6 0%, #1e4fa0 100%);
-        min-height: 12px;
-    }
-
-    .sol-timeline-item {
-        position: relative;
-        padding-left: 40px;
-        padding-bottom: 18px;
-    }
-
-    .sol-timeline-item:last-child { padding-bottom: 0; }
-
-    .sol-timeline-item::before {
-        content: "";
-        position: absolute;
-        left: 15px;
-        top: 28px;
-        bottom: 0;
-        width: 2px;
-        background-color: #e5e7eb;
-    }
-
-    .sol-timeline-item:last-child::before { display: none; }
-
-    .sol-timeline-icon {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 32px;
-        height: 32px;
-        border-radius: 999px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    html { scroll-behavior: smooth; }
-
-    @media (max-width: 640px) {
-        .sol-hero-gradient h1 { font-size: 2.15rem; }
-        .sol-hero-gradient p  { font-size: 1rem; }
+    @media (prefers-reduced-motion: reduce) {
+        .solutions-page *, .solutions-page *::before, .solutions-page *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
     }
 </style>
 
-<!-- ============================================================
-     HERO
-============================================================ -->
-<section class="sol-hero-gradient py-16 md:py-24 text-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center sol-fade-in-up">
-            <span class="inline-block text-[11px] font-semibold uppercase tracking-[0.22em] text-blue-200 mb-4">
-                Plataforma Fiscal Completa
-            </span>
-            <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-5">
-                Seis produtos. Um só radar fiscal.
-            </h1>
-            <p class="text-lg md:text-xl text-blue-100 max-w-3xl mx-auto mb-8">
-                Do upload do SPED ao alerta de risco, o FiscalDock conecta importação, monitoramento e inteligência em uma operação só — pensada para contadores que não podem errar.
-            </p>
-            <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                <a href="#produto-sped" class="sol-cta-primary inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-base">
-                    Ver todos os produtos
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
-                </a>
-                <a href="{{ route('agendar') }}" class="sol-cta-secondary inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-base">
-                    Agendar demonstração
-                </a>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ============================================================
-     NAV ÂNCORA STICKY
-============================================================ -->
-<nav class="sol-anchor-nav bg-white/90 border-b border-gray-200">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-center gap-2 md:gap-3 overflow-x-auto py-4 text-sm">
-            <a href="#produto-sped"           class="sol-pill px-4 py-2 rounded-full font-semibold">1. Importação SPED</a>
-            <a href="#produto-monitoramento"  class="sol-pill px-4 py-2 rounded-full font-semibold">2. Monitoramento</a>
-            <a href="#produto-consultas"      class="sol-pill px-4 py-2 rounded-full font-semibold">3. Consultas CNPJ</a>
-            <a href="#produto-bi"             class="sol-pill px-4 py-2 rounded-full font-semibold">4. BI Fiscal</a>
-            <a href="#produto-clearance"      class="sol-pill px-4 py-2 rounded-full font-semibold">5. Clearance de Notas</a>
-            <a href="#produto-alertas"        class="sol-pill px-4 py-2 rounded-full font-semibold">6. Central de Alertas</a>
-        </div>
-    </div>
-</nav>
-
-<!-- ============================================================
-     PRODUTO 1 — IMPORTAÇÃO SPED/EFD + XML
-============================================================ -->
-<section id="produto-sped" class="py-20 lg:py-28 bg-white sol-section-fade-in">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            <!-- Texto -->
-            <div class="lg:order-1">
-                <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-5" style="background-color: #eef2f7; border: 1px solid #dce3ed;">
-                    <svg class="w-7 h-7" fill="none" stroke="#1e4fa0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+<div class="solutions-page">
+    <section class="sol-hero" aria-labelledby="solutions-title">
+        <div class="sol-shell sol-hero-grid">
+            <div>
+                <span class="sol-kicker sol-kicker--light">Plataforma fiscal de ponta a ponta</span>
+                <h1 id="solutions-title" class="sol-serif">Do arquivo bruto à <em>decisão fiscal.</em></h1>
+                <p class="sol-hero-copy">
+                    A FiscalDock organiza documentos, monitora CNPJs, cruza apurações, valida notas e
+                    transforma a Reforma Tributária em números que o contador consegue explicar e agir.
+                </p>
+                <div class="sol-hero-actions">
+                    <a href="{{ route('signup') }}" class="btn-cta">Começar com @brl($trialBalance) grátis</a>
+                    <a href="#mapa" class="sol-btn-secondary">Explorar a plataforma <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></a>
                 </div>
-                <span class="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-600">Documentos Fiscais</span>
-                <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-gray-900 mt-2 mb-4">
-                    Importe SPED e XMLs sem digitar nada
-                </h2>
-                <p class="text-base text-gray-600 leading-relaxed mb-6">
-                    Upload de EFD ICMS/IPI e EFD PIS/COFINS com extração automática de participantes, notas e blocos (A, C, D, E, F, M). XMLs de NF-e, CT-e e NFS-e também em massa, via zip.
-                </p>
-                <ul class="space-y-3 mb-7">
-                    @foreach ([
-                        'Extração automática dos blocos SPED em minutos',
-                        'Progresso em tempo real via Server-Sent Events',
-                        'Upload em massa de XMLs NF-e, CT-e e NFS-e',
-                        'Histórico completo de importações auditável',
-                    ] as $bullet)
-                        <li class="flex items-start gap-3">
-                            <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="#1e4fa0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                            <span class="text-sm text-gray-700">{{ $bullet }}</span>
-                        </li>
-                    @endforeach
-                </ul>
-                <a href="{{ route('agendar') }}" class="sol-link-cta">
-                    Agendar demo da Importação SPED
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-                </a>
-                <p class="sol-card-interlinks mt-4 text-xs text-gray-500">
-                    <a href="{{ route('precos') }}#precos-consumo" class="hover:underline" style="color: #1e4fa0">Ver preços</a>
-                    <span class="mx-2 text-gray-300">·</span>
-                    <a href="{{ route('duvidas') }}" class="hover:underline" style="color: #1e4fa0">Tirar dúvida</a>
-                    <span class="mx-2 text-gray-300">·</span>
-                    <a href="{{ route('blog.tema', 'efd') }}" class="hover:underline" style="color: #1e4fa0">Guia de EFD</a>
-                </p>
+                <div class="sol-hero-facts">
+                    <span class="sol-hero-fact">EFD Fiscal + Contribuições</span>
+                    <span class="sol-hero-fact">{{ $activeCnpjSources }} fontes cadastrais e fiscais</span>
+                    <span class="sol-hero-fact">PDF, XLSX e CSV auditáveis</span>
+                </div>
             </div>
 
-            <!-- Mockup -->
-            <div class="lg:order-2">
-                <div class="sol-mockup">
-                    <div class="sol-mockup-header">
-                        <span class="sol-mockup-dot" style="background-color: #ef4444;"></span>
-                        <span class="sol-mockup-dot" style="background-color: #f59e0b;"></span>
-                        <span class="sol-mockup-dot" style="background-color: #10b981;"></span>
-                        <span class="ml-3 text-xs text-gray-500 font-mono">importacao.efd</span>
-                    </div>
-                    <div class="p-6">
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background-color: #eef2f7;">
-                                    <svg class="w-5 h-5" fill="none" stroke="#1e4fa0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m-7 4h8a2 2 0 002-2V8l-5-5H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                                </div>
-                                <div>
-                                    <div class="text-sm font-semibold text-gray-900">efd_pis_cofins_032026.txt</div>
-                                    <div class="text-xs text-gray-500">18,4 MB · 7.312 registros</div>
-                                </div>
-                            </div>
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold" style="background-color: #eefbf5; color: #047857; border: 1px solid #c6eed8;">
-                                Extraindo
-                            </span>
-                        </div>
-                        <div class="sol-bar-track mt-4 mb-1">
-                            <div class="sol-bar-fill" style="width: 85%;"></div>
-                        </div>
-                        <div class="text-xs text-gray-500 text-right mb-5">85%</div>
+            <aside class="sol-radar" aria-label="Fluxo da plataforma">
+                <div class="sol-radar-top"><span class="sol-radar-label">Radar operacional</span><span class="sol-radar-live">Dados conectados</span></div>
+                <div class="sol-radar-stage">
+                    <div class="sol-radar-stage-head"><span>01 · Entrada</span><strong>EFD + XML</strong></div>
+                    <div class="sol-radar-track"><i style="width: 100%"></i></div>
+                </div>
+                <div class="sol-radar-stage">
+                    <div class="sol-radar-stage-head"><span>02 · Contexto</span><strong>Notas · CNPJ · Catálogo</strong></div>
+                    <div class="sol-radar-track"><i style="width: 86%"></i></div>
+                </div>
+                <div class="sol-radar-stage">
+                    <div class="sol-radar-stage-head"><span>03 · Inteligência</span><strong>BI · Score · Clearance</strong></div>
+                    <div class="sol-radar-track"><i style="width: 72%"></i></div>
+                </div>
+                <div class="sol-radar-output">
+                    <div class="sol-radar-kpi"><small>Alertas</small><strong>priorizados</strong></div>
+                    <div class="sol-radar-kpi"><small>Crédito</small><strong>IBS/CBS</strong></div>
+                    <div class="sol-radar-kpi"><small>Saída</small><strong>dossiê</strong></div>
+                </div>
+            </aside>
+        </div>
+    </section>
 
-                        <div class="space-y-2">
-                            @foreach ([
-                                ['participantes',       '312'],
-                                ['notas_mercadorias',   '1.847'],
-                                ['apuracao_pis_cofins', '13'],
-                                ['retencoes_fonte',     '22'],
-                            ] as [$label, $count])
-                                <div class="flex items-center justify-between px-3 py-2 rounded-lg border border-gray-200">
-                                    <div class="flex items-center gap-2">
-                                        <svg class="w-4 h-4" fill="none" stroke="#047857" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                        <span class="text-xs font-mono text-gray-700">{{ $label }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-xs font-semibold text-gray-900">{{ $count }}</span>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold" style="background-color: #eefbf5; color: #047857;">concluído</span>
-                                    </div>
-                                </div>
+    <nav class="sol-anchor-nav" aria-label="Navegação das soluções">
+        <div class="sol-shell sol-anchor-list">
+            <a href="#mapa" class="sol-anchor-link is-active">Visão geral</a>
+            <a href="#documentos" class="sol-anchor-link">Documentos</a>
+            <a href="#inteligencia" class="sol-anchor-link">BI Fiscal</a>
+            <a href="#risco" class="sol-anchor-link">CNPJ e risco</a>
+            <a href="#reforma" class="sol-anchor-link">Reforma Tributária</a>
+            <a href="#clearance" class="sol-anchor-link">Clearance</a>
+            <a href="#acao" class="sol-anchor-link">Alertas e gestão</a>
+        </div>
+    </nav>
+
+    <section id="mapa" class="sol-section sol-section--soft">
+        <div class="sol-shell">
+            <header class="sol-section-head" data-sol-reveal>
+                <div><span class="sol-kicker">O mapa da operação</span><h2 class="sol-heading">Uma jornada contínua, sem ilhas de informação.</h2></div>
+                <p>Cada etapa aproveita o contexto da anterior. O participante extraído do SPED vira CNPJ monitorado; a nota alimenta o BI; o resultado vira alerta e dossiê.</p>
+            </header>
+            <div class="sol-journey" data-sol-reveal>
+                @foreach([
+                    ['01 / Ingerir', 'SPED e XML', 'Receba documentos em massa, acompanhe o progresso e preserve o histórico da importação.', 'M4 4v16h16V8l-4-4H4zm8 4v8m-4-4h8'],
+                    ['02 / Organizar', 'Acervo fiscal', 'Unifique notas, participantes, clientes, itens e catálogo com rastreabilidade de origem.', 'M4 6h16M4 12h16M4 18h10'],
+                    ['03 / Interpretar', 'Resumo e BI', 'Leia competência, apuração, faturamento, compras, CFOP, CST, NCM e cruzamentos.', 'M4 19V9m5 10V5m5 14v-7m5 7V3'],
+                    ['04 / Vigiar', 'Risco contínuo', 'Consulte, monitore, pontue e priorize contrapartes e documentos que pedem ação.', 'M12 5c4.5 0 8.3 2.9 9.5 7-1.2 4.1-5 7-9.5 7s-8.3-2.9-9.5-7C3.7 7.9 7.5 5 12 5zm0 4a3 3 0 100 6 3 3 0 000-6z'],
+                    ['05 / Agir', 'Alerta e dossiê', 'Leve evidência para o cliente, trate pendências e exporte relatórios auditáveis.', 'M9 12l2 2 4-4m5 2a8 8 0 11-16 0 8 8 0 0116 0z'],
+                ] as [$number, $title, $text, $icon])
+                    <article class="sol-journey-step"><span class="sol-journey-num">{{ $number }}</span><h3>{{ $title }}</h3><p>{{ $text }}</p><span class="sol-journey-token"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="{{ $icon }}"/></svg></span></article>
+                @endforeach
+            </div>
+        </div>
+    </section>
+
+    <section id="documentos" class="sol-section">
+        <div class="sol-shell sol-chapter">
+            <div class="sol-chapter-intro" data-sol-reveal>
+                <span class="sol-chapter-index">01</span>
+                <h2>Comece pela escrituração que você já tem.</h2>
+                <p>O arquivo deixa de ser uma obrigação arquivada e vira uma base navegável: notas, itens, participantes, apurações, retenções e histórico de cadastro.</p>
+                <a href="{{ route('agendar') }}" class="sol-text-link">Ver uma importação real →</a>
+            </div>
+            <div class="sol-feature-grid" data-sol-reveal>
+                <article class="sol-feature-card">
+                    <div class="sol-feature-top"><span class="sol-feature-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg></span><span class="sol-feature-state">Operacional</span></div>
+                    <h3>EFD ICMS/IPI e PIS/COFINS</h3>
+                    <p>Extração de participantes, catálogo, notas de serviços e mercadorias, transportes, apuração de ICMS/IPI e PIS/COFINS e retenções na fonte.</p>
+                    <span class="sol-feature-meta">Blocos A · C · D · E · F · M · progresso SSE</span>
+                </article>
+                <article class="sol-feature-card">
+                    <div class="sol-feature-top"><span class="sol-feature-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 4h8l4 4v12H4V4h4zm0 0v5h8V4"/></svg></span><span class="sol-feature-state">Operacional</span></div>
+                    <h3>XML de NF-e em massa</h3>
+                    <p>Envio avulso ou ZIP, detecção de duplicidade, itens tipados, lotes multiempresa e vínculo assistido entre cliente e contraparte.</p>
+                    <span class="sol-feature-meta">Laravel · NF-e modelo 55 · histórico unificado</span>
+                </article>
+                <article class="sol-feature-card">
+                    <div class="sol-feature-top"><span class="sol-feature-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 7h16v12H4zM8 3h8v4H8zM7 11h4m-4 4h8"/></svg></span><span class="sol-feature-state">Operacional</span></div>
+                    <h3>Notas unificadas e detalhadas</h3>
+                    <p>Uma listagem para documentos EFD e XML, com origem explícita, filtros, partes, itens, tributos e navegação até o detalhe.</p>
+                    <span class="sol-feature-meta">Acervo · EFD vence no dedup analítico</span>
+                </article>
+                <article class="sol-feature-card">
+                    <div class="sol-feature-top"><span class="sol-feature-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 4h14v16H5zM8 8h8m-8 4h8m-8 4h5"/></svg></span><span class="sol-feature-state">Operacional</span></div>
+                    <h3>Catálogo × movimentação</h3>
+                    <p>Cruze registro 0200, NCM, CFOP, CST, alíquotas e itens reais; acompanhe divergência, movimentação e drift do cadastro ao longo do tempo.</p>
+                    <span class="sol-feature-meta">Histórico período-fiel · alertas de NCM</span>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section id="inteligencia" class="sol-section sol-section--soft">
+        <div class="sol-shell">
+            <header class="sol-section-head" data-sol-reveal>
+                <div><span class="sol-kicker">02 — Inteligência fiscal</span><h2 class="sol-heading">Veja a operação por competência, documento e causa.</h2></div>
+                <p>Dashboards servem para investigar. O Resumo Fiscal serve para fechar. Os cruzamentos servem para encontrar aquilo que uma visão isolada não revela.</p>
+            </header>
+            <div class="sol-console" data-sol-reveal>
+                <div class="sol-console-bar"><div class="sol-console-dots"><i></i><i></i><i></i></div><span>cockpit / inteligência fiscal</span></div>
+                <div class="sol-console-body">
+                    <div class="sol-console-kpis">
+                        <div class="sol-console-kpi"><small>Faturamento</small><strong>por período</strong></div>
+                        <div class="sol-console-kpi"><small>Compras</small><strong>por fornecedor</strong></div>
+                        <div class="sol-console-kpi"><small>Tributos</small><strong>apurados</strong></div>
+                        <div class="sol-console-kpi"><small>Alertas</small><strong>por severidade</strong></div>
+                    </div>
+                    <div class="sol-console-chart">
+                        <div class="sol-chart-box"><span class="sol-feature-meta">Evolução por competência</span><div class="sol-chart-bars"><i style="height:38%"></i><i style="height:52%"></i><i style="height:46%"></i><i style="height:68%"></i><i style="height:61%"></i><i style="height:82%"></i><i style="height:74%"></i><i style="height:91%"></i></div></div>
+                        <div class="sol-list-box"><span class="sol-feature-meta">Leituras disponíveis</span><div class="sol-list-row"><span>CFOP e operação</span><strong>drill-down</strong></div><div class="sol-list-row"><span>Apuração × notas</span><strong>confronto</strong></div><div class="sol-list-row"><span>Participantes</span><strong>concentração</strong></div><div class="sol-list-row"><span>Catálogo</span><strong>NCM/CST</strong></div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="sol-feature-grid" style="margin-top:.85rem" data-sol-reveal>
+                <article class="sol-feature-card"><div class="sol-feature-top"><span class="sol-feature-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 4h14v16H5zM8 8h8m-8 4h5m-5 4h8"/></svg></span><span class="sol-feature-state">Executivo</span></div><h3>Resumo Fiscal por competência</h3><p>Consolide a recolher, apuração de ICMS e PIS/COFINS, retenções, cruzamentos e alertas com trilha até a origem.</p><span class="sol-feature-meta">PDF · XLSX · CSV</span></article>
+                <article class="sol-feature-card"><div class="sol-feature-top"><span class="sol-feature-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 19V9m5 10V5m5 14v-7m5 7V3"/></svg></span><span class="sol-feature-state">Analítico</span></div><h3>BI e cruzamentos fiscais</h3><p>Faturamento, compras, tributos, EFD, participantes, risco, CFOP, catálogo, ICMS-ST × regime, estoque e notas canceladas.</p><span class="sol-feature-meta">Filtros · drill-down · exportação</span></article>
+            </div>
+        </div>
+    </section>
+
+    <section id="risco" class="sol-section">
+        <div class="sol-shell">
+            <header class="sol-section-head" data-sol-reveal>
+                <div>
+                    <span class="sol-kicker">03 — Consulta e monitoramento CNPJ</span>
+                    <h2 class="sol-heading">Um CNPJ deixa de ser cadastro. Vira uma decisão acompanhável.</h2>
+                </div>
+                <p>A consulta é a fotografia; o monitoramento é o filme. Identidade, certidões, regime, Score e movimentação mostram o que mudou, quanto isso importa e qual ação vem depois.</p>
+            </header>
+
+            <div class="sol-cnpj-workspace" data-sol-reveal>
+                <article class="sol-cnpj-file">
+                    <div class="sol-cnpj-file-head">
+                        <div><span class="sol-cnpj-file-label">Ficha da contraparte</span><h3>Distribuidora Horizonte Ltda.</h3><span class="sol-cnpj-doc">12.345.678/0001-90</span></div>
+                        <span class="sol-cnpj-badge">Ativa</span>
+                    </div>
+                    <div class="sol-cnpj-score">
+                        <div class="sol-score-dial"><strong>18</strong></div>
+                        <div class="sol-score-copy"><small>Score Fiscal</small><strong>Baixo risco</strong><span>Um vencimento próximo pede acompanhamento.</span></div>
+                    </div>
+                    <div class="sol-cnpj-signals">
+                        <div class="sol-cnpj-signal"><span>CND Federal</span><strong>Negativa</strong></div>
+                        <div class="sol-cnpj-signal"><span>FGTS e CNDT</span><strong>Regulares</strong></div>
+                        <div class="sol-cnpj-signal sol-cnpj-signal--warning"><span>CND Municipal</span><strong>Vence em 12 dias</strong></div>
+                        <div class="sol-cnpj-signal"><span>Regime tributário</span><strong>Lucro Presumido · estimado</strong></div>
+                    </div>
+                    <p class="sol-cnpj-file-foot">Última consulta há 2 dias · metodologia e origem visíveis no detalhe</p>
+                </article>
+
+                <div class="sol-cnpj-analysis">
+                    <div class="sol-cnpj-analysis-head"><h3>Quatro camadas para decidir</h3><p>Cada camada responde uma pergunta diferente antes de contratar, manter, monitorar ou revisar a relação.</p></div>
+                    <div class="sol-cnpj-layers">
+                        <article class="sol-cnpj-layer" data-layer="1"><small>Identidade</small><h4>Quem é e como opera?</h4><p>Situação cadastral, QSA, CNAEs, endereço, porte, capital e regime tributário.</p></article>
+                        <article class="sol-cnpj-layer" data-layer="2"><small>Regularidade</small><h4>Está apto para a decisão?</h4><p>CND Federal, Estadual e Municipal, CNDT, FGTS e inscrição no SINTEGRA.</p></article>
+                        <article class="sol-cnpj-layer" data-layer="3"><small>Relevância fiscal</small><h4>Quanto essa relação representa?</h4><p>Compras, vendas, concentração, documentos e período real extraídos da escrituração.</p></article>
+                        <article class="sol-cnpj-layer" data-layer="4"><small>Evolução</small><h4>O que mudou desde a última leitura?</h4><p>Ciclos de monitoramento, histórico, alerta de vencimento e nova classificação de risco.</p></article>
+                    </div>
+                    <div class="sol-cnpj-actions">
+                        <div class="sol-cnpj-action"><i>01</i><div><small>Agora</small><strong>Consultar individual ou em lote</strong></div></div>
+                        <div class="sol-cnpj-action"><i>02</i><div><small>Contínuo</small><strong>Adicionar a um grupo monitorado</strong></div></div>
+                        <div class="sol-cnpj-action"><i>03</i><div><small>Evidência</small><strong>Gerar alerta, histórico e dossiê</strong></div></div>
+                    </div>
+                    <div class="sol-cnpj-sources">
+                        <span>{{ $activeCnpjSources }} fontes conectadas</span>
+                        <div class="sol-source-cloud">
+                            @foreach(['Cadastro RFB','CND Federal','CND Estadual','CND Municipal','CNDT','FGTS','SINTEGRA'] as $source)
+                                <span class="sol-source-chip">{{ $source }}</span>
                             @endforeach
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</section>
 
-<!-- ============================================================
-     PRODUTO 2 — MONITORAMENTO DE PARTICIPANTES
-============================================================ -->
-<section id="produto-monitoramento" class="py-20 lg:py-28 bg-gray-50 sol-section-fade-in">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            <!-- Mockup (esquerda) -->
-            <div class="lg:order-1">
-                <div class="sol-mockup">
-                    <div class="sol-mockup-header">
-                        <span class="sol-mockup-dot" style="background-color: #ef4444;"></span>
-                        <span class="sol-mockup-dot" style="background-color: #f59e0b;"></span>
-                        <span class="sol-mockup-dot" style="background-color: #10b981;"></span>
-                        <span class="ml-3 text-xs text-gray-500 font-mono">monitoramento/participantes</span>
+            <article class="sol-feature-card sol-feature-card--wide sol-credit-bridge" style="margin-top:.8rem" data-sol-reveal>
+                    <div class="sol-feature-top"><span class="sol-feature-icon" style="background-color:rgba(255,255,255,.09);color:#fde68a"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 7h16M7 4v6m10-6v6M6 14h4m4 0h4M6 18h12"/></svg></span><span class="sol-feature-state">Consulta + crédito</span></div>
+                    <h3>A consulta CNPJ alimenta o eixo de crédito IBS/CBS.</h3>
+                    <p>O resultado não fica isolado em uma certidão. Regime, regularidade e movimentação se combinam para explicar quanto crédito o relacionamento pode gerar — e onde a exposição merece atenção.</p>
+                    <div class="sol-bridge-flow">
+                        <div class="sol-bridge-step"><small>01 · Consulta</small><strong>Identifica MEI, Simples ou Regime Normal</strong></div>
+                        <div class="sol-bridge-step"><small>02 · Qualidade</small><strong>Preserva origem real ou estimada do regime</strong></div>
+                        <div class="sol-bridge-step"><small>03 · Movimento</small><strong>Usa compras e vendas escrituradas no EFD</strong></div>
+                        <div class="sol-bridge-step"><small>04 · Decisão</small><strong>Calcula potencial, aproveitável e em risco</strong></div>
                     </div>
-                    <div class="p-5">
-                        <div class="space-y-2">
-                            @foreach ([
-                                ['Distribuidora Norte Ltda',       '12.345.678/0001-90', 'ATIVA',        '#eefbf5', '#047857', '#c6eed8'],
-                                ['Metalúrgica Horizonte SA',       '98.765.432/0001-11', 'IE SUSPENSA',  '#fef2f2', '#b91c1c', '#fecaca'],
-                                ['Transportes Via Sul ME',         '55.443.322/0001-44', 'PENDENTE',     '#fef8ee', '#b45309', '#f5e6c8'],
-                                ['Comercial Atlas Importação',     '77.112.998/0001-22', 'ATIVA',        '#eefbf5', '#047857', '#c6eed8'],
-                            ] as [$nome, $cnpj, $status, $bg, $fg, $bd])
-                                <div class="flex items-center justify-between px-3 py-3 rounded-lg border border-gray-200 bg-white">
-                                    <div class="flex items-center gap-3 min-w-0">
-                                        <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color: #eef2f7;">
-                                            <svg class="w-4 h-4" fill="none" stroke="#1e4fa0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.93 23.93 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                                        </div>
-                                        <div class="min-w-0">
-                                            <div class="text-xs font-semibold text-gray-900 truncate">{{ $nome }}</div>
-                                            <div class="text-[10px] font-mono text-gray-500">{{ $cnpj }}</div>
-                                        </div>
-                                    </div>
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold flex-shrink-0 ml-2" style="background-color: {{ $bg }}; color: {{ $fg }}; border: 1px solid {{ $bd }};">
-                                        {{ $status }}
-                                    </span>
-                                </div>
-                            @endforeach
-                        </div>
-                        <div class="mt-4 flex items-center justify-between text-xs text-gray-500 px-1">
-                            <span>Última sincronização: há 2 min</span>
-                            <span class="font-semibold" style="color: #1e4fa0;">Ver todos (312)</span>
-                        </div>
-                    </div>
+                    <p class="sol-bridge-note">Se a Receita não publicar o regime, a plataforma pode estimá-lo com origem e ressalva explícitas — nunca sobrescreve informação oficial. Certidões e regularidade qualificam o risco, mas não reduzem o valor estimado em R$ sem evidência oficial de recolhimento.</p>
+            </article>
+            <a href="{{ route('precos') }}#precos-consumo" class="sol-text-link" data-sol-reveal>Comparar os quatro níveis de consulta →</a>
+        </div>
+    </section>
+
+    <section id="reforma" class="sol-section sol-reform sol-dark-grid">
+        <div class="sol-shell sol-reform-grid">
+            <div data-sol-reveal>
+                <span class="sol-kicker sol-kicker--light">04 — Reforma Tributária</span>
+                <h2 class="sol-heading">Preparado para migrar sem perder o fio do crédito.</h2>
+                <p class="sol-lead">A base histórica já está organizada para comparar o regime atual com a transição IBS/CBS. A FiscalDock transforma volume de entradas e regime do fornecedor em uma estimativa financeira de crédito tributário.</p>
+                <div class="sol-reform-bullets">
+                    <div class="sol-reform-bullet">Classifica fornecedor que gera crédito integral, parcial ou nenhum crédito IBS/CBS.</div>
+                    <div class="sol-reform-bullet">Calcula crédito potencial, crédito aproveitável e valor estimado em risco por fornecedor.</div>
+                    <div class="sol-reform-bullet">Mantém alíquotas parametrizadas por ano da transição, de 2026 ao regime pleno.</div>
+                    <div class="sol-reform-bullet">Cruza a estimativa com regularidade fiscal e volume EFD, sem misturar risco de crédito com Score de conformidade.</div>
                 </div>
             </div>
-
-            <!-- Texto -->
-            <div class="lg:order-2">
-                <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-5" style="background-color: #eef2f7; border: 1px solid #dce3ed;">
-                    <svg class="w-7 h-7" fill="none" stroke="#1e4fa0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            <div class="sol-credit-sheet" data-sol-reveal>
+                <div class="sol-credit-sheet-head"><span>Dossiê de crédito IBS/CBS</span><strong>Planejamento de exposição</strong></div>
+                <div class="sol-credit-formula"><small>A conta auditável</small><strong>Volume de entradas × alíquota × fator do regime</strong></div>
+                <div class="sol-credit-steps">
+                    <div class="sol-credit-step"><small>01 · Potencial</small><strong>Quanto existiria no regime regular</strong></div>
+                    <div class="sol-credit-step"><small>02 · Aproveitável</small><strong>Quanto o regime transfere ao comprador</strong></div>
+                    <div class="sol-credit-step"><small>03 · Em risco</small><strong>A diferença que pede decisão</strong></div>
                 </div>
-                <span class="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-600">Radar Fiscal</span>
-                <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-gray-900 mt-2 mb-4">
-                    Saiba antes do fisco quando um fornecedor vira risco
-                </h2>
-                <p class="text-base text-gray-600 leading-relaxed mb-6">
-                    Cada CNPJ extraído do SPED recebe consulta de situação cadastral via Receita Federal e, nas consultas premium pagas, enriquecimento via sistemas públicos oficiais (CND Federal, CND Estadual, CND Municipal, CNDT, FGTS e SINTEGRA).
-                </p>
-                <ul class="space-y-3 mb-7">
-                    @foreach ([
-                        'Detecção de CNPJ baixado ou suspenso',
-                        'Alerta de Inscrição Estadual suspensa ou inidônea',
-                        'Alteração de regime tributário (Simples, Lucro Real)',
-                        'Enriquecimento com dados cadastrais em tempo real',
-                    ] as $bullet)
-                        <li class="flex items-start gap-3">
-                            <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="#1e4fa0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                            <span class="text-sm text-gray-700">{{ $bullet }}</span>
-                        </li>
-                    @endforeach
-                </ul>
-                <a href="{{ route('agendar') }}" class="sol-link-cta">
-                    Agendar demo do Monitoramento
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-                </a>
-                <p class="sol-card-interlinks mt-4 text-xs text-gray-500">
-                    <a href="{{ route('precos') }}#precos-consumo" class="hover:underline" style="color: #1e4fa0">Ver preços</a>
-                    <span class="mx-2 text-gray-300">·</span>
-                    <a href="{{ route('duvidas') }}" class="hover:underline" style="color: #1e4fa0">Tirar dúvida</a>
-                    <span class="mx-2 text-gray-300">·</span>
-                    <a href="{{ route('blog.tema', 'compliance') }}" class="hover:underline" style="color: #1e4fa0">Guia de compliance</a>
-                </p>
+                <div class="sol-transition">
+                    <div class="sol-transition-year"><strong>2026</strong><span>fase de teste · {{ number_format(($reformRates[2026] ?? .01) * 100, 1, ',', '.') }}%</span></div>
+                    <div class="sol-transition-year"><strong>2027–28</strong><span>CBS ganha peso</span></div>
+                    <div class="sol-transition-year"><strong>2029–32</strong><span>IBS sobe por fase</span></div>
+                    <div class="sol-transition-year"><strong>2033+</strong><span>estado pleno · ref. {{ number_format($fullReformRate * 100, 1, ',', '.') }}%</span></div>
+                </div>
+                <p class="sol-reform-note">É uma estimativa parametrizável para planejamento, não apuração oficial nem garantia de aproveitamento. Alíquota real, opção híbrida do Simples e recolhimento efetivo dependem da regulamentação e de fontes oficiais futuras.</p>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- ============================================================
-     PRODUTO 3 — CONSULTAS CNPJ + SCORE DE RISCO
-============================================================ -->
-<section id="produto-consultas" class="py-20 lg:py-28 bg-white sol-section-fade-in">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            <!-- Texto -->
-            <div class="lg:order-1">
-                <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-5" style="background-color: #eef2f7; border: 1px solid #dce3ed;">
-                    <svg class="w-7 h-7" fill="none" stroke="#1e4fa0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    <section id="clearance" class="sol-section sol-section--paper">
+        <div class="sol-shell sol-clearance-grid">
+            <div data-sol-reveal>
+                <span class="sol-kicker">05 — Clearance de documentos</span>
+                <h2 class="sol-heading">O declarado de um lado. A situação oficial do outro.</h2>
+                <p class="sol-lead">Valide NF-e e CT-e já importados ou consulte uma chave diretamente. O motor preserva o acervo declarado e o snapshot oficial para mostrar divergência sem misturar as fontes.</p>
+                <div class="sol-reform-bullets" style="color:var(--sol-ink)">
+                    <div class="sol-reform-bullet" style="color:#536071">Clearance básico individual ou em lote sobre documentos do acervo.</div>
+                    <div class="sol-reform-bullet" style="color:#536071">Busca avulsa por chave com confirmação antes de reconsulta e nova cobrança.</div>
+                    <div class="sol-reform-bullet" style="color:#536071">Classificação operacional, exposição e relatório executivo em PDF.</div>
                 </div>
-                <span class="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-600">Consulta em lote</span>
-                <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-gray-900 mt-2 mb-4">
-                    Consulte centenas de CNPJs em uma operação
-                </h2>
-                <p class="text-base text-gray-600 leading-relaxed mb-6">
-                    Envie uma planilha ou lista de CNPJs e receba situação cadastral, regime tributário, IE, sócios e um score de risco consolidado — tudo em minutos.
-                </p>
-                <ul class="space-y-3 mb-7">
-                    @foreach ([
-                        'Consulta em lote via CSV ou digitação livre',
-                        'Score de risco em beta, baseado em situação cadastral e infrações públicas',
-                        'Relatório detalhado exportável em Excel e CSV',
-                        'Integração oficial com bases públicas e Receita Federal',
-                    ] as $bullet)
-                        <li class="flex items-start gap-3">
-                            <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="#1e4fa0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                            <span class="text-sm text-gray-700">{{ $bullet }}</span>
-                        </li>
-                    @endforeach
-                </ul>
-                <a href="{{ route('agendar') }}" class="sol-link-cta">
-                    Agendar demo das Consultas CNPJ
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-                </a>
-                <p class="sol-card-interlinks mt-4 text-xs text-gray-500">
-                    <a href="{{ route('precos') }}#precos-consumo" class="hover:underline" style="color: #1e4fa0">Ver preços</a>
-                    <span class="mx-2 text-gray-300">·</span>
-                    <a href="{{ route('duvidas') }}" class="hover:underline" style="color: #1e4fa0">Tirar dúvida</a>
-                    <span class="mx-2 text-gray-300">·</span>
-                    <a href="{{ route('blog.tema', 'consultas') }}" class="hover:underline" style="color: #1e4fa0">Guia de consultas CNPJ</a>
-                </p>
             </div>
-
-            <!-- Mockup -->
-            <div class="lg:order-2">
-                <div class="sol-mockup">
-                    <div class="sol-mockup-header">
-                        <span class="sol-mockup-dot" style="background-color: #ef4444;"></span>
-                        <span class="sol-mockup-dot" style="background-color: #f59e0b;"></span>
-                        <span class="sol-mockup-dot" style="background-color: #10b981;"></span>
-                        <span class="ml-3 text-xs text-gray-500 font-mono">consulta/lote_abril.csv</span>
-                    </div>
-                    <div class="p-6">
-                        <div class="flex items-center justify-between mb-3">
-                            <div>
-                                <div class="text-sm font-semibold text-gray-900">Processamento em lote</div>
-                                <div class="text-xs text-gray-500">47 de 120 CNPJs processados</div>
-                            </div>
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold" style="background-color: #eff6ff; color: #1e4fa0; border: 1px solid #bfdbfe;">
-                                em andamento
-                            </span>
-                        </div>
-                        <div class="sol-bar-track mb-5">
-                            <div class="sol-bar-fill" style="width: 39%;"></div>
-                        </div>
-
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between px-3 py-3 rounded-lg border border-gray-200">
-                                <div class="flex items-center gap-3 min-w-0">
-                                    <div class="sol-score" style="background: linear-gradient(135deg, #047857 0%, #10b981 100%);">23</div>
-                                    <div class="min-w-0">
-                                        <div class="text-xs font-semibold text-gray-900 truncate">Indústria Horizonte SA</div>
-                                        <div class="text-[10px] text-gray-500">Simples Nacional · Ativa</div>
-                                    </div>
-                                </div>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold" style="background-color: #eefbf5; color: #047857;">baixo risco</span>
-                            </div>
-                            <div class="flex items-center justify-between px-3 py-3 rounded-lg border border-gray-200">
-                                <div class="flex items-center gap-3 min-w-0">
-                                    <div class="sol-score" style="background: linear-gradient(135deg, #b45309 0%, #f59e0b 100%);">78</div>
-                                    <div class="min-w-0">
-                                        <div class="text-xs font-semibold text-gray-900 truncate">Transportes Vitória Ltda</div>
-                                        <div class="text-[10px] text-gray-500">Lucro Presumido · IE suspensa</div>
-                                    </div>
-                                </div>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold" style="background-color: #fef8ee; color: #b45309;">alto risco</span>
-                            </div>
-                            <div class="flex items-center justify-between px-3 py-3 rounded-lg border border-gray-200">
-                                <div class="flex items-center gap-3 min-w-0">
-                                    <div class="sol-score" style="background: linear-gradient(135deg, #b91c1c 0%, #ef4444 100%);">94</div>
-                                    <div class="min-w-0">
-                                        <div class="text-xs font-semibold text-gray-900 truncate">Metal Forja do Sul ME</div>
-                                        <div class="text-[10px] text-gray-500">CNPJ baixado · CND positiva</div>
-                                    </div>
-                                </div>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold" style="background-color: #fef2f2; color: #b91c1c;">crítico</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="sol-compare" data-sol-reveal>
+                <div class="sol-compare-head"><span>Escrituração</span><i></i><span>Snapshot oficial</span></div>
+                @foreach([
+                    ['Chave 3524…0917', 'Autorizada', true],
+                    ['Total R$ 12.480,00', 'R$ 12.480,00', true],
+                    ['Situação declarada: regular', 'Evento: cancelamento', false],
+                    ['Emitente identificado', 'CNPJ mascarado resolvido', true],
+                ] as [$left, $right, $match])
+                    <div class="sol-compare-row"><span class="sol-compare-value">{{ $left }}</span><span class="sol-match {{ $match ? '' : 'sol-match--alert' }}">{{ $match ? '✓' : '!' }}</span><span class="sol-compare-value">{{ $right }}</span></div>
+                @endforeach
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- ============================================================
-     PRODUTO 4 — BI FISCAL & DASHBOARDS
-============================================================ -->
-<section id="produto-bi" class="py-20 lg:py-28 bg-gray-50 sol-section-fade-in">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            <!-- Mockup -->
-            <div class="lg:order-1">
-                <div class="sol-mockup">
-                    <div class="sol-mockup-header">
-                        <span class="sol-mockup-dot" style="background-color: #ef4444;"></span>
-                        <span class="sol-mockup-dot" style="background-color: #f59e0b;"></span>
-                        <span class="sol-mockup-dot" style="background-color: #10b981;"></span>
-                        <span class="ml-3 text-xs text-gray-500 font-mono">bi/dashboard-fiscal</span>
-                    </div>
-                    <div class="p-5">
-                        <div class="grid grid-cols-2 gap-3 mb-5">
-                            <div class="sol-kpi">
-                                <div class="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Faturamento</div>
-                                <div class="text-lg font-bold text-gray-900 mt-1">R$ 2,41M</div>
-                                <div class="text-[10px] font-semibold" style="color: #047857;">+12,4% vs. mês ant.</div>
-                            </div>
-                            <div class="sol-kpi">
-                                <div class="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Compras</div>
-                                <div class="text-lg font-bold text-gray-900 mt-1">R$ 1,18M</div>
-                                <div class="text-[10px] font-semibold" style="color: #b45309;">+3,8% vs. mês ant.</div>
-                            </div>
-                            <div class="sol-kpi">
-                                <div class="text-[10px] font-semibold uppercase tracking-wider text-gray-500">ICMS a pagar</div>
-                                <div class="text-lg font-bold text-gray-900 mt-1">R$ 184k</div>
-                                <div class="text-[10px] text-gray-500">Apuração mar/26</div>
-                            </div>
-                            <div class="sol-kpi">
-                                <div class="text-[10px] font-semibold uppercase tracking-wider text-gray-500">PIS/COFINS</div>
-                                <div class="text-lg font-bold text-gray-900 mt-1">R$ 62k</div>
-                                <div class="text-[10px] text-gray-500">Não cumulativo</div>
-                            </div>
-                        </div>
-
-                        <div class="border border-gray-200 rounded-lg p-4">
-                            <div class="flex items-center justify-between mb-3">
-                                <span class="text-xs font-semibold text-gray-900">Faturamento por CFOP</span>
-                                <span class="text-[10px] text-gray-500">últimos 30 dias</span>
-                            </div>
-                            <div class="sol-bar-chart">
-                                <div style="height: 85%;" title="5102"></div>
-                                <div style="height: 62%;" title="5405"></div>
-                                <div style="height: 94%;" title="5910"></div>
-                                <div style="height: 38%;" title="6102"></div>
-                                <div style="height: 71%;" title="5101"></div>
-                            </div>
-                            <div class="flex justify-between text-[10px] font-mono text-gray-500 mt-2">
-                                <span>5102</span><span>5405</span><span>5910</span><span>6102</span><span>5101</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Texto -->
-            <div class="lg:order-2">
-                <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-5" style="background-color: #eef2f7; border: 1px solid #dce3ed;">
-                    <svg class="w-7 h-7" fill="none" stroke="#1e4fa0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/></svg>
-                </div>
-                <span class="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-600">Inteligência</span>
-                <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-gray-900 mt-2 mb-4">
-                    Faturamento e compras em dashboards interativos
-                </h2>
-                <p class="text-base text-gray-600 leading-relaxed mb-6">
-                    Todos os dados importados alimentam dashboards por CFOP, participante e período. Visualize compras, vendas, tributos e alertas em um único lugar — com filtros globais e comparação entre clientes.
-                </p>
-                <ul class="space-y-3 mb-7">
-                    @foreach ([
-                        '6 abas: Visão Geral, CFOP, Participantes, Tributário, Alertas, Compliance',
-                        'Filtros globais por período, cliente, participante e tipo de EFD',
-                        'Exportação de tabelas e gráficos em CSV e Excel',
-                        'Comparação rápida entre clientes do escritório',
-                    ] as $bullet)
-                        <li class="flex items-start gap-3">
-                            <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="#1e4fa0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                            <span class="text-sm text-gray-700">{{ $bullet }}</span>
-                        </li>
-                    @endforeach
-                </ul>
-                <a href="{{ route('agendar') }}" class="sol-link-cta">
-                    Agendar demo do BI Fiscal
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-                </a>
-                <p class="sol-card-interlinks mt-4 text-xs text-gray-500">
-                    <a href="{{ route('precos') }}#precos-consumo" class="hover:underline" style="color: #1e4fa0">Ver preços</a>
-                    <span class="mx-2 text-gray-300">·</span>
-                    <a href="{{ route('duvidas') }}" class="hover:underline" style="color: #1e4fa0">Tirar dúvida</a>
-                    <span class="mx-2 text-gray-300">·</span>
-                    <a href="{{ route('blog.tema', 'efd') }}" class="hover:underline" style="color: #1e4fa0">Análise de EFD</a>
-                </p>
+    <section id="acao" class="sol-section">
+        <div class="sol-shell">
+            <header class="sol-section-head" data-sol-reveal>
+                <div><span class="sol-kicker">06 — Da análise para a rotina</span><h2 class="sol-heading">Tudo o que fecha o ciclo operacional.</h2></div>
+                <p>Não basta encontrar. A plataforma organiza o tratamento, preserva o histórico e entrega a evidência no formato que cliente, equipe e auditoria conseguem consumir.</p>
+            </header>
+            <div class="sol-atlas" data-sol-reveal>
+                @foreach([
+                    ['Alertas', 'Central priorizada', 'Notas duplicadas, NCM ausente, certidão positiva ou vencendo, fornecedor irregular e gaps de importação.'],
+                    ['Workflow', 'Status e histórico', 'Marque, trate, resolva e recalcule alertas com metodologia e fonte de dados visíveis.'],
+                    ['Dossiês', 'Um CNPJ ou um lote', 'Gere dossiês de cliente e participante com regularidade, movimentação e crédito IBS/CBS.'],
+                    ['Relatórios', 'PDF, XLSX e CSV', 'Exporte dashboards, listas, resumos, cruzamentos, catálogo, notas e Score Fiscal.'],
+                    ['Cadastros', 'Clientes e participantes', 'Empresa própria automática, carteira administrada, vínculos, grupos e ações em massa.'],
+                    ['Cockpit', 'Dashboard configurável', 'Saldo, consultas, documentos, monitoramento, alertas e atalhos em uma visão operacional.'],
+                    ['Governança', 'LGPD e rastreabilidade', 'Consentimentos, centro de privacidade, exportação de dados, solicitação de exclusão e trilhas.'],
+                    ['Comercial', 'Plano + saldo em reais', 'Assinaturas com limites e recursos, saldo incluso ou avulso, recarga e controle de consumo.'],
+                ] as [$tag, $title, $text])
+                    <article class="sol-atlas-card"><span>{{ $tag }}</span><h3>{{ $title }}</h3><p>{{ $text }}</p></article>
+                @endforeach
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- ============================================================
-     PRODUTO 5 — CLEARANCE NF-e
-============================================================ -->
-<section id="produto-clearance" class="py-20 lg:py-28 bg-white sol-section-fade-in">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            <!-- Texto -->
-            <div class="lg:order-1">
-                <div class="flex items-center gap-3 mb-5">
-                    <div class="w-14 h-14 rounded-xl flex items-center justify-center" style="background-color: #eef2f7; border: 1px solid #dce3ed;">
-                        <svg class="w-7 h-7" fill="none" stroke="#1e4fa0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                    </div>
-                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold" style="background-color: #fef8ee; color: #b45309; border: 1px solid #f5e6c8;">
-                        Em construção
-                    </span>
-                </div>
-                <span class="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-600">Validação Documental</span>
-                <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-gray-900 mt-2 mb-4">
-                    Valide notas fiscais, de serviço e transporte em um só fluxo
-                </h2>
-                <p class="text-base text-gray-600 leading-relaxed mb-6">
-                    Verificação em lote de <strong>NF-e</strong>, <strong>CT-e</strong> e <strong>NFS-e</strong> contra SEFAZ e prefeituras. <strong>Módulo em construção</strong> — release previsto para 2026-Q2. Entre na lista de espera para acompanhar o lançamento.
-                </p>
-                <ul class="space-y-3 mb-7">
-                    @foreach ([
-                        'Validação contra SEFAZ (NF-e/CT-e) e prefeituras (NFS-e) — em construção',
-                        'Detecção de documentos cancelados, denegados ou frios — planejado',
-                        'Confronto automático de valores XML × EFD — planejado',
-                        'Cobertura dos três tipos em uma única operação — planejado',
-                    ] as $bullet)
-                        <li class="flex items-start gap-3">
-                            <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="#1e4fa0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                            <span class="text-sm text-gray-700">{{ $bullet }}</span>
-                        </li>
-                    @endforeach
-                </ul>
-                <a href="{{ route('agendar') }}" class="sol-link-cta">
-                    Entrar na lista de espera
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-                </a>
-                <p class="sol-card-interlinks mt-4 text-xs text-gray-500">
-                    <a href="{{ route('duvidas') }}" class="hover:underline" style="color: #1e4fa0">Quando o Clearance fica disponível?</a>
-                    <span class="mx-2 text-gray-300">·</span>
-                    <a href="{{ route('blog.tema', 'clearance') }}" class="hover:underline" style="color: #1e4fa0">Guia de Clearance NF-e</a>
-                </p>
-            </div>
-
-            <!-- Mockup -->
-            <div class="lg:order-2">
-                <div class="sol-mockup">
-                    <div class="sol-mockup-header">
-                        <span class="sol-mockup-dot" style="background-color: #ef4444;"></span>
-                        <span class="sol-mockup-dot" style="background-color: #f59e0b;"></span>
-                        <span class="sol-mockup-dot" style="background-color: #10b981;"></span>
-                        <span class="ml-3 text-xs text-gray-500 font-mono">clearance/nfe</span>
-                    </div>
-                    <div class="p-6 space-y-4">
-                        <!-- NF-e (mercadorias) -->
-                        <div class="border border-gray-200 rounded-lg p-4">
-                            <div class="flex items-center justify-between mb-2">
-                                <div class="flex items-center gap-2">
-                                    <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold" style="background-color: #eff6ff; color: #1e4fa0; border: 1px solid #bfdbfe;">NF-e</span>
-                                    <span class="text-[10px] font-semibold uppercase tracking-wider text-gray-500">000.184.923</span>
-                                </div>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold" style="background-color: #eefbf5; color: #047857; border: 1px solid #c6eed8;">
-                                    ✓ validada
-                                </span>
-                            </div>
-                            <div class="text-[11px] font-mono text-gray-600 truncate mb-3">35240612345678000190550010001849231234567890</div>
-                            <div class="flex items-center justify-between text-xs">
-                                <span class="text-gray-500">Distribuidora Norte Ltda</span>
-                                <span class="font-semibold text-gray-900">R$ 18.420,00</span>
-                            </div>
-                        </div>
-
-                        <!-- CT-e (transporte) -->
-                        <div class="border border-gray-200 rounded-lg p-4">
-                            <div class="flex items-center justify-between mb-2">
-                                <div class="flex items-center gap-2">
-                                    <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold" style="background-color: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe;">CT-e</span>
-                                    <span class="text-[10px] font-semibold uppercase tracking-wider text-gray-500">000.047.182</span>
-                                </div>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold" style="background-color: #fef8ee; color: #b45309; border: 1px solid #f5e6c8;">
-                                    ⚠ cancelado
-                                </span>
-                            </div>
-                            <div class="text-[11px] font-mono text-gray-600 truncate mb-3">35240655443322000144570030000471821122334455</div>
-                            <div class="flex items-center justify-between text-xs">
-                                <span class="text-gray-500">Transportes Via Sul ME</span>
-                                <span class="font-semibold text-gray-900">R$ 3.140,00</span>
-                            </div>
-                        </div>
-
-                        <!-- NFS-e (serviços) -->
-                        <div class="border border-gray-200 rounded-lg p-4">
-                            <div class="flex items-center justify-between mb-2">
-                                <div class="flex items-center gap-2">
-                                    <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold" style="background-color: #fff7ed; color: #c2410c; border: 1px solid #fed7aa;">NFS-e</span>
-                                    <span class="text-[10px] font-semibold uppercase tracking-wider text-gray-500">2026/00389</span>
-                                </div>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold" style="background-color: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;">
-                                    ✗ divergência
-                                </span>
-                            </div>
-                            <div class="text-[11px] text-gray-600 truncate mb-3">Prefeitura de São Paulo · Consultoria Horizonte SS</div>
-                            <div class="flex items-center justify-between text-xs">
-                                <span class="text-gray-500">XML R$ 9.200 · EFD R$ 8.750</span>
-                                <span class="font-semibold" style="color: #b91c1c;">−R$ 450,00</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <section class="sol-final sol-dark-grid" aria-labelledby="solutions-final-title">
+        <div class="sol-shell" style="position:relative">
+            <span class="sol-kicker sol-kicker--light">A plataforma cresce com a sua operação</span>
+            <h2 id="solutions-final-title">Seu próximo diagnóstico pode começar com um arquivo que você já tem.</h2>
+            <p>Crie a conta com @brl($trialBalance) de saldo grátis por {{ $trialDays }} dias, importe uma escrituração real e veja como documentos, CNPJs, crédito tributário e risco passam a conversar.</p>
+            <div class="sol-final-actions"><a href="{{ route('signup') }}" class="btn-cta">Criar conta grátis</a><a href="{{ route('agendar') }}" class="sol-btn-secondary">Agendar demonstração</a></div>
         </div>
-    </div>
-</section>
-
-<!-- ============================================================
-     PRODUTO 6 — CENTRAL DE ALERTAS
-============================================================ -->
-<section id="produto-alertas" class="py-20 lg:py-28 bg-gray-50 sol-section-fade-in">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            <!-- Mockup -->
-            <div class="lg:order-1">
-                <div class="sol-mockup">
-                    <div class="sol-mockup-header">
-                        <span class="sol-mockup-dot" style="background-color: #ef4444;"></span>
-                        <span class="sol-mockup-dot" style="background-color: #f59e0b;"></span>
-                        <span class="sol-mockup-dot" style="background-color: #10b981;"></span>
-                        <span class="ml-3 text-xs text-gray-500 font-mono">alertas/central</span>
-                    </div>
-                    <div class="p-6">
-                        <div class="sol-timeline-item">
-                            <div class="sol-timeline-icon" style="background-color: #fef2f2; border: 1px solid #fecaca;">
-                                <svg class="w-4 h-4" fill="none" stroke="#b91c1c" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                            </div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold" style="background-color: #fef2f2; color: #b91c1c;">crítico</span>
-                                <span class="text-[10px] text-gray-500">há 12 min</span>
-                            </div>
-                            <div class="text-sm font-semibold text-gray-900">IE suspensa — Metalúrgica Horizonte SA</div>
-                            <div class="text-xs text-gray-500">Inscrição estadual 110.445.221 saiu do SINTEGRA</div>
-                        </div>
-
-                        <div class="sol-timeline-item">
-                            <div class="sol-timeline-icon" style="background-color: #fef8ee; border: 1px solid #f5e6c8;">
-                                <svg class="w-4 h-4" fill="none" stroke="#b45309" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            </div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold" style="background-color: #fef8ee; color: #b45309;">atenção</span>
-                                <span class="text-[10px] text-gray-500">há 2 h</span>
-                            </div>
-                            <div class="text-sm font-semibold text-gray-900">Mudança de regime — Comercial Atlas</div>
-                            <div class="text-xs text-gray-500">Migração Simples → Lucro Presumido detectada</div>
-                        </div>
-
-                        <div class="sol-timeline-item">
-                            <div class="sol-timeline-icon" style="background-color: #eff6ff; border: 1px solid #bfdbfe;">
-                                <svg class="w-4 h-4" fill="none" stroke="#1e4fa0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                            </div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold" style="background-color: #eff6ff; color: #1e4fa0;">informativo</span>
-                                <span class="text-[10px] text-gray-500">há 4 h</span>
-                            </div>
-                            <div class="text-sm font-semibold text-gray-900">312 participantes sincronizados</div>
-                            <div class="text-xs text-gray-500">Última sincronização da importação mar/26 concluída</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Texto -->
-            <div class="lg:order-2">
-                <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-5" style="background-color: #eef2f7; border: 1px solid #dce3ed;">
-                    <svg class="w-7 h-7" fill="none" stroke="#1e4fa0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                </div>
-                <span class="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-600">Notificações</span>
-                <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-gray-900 mt-2 mb-4">
-                    Toda irregularidade vira um alerta acionável
-                </h2>
-                <p class="text-base text-gray-600 leading-relaxed mb-6">
-                    Irregularidades cadastrais, divergências de dados e vencimentos fiscais chegam em uma central única, priorizados por severidade e acompanhados do contexto necessário para agir.
-                </p>
-                <ul class="space-y-3 mb-7">
-                    @foreach ([
-                        'Classificação automática por severidade',
-                        'Entrega por e-mail e notificação in-app',
-                        'Histórico auditável com triagem e responsáveis',
-                        'Integração nativa com o monitoramento de participantes',
-                    ] as $bullet)
-                        <li class="flex items-start gap-3">
-                            <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="#1e4fa0" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                            <span class="text-sm text-gray-700">{{ $bullet }}</span>
-                        </li>
-                    @endforeach
-                </ul>
-                <a href="{{ route('agendar') }}" class="sol-link-cta">
-                    Agendar demo da Central de Alertas
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-                </a>
-                <p class="sol-card-interlinks mt-4 text-xs text-gray-500">
-                    <a href="{{ route('precos') }}#precos-consumo" class="hover:underline" style="color: #1e4fa0">Ver preços</a>
-                    <span class="mx-2 text-gray-300">·</span>
-                    <a href="{{ route('duvidas') }}" class="hover:underline" style="color: #1e4fa0">Tirar dúvida</a>
-                    <span class="mx-2 text-gray-300">·</span>
-                    <a href="{{ route('blog.tema', 'compliance') }}" class="hover:underline" style="color: #1e4fa0">Riscos fiscais no blog</a>
-                </p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ============================================================
-     CTA FINAL
-============================================================ -->
-<section class="sol-hero-gradient py-16 md:py-24 text-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center sol-fade-in-up">
-            <h2 class="text-3xl md:text-5xl font-extrabold tracking-tight mb-5">
-                Chega de risco fiscal no escuro
-            </h2>
-            <p class="text-lg md:text-xl text-blue-100 max-w-3xl mx-auto mb-8">
-                Comece gratuitamente e monitore fornecedores, importe SPED e antecipe irregularidades antes que virem autuações.
-            </p>
-            <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                <a href="{{ route('agendar') }}" class="sol-cta-primary inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-base">
-                    Agendar demonstração
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-                </a>
-                <a href="{{ route('precos') }}" class="sol-cta-secondary inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-base">
-                    Ver preços
-                </a>
-            </div>
-        </div>
-    </div>
-</section>
-
-<script>
-    (function () {
-        function setupScrollAnimations() {
-            const sections = document.querySelectorAll('.sol-section-fade-in');
-            if (!('IntersectionObserver' in window)) {
-                sections.forEach(s => s.classList.add('visible'));
-                return;
-            }
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-
-            sections.forEach(section => observer.observe(section));
-        }
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', setupScrollAnimations);
-        } else {
-            setupScrollAnimations();
-        }
-    })();
-</script>
+    </section>
+</div>

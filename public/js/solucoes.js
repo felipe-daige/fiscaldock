@@ -1,173 +1,119 @@
-// Função específica para a página de soluções
-window._solucoesSwiper = window._solucoesSwiper || null;
-window._solucoesAccordionHandlers = window._solucoesAccordionHandlers || [];
+(function () {
+    'use strict';
 
-function initSolucoes() {
-    // Destruir instância Swiper anterior se existir
-    if (_solucoesSwiper && typeof _solucoesSwiper.destroy === 'function') {
-        try {
-            _solucoesSwiper.destroy(true, true);
-        } catch (error) {
-            console.error('Erro ao destruir Swiper anterior:', error);
-        }
-        _solucoesSwiper = null;
-    }
-    
-    // Verificar se o elemento existe antes de criar Swiper
-    const swiperElement = document.querySelector('.solutions-swiper');
-    if (!swiperElement) {
-        return;
-    }
-    
-    // Inicializar Swiper com scroll contínuo fluido profissional
-    _solucoesSwiper = new Swiper('.solutions-swiper', {
-        slidesPerView: 'auto',
-        spaceBetween: 24,
-        freeMode: true,
-        freeModeMomentum: false,
-        speed: 4000,
-        autoplay: {
-            delay: 0,
-            disableOnInteraction: false,
-            pauseOnMouseEnter: false,
-            stopOnLastSlide: false,
-        },
-        loop: true,
-        allowTouchMove: false,
-        simulateTouch: false,
-        grabCursor: false,
-        breakpoints: {
-            320: {
-                slidesPerView: 1.2,
-                spaceBetween: 16,
-            },
-            640: {
-                slidesPerView: 2.2,
-                spaceBetween: 20,
-            },
-            1024: {
-                slidesPerView: 3.2,
-                spaceBetween: 24,
-            },
-            1280: {
-                slidesPerView: 4.2,
-                spaceBetween: 24,
-            }
-        }
-    });
-    
-    // Registrar Swiper no sistema de recursos
-    if (window._spaResources) {
-        window._spaResources.swipers.push(_solucoesSwiper);
-    }
-    
-    // Inicializar accordion de soluções
-    initSolucoesAccordion();
-}
+    document.documentElement.classList.add('js');
 
-// Função para inicializar accordion de soluções
-function initSolucoesAccordion() {
-    const accordionItems = document.querySelectorAll('.solution-accordion-item');
-    
-    if (accordionItems.length === 0) return;
-    
-    // Remover listeners antigos se existirem
-    _solucoesAccordionHandlers.forEach(({ element, handler }) => {
-        if (element && handler) {
-            element.removeEventListener('click', handler);
+    const state = {
+        revealObserver: null,
+        sectionObserver: null,
+        listeners: [],
+        initialized: false,
+    };
+
+    function cleanupSolucoes() {
+        if (state.revealObserver) {
+            state.revealObserver.disconnect();
+            state.revealObserver = null;
         }
-    });
-    _solucoesAccordionHandlers = [];
-    
-    accordionItems.forEach((item) => {
-        const header = item.querySelector('.solution-accordion-header');
-        const content = item.querySelector('.solution-accordion-content');
-        const svg = header?.querySelector('svg');
-        
-        if (!header || !content) return;
-        
-        // Criar handler para este item
-        const handler = function(e) {
-            e.preventDefault();
-            
-            const isActive = item.classList.contains('active');
-            const contentDiv = content.querySelector('div');
-            
-            // Toggle atual
-            if (isActive) {
-                item.classList.remove('active');
-                content.style.maxHeight = '0';
-                content.style.opacity = '0';
-                if (svg) {
-                    svg.style.transform = 'rotate(0deg)';
-                }
-            } else {
-                item.classList.add('active');
-                if (contentDiv) {
-                    content.style.maxHeight = contentDiv.scrollHeight + 'px';
+
+        if (state.sectionObserver) {
+            state.sectionObserver.disconnect();
+            state.sectionObserver = null;
+        }
+
+        state.listeners.forEach(({ element, event, handler }) => {
+            element.removeEventListener(event, handler);
+        });
+
+        state.listeners = [];
+        state.initialized = false;
+        window._solucoesInitialized = false;
+    }
+
+    function initReveal() {
+        const elements = document.querySelectorAll('[data-sol-reveal]');
+
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) {
+            elements.forEach((element) => element.classList.add('is-visible'));
+            return;
+        }
+
+        state.revealObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add('is-visible');
+                observer.unobserve(entry.target);
+            });
+        }, {
+            rootMargin: '0px 0px -8% 0px',
+            threshold: 0.08,
+        });
+
+        elements.forEach((element) => state.revealObserver.observe(element));
+    }
+
+    function initSectionNavigation() {
+        const links = [...document.querySelectorAll('.sol-anchor-link[href^="#"]')];
+        const linkById = new Map(links.map((link) => [link.getAttribute('href').slice(1), link]));
+        const sections = [...linkById.keys()]
+            .map((id) => document.getElementById(id))
+            .filter(Boolean);
+
+        const activate = (id) => {
+            links.forEach((link) => {
+                const active = link.getAttribute('href') === `#${id}`;
+                link.classList.toggle('is-active', active);
+                if (active) {
+                    link.setAttribute('aria-current', 'true');
+                    link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                 } else {
-                    content.style.maxHeight = content.scrollHeight + 'px';
+                    link.removeAttribute('aria-current');
                 }
-                content.style.opacity = '1';
-                if (svg) {
-                    svg.style.transform = 'rotate(180deg)';
-                }
-            }
+            });
         };
-        
-        header.addEventListener('click', handler);
-        _solucoesAccordionHandlers.push({ element: header, handler });
-        
-        // Estado inicial - fechado
-        content.style.maxHeight = '0';
-        content.style.opacity = '0';
-        content.style.transition = 'max-height 0.3s ease, opacity 0.3s ease';
-        if (svg) {
-            svg.style.transition = 'transform 0.3s ease';
-        }
-    });
-    
-    // Expandir accordion se houver hash no URL
-    const hash = window.location.hash;
-    if (hash) {
-        const targetId = hash.substring(1); // Remove o #
-        const targetItem = document.getElementById(targetId);
-        if (targetItem && targetItem.classList.contains('solution-accordion-item')) {
-            const header = targetItem.querySelector('.solution-accordion-header');
-            if (header) {
-                // Simular clique após um pequeno delay para garantir que o DOM está pronto
-                setTimeout(() => {
-                    header.click();
-                    // Scroll suave até o elemento
-                    targetItem.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 100);
-            }
-        }
-    }
-}
 
-// Função de limpeza para recursos da página de soluções
-function cleanupSolucoes() {
-    if (_solucoesSwiper && typeof _solucoesSwiper.destroy === 'function') {
-        try {
-            _solucoesSwiper.destroy(true, true);
-        } catch (error) {
-            console.error('Erro ao destruir Swiper:', error);
-        }
-        _solucoesSwiper = null;
-    }
-    
-    // Limpar handlers do accordion
-    _solucoesAccordionHandlers.forEach(({ element, handler }) => {
-        if (element && handler) {
-            element.removeEventListener('click', handler);
-        }
-    });
-    _solucoesAccordionHandlers = [];
-}
+        links.forEach((link) => {
+            const handler = () => activate(link.getAttribute('href').slice(1));
+            link.addEventListener('click', handler);
+            state.listeners.push({ element: link, event: 'click', handler });
+        });
 
-// Registrar função de cleanup no sistema global
-if (!window._cleanupFunctions) {
-    window._cleanupFunctions = {};
-}
-window._cleanupFunctions.initSolucoes = cleanupSolucoes;
+        if (!('IntersectionObserver' in window)) return;
+
+        state.sectionObserver = new IntersectionObserver((entries) => {
+            const visible = entries
+                .filter((entry) => entry.isIntersecting)
+                .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+            if (visible) activate(visible.target.id);
+        }, {
+            rootMargin: '-20% 0px -62% 0px',
+            threshold: [0, 0.1, 0.25],
+        });
+
+        sections.forEach((section) => state.sectionObserver.observe(section));
+    }
+
+    function initSolucoes() {
+        if (!document.querySelector('.solutions-page')) return;
+
+        if (state.initialized) cleanupSolucoes();
+
+        initReveal();
+        initSectionNavigation();
+
+        state.initialized = true;
+        window._solucoesInitialized = true;
+    }
+
+    window.initSolucoes = initSolucoes;
+    window.cleanupSolucoes = cleanupSolucoes;
+    window._cleanupFunctions = window._cleanupFunctions || {};
+    window._cleanupFunctions.initSolucoes = cleanupSolucoes;
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSolucoes, { once: true });
+    } else {
+        initSolucoes();
+    }
+})();

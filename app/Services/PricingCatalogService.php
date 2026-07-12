@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\CreditTransaction;
 use App\Models\MonitoramentoPlano;
 use App\Models\User;
+use App\Support\Monitoramento\PlanoCatalog;
 
 class PricingCatalogService
 {
@@ -30,7 +31,7 @@ class PricingCatalogService
     }
 
     /**
-     * Ofertas promocionais destacadas.
+     * Atalhos de recarga destacados.
      */
     public function getFeaturedOffers(): array
     {
@@ -40,10 +41,10 @@ class PricingCatalogService
                 'nome' => 'Business',
                 'creditos' => 1000,
                 'preco' => 200.00,
-                'badge' => 'Promocional',
-                'usage_hint' => 'Para volume mensal',
+                'badge' => 'Recarga rápida',
+                'usage_hint' => 'Para a rotina do mês',
                 'featured' => true,
-                'descricao' => 'Atalho promocional para rotina mensal com saldo forte de entrada.',
+                'descricao' => 'Um atalho de recarga para manter a rotina fiscal em movimento, sem assinatura obrigatória.',
             ],
             [
                 // slug 'enterprise' mantido por compatibilidade de rota; nome de exibição
@@ -52,10 +53,10 @@ class PricingCatalogService
                 'nome' => 'Volume',
                 'creditos' => 5000,
                 'preco' => 1000.00,
-                'badge' => 'Escala',
+                'badge' => 'Maior volume',
                 'usage_hint' => 'Para operação intensiva',
                 'featured' => false,
-                'descricao' => 'Atalho promocional para operações intensivas que precisam acelerar saldo.',
+                'descricao' => 'Recarga direta para operações com maior volume de consultas e validações.',
             ],
         ];
     }
@@ -177,8 +178,7 @@ class PricingCatalogService
     }
 
     /**
-     * Fontes de dados que compõem o produto Compliance.
-     * Status: ativo (já operacional), em_implementacao (em rollout), em_breve (roadmap).
+     * Fontes operacionais que compõem o produto Compliance.
      */
     public function getComplianceSources(): array
     {
@@ -194,74 +194,69 @@ class PricingCatalogService
                 'slug' => 'cnd_federal',
                 'nome' => 'CND Federal (PGFN/RFB)',
                 'categoria' => 'Fiscal obrigatória',
-                'status' => 'em_implementacao',
+                'status' => 'ativo',
                 'descricao_curta' => 'Certidão Negativa de Débitos Federais e Dívida Ativa da União.',
             ],
             [
                 'slug' => 'cnd_estadual',
                 'nome' => 'CND Estadual (SEFAZ)',
                 'categoria' => 'Fiscal obrigatória',
-                'status' => 'em_breve',
+                'status' => 'ativo',
                 'descricao_curta' => 'Certidão estadual nas 27 UFs via SEFAZ.',
             ],
             [
                 'slug' => 'cnd_municipal',
                 'nome' => 'CND Municipal (Prefeituras)',
                 'categoria' => 'Fiscal obrigatória',
-                'status' => 'em_breve',
+                'status' => 'ativo',
                 'descricao_curta' => 'Certidão municipal por cidade do participante.',
             ],
             [
                 'slug' => 'cndt',
                 'nome' => 'CNDT (TST)',
                 'categoria' => 'Trabalhista obrigatória',
-                'status' => 'em_breve',
+                'status' => 'ativo',
                 'descricao_curta' => 'Certidão Negativa de Débitos Trabalhistas — exigida em licitação.',
             ],
             [
                 'slug' => 'crf_fgts',
                 'nome' => 'CRF FGTS (Caixa)',
                 'categoria' => 'FGTS obrigatória',
-                'status' => 'em_breve',
+                'status' => 'ativo',
                 'descricao_curta' => 'Certificado de Regularidade do FGTS.',
             ],
             [
                 'slug' => 'sintegra',
                 'nome' => 'SINTEGRA unificada',
                 'categoria' => 'Cadastral estadual',
-                'status' => 'em_breve',
+                'status' => 'ativo',
                 'descricao_curta' => 'Inscrição estadual ativa — protege crédito de ICMS.',
             ],
         ];
     }
 
     /**
-     * Catálogo comercial público — preço único por plano (sem faixas de volume).
+     * Catálogo comercial público dos produtos de consulta CNPJ ativos.
+     *
+     * A composição e a descrição vêm do PlanoCatalog para a landing não criar uma
+     * segunda fonte de verdade. Due Diligence e Enterprise permanecem fora porque
+     * estão inativos; Clearance tem catálogo e feature flags próprios.
      */
     public function getProductCatalog(): array
     {
-        return [
-            [
-                'slug' => 'validacao',
-                'nome' => 'Validação',
-                'descricao' => 'Consulta fiscal básica de CNPJ com Simples Nacional e SINTEGRA para qualificação inicial.',
-            ],
-            [
-                'slug' => 'licitacao',
-                'nome' => 'Licitação',
-                'descricao' => 'Consulta para editais e contratação pública com CND Federal, CNDT e FGTS.',
-            ],
-            [
-                'slug' => 'compliance',
-                'nome' => 'Compliance',
-                'descricao' => 'Consulta de regularidade fiscal e trabalhista completa por CNPJ.',
-            ],
-            [
-                'slug' => 'clearance',
-                'nome' => 'Clearance',
-                'descricao' => 'Validação premium de notas fiscais com custo mais alto por consulta, preservando o posicionamento premium do produto.',
-            ],
-        ];
+        return collect(PlanoCatalog::definitions())
+            ->filter(fn (array $plano) => ($plano['is_active'] ?? false) === true)
+            ->map(fn (array $plano) => [
+                'slug' => $plano['codigo'],
+                'nome' => $plano['nome'],
+                'descricao' => $plano['descricao'],
+                'consultas_incluidas' => $plano['consultas_incluidas'],
+                'is_gratuito' => $plano['is_gratuito'],
+                'ordem' => $plano['ordem'],
+            ])
+            ->sortBy('ordem')
+            ->values()
+            ->all();
     }
 
     /**
@@ -319,6 +314,8 @@ class PricingCatalogService
                 'slug' => $product['slug'],
                 'nome' => $product['nome'],
                 'descricao' => $product['descricao'],
+                'consultas_incluidas' => $product['consultas_incluidas'],
+                'is_gratuito' => $product['is_gratuito'],
                 'price' => $price,
                 'price_label' => \App\Support\Dinheiro::brl($price).'/consulta',
                 'price_for_100' => $price * 100,
