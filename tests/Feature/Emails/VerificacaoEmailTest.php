@@ -100,6 +100,14 @@ it('link de verificacao sem assinatura valida da 403', function () {
     $this->get("/email/verificar/{$user->id}/".sha1($user->email))->assertForbidden();
 });
 
+it('verification.notice (F7 preventivo) existe e nao da 500', function () {
+    // Deslogado → login.
+    $this->get('/email/verificar')->assertRedirect('/login');
+
+    // Logado → perfil.
+    $this->actingAs(User::factory()->create())->get('/email/verificar')->assertRedirect('/app/perfil');
+});
+
 it('reenviar verificacao dispara VerifyEmail e recusa quem ja verificou', function () {
     $user = User::factory()->unverified()->create();
 

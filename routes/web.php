@@ -3,7 +3,6 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\PasswordResetController;
-use App\Http\Controllers\SaldoController;
 use App\Http\Controllers\Dashboard\BiController;
 use App\Http\Controllers\Dashboard\CatalogoController;
 use App\Http\Controllers\Dashboard\ClearanceController;
@@ -22,6 +21,7 @@ use App\Http\Controllers\Dashboard\SupportController;
 use App\Http\Controllers\Landing\BlogController;
 use App\Http\Controllers\Landing\LandingPageController;
 use App\Http\Controllers\Landing\SitemapController;
+use App\Http\Controllers\SaldoController;
 use App\Http\Middleware\RequiresEntitlement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -76,6 +76,13 @@ Route::get('/email/verificar/{id}/{hash}', [EmailVerificationController::class, 
     ->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
 Route::get('/perfil/email/confirmar/{user}/{hash}', [EmailVerificationController::class, 'confirmarTroca'])
     ->middleware(['signed', 'throttle:6,1'])->name('perfil.email.confirmar');
+
+// Preventivo (F7): o middleware `verified` do Laravel redireciona pra route('verification.notice')
+// quando o e-mail não está confirmado. Não usamos `verified` hoje (MustVerifyEmail é SOFT), mas se
+// alguém adicionar sem registrar esta rota, dá 500. Aqui ela só manda pro perfil (logado) ou login.
+Route::get('/email/verificar', function () {
+    return \Illuminate\Support\Facades\Auth::check() ? redirect('/app/perfil') : redirect('/login');
+})->name('verification.notice');
 
 Route::post('/lead/banner-contato', [LandingPageController::class, 'capturarLead'])
     ->name('landing.lead.banner');
