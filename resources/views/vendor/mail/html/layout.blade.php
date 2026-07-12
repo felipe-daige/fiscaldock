@@ -7,6 +7,41 @@
 <meta name="color-scheme" content="light">
 <meta name="supported-color-schemes" content="light">
 <style>
+/* Trava tema CLARO independente do dark mode do aparelho. `color-scheme: light only`
+   faz Apple Mail / iOS renderizarem exatamente como desenhado (sem auto-inversão). O
+   bloco @media dark re-força a paleta nos clientes que respeitam a media query,
+   mirando só os contêineres estruturais e os textos do corpo — os blocos coloridos
+   (header, hero, ficha) já carregam cor inline e não devem ser tocados aqui. */
+:root {
+color-scheme: light only;
+supported-color-schemes: light only;
+}
+body {
+color-scheme: light only;
+supported-color-schemes: light only;
+}
+
+@media (prefers-color-scheme: dark) {
+body, .wrapper, .body {
+background-color: #eef1f5 !important;
+}
+.inner-body {
+background-color: #ffffff !important;
+}
+.content-cell {
+background-color: #ffffff !important;
+}
+h1, h2, h3 {
+color: #0f172a !important;
+}
+.content-cell p {
+color: #1f2937 !important;
+}
+.footer, .footer td {
+background-color: #eef1f5 !important;
+}
+}
+
 @media only screen and (max-width: 600px) {
 .inner-body {
 width: 100% !important;
