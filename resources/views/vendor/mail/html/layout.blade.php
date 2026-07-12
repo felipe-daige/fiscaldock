@@ -4,42 +4,27 @@
 <title>{{ config('app.name') }}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<meta name="color-scheme" content="light">
-<meta name="supported-color-schemes" content="light">
+<meta name="color-scheme" content="only light">
+<meta name="supported-color-schemes" content="only light">
 <style>
-/* Trava tema CLARO independente do dark mode do aparelho. `color-scheme: light only`
-   faz Apple Mail / iOS renderizarem exatamente como desenhado (sem auto-inversão). O
-   bloco @media dark re-força a paleta nos clientes que respeitam a media query,
-   mirando só os contêineres estruturais e os textos do corpo — os blocos coloridos
-   (header, hero, ficha) já carregam cor inline e não devem ser tocados aqui. */
+/* Trava tema CLARO independente do dark mode do aparelho. color-scheme only light
+   (keyword correto: "only light", nao "light only") pede pra Apple Mail / iOS
+   renderizarem como desenhado, sem auto-inversao.
+
+   NAO ha bloco de dark-mode aqui de proposito: declarar estilo de dark sinaliza pro
+   iOS que o email "suporta dark" e o faz ENTRAR em dark, anulando o only light. Sem
+   isso, cliente que honra o color-scheme nem entra em dark; o que NAO honra inverte o
+   render abaixo do CSS (media query nao ganha da inversao — foi o que deixava texto
+   branco-no-branco). A defesa vive nos blocos: fundo SATURADO travado por gradiente
+   (Blocos::bgSolido, texto branco = ok invertido ou nao); fundo CLARO livre pra
+   escurecer junto com o texto que clareia = continua legivel. */
 :root {
-color-scheme: light only;
-supported-color-schemes: light only;
+color-scheme: only light;
+supported-color-schemes: only light;
 }
 body {
-color-scheme: light only;
-supported-color-schemes: light only;
-}
-
-@media (prefers-color-scheme: dark) {
-body, .wrapper, .body {
-background-color: #eef1f5 !important;
-}
-.inner-body {
-background-color: #ffffff !important;
-}
-.content-cell {
-background-color: #ffffff !important;
-}
-h1, h2, h3 {
-color: #0f172a !important;
-}
-.content-cell p {
-color: #1f2937 !important;
-}
-.footer, .footer td {
-background-color: #eef1f5 !important;
-}
+color-scheme: only light;
+supported-color-schemes: only light;
 }
 
 @media only screen and (max-width: 600px) {

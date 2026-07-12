@@ -187,7 +187,7 @@ class Blocos
         return new HtmlString(
             '<table width="100%" cellpadding="0" cellspacing="0" role="presentation" '
             .'style="margin: 22px 0; border: 1px solid '.self::BORDA.'; border-radius: 4px; '
-            .self::bgSolido(self::FUNDO_SUAVE).'"><tr>'.$celulas.'</tr></table>'
+            .'background-color: '.self::FUNDO_SUAVE.';"><tr>'.$celulas.'</tr></table>'
         );
     }
 
@@ -242,9 +242,9 @@ class Blocos
 
             $linhas .= '<tr>'
                 .'<td style="padding: 11px 16px; font-size: 13px; color: '.self::TEXTO_SUAVE.'; '
-                .self::bgSolido($fundo).' white-space: nowrap;">'.e($rotulo).'</td>'
+                .'background-color: '.$fundo.'; white-space: nowrap;">'.e($rotulo).'</td>'
                 .'<td align="right" style="padding: 11px 16px; font-size: 13px; font-weight: 600; '
-                .'color: '.self::TEXTO.'; '.self::bgSolido($fundo).' text-align: right;">'.e($valor).'</td>'
+                .'color: '.self::TEXTO.'; background-color: '.$fundo.'; text-align: right;">'.e($valor).'</td>'
                 .'</tr>';
         }
 
@@ -252,7 +252,7 @@ class Blocos
             '<table width="100%" cellpadding="0" cellspacing="0" role="presentation" '
             .'style="margin: 22px 0; border: 1px solid '.self::BORDA.'; border-radius: 4px; '
             .'border-collapse: separate; overflow: hidden;">'
-            .'<tr><td colspan="2" style="padding: 10px 16px; '.self::bgSolido('#eef1f5').' '
+            .'<tr><td colspan="2" style="padding: 10px 16px; background-color: #eef1f5; '
             .'border-bottom: 1px solid '.self::BORDA.'; font-size: 10px; font-weight: 700; '
             .'letter-spacing: 0.1em; text-transform: uppercase; color: #56616f;">'.e($titulo).'</td></tr>'
             .$linhas
@@ -266,7 +266,7 @@ class Blocos
         return new HtmlString(
             '<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin: 22px 0;">'
             .'<tr><td style="padding: 16px 18px; border-left: 3px solid '.$cor.'; '
-            .self::bgSolido(self::FUNDO_SUAVE).' border-radius: 0 4px 4px 0; font-size: 14px; '
+            .'background-color: '.self::FUNDO_SUAVE.'; border-radius: 0 4px 4px 0; font-size: 14px; '
             .'color: '.self::TEXTO_SUAVE.'; line-height: 1.6;">'.$texto.'</td></tr></table>'
         );
     }
@@ -292,7 +292,7 @@ class Blocos
 
             $linhas .= '<tr>'
                 .'<td width="4" style="'.self::bgSolido($cor).'"></td>'
-                .'<td style="padding: 13px 16px; '.self::bgSolido('#ffffff').' border-bottom: '.$borda.';">'
+                .'<td style="padding: 13px 16px; background-color: #ffffff; border-bottom: '.$borda.';">'
                 .'<div style="font-size: 14px; font-weight: 600; color: '.self::TEXTO.'; line-height: 1.4;">'.e($item['titulo']).'</div>'
                 .$valor
                 .'</td>'
@@ -313,14 +313,21 @@ class Blocos
     }
 
     /**
-     * Snippet de fundo sólido que SOBREVIVE ao dark mode do iOS Mail.
+     * Fundo sólido que SOBREVIVE ao dark mode do iOS Mail. Usar **só em fundo
+     * SATURADO com texto claro em cima** (navy, dourado, vermelho, verde) — nunca em
+     * fundo branco/claro.
      *
-     * iOS Mail (iPhone) transforma `background-color` no dark mode mesmo com
-     * `color-scheme: light` — clareia navy para azul-bebê. Mas NÃO transforma
-     * `background-image`. Então declaramos a cor como um gradiente sólido (mesma cor
-     * nas duas pontas) além do `background-color`: o iOS respeita o gradiente e mantém
-     * a cor; o Outlook (motor Word, ignora gradiente) cai no `background-color`. macOS
-     * Mail já respeitava `color-scheme`, então não muda nada lá.
+     * iOS Mail (iPhone) às vezes ignora `color-scheme: only light` e transforma o
+     * render no dark mode: `background-color` é clareado (navy → azul-bebê), mas
+     * `background-image` NÃO. Declarar a cor também como gradiente sólido (mesma cor
+     * nas duas pontas) segura o iOS; o Outlook (ignora gradiente) cai no
+     * `background-color`; os demais veem sólido idêntico.
+     *
+     * **Por que não em fundo claro:** o texto ESCURO desses blocos o iOS clareia (sem
+     * escape equivalente ao bg-image). Se travássemos o fundo branco, o texto clareado
+     * ficaria branco-no-branco (invisível). Deixando o fundo claro seguir o iOS, ele
+     * escurece junto com o texto que clareia → continua legível. Fundo saturado tem
+     * texto branco, que o iOS mantém claro → branco sobre navy = ok nos dois casos.
      */
     public static function bgSolido(string $cor): string
     {
