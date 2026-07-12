@@ -323,7 +323,10 @@ it('origem NULL com notas EFD vinculadas exibe "EFD (SPED importado)" e o card e
         ->assertSee('Como é calculado')
         ->assertSee('Crédito potencial')
         // MEI: fator 0 → em risco = 100% do potencial (1000 × 28,5% = 285)
-        ->assertSee('R$ 285,00');
+        ->assertSee('R$ 285,00')
+        // Período coberto pelo volume (nota única de 01/2026)
+        ->assertSee('Emissões de 01/2026')
+        ->assertSee('acumulado do período');
 });
 
 it('origem NULL sem vínculo EFD segue exibindo traço', function () {

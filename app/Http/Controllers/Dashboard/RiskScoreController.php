@@ -213,12 +213,23 @@ class RiskScoreController extends Controller
         // (P1 participante-scoped + sem canceladas): converge com a ficha `/app/participante` e
         // com o dossiê. O SUM cru da relação dobrava a NF-e escriturada nas duas EFD e somava
         // canceladas — inflava o volume e o crédito da reforma calculado a partir dele.
-        $volumeEfd = (float) \App\Models\EfdNota::query()
+        $volumeAgg = \App\Models\EfdNota::query()
             ->where('user_id', $participante->user_id)
             ->where('participante_id', $participante->id)
             ->where('cancelada', false)
             ->whereRaw(\App\Services\BiService::dedupParticipanteSql('efd_notas'))
-            ->sum('valor_total');
+            ->selectRaw('COALESCE(SUM(valor_total), 0) as volume, MIN(data_emissao) as primeira, MAX(data_emissao) as ultima')
+            ->first();
+
+        $volumeEfd = (float) $volumeAgg->volume;
+        // Período coberto pelo volume (contextualiza o crédito em risco: é o acumulado
+        // dessas emissões, não uma taxa anual).
+        $volumePeriodo = $volumeAgg->primeira !== null
+            ? [
+                'inicio' => \Carbon\Carbon::parse($volumeAgg->primeira)->format('m/Y'),
+                'fim' => \Carbon\Carbon::parse($volumeAgg->ultima)->format('m/Y'),
+            ]
+            : null;
 
         $scoreModel = $participante->score;
         $detalhamento = $scoreModel
@@ -242,6 +253,7 @@ class RiskScoreController extends Controller
             // "Ver detalhes" da Consulta CNPJ) — substitui o dump JSON de dados_consultados.
             'detalheConsultaHtml' => $this->htmlDetalheUltimaConsulta($participante),
             'origemLabel' => $this->origemLabel($participante),
+            'volumePeriodo' => $volumePeriodo,
         ];
 
         return $this->render($request, 'show', $data);

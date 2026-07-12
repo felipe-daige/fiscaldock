@@ -146,6 +146,11 @@
                         <div class="px-4 py-3">
                             <dt class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Movimentado em notas (EFD)</dt>
                             <dd class="text-sm font-semibold text-gray-900 font-mono mt-0.5">R$&nbsp;{{ number_format($volumeEfd ?? 0, 2, ',', '.') }}</dd>
+                            @if(!empty($volumePeriodo))
+                                <p class="text-[11px] text-gray-500 mt-0.5">
+                                    Emissões de {{ $volumePeriodo['inicio'] }}{{ $volumePeriodo['fim'] !== $volumePeriodo['inicio'] ? ' a '.$volumePeriodo['fim'] : '' }} (acumulado do acervo importado)
+                                </p>
+                            @endif
                             @if(($volumeEfd ?? 0) > 0)
                                 <a href="/app/participante/{{ $participante->id }}/notas" data-link class="mt-1 inline-block text-[11px] text-gray-600 hover:text-gray-900 hover:underline">Ver notas do participante</a>
                             @endif
@@ -190,7 +195,7 @@
                         <p class="text-[10px] font-bold uppercase tracking-widest mb-2" style="color: #475569;">Como é calculado</p>
                         <div class="space-y-1 text-[11px] leading-relaxed" style="color: #334155;">
                             <p>
-                                <span class="font-semibold">1. Crédito potencial</span> = volume de entradas (EFD) × alíquota IBS+CBS de referência:
+                                <span class="font-semibold">1. Crédito potencial</span> = volume de entradas (EFD{{ !empty($volumePeriodo) ? ', emissões '.$volumePeriodo['inicio'].($volumePeriodo['fim'] !== $volumePeriodo['inicio'] ? ' a '.$volumePeriodo['fim'] : '') : '' }}) × alíquota IBS+CBS de referência:
                                 <span class="font-mono whitespace-nowrap">R$ {{ number_format($volumeEfd ?? 0, 2, ',', '.') }} × {{ $crAliquotaPct }}% = R$ {{ number_format($cr['credito_potencial'] ?? 0, 2, ',', '.') }}</span>
                             </p>
                             <p>
@@ -208,8 +213,10 @@
                             </p>
                         </div>
                         <p class="mt-2 text-[10px] leading-relaxed" style="color: #94a3b8;">
-                            Estimativa de risco — não confirma recolhimento. Cenário de impacto pleno da Reforma
-                            (vigência total em 2033, alíquota {{ number_format((float) config('reforma.aliquota_referencia') * 100, 1, ',', '.') }}%).
+                            Estimativa de risco — não confirma recolhimento. O valor é o <strong>acumulado do período
+                            escriturado no seu acervo</strong> (não uma taxa anual): importou mais SPED, o volume e o
+                            risco crescem juntos. Cenário de impacto pleno da Reforma (vigência total em 2033, alíquota
+                            {{ number_format((float) config('reforma.aliquota_referencia') * 100, 1, ',', '.') }}%).
                             Detalhe da metodologia: LC 214/2025.
                         </p>
                     </div>
