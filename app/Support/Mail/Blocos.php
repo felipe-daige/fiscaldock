@@ -54,8 +54,17 @@ class Blocos
         'baixa' => ['Severidade baixa', '#6b7280'],
     ];
 
-    /** @var array<int, string> CID por mensagem — o build renderiza a view mais de uma vez. */
-    private static array $cidPorMensagem = [];
+    /**
+     * CID da logo por mensagem — o build renderiza a view mais de uma vez, e cada
+     * `embed()` cria um anexo; sem memo a logo ia 2× no MIME.
+     *
+     * `WeakMap` keyed pelo próprio `$message` (não por `spl_object_id`): no worker
+     * (`queue:work`, processo longo) os ids são RECICLADOS após o GC do objeto
+     * anterior — um array keyed-por-id devolveria o CID de uma mensagem já coletada
+     * para outra que reusou o id, quebrando a logo de forma intermitente. O WeakMap
+     * só tem entrada enquanto o objeto vive; some com ele, sem risco de colisão.
+     */
+    private static ?\WeakMap $cidPorMensagem = null;
 
     /**
      * `src` da logo. Num envio real, `$message` existe e a imagem vai por CID (anexo
@@ -73,7 +82,9 @@ class Blocos
             return asset('binary_files/logo/Logo FiscalDock.png');
         }
 
-        return self::$cidPorMensagem[spl_object_id($message)] ??= $message->embed($arquivo);
+        self::$cidPorMensagem ??= new \WeakMap;
+
+        return self::$cidPorMensagem[$message] ??= $message->embed($arquivo);
     }
 
     /**
