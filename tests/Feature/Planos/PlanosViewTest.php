@@ -23,13 +23,14 @@ it('renderiza os 5 tiers do seeder com preços e créditos inclusos da doc CFO',
         expect($html)->toContain($nome);
     }
 
-    // Preços e créditos inclusos canônicos (CFO)
-    expect($html)->toContain('R$ 99');
-    expect($html)->toContain('R$ 299');
-    expect($html)->toContain('R$ 799');
-    expect($html)->toContain('R$ 60,00 em saldo/mês');
-    expect($html)->toContain('R$ 220,00 em saldo/mês');
-    expect($html)->toContain('R$ 600,00 em saldo/mês');
+    // Preços e créditos inclusos canônicos (CFO). Preço vem hardcoded na view
+    // como "R$&nbsp;{n}"; saldo/mês vem de Dinheiro::brl (NBSP real).
+    expect($html)->toContain('R$&nbsp;99');
+    expect($html)->toContain('R$&nbsp;299');
+    expect($html)->toContain('R$&nbsp;799');
+    expect($html)->toContain(\App\Support\Dinheiro::brl(60).' em saldo/mês');
+    expect($html)->toContain(\App\Support\Dinheiro::brl(220).' em saldo/mês');
+    expect($html)->toContain(\App\Support\Dinheiro::brl(600).' em saldo/mês');
 });
 
 it('marca o Free como plano atual de quem não tem assinatura e oferece Assinar nos pagos', function () {
@@ -55,7 +56,7 @@ it('renderiza os tiers mesmo se a tabela estiver vazia (fallback resiliente)', f
     foreach (['Essencial', 'Profissional', 'Escritório'] as $nome) {
         expect($html)->toContain($nome);
     }
-    expect($html)->toContain('R$ 60,00 em saldo/mês');
+    expect($html)->toContain(\App\Support\Dinheiro::brl(60).' em saldo/mês');
 });
 
 it('expõe os limites de carteira por tier (clientes/CNPJs)', function () {

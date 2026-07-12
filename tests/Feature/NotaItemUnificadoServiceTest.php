@@ -92,9 +92,11 @@ it('agrega itens das duas fontes deduplicando por chave (EFD vence)', function (
     $itens = app(NotaItemUnificadoService::class)->itensAgregados($user->id)->keyBy('codigo_item');
 
     expect($itens)->toHaveCount(2);
+    // Medida dedupada (EFD vence na chave): valor/ocorrências não somam a nota 2×.
     expect((float) $itens['SKU1']['valor_total'])->toBe(100.0);
     expect($itens['SKU1']['ocorrencias'])->toBe(1);
-    expect($itens['SKU1']['fontes'])->toBe('efd');
+    // Procedência é rastreabilidade, não medida: enxerga as duas metades, inclusive a duplicada.
+    expect($itens['SKU1']['fontes'])->toBe('ambas');
     expect((float) $itens['SKU2']['valor_total'])->toBe(50.0);
     expect($itens['SKU2']['fontes'])->toBe('xml');
 });

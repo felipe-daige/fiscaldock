@@ -54,7 +54,7 @@ it('CFOP: renderiza descrição + valor + qtd e oferece seletor Top N como produ
     expect($html)->toContain('Principais CFOPs');
     expect($html)->toContain('VENDA TIPO 1');     // descrição da CFOP
     expect($html)->toContain('5101');             // código
-    expect($html)->toContain('R$ 100,00');        // valor (não só qtd)
+    expect($html)->toContain('R$&nbsp;100,00'); // valor (não só qtd; entity da view)
     expect($html)->toContain('×1');               // qtd
     expect($html)->toContain('Todos (8)');        // mesmo seletor das outras listas
     expect($html)->toContain('VENDA TIPO 8');     // todas as linhas no DOM

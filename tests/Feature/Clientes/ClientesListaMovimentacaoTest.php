@@ -56,7 +56,7 @@ it('exibe valor total, entradas/saidas e ultima emissao na coluna de movimentaca
 
     actingAs($user)->get('/app/clientes')
         ->assertOk()
-        ->assertSee('R$ 2.000,50')
+        ->assertSee('R$&nbsp;2.000,50', false)
         ->assertSee('2 notas')
         ->assertSee('até 04/2026');
 });
@@ -147,7 +147,7 @@ it('soma notas XML na movimentacao do cliente', function () {
 
     actingAs($user)->get('/app/clientes')
         ->assertOk()
-        ->assertSee('R$ 3.000,00')
+        ->assertSee('R$&nbsp;3.000,00', false)
         ->assertSee('1 nota');
 });
 
@@ -179,6 +179,6 @@ it('nao conta duas vezes a mesma nota presente no XML e no EFD (dedup por chave)
 
     actingAs($user)->get('/app/clientes')
         ->assertOk()
-        ->assertSee('R$ 1.500,00')
+        ->assertSee('R$&nbsp;1.500,00', false)
         ->assertSee('2 notas');
 });

@@ -34,10 +34,10 @@ it('lida com _fontes_erro no shape objeto (retry) sem TypeError', function () {
     ]);
     $presenter = new ResultadoDetalhePresenter();
 
-    // blocos(): cnd_federal pedido mas ausente → card de falha; origem integracao
+    // blocos(): cnd_federal pedido mas ausente → card de falha; status retry/615 = órgão fora do ar
     $cnd = bloco($presenter->blocos($resultado, ['cnd_federal', 'sintegra']), 'cnd_federal');
     expect($cnd)->not->toBeNull();
-    expect($cnd['badge']['label'])->toBe('Falha na integração');
+    expect($cnd['badge']['label'])->toBe('Órgão fora do ar');
 
     // certidoes() strip: sintegra origem interno → erro interno
     $strip = collect($presenter->certidoes($resultado, ['cnd_federal', 'sintegra']));
@@ -251,7 +251,7 @@ it('certidoes() classifica fontes presentes com sigla e badge', function () {
     expect($cndt['hex'])->toBe(\App\Support\CertidaoBadge::HEX_IRREGULAR);
 });
 
-it('certidoes() marca "Falha na integração" (default) fonte esperada ausente sem marcador', function () {
+it('certidoes() marca erro do provedor (default) fonte esperada ausente sem marcador', function () {
     // cnd_federal pedido pelo plano mas sem blob (fonte externa falhou → chave ausente)
     $certs = (new ResultadoDetalhePresenter())->certidoes(resultadoComDados([
         'crf_fgts' => ['status' => 'Regular'],
@@ -260,7 +260,7 @@ it('certidoes() marca "Falha na integração" (default) fonte esperada ausente s
     $fed = collect($certs)->firstWhere('chave', 'cnd_federal');
     expect($fed)->not->toBeNull();
     expect($fed['estado'])->toBe('erro_integracao');
-    expect($fed['label'])->toBe('Falha na integração');
+    expect($fed['label'])->toBe('Erro com o site de consultas do provedor');
     expect($fed['hex'])->toBe(\App\Support\CertidaoBadge::HEX_FALHOU);
     expect($fed['descricao'])->toBeString()->not->toBe('');
 });
@@ -295,14 +295,14 @@ it('blocos() injeta placeholder "Falhou" para certidão esperada ausente', funct
     $comEsperadas = $presenter->blocos(resultadoComDados($dados), ['cnd_federal', 'crf_fgts']);
     $fed = bloco($comEsperadas, 'cnd_federal');
     expect($fed)->not->toBeNull();
-    expect($fed['badge']['label'])->toBe('Falha na integração');
+    expect($fed['badge']['label'])->toBe('Erro com o site de consultas do provedor');
 
     // back-compat: sem esperadas não inventa Falhou
     $semEsperadas = $presenter->blocos(resultadoComDados($dados));
     expect(bloco($semEsperadas, 'cnd_federal'))->toBeNull();
 });
 
-it('analiseLote conta fonte que falhou como neutro (N/Consult)', function () {
+it('analiseLote conta fonte que falhou no bucket falha (distinto de não consultado)', function () {
     $presenter = new ResultadoDetalhePresenter();
     $rows = [
         ['detalhe_blocos' => $presenter->blocos(resultadoComDados([
@@ -314,7 +314,9 @@ it('analiseLote conta fonte que falhou como neutro (N/Consult)', function () {
     $analise = $presenter->analiseLote($rows);
     $fed = collect($analise['por_fonte'])->firstWhere('chave', 'cnd_federal');
     expect($fed)->not->toBeNull();
-    expect($fed['neutro'])->toBe(1);
+    expect($fed['falha'])->toBe(1);
+    expect($fed['neutro'])->toBe(0);
+    expect($analise['falhas'])->toBe(1);
 });
 
 // ── Certidão "sem emissão" (fonte recusou emitir online) ─────────────────────

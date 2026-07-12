@@ -482,7 +482,7 @@ it('exibe créditos por consulta como tag do produto em vez do código cru', fun
 
     $resp->assertSee($plano->nome);
     if ($plano->codigo === 'due_diligence') {
-        $resp->assertSee('R$ 7,00')->assertDontSee('due_diligence'); // 35 créditos internos × R$0,20
+        $resp->assertSee(\App\Support\Dinheiro::brl(7))->assertDontSee('due_diligence'); // 35 créditos internos × R$0,20
     }
 });
 

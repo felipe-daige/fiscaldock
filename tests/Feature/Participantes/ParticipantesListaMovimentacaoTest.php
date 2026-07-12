@@ -63,7 +63,7 @@ it('exibe valor movimentado e quantidade de notas na linha', function () {
 
     actingAs($user)->get('/app/participantes')
         ->assertOk()
-        ->assertSee('R$ 2.000,50')
+        ->assertSee('R$&nbsp;2.000,50', false)
         ->assertSee('2 notas');
 });
 

@@ -94,11 +94,30 @@ it('ancora o cockpit na ultima competencia com dados quando a janela atual vem v
         'cancelada' => false,
     ]);
 
+    // Fornecedor = quem te vende (ENTRADA). As saídas acima alimentam a tendência,
+    // não o ranking de fornecedores.
+    EfdNota::create([
+        'user_id' => $user->id,
+        'cliente_id' => $clienteId,
+        'participante_id' => $participante->id,
+        'importacao_id' => $importacao->id,
+        'chave_acesso' => str_pad('C', 44, '0', STR_PAD_LEFT),
+        'modelo' => '55',
+        'numero' => 3,
+        'serie' => '1',
+        'data_emissao' => '2024-01-20',
+        'tipo_operacao' => 'entrada',
+        'valor_total' => 700,
+        'valor_desconto' => 0,
+        'origem_arquivo' => 'fiscal',
+        'cancelada' => false,
+    ]);
+
     $dados = app(DashboardDataService::class)->cockpit($user->id, $user, null, 6);
 
     expect($dados['meta']['referencia'])->toBe('2024-02-10')
         ->and($dados['tendencia']['saida_valor'])->toContain(1000.0, 500.0)
         ->and(array_sum($dados['tendencia']['saida_valor']))->toBe(1500.0)
         ->and($dados['top_fornecedores'])->not->toBeEmpty()
-        ->and($dados['top_fornecedores'][0]['total'])->toBe(1500.0);
+        ->and($dados['top_fornecedores'][0]['total'])->toBe(700.0);
 });

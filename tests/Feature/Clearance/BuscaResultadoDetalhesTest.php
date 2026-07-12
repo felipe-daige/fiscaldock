@@ -133,7 +133,7 @@ it('usuário com certificado A1 válido não recebe CTA de cadastro (copy muda)'
         'documento' => '00000000000191', 'razao_social' => 'Propria',
     ]);
     \App\Models\CertificadoDigital::create([
-        'cliente_id' => $propria->id, 'cnpj' => '00000000000191',
+        'user_id' => $user->id, 'cliente_id' => $propria->id, 'cnpj' => '00000000000191',
         'validade' => now()->addYear(), 'arquivo_path' => 'certs/x.pfx', 'senha_cifrada' => 'x',
     ]);
     $lote = brdLote($user);
