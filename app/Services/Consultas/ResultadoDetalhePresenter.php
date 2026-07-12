@@ -313,7 +313,7 @@ class ResultadoDetalhePresenter
 
         $situacao = trim((string) ($dados['situacao_cadastral'] ?? ''));
         if ($situacao !== '') {
-            $regime = trim((string) ($dados['regime_tributario'] ?? ''));
+            $regime = trim((string) $this->regimeDisplay($dados));
             $frase = "Situação cadastral {$situacao} na Receita Federal";
             $frase .= $regime !== '' ? " ({$regime})." : '.';
             $frases[] = $frase;
@@ -566,7 +566,11 @@ class ResultadoDetalhePresenter
             $this->item('Capital social', $this->moeda($d['capital_social'] ?? null)),
             $this->item('Matriz/Filial', isset($d['matriz_filial']) ? ucfirst((string) $d['matriz_filial']) : null),
             $this->item('Início de atividade', $d['data_inicio_atividade'] ?? null),
-            $this->item('Regime tributário', $d['regime_tributario'] ?? null, ($d['regime_tributario_origem'] ?? null) === 'matriz' ? 'Publicado pela RFB no CNPJ da matriz (regime é da empresa).' : null),
+            $this->item('Regime tributário', $this->regimeDisplay($d), match ($d['regime_tributario_origem'] ?? null) {
+                'matriz' => 'Publicado pela RFB no CNPJ da matriz (regime é da empresa).',
+                'estimado' => (string) ($d['regime_tributario_nota'] ?? 'Estimado pelo sistema — a RFB não publica o regime deste CNPJ.'),
+                default => null,
+            }),
             $this->item('Endereço', $this->endereco($d['endereco'] ?? null)),
             $this->item('Telefone', $d['telefone_1'] ?? null),
         ];
@@ -832,6 +836,19 @@ class ResultadoDetalhePresenter
         }
 
         return 'R$ '.number_format((float) $v, 2, ',', '.');
+    }
+
+    /** Regime estimado nunca se apresenta como dado oficial — o valor carrega a marca. */
+    private function regimeDisplay(array $d): ?string
+    {
+        $regime = trim((string) ($d['regime_tributario'] ?? ''));
+        if ($regime === '') {
+            return null;
+        }
+
+        return ($d['regime_tributario_origem'] ?? null) === 'estimado'
+            ? $regime.' (estimado)'
+            : $regime;
     }
 
     private function endereco(mixed $e): ?string

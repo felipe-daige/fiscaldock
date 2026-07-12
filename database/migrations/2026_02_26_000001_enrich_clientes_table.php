@@ -24,6 +24,8 @@ return new class extends Migration
             $table->string('situacao_cadastral', 50)->nullable()->after('bairro');
             $table->string('regime_tributario', 50)->nullable()->after('situacao_cadastral');
             $table->string('regime_tributario_nota')->nullable()->after('regime_tributario');
+            // null = RFB direta | 'matriz' = RFB no CNPJ da matriz | 'estimado' = inferido pelo sistema
+            $table->string('regime_tributario_origem', 20)->nullable()->after('regime_tributario_nota');
             $table->string('cnpj_matriz', 14)->nullable()->after('regime_tributario');
             $table->string('suframa', 20)->nullable()->after('cnpj_matriz');
             $table->string('codigo_municipal', 10)->nullable()->after('suframa');
@@ -64,6 +66,7 @@ return new class extends Migration
                 'situacao_cadastral',
                 'regime_tributario',
                 'regime_tributario_nota',
+                'regime_tributario_origem',
                 'cnpj_matriz',
                 'suframa',
                 'codigo_municipal',

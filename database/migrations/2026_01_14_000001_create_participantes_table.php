@@ -26,6 +26,8 @@ return new class extends Migration
             $table->string('situacao_cadastral')->nullable();
             $table->string('regime_tributario')->nullable();
             $table->string('regime_tributario_nota')->nullable();
+            // null = RFB direta | 'matriz' = RFB no CNPJ da matriz | 'estimado' = inferido pelo sistema
+            $table->string('regime_tributario_origem', 20)->nullable();
             $table->string('uf', 2)->nullable();
             $table->string('cnpj_matriz', 14)->nullable()->index();
             $table->string('inscricao_estadual')->nullable();

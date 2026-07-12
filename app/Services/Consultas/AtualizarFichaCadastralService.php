@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 class AtualizarFichaCadastralService
 {
     /** Campos da RFB que mudam no tempo → SEMPRE atualizam (sobrescrevem). */
-    private const VOLATEIS = ['situacao_cadastral', 'regime_tributario'];
+    private const VOLATEIS = ['situacao_cadastral'];
 
     /**
      * @param  array<string,mixed>  $dados  resultado_dados (top-level mescla as fontes)
@@ -37,7 +37,6 @@ class AtualizarFichaCadastralService
             'razao_social' => $dados['razao_social'] ?? null,
             'nome_fantasia' => $dados['nome_fantasia'] ?? null,
             'situacao_cadastral' => $dados['situacao_cadastral'] ?? null,
-            'regime_tributario' => $dados['regime_tributario'] ?? null,
             'uf' => $end['uf'] ?? null,
             'cep' => $end['cep'] ?? null,
             'municipio' => $end['municipio'] ?? null,
@@ -74,15 +73,8 @@ class AtualizarFichaCadastralService
             }
         }
 
-        // A nota do regime anda JUNTO com o regime (o loop acima pula nulls de propósito):
-        // consulta nova com regime direto (sem nota) precisa LIMPAR a nota antiga, senão a
-        // ficha exibiria "Lucro Real — foi optante do Simples..." de uma consulta passada.
-        if (! empty($dados['regime_tributario']) && in_array('regime_tributario_nota', $fillable, true)) {
-            $nota = $dados['regime_tributario_nota'] ?? null;
-            if ($alvo->regime_tributario_nota !== $nota) {
-                $alvo->regime_tributario_nota = $nota;
-                $mudou = true;
-            }
+        if ($this->aplicarRegime($alvo, $dados, $fillable)) {
+            $mudou = true;
         }
 
         if (in_array('ultima_consulta_em', $fillable, true)) {
@@ -92,6 +84,53 @@ class AtualizarFichaCadastralService
 
         if ($mudou) {
             $alvo->save();
+        }
+
+        return $mudou;
+    }
+
+    /**
+     * Regime tributário é volátil (sempre atualiza), MAS com hierarquia de origem:
+     * RFB direta > RFB da matriz > estimado pelo sistema. Estimativa nunca sobrescreve
+     * regime real já persistido; regime real sempre vence (e limpa origem/nota antigas).
+     * A nota anda JUNTO com o regime — consulta nova com regime direto (sem nota) limpa
+     * a nota antiga, senão a ficha exibiria "Lucro Real — foi optante do Simples..." velho.
+     */
+    private function aplicarRegime(Model $alvo, array $dados, array $fillable): bool
+    {
+        $regime = trim((string) ($dados['regime_tributario'] ?? ''));
+        if ($regime === '' || ! in_array('regime_tributario', $fillable, true)) {
+            return false;
+        }
+
+        $origem = $dados['regime_tributario_origem'] ?? null; // null (RFB) | 'matriz' | 'estimado'
+
+        $atual = trim((string) $alvo->regime_tributario);
+        $origemAtual = in_array('regime_tributario_origem', $fillable, true)
+            ? $alvo->regime_tributario_origem
+            : null;
+        $atualEhReal = $atual !== ''
+            && strcasecmp($atual, 'Não informado') !== 0
+            && $origemAtual !== 'estimado';
+
+        if ($origem === 'estimado' && $atualEhReal) {
+            return false;
+        }
+
+        $mudou = false;
+        $novos = [
+            'regime_tributario' => $regime,
+            'regime_tributario_origem' => $origem,
+            'regime_tributario_nota' => $dados['regime_tributario_nota'] ?? null,
+        ];
+        foreach ($novos as $col => $valor) {
+            if (! in_array($col, $fillable, true)) {
+                continue;
+            }
+            if ($alvo->{$col} !== $valor) {
+                $alvo->{$col} = $valor;
+                $mudou = true;
+            }
         }
 
         return $mudou;

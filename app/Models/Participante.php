@@ -27,6 +27,7 @@ class Participante extends Model
         'situacao_cadastral',
         'regime_tributario',
         'regime_tributario_nota',
+        'regime_tributario_origem',
         'uf',
         'cep',
         'municipio',

@@ -1798,6 +1798,11 @@
             return '<span class="text-gray-500 text-xs underline decoration-dotted decoration-gray-300" '
                  + 'title="Dado indisponível na fonte — não requer correção.">Não informado pela Receita</span>';
         }
+        if (/^estimado/i.test(n)) {
+            return '<span class="inline-flex flex-col items-center leading-tight text-xs" title="' + escapeHtml(n) + '">'
+                 + '<span class="text-gray-700">' + escapeHtml(v) + ' <span class="text-gray-400">(estimado)</span></span>'
+                 + '<span class="text-[10px] text-gray-400">Estimado — RFB não publica</span></span>';
+        }
         return '<span class="text-gray-700 text-xs whitespace-nowrap">' + escapeHtml(v) + '</span>';
     }
 

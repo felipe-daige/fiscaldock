@@ -207,6 +207,16 @@ class ProcessarConsultaJob implements ShouldQueue
                         report($e);
                     }
                 }
+
+                // Regime seguiu indefinido (RFB não publica, nem na matriz) → estima pelo
+                // perfil (natureza/CNAE/EFD/exclusão do Simples) com origem 'estimado'. A
+                // ficha nunca deixa a estimativa sobrescrever regime real já persistido.
+                if ($fonte instanceof \App\Services\Consultas\Fontes\CadastroFonte
+                    && $resp->status === 'sucesso'
+                    && $fonte->regimeIndefinido($dados)) {
+                    $dados = app(\App\Services\Consultas\RegimeEstimadoResolver::class)
+                        ->aplicar($dados, $this->userId, $this->alvoTipo, $this->alvoId);
+                }
             }
 
             $resultado = new ResultadoFonte(

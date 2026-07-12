@@ -13,6 +13,11 @@
         : null;
     // "regime da matriz (RFB)" → rótulo curto padronizado.
     $notaCurta = preg_match('/matriz/iu', $notaTxt) ? 'Regime da matriz (RFB)' : $notaTxt;
+    // Regime estimado pelo sistema (RFB não publica): marca no valor + rótulo curto.
+    $estimado = (bool) preg_match('/^estimado/iu', $notaTxt);
+    if ($estimado) {
+        $notaCurta = 'Estimado — RFB não publica';
+    }
     $display = $valorTxt !== '' ? $valorTxt : 'Não informado';
 @endphp
 
@@ -23,7 +28,7 @@
     </span>
 @elseif($notaTxt !== '')
     <span {{ $attributes->merge(['class' => 'inline-flex flex-col leading-tight']) }} title="{{ $display }} — {{ $notaTxt }}">
-        <span>{{ $display }}</span>
+        <span>{{ $display }}@if($estimado) <span style="color:#9ca3af;">(estimado)</span>@endif</span>
         <span class="text-[11px]" style="color:#9ca3af;">{{ $notaCurta }}</span>
     </span>
 @else

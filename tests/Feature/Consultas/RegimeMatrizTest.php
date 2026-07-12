@@ -71,7 +71,7 @@ it('nao chama a matriz quando a filial ja tem regime (Simples)', function () {
     Http::assertSentCount(1);
 });
 
-it('mantem Nao informado quando a matriz tambem nao tem regime publicado', function () {
+it('estima o regime quando a matriz tambem nao tem regime publicado', function () {
     [$loteId, $participanteId, $userId] = montarLoteParticipante();
 
     Http::fake([
@@ -90,9 +90,11 @@ it('mantem Nao informado quando a matriz tambem nao tem regime publicado', funct
         etapas: ['Preparando consulta', 'Dados cadastrais'],
     );
 
+    // RFB não publica (nem na matriz) → RegimeEstimadoResolver assume com origem marcada.
     $r = ConsultaResultado::where('consulta_lote_id', $loteId)->first();
-    expect($r->resultado_dados['regime_tributario'])->toBe('Não informado');
-    expect($r->resultado_dados)->not->toHaveKey('regime_tributario_origem');
+    expect($r->resultado_dados['regime_tributario'])->toBe('Lucro Presumido');
+    expect($r->resultado_dados['regime_tributario_origem'])->toBe('estimado');
+    expect($r->resultado_dados['regime_tributario_nota'])->toStartWith('estimado — ');
 });
 
 it('gera nota "foi optante do Simples" quando o regime atual e Nao informado', function () {
