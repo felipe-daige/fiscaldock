@@ -69,6 +69,17 @@ it('dossiê PDF mostra detalhamento do score (subscore por categoria)', function
     expect($html)->toContain('Subscore')->and($html)->toContain('Peso');
 });
 
+it('dossiê PDF preenche a barra agregada quando score fiscal é crítico 100', function () {
+    $dados = app(\App\Services\Participantes\DossieParticipanteBuilder::class)->montar($this->p);
+    $dados['score']['score_total'] = 100;
+    $dados['score']['classificacao'] = 'critico';
+
+    $html = view('reports.dossie.participante', $dados)->render();
+
+    expect($html)->toContain('width:100%;height:14px')
+        ->and($html)->not->toContain('width:0%;height:14px');
+});
+
 it('dossiê PDF lista principais produtos e CFOP detalhado', function () {
     $user = User::factory()->create();
     $p = Participante::create(['user_id' => $user->id, 'documento' => '07863768000138', 'razao_social' => 'ACME LTDA', 'uf' => 'SP', 'crt' => '3']);

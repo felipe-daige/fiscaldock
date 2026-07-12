@@ -3,6 +3,8 @@
     $fmt = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
     $scoreHex = \App\Support\Reports\ReportTheme::riscoHex($score['classificacao'] ?? 'medio');
     $scoreInconclusivo = ($score['classificacao'] ?? '') === 'inconclusivo';
+    $scoreTotalBarra = max(0, min(100, (int) ($score['score_total'] ?? 0)));
+    $scoreBarraPct = $scoreTotalBarra === 0 ? 100 : $scoreTotalBarra;
 @endphp
 @php
     $docNum = preg_replace('/\D/', '', (string) $participante->documento);
@@ -48,8 +50,8 @@
                 @if($scoreInconclusivo)
                     <div style="margin-top:4px;font-size:7.5px;color:#6b7280;">Cobertura insuficiente — score conclusivo exige CND Federal + 2 certidões avaliadas.</div>
                 @else
-                    {{-- Barra = regularidade (100 − score de risco): baixo risco enche a barra. --}}
-                    <div class="score-bar" style="margin-top:4px;"><div style="background-color:{{ $scoreHex }};width:{{ 100 - max(0,min(100,(int)$score['score_total'])) }}%;height:14px;"></div></div>
+                    {{-- Barra = intensidade do risco: regular (0) cheia verde; crítico (100) cheia vermelha. --}}
+                    <div class="score-bar" style="margin-top:4px;"><div style="background-color:{{ $scoreHex }};width:{{ $scoreBarraPct }}%;height:14px;"></div></div>
                 @endif
                 <div style="margin-top:8px;">
                     @include('reports.partials._score-detalhamento', ['detalhamento' => $score['detalhamento'] ?? []])
