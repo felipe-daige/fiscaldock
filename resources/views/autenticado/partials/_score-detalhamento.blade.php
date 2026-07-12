@@ -33,10 +33,12 @@
                 $avaliado = $item['avaliado'] ?? false;
                 $score = (int) ($item['score'] ?? 0);
                 $regular = $avaliado && $score === 0;
-                // Barra = regularidade (100 − subscore de risco), MESMA fórmula do PDF
-                // (reports/partials/_score-detalhamento): regular (0) enche de verde; irregular
-                // encolhe. Se enchesse pelo risco, o caso bom (0) viraria barra vazia = "sem dado".
-                $largura = 100 - max(0, min(100, $score));
+                // Barra = intensidade do estado, MESMA fórmula do PDF
+                // (reports/partials/_score-detalhamento): regular (0) enche de verde;
+                // irregular enche PELO RISCO (suspensa 50 = meia barra, baixada 100 = cheia
+                // vermelha). A cor desambigua verde×vermelho. Fórmula anterior (100 − score)
+                // deixava o pior caso (100) com barra VAZIA — lia-se como "sem dado".
+                $largura = $regular ? 100 : max(0, min(100, $score));
             @endphp
             <div>
                 <div class="flex items-center justify-between mb-1">

@@ -21,11 +21,12 @@
                         @if($linha['avaliado'])
                             <table style="width:100%;"><tr>
                                 <td style="padding:0;">
-                                    {{-- Barra = regularidade (100 − subscore de risco): categoria regular
-                                         (score 0) enche a barra de verde; irregular encolhe. Se enchesse
-                                         pelo risco, o caso bom (0) viraria barra vazia — lia-se como "sem dado". --}}
+                                    {{-- Barra = intensidade do estado (mesma fórmula da partial web):
+                                         regular (score 0) enche de verde; irregular enche PELO RISCO
+                                         (baixada 100 = barra cheia vermelha). Fórmula anterior (100 − score)
+                                         deixava o pior caso com barra vazia — lia-se como "sem dado". --}}
                                     <div style="background:#f3f4f6;height:8px;width:100%;">
-                                        <div style="background-color:{{ $linha['hex'] }};height:8px;width:{{ 100 - max(0, min(100, (int) $linha['score'])) }}%;"></div>
+                                        <div style="background-color:{{ $linha['hex'] }};height:8px;width:{{ ((int) $linha['score']) === 0 ? 100 : max(0, min(100, (int) $linha['score'])) }}%;"></div>
                                     </div>
                                 </td>
                                 <td style="padding:0 0 0 6px;width:26px;white-space:nowrap;text-align:right;color:{{ $linha['hex'] }};font-weight:bold;">{{ $linha['score'] }}</td>

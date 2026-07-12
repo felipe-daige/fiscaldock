@@ -20,6 +20,22 @@ it('renderiza detalhamento web com headline, categorias, peso e legenda', functi
         ->and($html)->toContain('Legenda');               // seção "Categorias em breve" removida com ESG/Protestos
 });
 
+it('irregular preenche a barra PELO RISCO: baixada (100) = barra cheia, suspensa (50) = metade', function () {
+    // Regressão: fórmula antiga (100 − score) deixava o pior caso (baixada, score 100)
+    // com barra VAZIA — lia-se como "sem dado".
+    $det = [
+        'cadastral' => ['label' => 'Situação Cadastral', 'peso_pct' => 15, 'score' => 100, 'avaliado' => true, 'hex' => '#b91c1c'],
+        'cnd_federal' => ['label' => 'CND Federal', 'peso_pct' => 20, 'score' => 50, 'avaliado' => true, 'hex' => '#d97706'],
+    ];
+    $html = view('autenticado.partials._score-detalhamento', [
+        'detalhamento' => $det, 'scoreTotal' => 100, 'classificacao' => 'critico', 'comHeadline' => true,
+    ])->render();
+
+    expect($html)->toContain('width: 100%; background-color: #b91c1c')  // baixada: cheia vermelha
+        ->and($html)->toContain('width: 50%; background-color: #d97706') // meia barra âmbar
+        ->and($html)->not->toContain('width: 0%');                       // nunca barra vazia em avaliado
+});
+
 it('sem headline (risk/show) não exibe o número grande do total', function () {
     $det = ['cadastral' => ['label' => 'Situação Cadastral', 'peso_pct' => 15, 'score' => 0, 'avaliado' => true, 'hex' => '#047857']];
     $html = view('autenticado.partials._score-detalhamento', [

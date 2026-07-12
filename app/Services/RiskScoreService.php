@@ -507,6 +507,52 @@ class RiskScoreService
         return $this->pesos;
     }
 
+    /**
+     * Metodologia do score em formato exibível (PDF do Score Fiscal e afins).
+     * Fonte única: lê pesos, penalidades, faixas e pisos REAIS do service — se a
+     * regra mudar aqui, o texto exibido acompanha sem editar view.
+     *
+     * @return array{categorias: array<int, array{label:string, peso_pct:int, penalidade:int|null}>, faixas: array<int, array{label:string, faixa:string, hex:string}>, pisos: array<int, array{fonte:string, piso:string}>, cobertura:string}
+     */
+    public function metodologia(): array
+    {
+        $labels = self::categoriaLabels();
+
+        $categorias = [];
+        foreach ($this->pesos as $categoria => $peso) {
+            $categorias[] = [
+                'label' => $labels[$categoria] ?? $categoria,
+                'peso_pct' => (int) round($peso * 100),
+                'penalidade' => $this->penalidadeIrregular[$categoria] ?? null,
+            ];
+        }
+
+        $faixas = [
+            ['label' => $this->getLabelClassificacao('baixo'), 'faixa' => '0–20', 'hex' => $this->getCorClassificacao('baixo')],
+            ['label' => $this->getLabelClassificacao('medio'), 'faixa' => '21–50', 'hex' => $this->getCorClassificacao('medio')],
+            ['label' => $this->getLabelClassificacao('alto'), 'faixa' => '51–80', 'hex' => $this->getCorClassificacao('alto')],
+            ['label' => $this->getLabelClassificacao('critico'), 'faixa' => '81–100', 'hex' => $this->getCorClassificacao('critico')],
+        ];
+
+        $pisos = [
+            ['fonte' => 'Situação cadastral INAPTA/BAIXADA/NULA', 'piso' => $this->getLabelClassificacao('critico')],
+            ['fonte' => 'Situação cadastral SUSPENSA', 'piso' => $this->getLabelClassificacao('alto')],
+        ];
+        foreach (self::GRAVIDADE_CERTIDAO as $categoria => $regra) {
+            $pisos[] = [
+                'fonte' => ($labels[$categoria] ?? $categoria).' positiva (irregular)',
+                'piso' => $this->getLabelClassificacao($regra['piso']),
+            ];
+        }
+
+        return [
+            'categorias' => $categorias,
+            'faixas' => $faixas,
+            'pisos' => $pisos,
+            'cobertura' => 'CND Federal avaliada + ao menos 2 certidões de regularidade avaliadas; abaixo disso a classificação é Inconclusivo (nunca "Baixo" sem regularidade consultada).',
+        ];
+    }
+
     // ============ Adapter: resultado_dados (aninhado) -> subscore por categoria ============
 
     /**
@@ -547,5 +593,4 @@ class RiskScoreService
             default => null, // indeterminado, neutro, não encontrada → não avaliado
         };
     }
-
 }

@@ -146,6 +146,40 @@ it('renderiza o botão único com os três formatos e overlay', function () {
         ->assertSee('papel A4 retrato', false);
 });
 
+it('metodologia() expõe pesos, penalidades, faixas e pisos reais do service', function () {
+    $svc = app(\App\Services\RiskScoreService::class);
+    $met = $svc->metodologia();
+
+    // Pesos/labels espelham o service (fonte única — nada hardcodado na view)
+    $porLabel = collect($met['categorias'])->keyBy('label');
+    expect($porLabel['CND Federal']['peso_pct'])->toBe(20)
+        ->and($porLabel['CND Federal']['penalidade'])->toBe(70)
+        ->and($porLabel['Situação Cadastral']['peso_pct'])->toBe(15)
+        ->and($porLabel['Situação Cadastral']['penalidade'])->toBeNull()
+        ->and($porLabel['FGTS/CRF']['penalidade'])->toBe(50)
+        ->and($porLabel['CNDT (Trabalhista)']['penalidade'])->toBe(40);
+
+    // Faixas na ordem crescente de risco
+    expect(collect($met['faixas'])->pluck('faixa')->all())->toBe(['0–20', '21–50', '51–80', '81–100']);
+
+    // Pisos: cadastral crítico/alto + os 4 de GRAVIDADE_CERTIDAO
+    expect($met['pisos'])->toHaveCount(2 + count(\App\Services\RiskScoreService::GRAVIDADE_CERTIDAO))
+        ->and(collect($met['pisos'])->firstWhere('fonte', 'CND Federal positiva (irregular)')['piso'])
+        ->toBe($svc->getLabelClassificacao('alto'));
+});
+
+it('PDF do score traz a seção de metodologia (view renderizada)', function () {
+    $relatorio = app(RiskScoreReportBuilder::class)->montar($this->user->id, []);
+    $html = view('reports.risk-score', ['relatorio' => $relatorio])->render();
+
+    expect($html)->toContain('Como o risco é classificado')
+        ->and($html)->toContain('Fontes, pesos e penalidades')
+        ->and($html)->toContain('Faixas do score total')
+        ->and($html)->toContain('Piso por irregularidade conhecida')
+        ->and($html)->toContain('INAPTA/BAIXADA/NULA')
+        ->and($html)->toContain('Cobertura mínima');
+});
+
 it('baixa PDF A4 retrato com os dados do recorte', function () {
     $response = actingAs($this->user)->get('/app/score-fiscal/exportar-pdf?cliente_id='.$this->clienteA->id);
 
