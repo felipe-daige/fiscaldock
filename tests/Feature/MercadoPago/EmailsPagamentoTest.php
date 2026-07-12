@@ -13,6 +13,7 @@ use App\Notifications\AssinaturaRenovadaNotification;
 use App\Notifications\CompraConfirmadaNotification;
 use App\Notifications\RecargaAutomaticaConfirmadaNotification;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 
 uses(Illuminate\Foundation\Testing\RefreshDatabase::class);
@@ -120,4 +121,25 @@ it('recarga automatica por tempo aprovada envia RecargaAutomaticaConfirmada 1x',
     app(CobrarRecargaMercadoPago::class)->execute('AP-3'); // re-entrega
 
     Notification::assertSentToTimes($user, RecargaAutomaticaConfirmadaNotification::class, 1);
+});
+
+it('recarga automatica por tempo RECUSADA envia RecargaAutomaticaPausada 1x (idempotente)', function () {
+    Mail::fake();
+    Http::fake(['api.mercadopago.com/authorized_payments/AP-4' => Http::response([
+        'status' => 'rejected', 'preapproval_id' => 'PRE-R4',
+    ], 200)]);
+
+    $user = User::factory()->create();
+    RecargaAutomatica::create([
+        'user_id' => $user->id, 'pacote' => 'business', 'creditos' => 1000, 'valor' => 200.0,
+        'status' => RecargaAutomatica::STATUS_ATIVA, 'gatilho' => RecargaAutomatica::GATILHO_TEMPO,
+        'mp_preapproval_id' => 'PRE-R4',
+    ]);
+
+    app(CobrarRecargaMercadoPago::class)->execute('AP-4');
+    app(CobrarRecargaMercadoPago::class)->execute('AP-4'); // re-entrega não reenvia
+
+    Mail::assertQueued(\App\Mail\RecargaAutomaticaPausada::class, 1);
+    expect(RecargaAutomatica::where('user_id', $user->id)->first()->status)
+        ->toBe(RecargaAutomatica::STATUS_INADIMPLENTE);
 });
