@@ -6,6 +6,7 @@ use App\Models\Alerta;
 use App\Models\Participante;
 use App\Models\ParticipanteScore;
 use App\Models\User;
+use App\Notifications\AlertaDigestNotification;
 use App\Notifications\AlertaImediatoNotification;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -19,6 +20,15 @@ class AlertaCentralService
         private NotasFiscaisAlertService $notasFiscaisAlertService,
         private GuiaAlertaService $guiaAlertaService,
     ) {}
+
+    /**
+     * Buffer de alertas notificáveis coletados durante um `recalcular` (F3). `null` =
+     * modo imediato (1 alerta = 1 e-mail, usado pelo monitoramento). Array = coletando
+     * pro digest. Sempre volta a `null` no `flushColeta`.
+     *
+     * @var array<int, Alerta>|null
+     */
+    private ?array $coleta = null;
 
     /**
      * Classes de alerta da Central (espelha `tabTipos` em central.blade.php).
@@ -133,6 +143,26 @@ class AlertaCentralService
         $atualizados = 0;
         $allHashes = [];
 
+        // F3: durante o recalcular, os alertas notificáveis são COLETADOS e viram 1
+        // digest no fim (senão importar um SPED com N fornecedores irregulares dispara
+        // N e-mails). Fora do recalcular (monitoramento 1-a-1), o modo é imediato.
+        // try/finally garante o flush + reset mesmo se um detector estourar (o loop de
+        // usuários do command reusa a mesma instância — não pode vazar coleta).
+        $this->coleta = [];
+
+        try {
+            return $this->executarRecalculo($userId, $novos, $atualizados, $allHashes);
+        } finally {
+            $this->flushColeta($userId);
+        }
+    }
+
+    /**
+     * @param  array<int, string>  $allHashes
+     * @return array{novos: int, atualizados: int, resolvidos: int}
+     */
+    private function executarRecalculo(int $userId, int $novos, int $atualizados, array $allHashes): array
+    {
         // 1. Alertas de notas fiscais (7 detectores do NotasFiscaisAlertService)
         $resultado = $this->notasFiscaisAlertService->detectar($userId, []);
 
@@ -370,10 +400,44 @@ class AlertaCentralService
             return;
         }
 
-        $user->notify(new AlertaImediatoNotification($alerta));
-
+        // Marca já aqui (guarda anti-reenvio): tanto o imediato quanto o digest usam a
+        // mesma guarda; se o flush falhar depois, pior caso é 1 e-mail a menos, nunca 2.
         $alerta->notificado_em = now();
         $alerta->saveQuietly();
+
+        // Dentro de um recalcular: coleta pro digest. Fora (monitoramento 1-a-1): imediato.
+        if ($this->coleta !== null) {
+            $this->coleta[] = $alerta;
+
+            return;
+        }
+
+        $user->notify(new AlertaImediatoNotification($alerta));
+    }
+
+    /**
+     * Descarrega os alertas coletados num recalcular: 0 → nada; 1 → e-mail imediato
+     * rico (com hero/ficha); 2+ → 1 digest. Sempre reseta a coleta (volta ao modo
+     * imediato pro próximo usuário do loop).
+     */
+    private function flushColeta(int $userId): void
+    {
+        $alertas = $this->coleta ?? [];
+        $this->coleta = null;
+
+        if ($alertas === []) {
+            return;
+        }
+
+        $user = User::find($userId);
+
+        if (! $user) {
+            return;
+        }
+
+        $user->notify(count($alertas) === 1
+            ? new AlertaImediatoNotification($alertas[0])
+            : new AlertaDigestNotification($alertas));
     }
 
     /**
