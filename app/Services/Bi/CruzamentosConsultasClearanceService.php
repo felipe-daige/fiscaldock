@@ -41,7 +41,7 @@ class CruzamentosConsultasClearanceService
 
     /**
      * @param  array{cliente_id?:int|null, data_inicio?:string|null, data_fim?:string|null}  $filtros
-     * @return Collection<int, array{participante_id:int, razao_social:string, documento:string, motivos:array<int,string>, valor_comprado:float, qtd_notas:int}>
+     * @return Collection<int, array{participante_id:int, razao_social:string, documento:string, motivos:array<int,string>, ultima_consulta_em:\Illuminate\Support\Carbon|null, valor_comprado:float, qtd_notas:int}>
      */
     public function fornecedoresIrregularesComCompras(int $userId, array $filtros = []): Collection
     {
@@ -53,6 +53,7 @@ class CruzamentosConsultasClearanceService
                 'razao_social' => $s->participante?->razao_social ?? '—',
                 'documento' => $s->participante?->documento ?? '—',
                 'motivos' => $this->motivosIrregularidade($s),
+                'ultima_consulta_em' => $s->ultima_consulta_em,
             ])
             ->filter(fn (array $linha) => $linha['motivos'] !== []);
 
@@ -76,7 +77,7 @@ class CruzamentosConsultasClearanceService
             ->when(! empty($filtros['cliente_id']), fn ($q) => $q->where('cliente_id', $filtros['cliente_id']))
             ->when(! empty($filtros['data_inicio']), fn ($q) => $q->where('data_emissao', '>=', $filtros['data_inicio']))
             ->when(! empty($filtros['data_fim']), fn ($q) => $q->where('data_emissao', '<=', $filtros['data_fim']))
-            ->get(['chave_acesso', 'numero', 'emit_nome', 'emit_cnpj', 'valor_total']);
+            ->get(['chave_acesso', 'numero', 'emit_nome', 'emit_cnpj', 'valor_total', 'consultado_em']);
 
         return $canceladas->map(function ($n) use ($situacoesPorCnpj) {
             $cnpj = preg_replace('/\D/', '', (string) ($n->emit_cnpj ?? ''));
@@ -88,6 +89,7 @@ class CruzamentosConsultasClearanceService
                 'emit_cnpj' => $n->emit_cnpj ?? '—',
                 'valor' => $n->valor_total !== null ? (float) $n->valor_total : null,
                 'situacao_emitente' => $situacoesPorCnpj[$cnpj] ?? null,
+                'consultado_em' => $n->consultado_em,
             ];
         })->values();
     }

@@ -1770,7 +1770,7 @@
         if (cnd && typeof cnd === 'object' && cnd.indeterminado) {
             var motivo = cnd.motivo ? escapeHtml(String(cnd.motivo)) : 'Certidão não emitida pela fonte oficial.';
             return '<span class="inline-block px-2 py-0.5 rounded text-xs font-medium text-white"'
-                + ' style="background-color: #d97706" title="' + motivo + '">Indeterminada</span>';
+                + ' style="background-color: #b45309" title="' + motivo + '">Indeterminada</span>';
         }
         return formatRegularidade(cnd);
     }
@@ -2103,7 +2103,7 @@
             hex = '#047857';
             label = 'Ativa';
         } else if (['BAIXADA', 'INAPTA', 'SUSPENSA'].includes(situacaoUpper)) {
-            hex = '#d97706';
+            hex = '#b45309';
             label = situacao;
         }
 

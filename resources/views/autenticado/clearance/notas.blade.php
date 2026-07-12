@@ -56,7 +56,7 @@
         }
         foreach ($alertas as $a) {
             if (($a['nivel'] ?? null) === 'atencao') {
-                return ['label' => 'Atenção', 'hex' => '#d97706'];
+                return ['label' => 'Atenção', 'hex' => '#b45309'];
             }
         }
         return ['label' => 'Validada', 'hex' => '#047857'];
@@ -596,7 +596,7 @@
                                     </span>
                                 </td>
                                 <td class="px-3 py-2 text-xs" data-label="Tipo">
-                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $n->tipo_nota === 'entrada' ? '#047857' : '#d97706' }}">
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $n->tipo_nota === 'entrada' ? '#047857' : '#b45309' }}">
                                         {{ ucfirst($n->tipo_nota) }}
                                     </span>
                                 </td>

@@ -68,7 +68,7 @@
         <h4 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-3">Legenda dos Scores</h4>
         <div class="flex flex-wrap gap-4 text-xs">
             <div class="flex items-center gap-2"><div class="w-3 h-3 rounded" style="background-color: #047857"></div><span class="text-gray-600">0-20: Baixo Risco</span></div>
-            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded" style="background-color: #d97706"></div><span class="text-gray-600">21-50: Médio Risco</span></div>
+            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded" style="background-color: #b45309"></div><span class="text-gray-600">21-50: Médio Risco</span></div>
             <div class="flex items-center gap-2"><div class="w-3 h-3 rounded" style="background-color: #ea580c"></div><span class="text-gray-600">51-80: Alto Risco</span></div>
             <div class="flex items-center gap-2"><div class="w-3 h-3 rounded" style="background-color: #b91c1c"></div><span class="text-gray-600">81-100: Crítico</span></div>
         </div>

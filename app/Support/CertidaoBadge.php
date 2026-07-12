@@ -19,7 +19,7 @@ class CertidaoBadge
 
     public const HEX_IRREGULAR = '#dc2626';
 
-    public const HEX_INDETERMINADO = '#d97706';
+    public const HEX_INDETERMINADO = '#b45309';
 
     public const HEX_NEUTRO = '#9ca3af';
 
@@ -31,7 +31,10 @@ class CertidaoBadge
     // p/ a UF/cidade) e de "—" (fora do plano). Dois sabores:
     //  - HEX_FALHOU          → falha na integração (a fonte externa não respondeu/recusou)
     //  - HEX_ERRO_INTERNO    → erro interno nosso (exceção no processamento)
-    public const HEX_FALHOU = '#b45309';
+    // amber-800: mais escuro que o âmbar de atenção/indeterminado (#b45309) — falha lê como
+    // mais severa E o hex fica distinto, o que `ResultadoDetalhePresenter::bucketHex` exige
+    // (o bucket é resolvido por valor de hex; colidir com HEX_INDETERMINADO fundia os buckets).
+    public const HEX_FALHOU = '#92400e';
 
     public const HEX_ERRO_INTERNO = '#7c3aed';
 

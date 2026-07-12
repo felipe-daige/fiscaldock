@@ -98,7 +98,7 @@
                 </div>
                 <div id="kpi-media" class="p-4 sm:p-6 cursor-pointer hover:bg-gray-50/50 transition-colors" data-filtro-severidade="media">
                     <div class="flex items-center gap-2 mb-1 sm:mb-2">
-                        <span class="w-2 h-2 rounded-full" style="background-color: #d97706"></span>
+                        <span class="w-2 h-2 rounded-full" style="background-color: #b45309"></span>
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Média Severidade</p>
                     </div>
                     <p class="text-lg sm:text-xl font-bold text-gray-900" id="kpi-media-valor">
@@ -352,7 +352,7 @@
     function severidadeBadge(sev) {
         var colors = {
             alta: '#dc2626',
-            media: '#d97706',
+            media: '#b45309',
             baixa: '#9ca3af'
         };
         var label = { alta: 'Alta', media: 'Média', baixa: 'Baixa' };
@@ -362,7 +362,7 @@
     }
 
     function severidadeDot(sev) {
-        var colors = { alta: '#dc2626', media: '#d97706', baixa: '#9ca3af' };
+        var colors = { alta: '#dc2626', media: '#b45309', baixa: '#9ca3af' };
         var color = colors[sev] || '#9ca3af';
         return '<span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: ' + color + '"></span>';
     }
@@ -656,7 +656,7 @@
                     if (temAlta) {
                         badge.style.backgroundColor = '#dc2626';
                     } else if (temMedia) {
-                        badge.style.backgroundColor = '#d97706';
+                        badge.style.backgroundColor = '#b45309';
                     } else {
                         badge.style.backgroundColor = '#9ca3af';
                     }
@@ -974,7 +974,7 @@
         if (dias < 0) { texto = 'Vencido em ' + venc.toLocaleDateString('pt-BR'); cor = '#b91c1c'; }
         else if (dias === 0) { texto = 'Vence hoje'; cor = '#b91c1c'; }
         else if (dias <= 7) { texto = 'Vence em ' + dias + ' dia(s)'; cor = '#dc2626'; }
-        else { texto = 'Vence em ' + dias + ' dias'; cor = '#d97706'; }
+        else { texto = 'Vence em ' + dias + ' dias'; cor = '#b45309'; }
         var icone = '<svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
         return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide text-white" style="background-color:' + cor + '" title="' + texto + ' (' + venc.toLocaleDateString('pt-BR') + ')">' + icone + texto + '</span>';
     }
@@ -1285,7 +1285,7 @@
     }
 
     function renderCertidaoPositiva(detalhes) {
-        var sevCor = { alta: '#dc2626', media: '#d97706', baixa: '#9ca3af' };
+        var sevCor = { alta: '#dc2626', media: '#b45309', baixa: '#9ca3af' };
         var alvoId = detalhes.participante_id || detalhes.cliente_id;
         var alvoUrl = detalhes.participante_id ? ('/app/participante/' + detalhes.participante_id)
             : (detalhes.cliente_id ? ('/app/cliente/' + detalhes.cliente_id) : null);

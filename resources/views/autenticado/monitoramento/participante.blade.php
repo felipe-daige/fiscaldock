@@ -9,15 +9,11 @@
         'INAPTA', 'SUSPENSA' => ['label' => $situacaoUpper, 'hex' => '#dc2626'],
         // BAIXADA gera subscore 100 + piso crítico — vermelho crítico, não cinza apagado.
         'BAIXADA' => ['label' => 'BAIXADA', 'hex' => '#b91c1c'],
-        default => ['label' => $situacaoUpper ?: 'SEM STATUS', 'hex' => '#6b7280'],
+        default => ['label' => $situacaoUpper ?: 'NÃO CONSULTADA', 'hex' => '#6b7280'],
     };
-    $regimeUpper = strtoupper((string) ($participante->regime_tributario ?? ''));
-    $regimeBadge = match($regimeUpper) {
-        'SIMPLES NACIONAL', 'SIMPLES' => ['label' => $regimeUpper, 'hex' => '#0f766e'],
-        'LUCRO PRESUMIDO' => ['label' => $regimeUpper, 'hex' => '#d97706'],
-        'LUCRO REAL' => ['label' => $regimeUpper, 'hex' => '#374151'],
-        default => $regimeUpper ? ['label' => $regimeUpper, 'hex' => '#6b7280'] : null,
-    };
+    $regimeLabel = trim((string) ($participante->regime_tributario ?? ''));
+    $regimeLabel = $regimeLabel !== '' && $regimeLabel !== '—' ? $regimeLabel : 'Não consultado';
+    $regimeBadge = ['label' => mb_strtoupper($regimeLabel), 'hex' => \App\Support\Reports\ReportTheme::regimeHex($regimeLabel)];
     $returnToUrl = $returnToUrl ?? '/app/dashboard';
     $returnToLabel = str_starts_with($returnToUrl, '/app/participantes')
         ? 'Voltar para participantes'
@@ -43,16 +39,12 @@
                     <p class="text-xs text-gray-500 mt-1 font-mono whitespace-nowrap tabular-nums">{{ $participante->cnpj_formatado }}</p>
                 </div>
                 <div class="flex items-center gap-2 flex-wrap">
-                    @if($participante->situacao_cadastral)
-                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $situacaoBadge['hex'] }}">
-                            {{ $situacaoBadge['label'] }}
-                        </span>
-                    @endif
-                    @if($regimeBadge)
-                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $regimeBadge['hex'] }}">
-                            {{ $regimeBadge['label'] }}
-                        </span>
-                    @endif
+                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $situacaoBadge['hex'] }}">
+                        {{ $situacaoBadge['label'] }}
+                    </span>
+                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $regimeBadge['hex'] }}">
+                        {{ $regimeBadge['label'] }}
+                    </span>
                 </div>
             </div>
         </div>
@@ -153,11 +145,15 @@
                             </div>
                             <div>
                                 <dt class="text-xs text-gray-500 uppercase tracking-wide">Situação Cadastral</dt>
-                                <dd class="mt-1 text-sm text-gray-900">{{ $participante->situacao_cadastral ?? '-' }}</dd>
+                                <dd class="mt-1 text-sm text-gray-900">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $situacaoBadge['hex'] }}">{{ $situacaoBadge['label'] }}</span>
+                                </dd>
                             </div>
                             <div>
                                 <dt class="text-xs text-gray-500 uppercase tracking-wide">Regime Tributário</dt>
-                                <dd class="mt-1 text-sm text-gray-900">{{ $participante->regime_tributario ?? '-' }}</dd>
+                                <dd class="mt-1 text-sm text-gray-900">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $regimeBadge['hex'] }}">{{ $regimeBadge['label'] }}</span>
+                                </dd>
                             </div>
                             <div>
                                 <dt class="text-xs text-gray-500 uppercase tracking-wide">UF</dt>
@@ -210,7 +206,7 @@
                                             'gratuito' => '#6b7280',
                                             'validacao' => '#4338ca',
                                             'licitacao' => '#7c3aed',
-                                            'compliance' => '#d97706',
+                                            'compliance' => '#b45309',
                                             'due_diligence' => '#be123c',
                                             'enterprise' => '#1f2937',
                                         ];
@@ -271,7 +267,7 @@
                                 if ($situacao === 'ATIVA') {
                                     $sitLabel = 'Ativa';                  $sitHex = '#047857';
                                 } elseif (in_array($situacao, ['SUSPENSA', 'INAPTA'], true)) {
-                                    $sitLabel = ucfirst(mb_strtolower($situacao)); $sitHex = '#d97706';
+                                    $sitLabel = ucfirst(mb_strtolower($situacao)); $sitHex = '#b45309';
                                 } elseif (in_array($situacao, ['BAIXADA', 'NULA'], true)) {
                                     $sitLabel = ucfirst(mb_strtolower($situacao)); $sitHex = '#dc2626';
                                 } elseif ($situacao !== '' && $situacao !== 'DESCONHECIDA') {
@@ -286,17 +282,17 @@
                                 $isMei     = ($dados['mei'] ?? false) === true;
 
                                 if ($isMei) {
-                                    $regLabel = 'MEI';                    $regHex = '#047857';
+                                    $regLabel = 'MEI';                    $regHex = \App\Support\Reports\ReportTheme::regimeHex($regLabel);
                                 } elseif ($isSimples || str_contains($regimeUp, 'SIMPLES')) {
-                                    $regLabel = 'Simples Nacional';       $regHex = '#047857';
+                                    $regLabel = 'Simples Nacional';       $regHex = \App\Support\Reports\ReportTheme::regimeHex($regLabel);
                                 } elseif (str_contains($regimeUp, 'PRESUMIDO')) {
-                                    $regLabel = 'Lucro Presumido';        $regHex = '#0f766e';
+                                    $regLabel = 'Lucro Presumido';        $regHex = \App\Support\Reports\ReportTheme::regimeHex($regLabel);
                                 } elseif (str_contains($regimeUp, 'REAL')) {
-                                    $regLabel = 'Lucro Real';             $regHex = '#0f766e';
+                                    $regLabel = 'Lucro Real';             $regHex = \App\Support\Reports\ReportTheme::regimeHex($regLabel);
                                 } elseif ($regimeRaw !== '') {
-                                    $regLabel = $regimeRaw;               $regHex = '#374151';
+                                    $regLabel = $regimeRaw;               $regHex = \App\Support\Reports\ReportTheme::regimeHex($regLabel);
                                 } else {
-                                    $regLabel = 'Não informado';          $regHex = '#9ca3af';
+                                    $regLabel = 'Não consultado';         $regHex = \App\Support\Reports\ReportTheme::regimeHex($regLabel);
                                 }
 
                                 $inicioFmt = null;
@@ -333,18 +329,20 @@
                                     <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Situação Fiscal</span>
                                 </div>
 
-                                @if($temRegime)
                                 <div class="grid grid-cols-2 sm:grid-cols-4 divide-x divide-gray-200">
                                     <div class="px-3 py-2.5">
                                         <p class="flex items-center gap-1.5 text-[9px] font-semibold text-gray-400 uppercase tracking-wider leading-none">
                                             <span class="inline-block w-2 h-2" style="background-color: {{ $regHex }}"></span>
                                             Regime Tributário
                                         </p>
-                                        <p class="mt-1.5 text-sm text-gray-900 font-semibold leading-tight inline-block border-b-2 pb-0.5" style="border-bottom-color: {{ $regHex }}">{{ $regLabel }}</p>
+                                        <p class="mt-1.5">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $regHex }}">{{ $regLabel }}</span>
+                                        </p>
                                         @if(! empty($dados['regime_tributario_ano']))
                                         <p class="text-[11px] text-gray-500 leading-tight mt-0.5">Ano-base {{ $dados['regime_tributario_ano'] }}</p>
                                         @endif
                                     </div>
+                                    @if($temRegime)
                                     <div class="px-3 py-2.5">
                                         <p class="text-[9px] font-semibold text-gray-400 uppercase tracking-wider leading-none">Simples Nacional</p>
                                         <p class="mt-1.5 text-sm text-gray-900 font-semibold leading-tight">{{ $isSimples ? 'Optante' : 'Não optante' }}</p>
@@ -363,11 +361,11 @@
                                         <p class="text-[9px] font-semibold text-gray-400 uppercase tracking-wider leading-none">CRT</p>
                                         <p class="mt-1.5 text-sm text-gray-900 font-mono leading-tight">{{ $crtLabel }}</p>
                                     </div>
+                                    @endif
                                 </div>
-                                @endif
 
                                 @if($temSituacao)
-                                <div class="grid grid-cols-2 sm:grid-cols-4 divide-x divide-gray-200 {{ $temRegime ? 'border-t border-gray-200' : '' }}">
+                                <div class="grid grid-cols-2 sm:grid-cols-4 divide-x divide-gray-200 border-t border-gray-200">
                                     <div class="px-3 py-2.5">
                                         <p class="flex items-center gap-1.5 text-[9px] font-semibold text-gray-400 uppercase tracking-wider leading-none">
                                             <span class="inline-block w-2 h-2" style="background-color: {{ $sitHex }}"></span>
@@ -415,7 +413,7 @@
                                     } elseif ($status === '') {
                                         $statusLabel = 'Não consultada'; $statusHex = '#9ca3af';
                                     } elseif (str_contains($status, 'POSITIVA COM EFEITO') || str_contains($status, 'EFEITO DE NEGATIVA') || $situacaoCnd === 'REGULAR_COM_RESSALVAS') {
-                                        $statusLabel = 'Regular c/ ressalvas'; $statusHex = '#d97706';
+                                        $statusLabel = 'Regular c/ ressalvas'; $statusHex = '#b45309';
                                     } elseif (in_array($status, ['POSITIVA', 'IRREGULAR', 'IRREGULARIDADE'], true)) {
                                         $statusLabel = 'Irregular'; $statusHex = '#dc2626';
                                     } elseif (in_array($status, ['NEGATIVA', 'REGULAR', 'REGULARIDADE'], true)) {
@@ -432,8 +430,8 @@
                                             $validadeFmt = $dataVal->format('d/m/Y');
                                             $dias = (int) floor(now()->startOfDay()->diffInDays($dataVal->startOfDay(), false));
                                             if ($dias < 0) { $validadeTexto = 'Vencida há '.abs($dias).' dia'.(abs($dias) === 1 ? '' : 's'); $validadeHex = '#dc2626'; }
-                                            elseif ($dias === 0) { $validadeTexto = 'Vence hoje'; $validadeHex = '#d97706'; }
-                                            elseif ($dias <= 30) { $validadeTexto = 'Vence em '.$dias.' dia'.($dias === 1 ? '' : 's'); $validadeHex = '#d97706'; }
+                                            elseif ($dias === 0) { $validadeTexto = 'Vence hoje'; $validadeHex = '#b45309'; }
+                                            elseif ($dias <= 30) { $validadeTexto = 'Vence em '.$dias.' dia'.($dias === 1 ? '' : 's'); $validadeHex = '#b45309'; }
                                             else { $validadeTexto = 'Vence em '.$dias.' dias'; $validadeHex = '#6b7280'; }
                                         } catch (\Exception $e) { $validadeFmt = (string) $dv; }
                                     }
@@ -532,7 +530,7 @@
                                             @php
                                                 $rfbAlerta = $cert['debitosRfb'] === true;
                                                 $rfbLabel  = $rfbAlerta ? 'Com débitos' : 'Sem débitos';
-                                                $rfbHex    = '#d97706';
+                                                $rfbHex    = '#b45309';
                                             @endphp
                                             <div class="px-3 py-2.5">
                                                 <p class="flex items-center gap-1.5 text-[9px] font-semibold text-gray-400 uppercase tracking-wider leading-none">
@@ -863,7 +861,7 @@
                                 'gratuito' => '#6b7280',
                                 'validacao' => '#4338ca',
                                 'licitacao' => '#7c3aed',
-                                'compliance' => '#d97706',
+                                'compliance' => '#b45309',
                                 'due_diligence' => '#be123c',
                                 'enterprise' => '#1f2937',
                             ];

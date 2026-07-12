@@ -6,7 +6,7 @@ it('marca INDETERMINADO pelo status', function () {
     $r = CndFederal::analisar(['status' => 'INDETERMINADO', 'mensagem' => 'Sem dados.']);
     expect($r['indeterminado'])->toBeTrue();
     expect($r['label'])->toBe('Indeterminada');
-    expect($r['hex'])->toBe('#d97706');
+    expect($r['hex'])->toBe('#b45309');
 });
 
 it('marca INDETERMINADO quando conseguiu_emitir e false sem status', function () {

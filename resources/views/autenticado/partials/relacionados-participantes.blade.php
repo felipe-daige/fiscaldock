@@ -82,7 +82,7 @@
                                 @if(($participante->situacao_cadastral ?? '') === 'ATIVA')
                                     <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Ativa</span>
                                 @elseif($participante->situacao_cadastral)
-                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b45309">
                                         {{ $participante->situacao_cadastral }}
                                     </span>
                                 @else

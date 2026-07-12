@@ -17,15 +17,15 @@
 
     // "Ver detalhes" inline por CNPJ (mesmo conteúdo da Consulta de CNPJ), carregado sob demanda.
     function setupDetalheButtons() {
-        document.querySelectorAll('[data-detalhe-participante]').forEach(btn => {
+        document.querySelectorAll('[data-detalhe-url]').forEach(btn => {
             btn.addEventListener('click', () => toggleDetalhe(btn));
         });
     }
 
     async function toggleDetalhe(btn) {
-        const pid = btn.dataset.detalheParticipante;
+        const url = btn.dataset.detalheUrl;
         const target = document.getElementById(btn.dataset.detalheTarget);
-        if (!target) return;
+        if (!url || !target) return;
 
         if (!target.classList.contains('hidden')) {
             target.classList.add('hidden');
@@ -39,52 +39,77 @@
         if (!content || content.dataset.loaded) return;
         content.innerHTML = '<div class="text-xs text-gray-500 py-3">Carregando…</div>';
         try {
-            const resp = await fetch(`/app/score-fiscal/participante/${pid}/detalhe`, {
+            const resp = await fetch(url, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
             });
             const data = await resp.json();
             content.innerHTML = data.html || '<div class="text-xs text-gray-500 py-3">Sem detalhe.</div>';
             content.dataset.loaded = '1';
+            setupInlineDetalheToggles(content);
         } catch (err) {
             content.innerHTML = '<div class="text-xs text-red-600 py-3">Erro ao carregar detalhe.</div>';
         }
+    }
+
+    function setupInlineDetalheToggles(root) {
+        root.querySelectorAll('[data-detalhe-toggle]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = document.getElementById(btn.getAttribute('data-detalhe-toggle'));
+                if (!target) return;
+
+                const isHidden = target.classList.toggle('hidden');
+                btn.setAttribute('aria-expanded', isHidden ? 'false' : 'true');
+
+                const chevron = btn.querySelector('.detalhe-chevron');
+                if (chevron) {
+                    chevron.style.transform = isHidden ? '' : 'rotate(90deg)';
+                }
+            });
+        });
     }
 
     // Configura filtros
     function setupFilters() {
         const filtroCliente = document.getElementById('filtro-cliente');
         const filtroClassificacao = document.getElementById('filtro-classificacao');
+        const filtroStatus = document.getElementById('filtro-status-score');
+        const filtroTipo = document.getElementById('filtro-tipo-score');
+        const filtroCredito = document.getElementById('filtro-credito-score');
+        const scoreMin = document.getElementById('score-min');
+        const scoreMax = document.getElementById('score-max');
         const buscaParticipante = document.getElementById('busca-participante');
 
-        if (filtroCliente) {
-            filtroCliente.addEventListener('change', function() {
-                applyFilters();
+        [filtroCliente, filtroClassificacao, filtroStatus, filtroTipo, filtroCredito].forEach(field => {
+            if (!field) return;
+            field.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') { e.preventDefault(); applyFilters(); }
             });
-        }
-
-        if (filtroClassificacao) {
-            filtroClassificacao.addEventListener('change', function() {
-                applyFilters();
-            });
-        }
+        });
 
         if (buscaParticipante) {
-            let debounceTimer;
-            buscaParticipante.addEventListener('input', function() {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => {
-                    applyFilters();
-                }, 500);
-            });
             buscaParticipante.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') { e.preventDefault(); applyFilters(); }
             });
         }
 
+        [scoreMin, scoreMax].forEach(field => {
+            if (!field) return;
+            field.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') { e.preventDefault(); applyFilters(); }
+            });
+        });
+
         const btnFiltrar = document.getElementById('btn-filtrar-score');
         if (btnFiltrar) {
             btnFiltrar.addEventListener('click', function() {
                 applyFilters();
+            });
+        }
+
+        const btnLimpar = document.getElementById('btn-limpar-filtros-score');
+        if (btnLimpar) {
+            btnLimpar.addEventListener('click', function() {
+                clearFilters();
             });
         }
     }
@@ -93,17 +118,41 @@
     function applyFilters() {
         const cliente = document.getElementById('filtro-cliente')?.value || '';
         const classificacao = document.getElementById('filtro-classificacao')?.value || 'todos';
+        const status = document.getElementById('filtro-status-score')?.value || 'todos';
+        const tipo = document.getElementById('filtro-tipo-score')?.value || 'todos';
+        const credito = document.getElementById('filtro-credito-score')?.value || 'todos';
+        const scoreMin = document.getElementById('score-min')?.value || '';
+        const scoreMax = document.getElementById('score-max')?.value || '';
         const busca = document.getElementById('busca-participante')?.value || '';
 
         const params = new URLSearchParams();
         // Visualizacao por cliente e obrigatoria — sempre enviada (id ou "todos").
         if (cliente) params.append('cliente_id', cliente);
+        if (status !== 'todos') params.append('status', status);
+        if (tipo !== 'todos') params.append('tipo', tipo);
         if (classificacao !== 'todos') params.append('classificacao', classificacao);
+        if (credito !== 'todos') params.append('credito', credito);
+        if (scoreMin) params.append('score_min', scoreMin);
+        if (scoreMax) params.append('score_max', scoreMax);
         if (busca) params.append('busca', busca);
 
         const url = '/app/score-fiscal' + (params.toString() ? '?' + params.toString() : '');
 
         // Usa o SPA router se disponivel
+        if (window.spaNavigate) {
+            window.spaNavigate(url);
+        } else {
+            window.location.href = url;
+        }
+    }
+
+    function clearFilters() {
+        const cliente = document.getElementById('filtro-cliente');
+        const params = new URLSearchParams();
+        params.append('cliente_id', cliente?.querySelector('option[value="todos"]') ? 'todos' : (cliente?.value || ''));
+
+        const url = '/app/score-fiscal?' + params.toString();
+
         if (window.spaNavigate) {
             window.spaNavigate(url);
         } else {

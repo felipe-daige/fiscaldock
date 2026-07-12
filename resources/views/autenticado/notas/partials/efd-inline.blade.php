@@ -1,7 +1,7 @@
 @php
     $tipoBadge = $nota->tipo_operacao === 'entrada'
         ? ['label' => 'ENTRADA', 'hex' => '#047857']
-        : ['label' => 'SAÍDA', 'hex' => '#d97706'];
+        : ['label' => 'SAÍDA', 'hex' => '#b45309'];
 
     $origemBadge = match($nota->origem_arquivo ?? '') {
         'fiscal' => ['label' => 'EFD ICMS/IPI', 'hex' => '#4338ca'],

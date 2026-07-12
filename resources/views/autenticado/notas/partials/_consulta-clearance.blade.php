@@ -13,7 +13,7 @@
         'CANCELADA' => '#dc2626',
         'DENEGADA' => '#991b1b',
         'INUTILIZADA' => '#374151',
-        'NAO_ENCONTRADA' => '#d97706',
+        'NAO_ENCONTRADA' => '#b45309',
         'INDETERMINADO' => '#1d4ed8',
     ];
     $situacaoLabel = [
@@ -85,7 +85,7 @@
         $sevMeta = [
             'ok' => ['#047857', 'Conforme', 'Declarado e Receita batem nos pontos verificados.'],
             'ruido' => ['#0891b2', 'Ruído de cadastro', 'Pequenas diferenças de cadastro, sem impacto fiscal.'],
-            'revisar' => ['#d97706', 'Revisar', 'Há divergência a revisar entre o escriturado e a Receita.'],
+            'revisar' => ['#b45309', 'Revisar', 'Há divergência a revisar entre o escriturado e a Receita.'],
             'critica' => ['#dc2626', 'Divergência crítica', 'Divergência grave — revise antes de qualquer apuração.'],
         ];
         $sev = $auditoria['severidade'] ?? 'ok';

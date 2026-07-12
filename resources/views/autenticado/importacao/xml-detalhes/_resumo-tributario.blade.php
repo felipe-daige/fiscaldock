@@ -25,7 +25,7 @@
         </div>
         <div class="px-4 py-3">
             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Devoluções</p>
-            <p class="text-lg font-bold text-gray-900" @if($rt['devolucoes'] > 0) style="color: #d97706" @endif>{{ number_format($rt['devolucoes']) }}</p>
+            <p class="text-lg font-bold text-gray-900" @if($rt['devolucoes'] > 0) style="color: #b45309" @endif>{{ number_format($rt['devolucoes']) }}</p>
             <p class="text-[11px] text-gray-500">finalidade 4</p>
         </div>
         <div class="px-4 py-3">

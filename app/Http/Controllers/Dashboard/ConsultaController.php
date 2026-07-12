@@ -386,7 +386,7 @@ class ConsultaController extends Controller
 
                     if ($diasSemConsulta > 30) {
                         $consultaStatusLabel = 'Consulta desatualizada';
-                        $consultaStatusHex = '#d97706';
+                        $consultaStatusHex = '#b45309';
                     } else {
                         $consultaStatusLabel = 'Consultado recentemente';
                         $consultaStatusHex = '#047857';
@@ -413,7 +413,7 @@ class ConsultaController extends Controller
                         $cndStatusHex = '#047857';
                     } elseif (str_contains($cndStatus, 'POSITIVA COM EFEITO') || str_contains($cndStatus, 'EFEITO DE NEGATIVA')) {
                         $cndStatusLabel = 'Positiva c/ efeito';
-                        $cndStatusHex = '#d97706';
+                        $cndStatusHex = '#b45309';
                     } elseif (in_array($cndStatus, ['POSITIVA', 'IRREGULAR', 'IRREGULARIDADE'])) {
                         $cndStatusLabel = 'Positiva';
                         $cndStatusHex = '#dc2626';
@@ -1986,7 +1986,7 @@ class ConsultaController extends Controller
     {
         return match (ConsultaLote::normalizeStatus($status)) {
             ConsultaLote::STATUS_FINALIZADO => ['label' => 'Finalizado', 'hex' => '#047857'],
-            ConsultaLote::STATUS_PROCESSANDO => ['label' => 'Processando', 'hex' => '#d97706'],
+            ConsultaLote::STATUS_PROCESSANDO => ['label' => 'Processando', 'hex' => '#b45309'],
             ConsultaLote::STATUS_ERRO => ['label' => 'Erro', 'hex' => '#dc2626'],
             default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
         };
@@ -2026,7 +2026,7 @@ class ConsultaController extends Controller
 
             $statusMeta = match ($resultado->status) {
                 ConsultaResultado::STATUS_SUCESSO => ['label' => 'Sucesso', 'hex' => '#047857'],
-                ConsultaResultado::STATUS_TIMEOUT => ['label' => 'Timeout', 'hex' => '#d97706'],
+                ConsultaResultado::STATUS_TIMEOUT => ['label' => 'Timeout', 'hex' => '#b45309'],
                 ConsultaResultado::STATUS_ERRO => ['label' => 'Erro', 'hex' => '#dc2626'],
                 default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
             };

@@ -15,7 +15,7 @@
         ['key' => 'canceladas',      'label' => 'Canceladas',      'hex' => '#dc2626', 'situacao' => 'CANCELADA',      'descricao' => 'Cancelamento confirmado'],
         ['key' => 'denegadas',       'label' => 'Denegadas',       'hex' => '#991b1b', 'situacao' => 'DENEGADA',       'descricao' => 'Uso negado pelo SEFAZ'],
         ['key' => 'inutilizadas',    'label' => 'Inutilizadas',    'hex' => '#374151', 'situacao' => 'INUTILIZADA',    'descricao' => 'Numeração inutilizada'],
-        ['key' => 'nao_encontradas', 'label' => 'Não encontradas', 'hex' => '#d97706', 'situacao' => 'NAO_ENCONTRADA', 'descricao' => 'Receita não retornou registro (612)'],
+        ['key' => 'nao_encontradas', 'label' => 'Não encontradas', 'hex' => '#b45309', 'situacao' => 'NAO_ENCONTRADA', 'descricao' => 'Receita não retornou registro (612)'],
         ['key' => 'indeterminadas',  'label' => 'Indeterminadas',  'hex' => '#1d4ed8', 'situacao' => 'INDETERMINADO',  'descricao' => 'Fonte oficial sem dados (611)'],
     ];
 
@@ -24,7 +24,7 @@
         'CANCELADA' => '#dc2626',
         'DENEGADA' => '#991b1b',
         'INUTILIZADA' => '#374151',
-        'NAO_ENCONTRADA' => '#d97706',
+        'NAO_ENCONTRADA' => '#b45309',
         'INDETERMINADO' => '#1d4ed8',
     ];
 

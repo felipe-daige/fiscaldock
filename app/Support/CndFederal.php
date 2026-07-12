@@ -6,7 +6,7 @@ class CndFederal
 {
     public const LABEL_INDETERMINADO = 'Indeterminada';
 
-    public const HEX_INDETERMINADO = '#d97706';
+    public const HEX_INDETERMINADO = '#b45309';
 
     /**
      * Analisa o retorno de uma certidão e isola o caso INDETERMINADO. Nasceu para a

@@ -5,14 +5,14 @@
     $scoreTotal = (int) ($validacao['score_total'] ?? 0);
     $scoreHex = match (true) {
         $scoreTotal >= 50 => '#dc2626',
-        $scoreTotal >= 30 => '#d97706',
+        $scoreTotal >= 30 => '#b45309',
         $scoreTotal >= 10 => '#b45309',
         default => '#047857',
     };
 
     $classificacaoHex = match (strtolower((string) ($nota->validacao_classificacao ?? $validacao['classificacao'] ?? ''))) {
         'conforme' => '#047857',
-        'atencao' => '#d97706',
+        'atencao' => '#b45309',
         'irregular' => '#b45309',
         'critico' => '#dc2626',
         default => '#374151',
@@ -73,7 +73,7 @@
                                     $scoreCategoria = (int) ($validacao['scores'][$key] ?? 0);
                                     $scoreCategoriaHex = match (true) {
                                         $scoreCategoria >= 50 => '#dc2626',
-                                        $scoreCategoria >= 30 => '#d97706',
+                                        $scoreCategoria >= 30 => '#b45309',
                                         $scoreCategoria >= 10 => '#b45309',
                                         default => '#047857',
                                     };
@@ -100,7 +100,7 @@
                         @php
                             $nivelHex = match ($alerta['nivel']) {
                                 'bloqueante' => '#dc2626',
-                                'atencao' => '#d97706',
+                                'atencao' => '#b45309',
                                 'info' => '#374151',
                                 default => '#9ca3af',
                             };

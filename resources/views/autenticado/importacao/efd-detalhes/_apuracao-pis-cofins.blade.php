@@ -6,7 +6,7 @@
  $ac = $apuracaoContribuicao;
  $regimeBadge = match($ac->regime) {
  'nao_cumulativo' => ['background-color: #374151', 'Não Cumulativo (Lucro Real)'],
- 'misto' => ['background-color: #d97706', 'Misto'],
+ 'misto' => ['background-color: #b45309', 'Misto'],
  default => ['background-color: #9ca3af', 'Cumulativo (Lucro Presumido)'],
  };
 @endphp

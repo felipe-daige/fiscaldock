@@ -70,7 +70,7 @@
                             $origemLabel = strtoupper($n['origem'] ?? '—');
                             $origemHex = $origem === 'efd' ? '#4338ca' : '#0f766e';
                             $tipoEntrada = ($n['tipo_operacao'] ?? '') === 'entrada';
-                            $tipoHex = $tipoEntrada ? '#047857' : '#d97706';
+                            $tipoHex = $tipoEntrada ? '#047857' : '#b45309';
                             $tipoLabel = $tipoEntrada ? 'Entrada' : 'Saída';
                             $dataFormatada = $n['data_emissao'] ? \Carbon\Carbon::parse($n['data_emissao'])->format('d/m/Y') : '—';
                             $numero = $n['numero'] ?? '—';
@@ -144,7 +144,7 @@
                     $origemLabel = strtoupper($n['origem'] ?? '—');
                     $origemHex = $origem === 'efd' ? '#4338ca' : '#0f766e';
                     $tipoEntrada = ($n['tipo_operacao'] ?? '') === 'entrada';
-                    $tipoHex = $tipoEntrada ? '#047857' : '#d97706';
+                    $tipoHex = $tipoEntrada ? '#047857' : '#b45309';
                     $tipoLabel = $tipoEntrada ? 'Entrada' : 'Saída';
                     $dataFormatada = $n['data_emissao'] ? \Carbon\Carbon::parse($n['data_emissao'])->format('d/m/Y') : '—';
                     $numero = $n['numero'] ?? '—';

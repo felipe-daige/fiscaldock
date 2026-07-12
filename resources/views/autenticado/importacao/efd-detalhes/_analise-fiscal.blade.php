@@ -16,7 +16,7 @@
  // Config de alertas (para banners inline)
  $alertaTipoConfig = [
  'danger' => ['border' => 'border-l-red-500', 'badgeHex' => '#dc2626', 'label' => 'Crítico', 'icon' => 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'],
- 'warning' => ['border' => 'border-l-amber-500', 'badgeHex' => '#d97706', 'label' => 'Atenção', 'icon' => 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'],
+ 'warning' => ['border' => 'border-l-amber-500', 'badgeHex' => '#b45309', 'label' => 'Atenção', 'icon' => 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'],
  'info' => ['border' => 'border-l-blue-500', 'badgeHex' => '#374151', 'label' => 'Info', 'icon' => 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
  ];
 @endphp
@@ -36,7 +36,7 @@
  <span class="text-[10px] font-bold text-white px-2 py-0.5 rounded" style="background-color: #dc2626">{{ $totalDanger }} {{ $totalDanger === 1 ? 'crítico' : 'críticos' }}</span>
  @endif
  @if($totalWarning > 0)
- <span class="text-[10px] font-bold text-white px-2 py-0.5 rounded" style="background-color: #d97706">{{ $totalWarning }} {{ $totalWarning === 1 ? 'atenção' : 'atenção' }}</span>
+ <span class="text-[10px] font-bold text-white px-2 py-0.5 rounded" style="background-color: #b45309">{{ $totalWarning }} {{ $totalWarning === 1 ? 'atenção' : 'atenção' }}</span>
  @endif
  @if($totalInfo > 0)
  <span class="text-[10px] font-bold text-white px-2 py-0.5 rounded" style="background-color: #374151">{{ $totalInfo }} info</span>
@@ -175,7 +175,7 @@
  <div class="flex items-center gap-2">
  <span class="text-sm font-semibold text-gray-900">Concentração de Fornecedores</span>
  @if($conc['concentracao_alta'] ?? false)
- <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #d97706">Alta</span>
+ <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #b45309">Alta</span>
  @endif
  @foreach($alertasParticipantes->groupBy('tipo') as $tipo => $group)
  @php $cfg = $alertaTipoConfig[$tipo] ?? $alertaTipoConfig['info']; @endphp
@@ -481,7 +481,7 @@
  <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #dc2626">{{ $obr['vencidas'] }} vencida{{ ($obr['vencidas'] ?? 0) > 1 ? 's' : '' }}</span>
  @endif
  @if(($obr['proximas_7_dias'] ?? 0) > 0)
- <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #d97706">{{ $obr['proximas_7_dias'] }} próx.</span>
+ <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #b45309">{{ $obr['proximas_7_dias'] }} próx.</span>
  @endif
  @foreach($alertasObrigacoes->groupBy('tipo') as $tipo => $group)
  @php $cfg = $alertaTipoConfig[$tipo] ?? $alertaTipoConfig['info']; @endphp

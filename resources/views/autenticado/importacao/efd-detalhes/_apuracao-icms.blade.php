@@ -12,7 +12,7 @@
  @endif
  </div>
  <div class="flex items-center gap-2">
- @if($ai->tem_st)<span class="px-2 py-0.5 text-xs font-medium rounded text-white" style="background-color: #d97706">ICMS-ST</span>@endif
+ @if($ai->tem_st)<span class="px-2 py-0.5 text-xs font-medium rounded text-white" style="background-color: #b45309">ICMS-ST</span>@endif
  @if($ai->tem_difal)<span class="px-2 py-0.5 text-xs font-medium rounded text-white" style="background-color: #0891b2">DIFAL/FCP</span>@endif
  @if($ai->tem_ipi)<span class="px-2 py-0.5 text-xs font-medium rounded text-white" style="background-color: #047857">IPI</span>@endif
  </div>

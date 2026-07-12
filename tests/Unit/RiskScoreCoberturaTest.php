@@ -48,7 +48,7 @@ it('nao_avaliado quando nada foi avaliado', function () {
 
 it('label e cor do inconclusivo são explícitos e cinza', function () {
     expect($this->svc->getLabelClassificacao('inconclusivo'))->toBe('Risco Não Conclusivo')
-        ->and($this->svc->getCorClassificacao('inconclusivo'))->toBe('gray');
+        ->and($this->svc->getCorClassificacao('inconclusivo'))->toBe('#9ca3af');
 });
 
 // ---------- Piso de classificação por certidão positiva ----------

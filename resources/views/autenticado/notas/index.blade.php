@@ -19,7 +19,7 @@
 
     $tipoBadgeMap = [
         'entrada' => ['label' => 'ENTRADA', 'hex' => '#047857'],
-        'saida' => ['label' => 'SAÍDA', 'hex' => '#d97706'],
+        'saida' => ['label' => 'SAÍDA', 'hex' => '#b45309'],
     ];
 @endphp
 

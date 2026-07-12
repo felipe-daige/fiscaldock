@@ -113,7 +113,6 @@ class AdminAcaoService
                 'sobrenome' => trim((string) $dados['sobrenome']),
                 'telefone' => $this->normalizarTelefone($dados['telefone'] ?? ''),
                 'email' => Str::lower(trim((string) $dados['email'])),
-                'email_verified_at' => $emailVerificado ? now() : null,
                 'password' => (string) $dados['password'],
                 'credits' => (float) ($dados['credits'] ?? 0),
                 'empresa' => $this->nullSeVazio($dados['empresa'] ?? null),

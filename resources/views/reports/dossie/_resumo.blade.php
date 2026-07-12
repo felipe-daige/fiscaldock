@@ -9,6 +9,15 @@
 @php
     $docNum = preg_replace('/\D/', '', (string) $participante->documento);
     $docLabel = strlen($docNum) === 11 ? 'CPF' : 'CNPJ';
+    $cadastro = collect($consulta['blocos'] ?? [])->firstWhere('chave', 'cadastro');
+    $cadastroItens = collect($cadastro['itens'] ?? []);
+    $valorCadastro = function (string $label) use ($cadastroItens): ?string {
+        $valor = trim((string) ($cadastroItens->firstWhere('label', $label)['valor'] ?? ''));
+
+        return $valor !== '' && $valor !== '—' ? $valor : null;
+    };
+    $situacaoCadastro = trim((string) ($participante->situacao_cadastral ?? '')) ?: $valorCadastro('Situação cadastral') ?: 'Não consultada';
+    $regimeTributario = trim((string) ($participante->regime_tributario ?? '')) ?: $valorCadastro('Regime tributário') ?: 'Não consultado';
 @endphp
 <div class="secao">
     <div class="secao-header">Identificação</div>
@@ -16,11 +25,21 @@
         <table class="ident">
             <tr>
                 <td><div class="ident-k">Razão Social</div><div class="ident-v">{{ $participante->razao_social ?: '—' }}</div></td>
-                <td><div class="ident-k">Situação Cadastral</div><div class="ident-v">{{ $participante->situacao_cadastral ?? '—' }}</div></td>
+                <td>
+                    <div class="ident-k">Situação Cadastral</div>
+                    <div class="ident-v"><span class="badge" style="background-color: {{ \App\Support\Reports\ReportTheme::statusHex($situacaoCadastro) }}">{{ $situacaoCadastro }}</span></div>
+                </td>
             </tr>
             <tr>
                 <td><div class="ident-k">{{ $docLabel }}</div><div class="ident-v mono">{{ $participante->documento }}</div></td>
+                <td>
+                    <div class="ident-k">Regime Tributário</div>
+                    <div class="ident-v"><span class="badge" style="background-color: {{ \App\Support\Reports\ReportTheme::regimeHex($regimeTributario) }}">{{ $regimeTributario }}</span></div>
+                </td>
+            </tr>
+            <tr>
                 <td><div class="ident-k">UF</div><div class="ident-v">{{ $participante->uf ?: '—' }}</div></td>
+                <td></td>
             </tr>
         </table>
     </div>

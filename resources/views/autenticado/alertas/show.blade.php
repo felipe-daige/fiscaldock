@@ -22,7 +22,7 @@
                         @php
                             $sevColors = [
                                 'alta' => '#dc2626',
-                                'media' => '#d97706',
+                                'media' => '#b45309',
                                 'baixa' => '#9ca3af'
                             ];
                             $sevLabels = ['alta' => 'Alta', 'media' => 'Média', 'baixa' => 'Baixa'];
@@ -202,7 +202,7 @@
             $auditorias = $alerta->auditorias()->with('user:id,name')->limit(50)->get();
             $acaoHexDet = [
                 'criado' => '#6b7280', 'resolvido' => '#047857', 'auto_resolvido' => '#059669',
-                'ignorado' => '#9ca3af', 'visto' => '#374151', 'reaberto' => '#d97706', 'reativado' => '#b45309',
+                'ignorado' => '#9ca3af', 'visto' => '#374151', 'reaberto' => '#b45309', 'reativado' => '#b45309',
             ];
         @endphp
         @if($auditorias->isNotEmpty())
@@ -236,7 +236,7 @@
         @php
             $detCert = is_string($alerta->detalhes) ? json_decode($alerta->detalhes, true) : ($alerta->detalhes ?? []);
             $detCert = is_array($detCert) ? $detCert : [];
-            $sevHex = ['alta' => '#dc2626', 'media' => '#d97706', 'baixa' => '#9ca3af'];
+            $sevHex = ['alta' => '#dc2626', 'media' => '#b45309', 'baixa' => '#9ca3af'];
             $vTotal = (float) ($detCert['valor_total'] ?? 0);
         @endphp
         <div class="mt-6 sm:mt-8 bg-white rounded border border-gray-300 overflow-hidden">

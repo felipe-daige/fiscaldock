@@ -12,13 +12,9 @@
         'BAIXADA' => ['label' => 'BAIXADA', 'hex' => '#b91c1c'],
         default => $situacaoUpper ? ['label' => $situacaoUpper, 'hex' => '#6b7280'] : null,
     };
-    $regimeUpper = strtoupper((string) ($participante->regime_tributario ?? ''));
-    $regimeBadge = match($regimeUpper) {
-        'SIMPLES NACIONAL', 'SIMPLES' => ['label' => $regimeUpper, 'hex' => '#0f766e'],
-        'LUCRO PRESUMIDO' => ['label' => $regimeUpper, 'hex' => '#d97706'],
-        'LUCRO REAL' => ['label' => $regimeUpper, 'hex' => '#374151'],
-        default => $regimeUpper ? ['label' => $regimeUpper, 'hex' => '#6b7280'] : null,
-    };
+    $regimeLabel = trim((string) ($participante->regime_tributario ?? ''));
+    $regimeLabel = $regimeLabel !== '' && $regimeLabel !== '—' ? $regimeLabel : 'Não consultado';
+    $regimeBadge = ['label' => mb_strtoupper($regimeLabel), 'hex' => \App\Support\Reports\ReportTheme::regimeHex($regimeLabel)];
 @endphp
 <div class="min-h-screen bg-gray-100" id="risk-detail-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -42,8 +38,8 @@
                     @if($participante->nome_fantasia)
                         <p class="text-sm text-gray-600">{{ $participante->nome_fantasia }}</p>
                     @endif
-                    <div class="mt-1 flex items-center gap-2 flex-wrap">
-                        <p class="text-xs text-gray-500 font-mono">CNPJ: {{ $participante->cnpj_formatado }}</p>
+                    <p class="mt-1 text-xs text-gray-500 font-mono">CNPJ: {{ $participante->cnpj_formatado }}</p>
+                    <div class="mt-1.5 flex items-center gap-2 flex-wrap">
                         @if($situacaoBadge)
                             <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $situacaoBadge['hex'] }}">{{ $situacaoBadge['label'] }}</span>
                         @endif
@@ -51,7 +47,14 @@
                             <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $regimeBadge['hex'] }}">{{ $regimeBadge['label'] }}</span>
                         @endif
                         @if(!empty($papel))
-                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border border-gray-300 text-gray-600 bg-white">{{ $papel }}</span>
+                            @php
+                                $papelHex = match($papel) {
+                                    'Fornecedor' => '#2563eb',
+                                    'Comprador' => '#059669',
+                                    default => '#7c3aed', // Fornecedor e Comprador
+                                };
+                            @endphp
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $papelHex }}">{{ $papel }}</span>
                         @endif
                     </div>
                 </div>
@@ -128,7 +131,9 @@
                         </div>
                         <div class="px-4 py-3">
                             <dt class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Regime Tributário</dt>
-                            <dd class="text-sm text-gray-700 mt-0.5">{{ $participante->regime_tributario ?? 'Não informado' }}</dd>
+                            <dd class="text-sm text-gray-700 mt-0.5">
+                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $regimeBadge['hex'] }}">{{ $regimeBadge['label'] }}</span>
+                            </dd>
                         </div>
                         <div class="px-4 py-3">
                             <dt class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">UF / Município</dt>
@@ -174,7 +179,7 @@
                 @php
                     $cr = $creditoReforma ?? null;
                     $crCor = ([
-                        'verde' => '#047857', 'amarelo' => '#d97706', 'vermelho' => '#b91c1c', 'cinza' => '#9ca3af',
+                        'verde' => '#047857', 'amarelo' => '#b45309', 'vermelho' => '#b91c1c', 'cinza' => '#9ca3af',
                     ])[$cr['flag'] ?? 'cinza'] ?? '#9ca3af';
                 @endphp
                 <div class="bg-white rounded border border-gray-300 overflow-hidden">
@@ -255,7 +260,7 @@
                         <div class="mt-4 text-[11px] text-gray-500">
                             Última atualização: {{ $score->ultima_consulta_em->format('d/m/Y H:i') }}
                             @if($score->isDesatualizado())
-                                <span class="ml-2 font-semibold" style="color: #d97706">(Desatualizado — mais de 30 dias)</span>
+                                <span class="ml-2 font-semibold" style="color: #b45309">(Desatualizado — mais de 30 dias)</span>
                             @endif
                         </div>
                         @endif

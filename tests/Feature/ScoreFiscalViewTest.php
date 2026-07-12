@@ -400,6 +400,211 @@ it('card de risco crítico mostra o motivo ao lado do score', function () {
         ->assertSee('Situação cadastral: BAIXADA');
 });
 
+it('dashboard colore o score pela classificação persistida e não só pela faixa numérica', function () {
+    $user = User::factory()->create();
+    $part = Participante::create([
+        'user_id' => $user->id,
+        'documento' => '11222333000181',
+        'razao_social' => 'PISO ALTO LTDA',
+    ]);
+
+    \App\Models\ParticipanteScore::create([
+        'participante_id' => $part->id,
+        'user_id' => $user->id,
+        'score_cadastral' => 0,
+        'score_cnd_estadual' => 70,
+        'score_total' => 15,
+        'classificacao' => 'alto',
+        'ultima_consulta_em' => now(),
+    ]);
+
+    $html = actingAs($user)
+        ->get('/app/score-fiscal?cliente_id=todos')
+        ->assertOk()
+        ->getContent();
+
+    expect($html)->toContain('style="color: #ea580c">15</span>')
+        ->not->toContain('style="color: #047857">15</span>');
+});
+
+it('barra de filtros expansível aplica tipo, crédito e faixa de score', function () {
+    $user = User::factory()->create();
+    $cliente = \App\Models\Cliente::create([
+        'user_id' => $user->id,
+        'documento' => '99888777000166',
+        'razao_social' => 'CLIENTE FILTRADO LTDA',
+        'tipo_pessoa' => 'PJ',
+    ]);
+    $participante = Participante::create([
+        'user_id' => $user->id,
+        'documento' => '11222333000181',
+        'razao_social' => 'PARTICIPANTE FORA LTDA',
+    ]);
+
+    \App\Models\ParticipanteScore::create([
+        'cliente_id' => $cliente->id,
+        'user_id' => $user->id,
+        'score_total' => 30,
+        'score_credito_reforma' => 50,
+        'classificacao' => 'medio',
+        'ultima_consulta_em' => now(),
+    ]);
+    \App\Models\ParticipanteScore::create([
+        'participante_id' => $participante->id,
+        'user_id' => $user->id,
+        'score_total' => 30,
+        'score_credito_reforma' => 50,
+        'classificacao' => 'medio',
+        'ultima_consulta_em' => now(),
+    ]);
+
+    actingAs($user)
+        ->get('/app/score-fiscal?cliente_id=todos&status=consultados&tipo=cliente&credito=parcial&score_min=20&score_max=40')
+        ->assertOk()
+        ->assertSee('data-mobile-filters', false)
+        ->assertSee('Crédito IBS/CBS')
+        ->assertSee('value="20"', false)
+        ->assertSee('value="40"', false)
+        ->assertSee('CLIENTE FILTRADO LTDA')
+        ->assertDontSee('PARTICIPANTE FORA LTDA');
+});
+
+it('cliente consultado também tem ver detalhes no Score Fiscal', function () {
+    $user = User::factory()->create();
+    $cliente = \App\Models\Cliente::create([
+        'user_id' => $user->id,
+        'documento' => '99888777000166',
+        'razao_social' => 'CLIENTE DETALHE LTDA',
+        'tipo_pessoa' => 'PJ',
+        'uf' => 'SP',
+    ]);
+
+    \App\Models\ParticipanteScore::create([
+        'cliente_id' => $cliente->id,
+        'user_id' => $user->id,
+        'score_total' => 0,
+        'classificacao' => 'baixo',
+        'ultima_consulta_em' => now(),
+    ]);
+
+    $lote = ConsultaLote::create([
+        'user_id' => $user->id,
+        'plano_id' => MonitoramentoPlano::porCodigo('licitacao')->id,
+        'status' => ConsultaLote::STATUS_FINALIZADO,
+        'total_participantes' => 1,
+        'creditos_cobrados' => 10,
+        'tab_id' => (string) Str::uuid(),
+        'processado_em' => now(),
+    ]);
+    ConsultaResultado::create([
+        'consulta_lote_id' => $lote->id,
+        'cliente_id' => $cliente->id,
+        'status' => ConsultaResultado::STATUS_SUCESSO,
+        'resultado_dados' => [
+            'situacao_cadastral' => 'ATIVA',
+            'regime_tributario' => 'Simples Nacional',
+            'razao_social' => 'CLIENTE DETALHE LTDA',
+            'cnd_federal' => ['status' => 'Negativa'],
+        ],
+        'consultado_em' => now(),
+    ]);
+
+    actingAs($user)
+        ->get('/app/score-fiscal?cliente_id=todos')
+        ->assertOk()
+        ->assertSee('CLIENTE DETALHE LTDA')
+        ->assertSee('data-detalhe-url="/app/score-fiscal/cliente/'.$cliente->id.'/detalhe"', false);
+
+    $resp = actingAs($user)->getJson("/app/score-fiscal/cliente/{$cliente->id}/detalhe")->assertOk();
+
+    expect($resp->json('html'))->toContain('CLIENTE DETALHE LTDA')
+        ->toContain('Dados cadastrais')
+        ->toContain('Situação cadastral: ATIVA')
+        ->toContain('Regime tributário: Simples Nacional');
+});
+
+it('detalhe cadastral mostra regime não consultado quando o plano não trouxe o dado', function () {
+    $html = view('autenticado.consulta.partials.detalhe-blocos', [
+        'resumo' => null,
+        'certidoes' => [],
+        'cabecalho' => ['razao' => 'SEM REGIME LTDA', 'documento' => '11222333000181', 'situacao' => 'ATIVA'],
+        'blocos' => [[
+            'chave' => 'cadastro',
+            'titulo' => 'Dados cadastrais',
+            'badge' => ['label' => 'Ativa', 'hex' => '#047857'],
+            'itens' => [
+                ['label' => 'Situação cadastral', 'valor' => 'ATIVA', 'tooltip' => null],
+                ['label' => 'Porte', 'valor' => 'DEMAIS', 'tooltip' => null],
+            ],
+            'listas' => [],
+            'mensagem' => null,
+        ]],
+    ])->render();
+
+    expect($html)->toContain('Situação cadastral: ATIVA')
+        ->toContain('Regime tributário: Não consultado');
+});
+
+it('ver detalhes do cliente mostra dados cadastrais mesmo sem resultado de consulta direto', function () {
+    $user = User::factory()->create();
+    $cliente = \App\Models\Cliente::create([
+        'user_id' => $user->id,
+        'documento' => '99888777000166',
+        'razao_social' => 'CLIENTE SEM RESULTADO LTDA',
+        'tipo_pessoa' => 'PJ',
+        'uf' => 'SP',
+        'situacao_cadastral' => 'ATIVA',
+        'regime_tributario' => 'Lucro Real',
+    ]);
+
+    \App\Models\ParticipanteScore::create([
+        'cliente_id' => $cliente->id,
+        'user_id' => $user->id,
+        'score_total' => 15,
+        'classificacao' => 'alto',
+        'ultima_consulta_em' => now(),
+    ]);
+
+    actingAs($user)
+        ->get('/app/score-fiscal?cliente_id=todos')
+        ->assertOk()
+        ->assertSee('data-detalhe-url="/app/score-fiscal/cliente/'.$cliente->id.'/detalhe"', false);
+
+    $resp = actingAs($user)->getJson("/app/score-fiscal/cliente/{$cliente->id}/detalhe")->assertOk();
+
+    expect($resp->json('html'))->toContain('CLIENTE SEM RESULTADO LTDA')
+        ->toContain('Dados cadastrais')
+        ->toContain('Situação cadastral: ATIVA')
+        ->toContain('Regime tributário: Lucro Real')
+        ->not->toContain('Sem consulta de certidões para este CNPJ');
+});
+
+it('detalhe inline usa badges compactos com tooltip', function () {
+    $html = view('autenticado.consulta.partials.detalhe-blocos', [
+        'resumo' => null,
+        'certidoes' => [[
+            'sigla' => 'FED',
+            'glyph' => '✓',
+            'titulo' => 'CND Federal',
+            'label' => 'Positiva com efeitos de negativa',
+            'hex' => '#047857',
+            'descricao' => 'Certidão regular por efeitos de negativa.',
+        ]],
+        'blocos' => [[
+            'chave' => 'cnd_federal',
+            'titulo' => 'CND Federal',
+            'badge' => ['label' => 'Positiva com efeitos de negativa', 'hex' => '#047857'],
+            'itens' => [],
+            'listas' => [],
+            'mensagem' => 'Certidão regular por efeitos de negativa.',
+        ]],
+    ])->render();
+
+    expect($html)->toContain('cert-tip hidden')
+        ->toContain('title="CND Federal · Positiva com efeitos de negativa')
+        ->toContain('P.E.N.');
+});
+
 it('origem NULL sem vínculo EFD segue exibindo traço', function () {
     $user = User::factory()->create();
     $part = Participante::create([

@@ -105,7 +105,7 @@
                         'gratuito' => '#047857',
                         'validacao' => '#4338ca',
                         'licitacao' => '#0f766e',
-                        'compliance' => '#d97706',
+                        'compliance' => '#b45309',
                         'due_diligence' => '#9a3412',
                         default => '#374151',
                     };
@@ -216,7 +216,7 @@
                                             <td class="py-2 px-3 text-gray-500" data-label="Quando usar">{{ $pd['casos_uso'][0] ?? '—' }}</td>
                                             <td class="py-2 px-3" data-label="Acesso">
                                                 @if ($pd['locked'])
-                                                    <span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold whitespace-nowrap" style="background-color: #d97706;">Requer 1ª compra</span>
+                                                    <span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold whitespace-nowrap" style="background-color: #b45309;">Requer 1ª compra</span>
                                                 @else
                                                     <span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold whitespace-nowrap" style="background-color: #047857;">Liberado</span>
                                                 @endif
@@ -1034,7 +1034,7 @@
                                                     @elseif($pd['gratuito'])
                                                         <span class="whitespace-nowrap flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Grátis</span>
                                                     @elseif($pd['promo'])
-                                                        <span class="whitespace-nowrap flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) $pd['creditos'])) }}</span>
+                                                        <span class="whitespace-nowrap flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b45309">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) $pd['creditos'])) }}</span>
                                                     @else
                                                         <span class="whitespace-nowrap flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeHex }}">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) $pd['creditos'])) }}</span>
                                                     @endif
@@ -1051,7 +1051,7 @@
                                                 @endif
 
                                                 @if($pd['promo'])
-                                                    <div class="mt-3 bg-white rounded border border-gray-300 border-l-4 p-3 text-sm text-gray-700" style="border-left-color: #d97706">
+                                                    <div class="mt-3 bg-white rounded border border-gray-300 border-l-4 p-3 text-sm text-gray-700" style="border-left-color: #b45309">
                                                         Promoção: de {{ $pd['preco_original'] }} por {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $pd['creditos'])) }}/CNPJ
                                                     </div>
                                                 @endif

@@ -338,7 +338,7 @@ class CatalogoController extends Controller
             foreach ($notas as $nota) {
                 $url = '/app/notas/efd/'.$nota->id;
                 $tipoOp = $nota->tipo_operacao === 'entrada' ? 'Entrada' : 'Saída';
-                $tipoBg = $nota->tipo_operacao === 'entrada' ? '#047857' : '#d97706';
+                $tipoBg = $nota->tipo_operacao === 'entrada' ? '#047857' : '#b45309';
                 $dataFmt = $nota->data_emissao ? date('d/m/Y', strtotime($nota->data_emissao)) : '—';
 
                 $html .= '<tr class="hover:bg-gray-50/50 transition-colors">';
@@ -381,21 +381,21 @@ class CatalogoController extends Controller
             foreach ($registros as $reg) {
                 $ncmChanged = $prevNcm !== null && $prevNcm !== $reg->cod_ncm;
                 $aliqChanged = $prevAliq !== null && abs((float) $prevAliq - (float) $reg->aliq_icms) > 0.01;
-                $highlightClass = ($ncmChanged || $aliqChanged) ? ' style="border-left: 3px solid #d97706"' : '';
+                $highlightClass = ($ncmChanged || $aliqChanged) ? ' style="border-left: 3px solid #b45309"' : '';
 
                 $html .= '<tr class="hover:bg-gray-50/50 transition-colors"'.$highlightClass.'>';
                 $html .= '<td class="px-3 py-2 text-sm text-gray-700">'.e($reg->importacao?->filename ?? 'ID '.$reg->importacao_id).'</td>';
                 $html .= '<td class="px-3 py-2 text-sm text-gray-500">'.($reg->importacao?->concluido_em?->format('d/m/Y') ?? '—').'</td>';
                 $html .= '<td class="px-3 py-2 font-mono text-sm '.($ncmChanged ? 'font-semibold' : 'text-gray-700').'">';
                 if ($ncmChanged) {
-                    $html .= '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #d97706">'.e($reg->cod_ncm ?: '—').'</span>';
+                    $html .= '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #b45309">'.e($reg->cod_ncm ?: '—').'</span>';
                 } else {
                     $html .= e($reg->cod_ncm ?: '—');
                 }
                 $html .= '</td>';
                 $html .= '<td class="px-3 py-2 text-right text-sm font-mono '.($aliqChanged ? 'font-semibold' : 'text-gray-700').'">';
                 if ($aliqChanged) {
-                    $html .= '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #d97706">'.($reg->aliq_icms !== null ? number_format((float) $reg->aliq_icms, 2, ',', '.').'%' : '—').'</span>';
+                    $html .= '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #b45309">'.($reg->aliq_icms !== null ? number_format((float) $reg->aliq_icms, 2, ',', '.').'%' : '—').'</span>';
                 } else {
                     $html .= ($reg->aliq_icms !== null ? number_format((float) $reg->aliq_icms, 2, ',', '.').'%' : '—');
                 }

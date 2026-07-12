@@ -15,7 +15,7 @@
     $precos = app(\App\Services\PricingCatalogService::class);
     $projecaoCiclo = $consumoCiclo + collect($assinaturas)->where('vence_no_ciclo', true)->sum('custo_ciclo');
     $pctConsumo = $capEfetivo > 0 ? min(100, (int) round($consumoCiclo * 100 / $capEfetivo)) : 0;
-    $corBarra = $pctConsumo >= 100 ? '#dc2626' : ($pctConsumo >= 80 ? '#d97706' : '#1f2937');
+    $corBarra = $pctConsumo >= 100 ? '#dc2626' : ($pctConsumo >= 80 ? '#b45309' : '#1f2937');
 @endphp
 <div class="min-h-screen bg-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-4 sm:space-y-6">
@@ -41,7 +41,7 @@
 
     @if(!empty($reconciliacaoDowngrade))
         @php $_rec = $reconciliacaoDowngrade; @endphp
-        <div class="bg-white rounded border border-gray-300 border-l-4 p-4" style="border-left-color: #d97706">
+        <div class="bg-white rounded border border-gray-300 border-l-4 p-4" style="border-left-color: #b45309">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                     <h2 class="text-sm font-bold text-gray-900">Ajuste de plano necessário</h2>
@@ -137,7 +137,7 @@
                         $sit = strtolower((string) ($a['ultima']['situacao'] ?? ''));
                         $hex = $sit === 'regular' ? '#047857'
                              : ($sit === 'irregular' ? '#dc2626'
-                             : ($sit === 'atencao' ? '#d97706'
+                             : ($sit === 'atencao' ? '#b45309'
                              : (($a['ultima']['status'] ?? '') === 'erro' ? '#b45309' : '#9ca3af')));
                     @endphp
                     <div class="px-4 py-3 space-y-1.5">
@@ -224,7 +224,7 @@
                                             $sit = strtolower((string) ($a['ultima']['situacao'] ?? ''));
                                             $hex = $sit === 'regular' ? '#047857'
                                                  : ($sit === 'irregular' ? '#dc2626'
-                                                 : ($sit === 'atencao' ? '#d97706'
+                                                 : ($sit === 'atencao' ? '#b45309'
                                                  : ($a['ultima']['status'] === 'erro' ? '#b45309' : '#9ca3af')));
                                         @endphp
                                         <span class="inline-flex px-1.5 py-0.5 rounded text-white text-[10px] capitalize" style="background-color: {{ $hex }}">{{ $a['ultima']['situacao'] ?? $a['ultima']['status'] }}</span>
@@ -920,7 +920,7 @@
             }
 
             var pct = Math.min(100, Math.round(consumoCreditos * 100 / capCreditos));
-            var cor = pct >= 100 ? '#dc2626' : (pct >= 80 ? '#d97706' : '#1f2937');
+            var cor = pct >= 100 ? '#dc2626' : (pct >= 80 ? '#b45309' : '#1f2937');
             percentual.textContent = pct + '%';
             barra.style.width = pct + '%';
             barra.style.backgroundColor = cor;

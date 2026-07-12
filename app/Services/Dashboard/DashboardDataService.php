@@ -29,7 +29,7 @@ class DashboardDataService
     /** Cores (hex inline — regra do design system) por classificação de risco. */
     private const RISCO_HEX = [
         'baixo' => '#047857',
-        'medio' => '#d97706',
+        'medio' => '#b45309',
         'alto' => '#ea580c',
         'critico' => '#dc2626',
     ];
@@ -130,8 +130,8 @@ class DashboardDataService
 
         return [
             ['chave' => 'alertas_alta', 'label' => 'Alertas alta severidade',        'count' => (int) $alertasAlta,             'hex' => '#dc2626', 'url' => '/app/alertas'],
-            ['chave' => 'certidoes',    'label' => 'Certidões desatualizadas (+30d)', 'count' => (int) $certidoesDesatualizadas, 'hex' => '#d97706', 'url' => '/app/score-fiscal'],
-            ['chave' => 'imports_erro', 'label' => 'Importações com erro',            'count' => (int) $importsErro,             'hex' => '#d97706', 'url' => '/app/importacao/historico'],
+            ['chave' => 'certidoes',    'label' => 'Certidões desatualizadas (+30d)', 'count' => (int) $certidoesDesatualizadas, 'hex' => '#b45309', 'url' => '/app/score-fiscal'],
+            ['chave' => 'imports_erro', 'label' => 'Importações com erro',            'count' => (int) $importsErro,             'hex' => '#b45309', 'url' => '/app/importacao/historico'],
             ['chave' => 'risco',        'label' => 'Participantes em risco',          'count' => $this->contarRisco($userId, $clienteId), 'hex' => '#ca8a04', 'url' => '/app/score-fiscal'],
         ];
     }

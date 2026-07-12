@@ -7,7 +7,7 @@
     $situacao = mb_strtoupper($certidoes['situacao_cadastral'] ?? 'NÃO CONSULTADO');
     $situacaoBadge = match($situacao) {
         'ATIVA' => ['label' => 'ATIVA', 'hex' => '#047857'],
-        'SUSPENSA' => ['label' => 'SUSPENSA', 'hex' => '#d97706'],
+        'SUSPENSA' => ['label' => 'SUSPENSA', 'hex' => '#b45309'],
         'INAPTA' => ['label' => 'INAPTA', 'hex' => '#dc2626'],
         'BAIXADA' => ['label' => 'BAIXADA', 'hex' => '#9ca3af'],
         default => ['label' => 'NÃO CONSULTADO', 'hex' => '#9ca3af'],
@@ -17,7 +17,7 @@
     if ($score) {
         $scoreBadge = match($score->classificacao) {
             'baixo' => ['label' => 'BAIXO', 'hex' => '#047857', 'valor' => $score->score_total . '/100'],
-            'medio' => ['label' => 'MÉDIO', 'hex' => '#d97706', 'valor' => $score->score_total . '/100'],
+            'medio' => ['label' => 'MÉDIO', 'hex' => '#b45309', 'valor' => $score->score_total . '/100'],
             'alto' => ['label' => 'ALTO', 'hex' => '#ea580c', 'valor' => $score->score_total . '/100'],
             'critico' => ['label' => 'CRÍTICO', 'hex' => '#dc2626', 'valor' => $score->score_total . '/100'],
             'inconclusivo' => ['label' => 'NÃO CONCLUSIVO', 'hex' => '#9ca3af', 'valor' => '—'],
@@ -192,7 +192,7 @@
                     @if($temScoreValor)
                         <div class="flex h-2 overflow-hidden rounded-full">
                             <span class="h-2" style="width:20%;background-color:#047857"></span>
-                            <span class="h-2" style="width:30%;background-color:#d97706"></span>
+                            <span class="h-2" style="width:30%;background-color:#b45309"></span>
                             <span class="h-2" style="width:30%;background-color:#ea580c"></span>
                             <span class="h-2" style="width:20%;background-color:#dc2626"></span>
                         </div>

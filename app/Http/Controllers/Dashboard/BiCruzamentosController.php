@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Concerns\RespondeAjax;
+use App\Http\Controllers\Concerns\SetsDownloadToken;
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Services\Bi\CruzamentosConsultasClearanceService;
+use App\Services\Bi\Export\CruzamentosReportBuilder;
+use App\Support\PdfReport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,6 +19,7 @@ use Illuminate\Support\Facades\Auth;
 class BiCruzamentosController extends Controller
 {
     use RespondeAjax;
+    use SetsDownloadToken;
 
     private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
 
@@ -113,6 +117,32 @@ class BiCruzamentosController extends Controller
         $notas = $this->service->notasDoFornecedor($userId, $participanteId, $this->filtros($request));
 
         return response()->json(['notas' => $notas]);
+    }
+
+    /**
+     * Relatório A4 (PDF) dos cruzamentos — mesmos services/filtros da tela (números batem por
+     * construção), com parecer executivo, checklist de providências e metodologia auditável.
+     * Gate na rota: `bi_completo` + `export`. Guarda defensiva aqui também.
+     */
+    public function exportarPdf(Request $request, CruzamentosReportBuilder $builder)
+    {
+        if (! Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        if (! $this->entitlements->permits(Auth::user(), 'bi_completo')) {
+            abort(403, 'Seu plano não inclui este recurso.');
+        }
+
+        $userId = (int) Auth::id();
+        $relatorio = $builder->montar($userId, $this->filtros($request));
+
+        $pdf = PdfReport::render('reports.bi-cruzamentos', ['relatorio' => $relatorio]);
+
+        return $this->comTokenDownload(
+            $pdf->download('cruzamentos-fiscais-'.now()->format('Ymd-His').'.pdf'),
+            $request
+        );
     }
 
     /** @return array{cliente_id?:int, data_inicio?:string, data_fim?:string} */

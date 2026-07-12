@@ -8,13 +8,13 @@
 
     $cards = [
         'bloqueante' => ['label' => 'Bloqueantes', 'hex' => '#dc2626', 'valor' => $contadores['bloqueante'] ?? 0],
-        'atencao' => ['label' => 'Atenção', 'hex' => '#d97706', 'valor' => $contadores['atencao'] ?? 0],
+        'atencao' => ['label' => 'Atenção', 'hex' => '#b45309', 'valor' => $contadores['atencao'] ?? 0],
         'info' => ['label' => 'Informativos', 'hex' => '#374151', 'valor' => $contadores['info'] ?? 0],
     ];
 
     $classificacaoHex = [
         'conforme' => '#047857',
-        'atencao' => '#d97706',
+        'atencao' => '#b45309',
         'irregular' => '#b45309',
         'critico' => '#dc2626',
     ];
@@ -174,7 +174,7 @@
                                                 <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #dc2626">{{ $alertasBloqueantes }}</span>
                                             @endif
                                             @if($alertasAtencao > 0)
-                                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">{{ $alertasAtencao }}</span>
+                                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b45309">{{ $alertasAtencao }}</span>
                                             @endif
                                             @if($alertasInfo > 0)
                                                 <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $alertasInfo }}</span>
@@ -219,7 +219,7 @@
                                         <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #dc2626">{{ $alertasBloqueantes }}</span>
                                     @endif
                                     @if($alertasAtencao > 0)
-                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">{{ $alertasAtencao }}</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b45309">{{ $alertasAtencao }}</span>
                                     @endif
                                     @if($alertasInfo > 0)
                                         <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $alertasInfo }}</span>

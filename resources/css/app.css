@@ -464,7 +464,7 @@
     }
     .sidebar__item-badge {
         @apply ml-auto w-1.5 h-1.5 rounded-full shrink-0;
-        background-color: #d97706;
+        background-color: #b45309;
     }
     .sidebar__item-badge-count {
         @apply ml-auto inline-flex items-center justify-center px-1.5 h-5 rounded-full text-[10px] font-bold text-white shrink-0;

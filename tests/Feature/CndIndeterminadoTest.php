@@ -65,7 +65,7 @@ it('endpoint resultadosLote retorna cnd indeterminado com motivo normalizado', f
         ->assertOk()
         ->assertJsonPath('resultados.0.cnd_federal.indeterminado', true)
         ->assertJsonPath('resultados.0.cnd_federal.label', 'Indeterminada')
-        ->assertJsonPath('resultados.0.cnd_federal.hex', '#d97706')
+        ->assertJsonPath('resultados.0.cnd_federal.hex', '#b45309')
         ->assertJsonPath(
             'resultados.0.cnd_federal.motivo',
             'Inscrição no CNPJ 72.983.711/0001-34 Inapta - Omissão de declarações, emissão de certidão não permitida.'
@@ -80,7 +80,7 @@ it('endpoint getParticipantes expoe motivo do cnd indeterminado no meta', functi
         ->getJson('/app/consulta/nova/participantes')
         ->assertOk()
         ->assertJsonFragment(['cnd_federal_status_label' => 'Indeterminada'])
-        ->assertJsonFragment(['cnd_federal_status_hex' => '#d97706'])
+        ->assertJsonFragment(['cnd_federal_status_hex' => '#b45309'])
         ->assertJsonFragment([
             'cnd_federal_meta' => 'Inscrição no CNPJ 72.983.711/0001-34 Inapta - Omissão de declarações, emissão de certidão não permitida.',
         ]);
@@ -96,5 +96,5 @@ it('detalhe do lote mostra Indeterminada em ambar e o motivo, sem vermelho', fun
         ->assertSee('Indeterminada')
         ->assertSee('Inscrição no CNPJ 72.983.711/0001-34 Inapta - Omissão de declarações, emissão de certidão não permitida.');
 
-    expect($response->getContent())->toContain('background-color: #d97706');
+    expect($response->getContent())->toContain('background-color: #b45309');
 });

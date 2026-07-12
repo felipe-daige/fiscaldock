@@ -246,7 +246,7 @@
                                 };
                                 $recentStatus = match($recentImp->status) {
                                     'concluido' => ['label' => 'Concluído', 'hex' => '#047857'],
-                                    'processando' => ['label' => 'Processando', 'hex' => '#d97706'],
+                                    'processando' => ['label' => 'Processando', 'hex' => '#b45309'],
                                     'erro' => ['label' => 'Erro', 'hex' => '#dc2626'],
                                     default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
                                 };
@@ -425,7 +425,7 @@
                         <div class="flex items-center justify-between mb-3 gap-3">
                             <div class="flex items-center gap-2">
                                 <h4 class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">CNPJs Novos Encontrados</h4>
-                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706" id="cnpjs-novos-count-badge">0</span>
+                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b45309" id="cnpjs-novos-count-badge">0</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <button type="button" id="btn-selecionar-todos-cnpjs" class="text-[11px] text-gray-600 hover:text-gray-900 hover:underline font-medium">
@@ -1020,7 +1020,7 @@
                         if (xmlCount === -1) {
                             statusHtml = `<span class="${badgeBase}" style="background-color: #374151" title="A contagem será feita durante o processamento">ZIP aceito</span>`;
                         } else if (xmlCount === 0) {
-                            statusHtml = `<span class="${badgeBase}" style="background-color: #d97706">0 XMLs</span>`;
+                            statusHtml = `<span class="${badgeBase}" style="background-color: #b45309">0 XMLs</span>`;
                         } else {
                             statusHtml = `<span class="${badgeBase}" style="background-color: #374151">${xmlCount} XML${xmlCount > 1 ? 's' : ''}</span>`;
                         }
@@ -1983,7 +1983,7 @@
                 const tipoText = nota.tipo_nota === 0 ? 'Entrada' : 'Saída';
                 const tipoBadge = nota.tipo_nota === 0
                     ? buildBadgeHtml(tipoIcon + ' ' + tipoText, '#047857', 'inline-flex items-center')
-                    : buildBadgeHtml(tipoIcon + ' ' + tipoText, '#d97706', 'inline-flex items-center');
+                    : buildBadgeHtml(tipoIcon + ' ' + tipoText, '#b45309', 'inline-flex items-center');
 
                 return '<tr class="hover:bg-gray-50" data-tipo="' + nota.tipo_nota + '" data-finalidade="' + nota.finalidade + '">' +
                     '<td class="px-3 py-2 text-gray-900 whitespace-nowrap">' + (nota.numero_nota || '-') + '/' + (nota.serie || 1) + '</td>' +

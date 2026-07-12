@@ -37,7 +37,7 @@ class ClearanceDashboardReportBuilder
         'CANCELADA' => '#dc2626',
         'DENEGADA' => '#991b1b',
         'INUTILIZADA' => '#374151',
-        'NAO_ENCONTRADA' => '#d97706',
+        'NAO_ENCONTRADA' => '#b45309',
         'INDETERMINADO' => '#1d4ed8',
         'NAO_VERIFICADA' => '#9ca3af',
     ];

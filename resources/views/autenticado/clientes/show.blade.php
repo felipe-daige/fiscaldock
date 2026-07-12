@@ -8,6 +8,12 @@
         ? ['label' => 'ATIVO', 'hex' => '#047857']
         : ['label' => 'INATIVO', 'hex' => '#dc2626'];
     $empresaBadge = ['label' => 'EMPRESA PRÓPRIA', 'hex' => '#0f766e'];
+    $situacaoCadastral = trim((string) ($cliente->situacao_cadastral ?? ''));
+    $situacaoCadastral = $situacaoCadastral !== '' && $situacaoCadastral !== '—' ? $situacaoCadastral : 'Não consultada';
+    $situacaoCadastralBadge = ['label' => $situacaoCadastral, 'hex' => \App\Support\Reports\ReportTheme::statusHex($situacaoCadastral)];
+    $regimeTributario = trim((string) ($cliente->regime_tributario ?? ''));
+    $regimeTributario = $regimeTributario !== '' && $regimeTributario !== '—' ? $regimeTributario : 'Não consultado';
+    $regimeTributarioBadge = ['label' => $regimeTributario, 'hex' => \App\Support\Reports\ReportTheme::regimeHex($regimeTributario)];
     $resumoCliente = [
         ['label' => 'Participantes Vinculados', 'valor' => number_format($totalParticipantes, 0, ',', '.'), 'sub' => 'Base vinculada ao cadastro'],
         ['label' => 'Notas Fiscais', 'valor' => number_format($totalNotas, 0, ',', '.'), 'sub' => 'Notas unificadas EFD e XML'],
@@ -22,6 +28,8 @@
         ['label' => 'Telefone', 'valor' => $cliente->telefone ?: 'Não informado', 'mono' => false],
         ['label' => 'Município / UF', 'valor' => implode(' - ', array_filter([$cliente->municipio, $cliente->uf])) ?: 'Não informado', 'mono' => false],
         ['label' => 'CEP', 'valor' => $cliente->cep ?: 'Não informado', 'mono' => true],
+        ['label' => 'Situação Cadastral', 'valor' => $situacaoCadastralBadge, 'mono' => false, 'badge' => true],
+        ['label' => 'Regime Tributário', 'valor' => $regimeTributarioBadge, 'mono' => false, 'badge' => true],
         ['label' => 'Status do Cadastro', 'valor' => $cliente->ativo ? 'Ativo' : 'Inativo', 'mono' => false],
     ];
 @endphp
@@ -119,7 +127,11 @@
                         @foreach($dadosCadastrais as $dado)
                             <div class="px-4 py-3 sm:px-5 sm:py-4">
                                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ $dado['label'] }}</p>
-                                <p class="text-sm text-gray-700 {{ $dado['mono'] ? 'font-mono' : '' }}">{{ $dado['valor'] }}</p>
+                                @if(!empty($dado['badge']))
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $dado['valor']['hex'] }}">{{ $dado['valor']['label'] }}</span>
+                                @else
+                                    <p class="text-sm text-gray-700 {{ $dado['mono'] ? 'font-mono' : '' }}">{{ $dado['valor'] }}</p>
+                                @endif
                             </div>
                         @endforeach
                         @if($cliente->endereco ?? null)

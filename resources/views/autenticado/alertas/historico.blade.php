@@ -7,7 +7,7 @@
         'auto_resolvido' => '#059669',
         'ignorado' => '#9ca3af',
         'visto' => '#374151',
-        'reaberto' => '#d97706',
+        'reaberto' => '#b45309',
         'reativado' => '#b45309',
     ];
 @endphp

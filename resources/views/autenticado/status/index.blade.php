@@ -14,7 +14,7 @@
 
     $legenda = [
         ['label' => 'Operacional', 'cor' => '#047857'],
-        ['label' => 'Degradado', 'cor' => '#d97706'],
+        ['label' => 'Degradado', 'cor' => '#b45309'],
         ['label' => 'Fora do ar', 'cor' => '#dc2626'],
         ['label' => 'Em manutenção', 'cor' => '#2563eb'],
     ];

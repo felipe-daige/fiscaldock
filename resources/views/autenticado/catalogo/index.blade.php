@@ -532,7 +532,7 @@
                         <p class="text-sm font-semibold text-gray-800 mt-0.5">{{ Str::limit($item->descr_item, 60) }}</p>
                     </div>
                     @if($divergente)
-                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #d97706">Divergente</span>
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #b45309">Divergente</span>
                     @elseif($semMov)
                     <span class="px-1.5 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #9ca3af">Sem Mov.</span>
                     @else
@@ -618,7 +618,7 @@
                         </td>
                         <td class="px-3 py-2.5 text-center">
                             @if($divergente)
-                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #d97706">Divergente</span>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #b45309">Divergente</span>
                             @elseif($semMov)
                             <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold text-white" style="background-color: #9ca3af">Sem Mov.</span>
                             @else
@@ -757,7 +757,7 @@
             chart: { type: 'donut', height: 230, fontFamily: 'inherit' },
             series: cstsData.map(function(c) { return Number(c.total); }),
             labels: cstsData.map(function(c) { return 'CST ' + c.cst_icms; }),
-            colors: ['#374151','#047857','#d97706','#dc2626','#7c3aed','#0891b2','#ea580c','#65a30d','#db2777','#4f46e5'],
+            colors: ['#374151','#047857','#b45309','#dc2626','#7c3aed','#0891b2','#ea580c','#65a30d','#db2777','#4f46e5'],
             legend: { show: false },
             dataLabels: { enabled: true, formatter: function(v) { return v.toFixed(0) + '%'; }, style: { fontSize: '10px' } },
             tooltip: { y: { formatter: function(v) { return v + ' itens'; } } },

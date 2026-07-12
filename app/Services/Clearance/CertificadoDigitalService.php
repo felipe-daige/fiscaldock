@@ -88,7 +88,7 @@ class CertificadoDigitalService
             'validade' => $cert->validade,
             'dias_para_expirar' => $dias,
             'expirado' => $dias < 0,
-            'badge_hex' => $dias < 0 ? '#dc2626' : ($dias <= 30 ? '#d97706' : '#047857'),
+            'badge_hex' => $dias < 0 ? '#dc2626' : ($dias <= 30 ? '#b45309' : '#047857'),
             'atualizado_em' => $cert->updated_at,
         ];
     }

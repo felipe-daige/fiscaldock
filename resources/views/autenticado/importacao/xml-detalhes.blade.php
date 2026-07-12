@@ -2,7 +2,7 @@
 @php
     [$badgeStyle, $badgeLabel] = match($importacao->status) {
         'concluido'   => ['background-color: #047857', 'Concluído'],
-        'processando' => ['background-color: #d97706', 'Processando'],
+        'processando' => ['background-color: #b45309', 'Processando'],
         'erro'        => ['background-color: #dc2626', 'Erro'],
         default       => ['background-color: #9ca3af', 'Pendente'],
     };
@@ -381,7 +381,7 @@
 
         {{-- Lote 100% duplicado: explica por que o resultado vem vazio --}}
         @if($loteTodoDuplicado)
-        <div class="bg-white rounded border border-gray-300 border-l-4 mb-4 px-4 py-3" style="border-left-color: #d97706">
+        <div class="bg-white rounded border border-gray-300 border-l-4 mb-4 px-4 py-3" style="border-left-color: #b45309">
             <p class="text-sm font-semibold text-gray-900">Nenhuma nota nova neste lote</p>
             <p class="text-xs text-gray-600 mt-1">
                 {{ number_format($importacao->xmls_duplicados_processados) }} {{ $importacao->xmls_duplicados_processados == 1 ? 'nota já existia' : 'notas já existiam' }} no seu acervo e {{ $importacao->xmls_duplicados_processados == 1 ? 'foi ignorada' : 'foram ignoradas' }}. As notas continuam disponíveis na importação original.
@@ -424,7 +424,7 @@
                         @foreach($notasColl as $nota)
                         @php
                             $ehSaida = $nota->tipo_nota === \App\Models\XmlNota::TIPO_SAIDA;
-                            $tipoHex = $ehSaida ? '#d97706' : '#047857';
+                            $tipoHex = $ehSaida ? '#b45309' : '#047857';
                             $donoEmit = $nota->lado_dono === 'emit';
                             $donoDest = $nota->lado_dono === 'dest';
                         @endphp

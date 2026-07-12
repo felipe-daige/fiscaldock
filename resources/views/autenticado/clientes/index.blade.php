@@ -353,7 +353,7 @@
                                                     @if(($cliente->situacao_cadastral ?? '') === 'ATIVA')
                                                         <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857" title="Situação cadastral (Receita Federal)">Ativa</span>
                                                     @elseif($cliente->situacao_cadastral)
-                                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #d97706" title="Situação cadastral (Receita Federal)">{{ $cliente->situacao_cadastral }}</span>
+                                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #b45309" title="Situação cadastral (Receita Federal)">{{ $cliente->situacao_cadastral }}</span>
                                                     @else
                                                         <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #9ca3af" title="Situação cadastral">{{ $cliente->ativo ? 'Ativo' : 'Inativo' }}</span>
                                                     @endif

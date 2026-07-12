@@ -320,12 +320,15 @@ class RiskScoreService
      */
     public function getCorClassificacao(string $classificacao): string
     {
+        // Hexes da paleta do design system (espelham ReportTheme::riscoHex) — não palavras CSS
+        // cruas: 'yellow' (#ffff00) ficava claro demais com texto branco, e 'green'/'orange'/'red'
+        // destoavam do restante dos relatórios/telas. Usado como cor inline em risk/show + metodologia.
         return match ($classificacao) {
-            'baixo' => 'green',
-            'medio' => 'yellow',
-            'alto' => 'orange',
-            'critico' => 'red',
-            default => 'gray', // inconclusivo, nao_avaliado e desconhecidos
+            'baixo' => '#047857',
+            'medio' => '#b45309',
+            'alto' => '#ea580c',
+            'critico' => '#dc2626',
+            default => '#9ca3af', // inconclusivo, nao_avaliado e desconhecidos
         };
     }
 
@@ -468,7 +471,7 @@ class RiskScoreService
         return match (true) {
             $score >= 80 => '#b91c1c',
             $score >= 50 => '#ea580c',
-            $score >= 20 => '#d97706',
+            $score >= 20 => '#b45309',
             default => '#047857',
         };
     }

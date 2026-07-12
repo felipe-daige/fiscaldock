@@ -50,7 +50,7 @@ class RiskScoreReportBuilder
     ];
 
     /**
-     * @param  array{cliente_id?:mixed,classificacao?:mixed,busca?:mixed}  $filtros
+     * @param  array{cliente_id?:mixed,classificacao?:mixed,busca?:mixed,status?:mixed,tipo?:mixed,credito?:mixed,score_min?:mixed,score_max?:mixed}  $filtros
      */
     public function montar(int $userId, array $filtros): array
     {
@@ -59,9 +59,21 @@ class RiskScoreReportBuilder
             ? (string) $filtros['classificacao']
             : null;
         $busca = trim((string) ($filtros['busca'] ?? ''));
+        $status = in_array($filtros['status'] ?? null, ['consultados', 'nao_consultados'], true) ? (string) $filtros['status'] : 'todos';
+        $tipo = in_array($filtros['tipo'] ?? null, ['cliente', 'participante'], true) ? (string) $filtros['tipo'] : 'todos';
+        $credito = in_array($filtros['credito'] ?? null, ['gera', 'parcial', 'nao_gera', 'indefinido'], true) ? (string) $filtros['credito'] : 'todos';
+        $scoreMin = $this->scoreFiltro($filtros['score_min'] ?? null);
+        $scoreMax = $this->scoreFiltro($filtros['score_max'] ?? null);
+        if ($scoreMin !== null && $scoreMax !== null && $scoreMin > $scoreMax) {
+            [$scoreMin, $scoreMax] = [$scoreMax, $scoreMin];
+        }
 
-        $avaliados = $this->avaliados($userId, $cliente?->id, $classificacao, $busca);
-        $naoConsultados = $this->naoConsultados($userId, $cliente?->id, $busca);
+        $avaliados = $status === 'nao_consultados'
+            ? collect()
+            : $this->avaliados($userId, $cliente?->id, $classificacao, $busca, $tipo, $credito, $scoreMin, $scoreMax);
+        $naoConsultados = $status === 'consultados' || $credito !== 'todos' || $scoreMin !== null || $scoreMax !== null
+            ? collect()
+            : $this->naoConsultados($userId, $cliente?->id, $busca, $tipo);
 
         $idsParticipantes = $avaliados->pluck('participante_id')
             ->merge($naoConsultados->where('tipo', 'participante')->pluck('id'))
@@ -78,7 +90,11 @@ class RiskScoreReportBuilder
             'gerado_em' => now(),
             'filtros' => [
                 'Cliente' => $cliente?->razao_social ?? 'Todos os CNPJs',
+                'Lista' => $this->statusLabel($status),
+                'Tipo' => $this->tipoLabel($tipo),
                 'Classificação' => $classificacao ? self::CLASSIFICACAO_LABELS[$classificacao] : 'Todas',
+                'Crédito IBS/CBS' => $this->creditoFiltroLabel($credito),
+                'Score' => $this->scoreLabel($scoreMin, $scoreMax),
                 'Busca' => $busca !== '' ? $busca : 'Sem filtro',
             ],
             'kpis' => $this->kpis($avaliados, $naoConsultados->count()),
@@ -96,7 +112,7 @@ class RiskScoreReportBuilder
         return Cliente::where('user_id', $userId)->find((int) $clienteId);
     }
 
-    private function avaliados(int $userId, ?int $clienteId, ?string $classificacao, string $busca)
+    private function avaliados(int $userId, ?int $clienteId, ?string $classificacao, string $busca, string $tipo, string $credito, ?int $scoreMin, ?int $scoreMax)
     {
         $cnpjRaw = "length(regexp_replace(coalesce(documento, ''), '[^0-9]', '', 'g')) = 14";
 
@@ -114,6 +130,14 @@ class RiskScoreReportBuilder
                     ->orWhereHas('participante', fn (Builder $participante) => $participante->where('cliente_id', $clienteId));
             }))
             ->when($classificacao, fn (Builder $query) => $query->where('classificacao', $classificacao))
+            ->when($tipo === 'cliente', fn (Builder $query) => $query->whereNotNull('cliente_id')->whereNull('participante_id'))
+            ->when($tipo === 'participante', fn (Builder $query) => $query->whereNotNull('participante_id'))
+            ->when($scoreMin !== null, fn (Builder $query) => $query->where('score_total', '>=', $scoreMin))
+            ->when($scoreMax !== null, fn (Builder $query) => $query->where('score_total', '<=', $scoreMax))
+            ->when($credito === 'gera', fn (Builder $query) => $query->where('score_credito_reforma', '<=', 0))
+            ->when($credito === 'parcial', fn (Builder $query) => $query->whereBetween('score_credito_reforma', [1, 99]))
+            ->when($credito === 'nao_gera', fn (Builder $query) => $query->where('score_credito_reforma', '>=', 100))
+            ->when($credito === 'indefinido', fn (Builder $query) => $query->whereNull('score_credito_reforma'))
             ->when($busca !== '', fn (Builder $query) => $query->where(function (Builder $alvo) use ($busca) {
                 $filtro = fn (Builder $q) => $q->where('razao_social', 'ilike', "%{$busca}%")
                     ->orWhere('documento', 'like', "%{$busca}%");
@@ -125,7 +149,7 @@ class RiskScoreReportBuilder
             ->get();
     }
 
-    private function naoConsultados(int $userId, ?int $clienteId, string $busca)
+    private function naoConsultados(int $userId, ?int $clienteId, string $busca, string $tipo)
     {
         $cnpjRaw = "length(regexp_replace(coalesce(documento, ''), '[^0-9]', '', 'g')) = 14";
         $filtroBusca = fn (Builder $query) => $query->where(fn (Builder $q) => $q
@@ -138,6 +162,7 @@ class RiskScoreReportBuilder
             ->whereDoesntHave('score')
             ->where(fn (Builder $q) => $q->where('origem_tipo', '!=', 'PROPRIO')->orWhereNull('origem_tipo'))
             ->when($clienteId, fn (Builder $query) => $query->where('cliente_id', $clienteId))
+            ->when($tipo === 'cliente', fn (Builder $query) => $query->whereRaw('1 = 0'))
             ->when($busca !== '', $filtroBusca)
             ->get()
             ->map(function (Participante $participante) {
@@ -151,6 +176,7 @@ class RiskScoreReportBuilder
             ->whereRaw($cnpjRaw)
             ->whereDoesntHave('score')
             ->when($clienteId, fn (Builder $query) => $query->whereKey($clienteId))
+            ->when($tipo === 'participante', fn (Builder $query) => $query->whereRaw('1 = 0'))
             ->when($busca !== '', $filtroBusca)
             ->get()
             ->map(function (Cliente $cliente) {
@@ -278,6 +304,54 @@ class RiskScoreReportBuilder
             $score <= 0 => 'Gera integral',
             $score >= 100 => 'Não gera',
             default => 'Parcial',
+        };
+    }
+
+    private function scoreFiltro(mixed $valor): ?int
+    {
+        if ($valor === null || $valor === '' || ! is_numeric($valor)) {
+            return null;
+        }
+
+        return max(0, min(100, (int) $valor));
+    }
+
+    private function statusLabel(string $status): string
+    {
+        return match ($status) {
+            'consultados' => 'Consultados',
+            'nao_consultados' => 'Não consultados',
+            default => 'Todos',
+        };
+    }
+
+    private function tipoLabel(string $tipo): string
+    {
+        return match ($tipo) {
+            'cliente' => 'Clientes',
+            'participante' => 'Participantes',
+            default => 'Clientes e participantes',
+        };
+    }
+
+    private function creditoFiltroLabel(string $credito): string
+    {
+        return match ($credito) {
+            'gera' => 'Gera crédito',
+            'parcial' => 'Crédito parcial',
+            'nao_gera' => 'Não gera crédito',
+            'indefinido' => 'Indefinido',
+            default => 'Todos',
+        };
+    }
+
+    private function scoreLabel(?int $min, ?int $max): string
+    {
+        return match (true) {
+            $min !== null && $max !== null => "{$min} a {$max}",
+            $min !== null => "a partir de {$min}",
+            $max !== null => "até {$max}",
+            default => 'Sem filtro',
         };
     }
 

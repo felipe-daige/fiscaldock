@@ -346,8 +346,8 @@
                     <span>Barra = volume relativo de itens</span>
                     <span class="hidden sm:inline">&middot;</span>
                     <span class="inline-flex items-center gap-1"><span class="w-4 h-4 rounded text-[10px] font-bold inline-flex items-center justify-center text-white" style="background-color: #047857">E</span> Entrada</span>
-                    <span class="inline-flex items-center gap-1"><span class="w-4 h-4 rounded text-[10px] font-bold inline-flex items-center justify-center text-white" style="background-color: #d97706">S</span> Saída</span>
-                    <span class="inline-flex items-center gap-1"><span class="w-4 h-4 rounded text-[10px] font-bold inline-flex items-center justify-center text-white" style="background-color: #d97706">D</span> Devolução</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-4 h-4 rounded text-[10px] font-bold inline-flex items-center justify-center text-white" style="background-color: #b45309">S</span> Saída</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-4 h-4 rounded text-[10px] font-bold inline-flex items-center justify-center text-white" style="background-color: #b45309">D</span> Devolução</span>
                     <span class="inline-flex items-center gap-1"><span class="w-4 h-4 rounded text-[10px] font-bold inline-flex items-center justify-center text-white" style="background-color: #7c3aed">T</span> Transferência</span>
                 </div>
                 <div id="dnf-cfop-table">
@@ -1020,7 +1020,7 @@
                 { name: 'Entradas', data: seriesEntradas },
                 { name: 'Saidas', data: seriesSaidas },
             ],
-            colors: ['#047857', '#d97706'],
+            colors: ['#047857', '#b45309'],
             plotOptions: {
                 bar: { columnWidth: '60%', borderRadius: 4 },
             },
@@ -1097,12 +1097,12 @@
             // Stacked proportion bar
             html += '<div class="flex h-1.5 rounded-full overflow-hidden bg-gray-100 mb-2">';
             if (m.entradas.valor > 0) html += '<div class="transition-all duration-500" style="width:' + entPct + '%;background-color:#047857"></div>';
-            if (m.saidas.valor > 0) html += '<div class="transition-all duration-500" style="width:' + saiPct + '%;background-color:#d97706"></div>';
+            if (m.saidas.valor > 0) html += '<div class="transition-all duration-500" style="width:' + saiPct + '%;background-color:#b45309"></div>';
             html += '</div>';
             // Sub-rows: entradas e saidas
             html += '<div class="flex flex-wrap justify-between gap-x-4 gap-y-1 text-xs">';
             html += '  <span class="text-gray-600"><span class="inline-block w-2 h-2 rounded-full mr-1" style="background-color:#047857"></span>' + formatNum(m.entradas.quantidade) + ' entradas &middot; ' + formatBrl(m.entradas.valor) + '</span>';
-            html += '  <span class="text-gray-600"><span class="inline-block w-2 h-2 rounded-full mr-1" style="background-color:#d97706"></span>' + formatNum(m.saidas.quantidade) + ' sa\u00eddas &middot; ' + formatBrl(m.saidas.valor) + '</span>';
+            html += '  <span class="text-gray-600"><span class="inline-block w-2 h-2 rounded-full mr-1" style="background-color:#b45309"></span>' + formatNum(m.saidas.quantidade) + ' sa\u00eddas &middot; ' + formatBrl(m.saidas.valor) + '</span>';
             html += '</div>';
             html += '</div>';
         });
@@ -1123,7 +1123,7 @@
             modeloDonutChart = null;
         }
 
-        const cores = ['#374151', '#047857', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#ea580c', '#65a30d', '#db2777', '#4f46e5'];
+        const cores = ['#374151', '#047857', '#b45309', '#dc2626', '#7c3aed', '#0891b2', '#ea580c', '#65a30d', '#db2777', '#4f46e5'];
 
         const options = {
             chart: { type: 'donut', height: 180, fontFamily: 'inherit' },
@@ -1347,7 +1347,7 @@
     function cfopNaturezaBadge(natureza) {
         const map = {
             'entrada':       { style: 'background-color:#047857', letter: 'E', barColor: 'bg-green-500', label: 'Entrada' },
-            'saida':         { style: 'background-color:#d97706', letter: 'S', barColor: 'bg-amber-500', label: 'Sa\u00edda' },
+            'saida':         { style: 'background-color:#b45309', letter: 'S', barColor: 'bg-amber-500', label: 'Sa\u00edda' },
             'devolucao':     { style: 'background-color:#dc2626', letter: 'D', barColor: 'bg-red-500',   label: 'Devolu\u00e7\u00e3o' },
             'transferencia': { style: 'background-color:#7c3aed', letter: 'T', barColor: 'bg-purple-500', label: 'Transfer\u00eancia' },
         };
@@ -1886,7 +1886,7 @@
 
         var sevConfig = {
             alta:  { badgeStyle: 'background-color:#dc2626', border: 'border-gray-200', dot: 'bg-red-400' },
-            media: { badgeStyle: 'background-color:#d97706', border: 'border-gray-200', dot: 'bg-yellow-400' },
+            media: { badgeStyle: 'background-color:#b45309', border: 'border-gray-200', dot: 'bg-yellow-400' },
             baixa: { badgeStyle: 'background-color:#9ca3af', border: 'border-gray-200', dot: 'bg-gray-400' },
         };
 
@@ -2064,7 +2064,7 @@
         var labels = detalhes.map(function(m) { return mesLabel(m); });
         var h = '<div class="flex flex-wrap gap-2">';
         labels.forEach(function(l) {
-            h += '<span class="inline-flex items-center px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#d97706">' + escapeHtml(l) + '</span>';
+            h += '<span class="inline-flex items-center px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#b45309">' + escapeHtml(l) + '</span>';
         });
         h += '</div>';
         return h;

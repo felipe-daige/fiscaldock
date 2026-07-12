@@ -56,12 +56,18 @@
                 </thead>
                 <tbody>
                     @foreach($participantes as $p)
+                        @php
+                            $situacao = trim((string) ($p['situacao'] ?? ''));
+                            $situacao = $situacao !== '' && $situacao !== '—' ? $situacao : 'Não consultada';
+                            $regime = trim((string) ($p['regime'] ?? ''));
+                            $regime = $regime !== '' && $regime !== '—' ? $regime : 'Não consultado';
+                        @endphp
                         <tr>
                             <td style="font-weight:600; color:#111827;">{{ $p['nome'] }}</td>
                             <td class="mono">{{ $p['documento'] }}</td>
                             <td class="center">{{ $p['uf'] }}</td>
-                            <td>{{ $p['situacao'] }}</td>
-                            <td>{{ $p['regime'] }}</td>
+                            <td><span class="badge" style="background-color:{{ ReportTheme::statusHex($situacao) }};">{{ $situacao }}</span></td>
+                            <td><span class="badge" style="background-color:{{ ReportTheme::regimeHex($regime) }};">{{ $regime }}</span></td>
                             <td class="center">
                                 <span class="badge" style="background-color:{{ $papelHex[$p['papel_classe']] ?? ReportTheme::NEUTRO }};">{{ $p['papel'] }}</span>
                             </td>

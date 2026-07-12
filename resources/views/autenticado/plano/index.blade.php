@@ -67,7 +67,7 @@
                                         @php
                                             $statusHex = match($tx->status) {
                                                 'concluido' => '#047857',
-                                                'processando' => '#d97706',
+                                                'processando' => '#b45309',
                                                 'erro' => '#dc2626',
                                                 default => '#9ca3af',
                                             };

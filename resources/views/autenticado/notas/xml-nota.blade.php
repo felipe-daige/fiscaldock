@@ -1,13 +1,13 @@
 @php
     $tipoBadge = $nota->tipo_nota === \App\Models\XmlNota::TIPO_ENTRADA
         ? ['label' => strtoupper($nota->tipo_nota_descricao), 'hex' => '#047857']
-        : ['label' => strtoupper($nota->tipo_nota_descricao), 'hex' => '#d97706'];
+        : ['label' => strtoupper($nota->tipo_nota_descricao), 'hex' => '#b45309'];
 
     $finalidadeBadgeMap = [
         \App\Models\XmlNota::FINALIDADE_NORMAL => '#374151',
         \App\Models\XmlNota::FINALIDADE_COMPLEMENTAR => '#0891b2',
         \App\Models\XmlNota::FINALIDADE_AJUSTE => '#7c3aed',
-        \App\Models\XmlNota::FINALIDADE_DEVOLUCAO => '#d97706',
+        \App\Models\XmlNota::FINALIDADE_DEVOLUCAO => '#b45309',
     ];
 
     $finalidadeBadge = $nota->finalidade
@@ -44,7 +44,7 @@
 
     $validacaoBadgeHex = match (strtolower((string) ($nota->validacao_classificacao_label ?? ''))) {
         'ok', 'conforme' => '#047857',
-        'divergente', 'atencao', 'atenção' => '#d97706',
+        'divergente', 'atencao', 'atenção' => '#b45309',
         'critico', 'crítico', 'erro' => '#dc2626',
         default => '#374151',
     };

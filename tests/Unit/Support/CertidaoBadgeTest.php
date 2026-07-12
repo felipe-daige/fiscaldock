@@ -48,7 +48,7 @@ it('classifica situação HABILITADO (sintegra) como Regular', function () {
 
 it('classifica INDETERMINADO como Indeterminada (âmbar)', function () {
     expect(CertidaoBadge::classificar(['status' => 'INDETERMINADO']))
-        ->toMatchArray(['label' => 'Indeterminada', 'hex' => '#d97706']);
+        ->toMatchArray(['label' => 'Indeterminada', 'hex' => '#b45309']);
 });
 
 it('classifica INDISPONIVEL e NAO_ENCONTRADA como neutros', function () {
@@ -62,7 +62,7 @@ it('com aplicarIndeterminado, conseguiu_emitir=false vira Indeterminada com moti
         true
     );
     expect($r['label'])->toBe('Indeterminada');
-    expect($r['hex'])->toBe('#d97706');
+    expect($r['hex'])->toBe('#b45309');
     expect($r['indeterminado'])->toBeTrue();
     expect($r['motivo'])->toBe('Receita sem dados.');
 });

@@ -1,7 +1,7 @@
 @php
     $tipoBadge = $nota->tipo_operacao === 'entrada'
         ? ['label' => 'ENTRADA', 'hex' => '#047857']
-        : ['label' => 'SAIDA', 'hex' => '#d97706'];
+        : ['label' => 'SAIDA', 'hex' => '#b45309'];
 
     $modeloLabel = match($nota->modelo) {
         '00' => 'NFS-e',

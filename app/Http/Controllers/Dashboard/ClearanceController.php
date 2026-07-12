@@ -2883,7 +2883,7 @@ class ClearanceController extends Controller
     private function statusMetaLote(?string $status): array
     {
         return match (ConsultaLote::normalizeStatus($status)) {
-            ConsultaLote::STATUS_PROCESSANDO => ['label' => 'Processando', 'hex' => '#d97706'],
+            ConsultaLote::STATUS_PROCESSANDO => ['label' => 'Processando', 'hex' => '#b45309'],
             ConsultaLote::STATUS_FINALIZADO => ['label' => 'Finalizado', 'hex' => '#047857'],
             ConsultaLote::STATUS_ERRO => ['label' => 'Erro', 'hex' => '#dc2626'],
             default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
@@ -2896,7 +2896,7 @@ class ClearanceController extends Controller
             'JA_NO_ACERVO' => '#4338ca',
             'AUTORIZADA', 'NEGATIVA' => '#047857',
             'CANCELADA', 'DENEGADA', 'INUTILIZADA' => '#dc2626',
-            'INDETERMINADO', 'NAO_ENCONTRADA' => '#d97706',
+            'INDETERMINADO', 'NAO_ENCONTRADA' => '#b45309',
             'ERRO_PARAMETRO', 'ERRO_PROVEDOR' => '#6b7280',
             default => '#374151',
         };

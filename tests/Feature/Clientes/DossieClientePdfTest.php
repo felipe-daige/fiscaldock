@@ -25,7 +25,7 @@ beforeEach(function () {
     ]);
     ConsultaResultado::create([
         'consulta_lote_id' => $lote->id, 'cliente_id' => $this->c->id, 'status' => ConsultaResultado::STATUS_SUCESSO,
-        'resultado_dados' => ['situacao_cadastral' => 'ATIVA', 'cnd_federal' => ['status' => 'Negativa']],
+        'resultado_dados' => ['situacao_cadastral' => 'ATIVA', 'regime_tributario' => 'Simples Nacional', 'cnd_federal' => ['status' => 'Negativa']],
         'consultado_em' => now(),
     ]);
 });
@@ -56,6 +56,8 @@ it('a view do dossie do cliente renderiza secoes e detalhamento do score', funct
     expect($html)->toContain('CLI DOSSIE PDF')
         ->and($html)->toContain('Movimentações')
         ->and($html)->toContain('Regularidade')
+        ->and($html)->toContain('ATIVA')
+        ->and($html)->toContain('Simples Nacional')
         ->and($html)->toContain('Detalhamento')
         ->and($html)->toContain('Subscore'); // tabela do score detalhado
 });

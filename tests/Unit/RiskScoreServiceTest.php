@@ -92,7 +92,7 @@ it('hexSubscore mapeia faixas (replica closure do risk/show)', function () {
     expect(\App\Services\RiskScoreService::hexSubscore(null))->toBe('#9ca3af');
     expect(\App\Services\RiskScoreService::hexSubscore(0))->toBe('#047857');
     expect(\App\Services\RiskScoreService::hexSubscore(19))->toBe('#047857');
-    expect(\App\Services\RiskScoreService::hexSubscore(20))->toBe('#d97706');
+    expect(\App\Services\RiskScoreService::hexSubscore(20))->toBe('#b45309');
     expect(\App\Services\RiskScoreService::hexSubscore(50))->toBe('#ea580c');
     expect(\App\Services\RiskScoreService::hexSubscore(80))->toBe('#b91c1c');
     expect(\App\Services\RiskScoreService::hexSubscore(100))->toBe('#b91c1c');

@@ -12,7 +12,7 @@
     <span class="sidebar__item-label">{{ $slot }}</span>
 
     @if($badge)
-        <span class="sidebar__item-badge-count" aria-label="{{ $badgeLabel ?? $badge }}" style="background-color: #d97706;">{{ $badge }}</span>
+        <span class="sidebar__item-badge-count" aria-label="{{ $badgeLabel ?? $badge }}" style="background-color: #b45309;">{{ $badge }}</span>
     @elseif($lock)
         <span style="margin-left:auto; display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:9999px; background-color:#e5e7eb;" aria-label="Recurso de plano pago" data-lock-pill>
             <svg style="width:9px; height:9px; color:#6b7280" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">

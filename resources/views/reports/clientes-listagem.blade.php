@@ -48,13 +48,19 @@
                 </thead>
                 <tbody>
                     @foreach($clientes as $c)
+                        @php
+                            $situacao = trim((string) ($c['situacao'] ?? ''));
+                            $situacao = $situacao !== '' && $situacao !== '—' ? $situacao : 'Não consultada';
+                            $regime = trim((string) ($c['regime'] ?? ''));
+                            $regime = $regime !== '' && $regime !== '—' ? $regime : 'Não consultado';
+                        @endphp
                         <tr>
                             <td style="font-weight:600; color:#111827;">{{ $c['nome'] }}</td>
                             <td class="mono">{{ $c['documento'] }}</td>
                             <td class="center">{{ $c['tipo'] }}</td>
                             <td class="center">{{ $c['uf'] }}</td>
-                            <td>{{ $c['situacao'] }}</td>
-                            <td>{{ $c['regime'] }}</td>
+                            <td><span class="badge" style="background-color:{{ ReportTheme::statusHex($situacao) }};">{{ $situacao }}</span></td>
+                            <td><span class="badge" style="background-color:{{ ReportTheme::regimeHex($regime) }};">{{ $regime }}</span></td>
                             <td class="right mono">{{ $fmtRs($c['movimentado']) }}</td>
                             <td class="center">
                                 <span class="badge" style="background-color:{{ $regHex[$c['regularidade_classe']] ?? ReportTheme::NEUTRO }};">{{ $c['regularidade'] }}</span>

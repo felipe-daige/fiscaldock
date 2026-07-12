@@ -46,7 +46,7 @@ it('accessors label/emoji/corClasse mapeiam por status', function () {
 
 it('accessor corHex mapeia por status com fallback cinza', function () {
     expect(integracao(['status' => 'operacional'])->corHex)->toBe('#047857');
-    expect(integracao(['status' => 'degradado'])->corHex)->toBe('#d97706');
+    expect(integracao(['status' => 'degradado'])->corHex)->toBe('#b45309');
     expect(integracao(['status' => 'fora'])->corHex)->toBe('#dc2626');
     expect(integracao(['status' => 'manutencao'])->corHex)->toBe('#2563eb');
 });

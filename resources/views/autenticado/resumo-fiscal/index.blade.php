@@ -152,7 +152,7 @@
             ['id' => 'alertas', 'label' => 'Alertas Fiscais', 'hex' => '#b91c1c', 'content_id' => 'rf-alertas-content', 'badge' => true],
             ['id' => 'icms', 'label' => 'Espelho — Apuração ICMS/IPI', 'hex' => '#047857', 'content_id' => 'rf-icms-content', 'collapsed' => true],
             ['id' => 'pis-cofins', 'label' => 'Espelho — Apuração PIS/COFINS', 'hex' => '#7c3aed', 'content_id' => 'rf-piscofins-content', 'collapsed' => true],
-            ['id' => 'retencoes', 'label' => 'Retenções na Fonte (F600)', 'hex' => '#d97706', 'content_id' => 'rf-retencoes-content', 'collapsed' => true],
+            ['id' => 'retencoes', 'label' => 'Retenções na Fonte (F600)', 'hex' => '#b45309', 'content_id' => 'rf-retencoes-content', 'collapsed' => true],
         ];
         // Seções analíticas: pro Free renderizam em paywall (blur + card), sem fetch.
         $secoesAnaliticas = ['cruzamentos', 'alertas', 'icms', 'pis-cofins', 'retencoes'];
@@ -263,7 +263,7 @@
     }
 
     function semaforoHtml(status, label) {
-        var hex = { verde: '#047857', amarelo: '#d97706', vermelho: '#b91c1c', sem_dado: '#9ca3af', sem_dados: '#9ca3af', neutro: '#9ca3af' };
+        var hex = { verde: '#047857', amarelo: '#b45309', vermelho: '#b91c1c', sem_dado: '#9ca3af', sem_dados: '#9ca3af', neutro: '#9ca3af' };
         var h = hex[status] || hex.sem_dados;
         return '<span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + h + '">' + (label || status) + '</span>';
     }
@@ -312,7 +312,7 @@
         if (data.tem_icms === false) falta.push('EFD ICMS/IPI');
         if (data.tem_contribuicoes === false) falta.push('EFD Contribuições');
         if (falta.length) {
-            html += '<div class="rounded border border-gray-300 border-l-4 p-3 mb-4" style="border-left-color:#d97706;background-color:#fffbeb">';
+            html += '<div class="rounded border border-gray-300 border-l-4 p-3 mb-4" style="border-left-color:#b45309;background-color:#fffbeb">';
             html += '<p class="text-sm font-semibold text-gray-800">Competência incompleta</p>';
             html += '<p class="text-xs text-gray-600 mt-0.5">Falta importar: ' + falta.join(' · ') + '. Os valores abaixo são parciais.</p>';
             html += '</div>';
@@ -334,7 +334,7 @@
 
             html += '<div class="bg-white rounded border border-gray-300 p-4">';
             html += '<p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">' + c.label;
-            if (parcial) html += ' <span style="color:#d97706">· parcial</span>';
+            if (parcial) html += ' <span style="color:#b45309">· parcial</span>';
             html += '</p>';
             html += '<p class="text-lg font-bold text-gray-900 font-mono truncate">' + fBrl(val) + '</p>';
             html += '<div class="mt-1">' + deltaHtml(k ? k.delta : null) + '</div>';
@@ -354,7 +354,7 @@
             if (l.vencimento) {
                 var d = new Date(l.vencimento + 'T00:00:00');
                 venc = d.toLocaleDateString('pt-BR');
-                if (l.vencimento_estimado) venc += ' <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color:#d97706">estimado</span>';
+                if (l.vencimento_estimado) venc += ' <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color:#b45309">estimado</span>';
             }
             rows += '<tr class="hover:bg-gray-50/50 transition-colors">';
             rows += '<td class="px-3 py-2 text-sm text-gray-800">' + l.tributo + '</td>';
@@ -715,7 +715,7 @@
             html += '<div class="grid grid-cols-3 gap-4 text-center">';
             html += '<div><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Retido (F600)</p><p class="text-sm font-bold text-gray-900 font-mono">' + fBrl(ret.total_retido) + '</p></div>';
             html += '<div><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Deduzido na Apuração</p><p class="text-sm font-bold text-gray-900 font-mono">' + fBrl(ret.deduzido_apuracao) + '</p></div>';
-            var ncHex = ret.nao_compensado > 0 ? '#d97706' : '#047857';
+            var ncHex = ret.nao_compensado > 0 ? '#b45309' : '#047857';
             html += '<div><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Não Compensado</p><p class="text-sm font-bold font-mono" style="color: ' + ncHex + '">' + fBrl(ret.nao_compensado) + '</p></div>';
             html += '</div>';
         } else {
@@ -775,14 +775,14 @@
             '</div>';
         };
         html += mkKpi('Críticos', data.resumo.alta || 0, data.resumo.alta > 0 ? '#b91c1c' : '#d1d5db');
-        html += mkKpi('Atenção', data.resumo.media || 0, data.resumo.media > 0 ? '#d97706' : '#d1d5db');
+        html += mkKpi('Atenção', data.resumo.media || 0, data.resumo.media > 0 ? '#b45309' : '#d1d5db');
         html += mkKpi('Info', data.resumo.info || 0, '#9ca3af');
         html += '</div>';
 
         html += '<div class="space-y-3">';
         data.alertas.forEach(function(a) {
-            var sevBorder = { alta: '#b91c1c', media: '#d97706', info: '#3b82f6' };
-            var sevBadge = { alta: '#b91c1c', media: '#d97706', info: '#3b82f6' };
+            var sevBorder = { alta: '#b91c1c', media: '#b45309', info: '#3b82f6' };
+            var sevBadge = { alta: '#b91c1c', media: '#b45309', info: '#3b82f6' };
             var borderHex = sevBorder[a.severidade] || '#9ca3af';
             var badgeHex = sevBadge[a.severidade] || '#9ca3af';
             html += '<div class="bg-white rounded border border-gray-300 border-l-4 p-4" style="border-left-color: ' + borderHex + '">';

@@ -23,7 +23,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'sobrenome',
         'email',
         'pending_email',
-        'email_verified_at',
+        // email_verified_at NÃO é mass-assignable de propósito (segurança): quem
+        // marca verificado faz por método explícito (markEmailAsVerified / forceFill),
+        // nunca via array de request. Ver docs/emails/hardening.md F2.
         'password',
         'telefone',
         'credits',

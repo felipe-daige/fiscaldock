@@ -30,7 +30,7 @@
                         @if($item->ncm)
                             {{ $item->ncm }}
                         @else
-                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">sem NCM</span>
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b45309">sem NCM</span>
                         @endif
                     </td>
                     <td class="px-3 py-3 text-sm font-mono text-gray-700 whitespace-nowrap">{{ $item->cfop ?: '—' }}</td>

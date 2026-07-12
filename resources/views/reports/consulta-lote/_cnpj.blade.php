@@ -1,5 +1,11 @@
 {{-- Uma página de CNPJ no dossiê. Espera $d (item de getDetalhes). --}}
-@php($fiscal = $d['fiscal_resumo'] ?? null)
+@php
+    $fiscal = $d['fiscal_resumo'] ?? null;
+    $situacao = trim((string) ($d['situacao_cadastral'] ?? ''));
+    $situacao = $situacao !== '' && $situacao !== '—' ? $situacao : 'Não consultada';
+    $regime = trim((string) ($d['regime_tributario'] ?? ''));
+    $regime = $regime !== '' && $regime !== '—' ? $regime : 'Não consultado';
+@endphp
 <div @if(!$loop->first) style="page-break-before: always;" @endif>
     {{-- Identificação --}}
     <div class="secao">
@@ -8,7 +14,12 @@
             <table class="lote-kv">
                 <tr><td class="k">CNPJ</td><td class="v">{{ $d['documento'] ?: '—' }}</td><td class="k">UF</td><td class="v">{{ $d['uf'] ?: '—' }}</td></tr>
                 <tr><td class="k">Razão social</td><td class="v" colspan="3">{{ $d['razao_social'] ?: '—' }}</td></tr>
-                <tr><td class="k">Situação</td><td class="v">{{ $d['situacao_cadastral'] ?? '—' }}</td><td class="k">Regime</td><td class="v">{{ $d['regime_tributario'] ?? '—' }}</td></tr>
+                <tr>
+                    <td class="k">Situação cadastral</td>
+                    <td class="v"><span class="badge" style="background-color: {{ \App\Support\Reports\ReportTheme::statusHex($situacao) }}">{{ $situacao }}</span></td>
+                    <td class="k">Regime tributário</td>
+                    <td class="v"><span class="badge" style="background-color: {{ \App\Support\Reports\ReportTheme::regimeHex($regime) }}">{{ $regime }}</span></td>
+                </tr>
             </table>
         </div>
     </div>

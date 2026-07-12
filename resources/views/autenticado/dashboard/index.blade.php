@@ -113,7 +113,7 @@
             <div data-trial-banner class="bg-white rounded border border-gray-300 overflow-hidden mb-4 sm:mb-6">
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
                     <span class="inline-flex items-center gap-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
-                        @unless($trialOn)<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color:#d97706;"></span>@endunless
+                        @unless($trialOn)<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color:#b45309;"></span>@endunless
                         {{ $trialOn ? 'Período de teste' : 'Teste encerrado' }}
                     </span>
                     <a href="/app/planos" data-link class="text-[11px] font-semibold text-gray-700 hover:text-gray-900 whitespace-nowrap">

@@ -1,7 +1,7 @@
 @php
     $tipoBadgeMap = [
         'purchase' => ['label' => 'Compra', 'hex' => '#047857'],
-        'refund' => ['label' => 'Reembolso', 'hex' => '#d97706'],
+        'refund' => ['label' => 'Reembolso', 'hex' => '#b45309'],
         'manual_add' => ['label' => 'Ajuste', 'hex' => '#4338ca'],
         'trial_bonus' => ['label' => 'Trial', 'hex' => '#1d4ed8'],
         'trial_expiration' => ['label' => 'Expiração', 'hex' => '#b45309'],

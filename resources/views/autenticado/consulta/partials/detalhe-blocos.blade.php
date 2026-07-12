@@ -6,13 +6,33 @@
           sem deixar o "um grande, outro pequeno" lado a lado. Cada cartão leva o acento da cor
           do status na borda esquerda (sinal fiscal de carimbo).
      Espera: $blocos (ResultadoDetalhePresenter::blocos), $resumo (texto). --}}
-@php($blocos = $blocos ?? [])
-@php($resumo = $resumo ?? null)
-@php($certidoes = $certidoes ?? [])
-@php($cabecalho = $cabecalho ?? [])
-@php($monoLabels = ['Certidão nº', 'Emissão', 'Validade', 'Início de atividade', 'Capital social', 'UF', 'Telefone'])
-@php($cadastro = collect($blocos)->firstWhere('chave', 'cadastro'))
-@php($fontes = collect($blocos)->reject(fn ($b) => ($b['chave'] ?? null) === 'cadastro')->values())
+@php
+    $blocos = $blocos ?? [];
+    $resumo = $resumo ?? null;
+    $certidoes = $certidoes ?? [];
+    $cabecalho = $cabecalho ?? [];
+    $monoLabels = ['Certidão nº', 'Emissão', 'Validade', 'Início de atividade', 'Capital social', 'UF', 'Telefone'];
+    $cadastro = collect($blocos)->firstWhere('chave', 'cadastro');
+    $fontes = collect($blocos)->reject(fn ($b) => ($b['chave'] ?? null) === 'cadastro')->values();
+
+    $badgeCurto = function (?string $label): string {
+        $label = trim((string) $label);
+        $normalizado = mb_strtolower($label);
+
+        return match (true) {
+            $label === '' => '—',
+            $normalizado === 'regular' => 'OK',
+            str_contains($normalizado, 'positiva com efeitos') => 'P.E.N.',
+            str_contains($normalizado, 'positiva') || str_contains($normalizado, 'irregular') => 'IRREG.',
+            str_contains($normalizado, 'indetermin') => 'INDET.',
+            str_contains($normalizado, 'falha') || str_contains($normalizado, 'erro') => 'FALHA',
+            str_contains($normalizado, 'indispon') => 'INDISP.',
+            str_contains($normalizado, 'não encontrado') || str_contains($normalizado, 'nao encontrado') => 'S/DADO',
+            mb_strlen($label) > 12 => \Illuminate\Support\Str::limit($label, 12),
+            default => $label,
+        };
+    };
+@endphp
 
 @if(!empty($resumo))
     <div class="mb-3 rounded border border-gray-200 bg-white px-3 py-2.5" style="border-left: 3px solid #1f2937">
@@ -24,10 +44,15 @@
 @if(!empty($certidoes))
     <div class="mb-3 flex flex-wrap gap-1.5">
         @foreach($certidoes as $cert)
-            <span class="cert-chip inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide text-white"
-                  style="background-color: {{ $cert['hex'] }}">
+            @php
+                $certTooltip = trim(($cert['titulo'] ?? '').' · '.($cert['label'] ?? '').(!empty($cert['descricao']) ? "\n".$cert['descricao'] : ''));
+            @endphp
+            <span class="cert-chip inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white cursor-help"
+                  style="background-color: {{ $cert['hex'] }}"
+                  title="{{ $certTooltip }}"
+                  aria-label="{{ $certTooltip }}">
                 {{ $cert['sigla'] }} {{ $cert['glyph'] }}
-                <span class="cert-tip">
+                <span class="cert-tip hidden">
                     <strong>{{ $cert['titulo'] }} · {{ $cert['label'] }}</strong>
                     @if(!empty($cert['descricao'])){{ $cert['descricao'] }}@endif
                 </span>
@@ -41,17 +66,45 @@
 @else
     {{-- ── Identidade (cadastro): largura total, retrátil ───────────────────── --}}
     @if($cadastro)
-        @php($cadId = 'cad-'.bin2hex(random_bytes(6)))
-        @php($previewItens = collect($cadastro['itens'] ?? [])->whereIn('label', ['Porte', 'Regime tributário', 'Natureza jurídica', 'Início de atividade'])->values())
+        @php
+            $cadId = 'cad-'.bin2hex(random_bytes(6));
+            $cadastroItens = collect($cadastro['itens'] ?? []);
+            $previewItens = $cadastroItens->whereIn('label', ['Porte', 'Natureza jurídica', 'Início de atividade'])->values();
+            $situacaoCadastro = trim((string) ($cabecalho['situacao'] ?? ''));
+            $situacaoUpper = mb_strtoupper($situacaoCadastro);
+            $situacaoHex = match ($situacaoUpper) {
+                'ATIVA', '02' => '#047857',
+                'SUSPENSA' => '#ea580c',
+                'INAPTA', 'BAIXADA', 'NULA' => '#b91c1c',
+                default => '#6b7280',
+            };
+            $regimeItem = $cadastroItens->firstWhere('label', 'Regime tributário');
+            $regimeValor = trim((string) ($regimeItem['valor'] ?? ''));
+            $regimeConsultado = $regimeItem !== null && $regimeValor !== '' && $regimeValor !== '—';
+            $regimeLabel = $regimeConsultado ? $regimeValor : 'Não consultado';
+            $regimeHex = \App\Support\Reports\ReportTheme::regimeHex($regimeLabel);
+            $regimeTooltip = $regimeConsultado
+                ? trim('Regime tributário: '.$regimeLabel.(!empty($regimeItem['tooltip']) ? "\n".$regimeItem['tooltip'] : ''))
+                : 'Regime tributário não consultado neste plano ou ausente no resultado.';
+        @endphp
         <div class="mb-3 rounded border border-gray-300 bg-white overflow-hidden" style="border-top: 2px solid #1e4679">
             <button type="button" data-detalhe-toggle="{{ $cadId }}" aria-expanded="false"
                     class="w-full flex items-start justify-between gap-3 px-3 py-2.5 bg-gray-50 hover:bg-gray-100 border-b border-gray-200 text-left transition-colors">
                 <span class="min-w-0 flex-1">
-                    <span class="flex items-center flex-wrap gap-x-2">
+                    <span class="flex items-center flex-wrap gap-2">
                         <span class="text-[11px] font-semibold text-gray-600 uppercase tracking-widest">{{ $cadastro['titulo'] }}</span>
-                        @if(!empty($cabecalho['situacao']))
-                            <span class="text-[9px] font-bold uppercase tracking-wide text-gray-400">· {{ $cabecalho['situacao'] }}</span>
+                        @if($situacaoCadastro !== '')
+                            <span class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white"
+                                  style="background-color: {{ $situacaoHex }}"
+                                  title="Situação cadastral: {{ $situacaoCadastro }}">
+                                Situação cadastral: {{ $situacaoCadastro }}
+                            </span>
                         @endif
+                        <span class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white"
+                              style="background-color: {{ $regimeHex }}"
+                              title="{{ $regimeTooltip }}">
+                            Regime tributário: {{ $regimeLabel }}
+                        </span>
                     </span>
                     @if(!empty($cabecalho['razao']) || !empty($cabecalho['documento']))
                         <span class="block text-[12px] text-gray-800 font-medium truncate mt-0.5">
@@ -113,15 +166,21 @@
     @if($fontes->isNotEmpty())
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
             @foreach($fontes as $bloco)
-                @php($acento = $bloco['badge']['hex'] ?? '#9ca3af')
+                @php
+                    $acento = $bloco['badge']['hex'] ?? '#9ca3af';
+                @endphp
                 <div class="min-w-0 rounded border border-gray-300 bg-white overflow-hidden" style="border-left: 3px solid {{ $acento }}">
                     <div class="flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 border-b border-gray-200">
                         <span class="text-[11px] font-semibold text-gray-600 uppercase tracking-wide truncate">{{ $bloco['titulo'] }}</span>
                         @if(!empty($bloco['badge']))
-                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap shrink-0"
+                            @php
+                                $badgeTooltip = trim(($bloco['titulo'] ?? '').' · '.($bloco['badge']['label'] ?? '').(!empty($bloco['mensagem']) ? "\n".$bloco['mensagem'] : ''));
+                            @endphp
+                            <span class="whitespace-nowrap px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white shrink-0 cursor-help"
                                   style="background-color: {{ $bloco['badge']['hex'] }}"
-                                  @if(!empty($bloco['mensagem'])) title="{{ $bloco['mensagem'] }}" @endif>
-                                {{ $bloco['badge']['label'] }}
+                                  title="{{ $badgeTooltip }}"
+                                  aria-label="{{ $badgeTooltip }}">
+                                {{ $badgeCurto($bloco['badge']['label'] ?? '') }}
                             </span>
                         @endif
                     </div>

@@ -241,7 +241,7 @@
                                     id="btn-abrir-retry-{{ $lote->id }}"
                                     onclick="document.getElementById('modal-retry-{{ $lote->id }}').classList.remove('hidden')"
                                     class="text-[11px] font-semibold px-3 py-1.5 rounded text-white"
-                                    style="background-color: #d97706">
+                                    style="background-color: #b45309">
                                     ↻ Reconsultar {{ count($retryAlvos) }} CNPJ(s) com falha — plano {{ $retryPendentes['desconto_pct_efetivo'] ?? 50 }}% off
                                 </button>
                             @endif
@@ -284,7 +284,7 @@
                                 @foreach([
                                     ['k' => 'regular', 'label' => 'regulares', 'hex' => '#047857'],
                                     ['k' => 'pendencia', 'label' => 'com pendência', 'hex' => '#dc2626'],
-                                    ['k' => 'indeterminado', 'label' => 'indeterminados', 'hex' => '#d97706'],
+                                    ['k' => 'indeterminado', 'label' => 'indeterminados', 'hex' => '#b45309'],
                                     ['k' => 'sem_info', 'label' => 'sem fontes de regularidade', 'hex' => '#9ca3af'],
                                 ] as $chip)
                                     @if((int) ($cn[$chip['k']] ?? 0) > 0)
@@ -324,7 +324,7 @@
                                                 <td class="py-2 pr-3 text-gray-800">{{ $f['titulo'] }}</td>
                                                 <td class="text-center px-2 font-medium" style="color: {{ ($f['regular'] ?? 0) > 0 ? '#047857' : '#9ca3af' }}">{{ (int) ($f['regular'] ?? 0) }}</td>
                                                 <td class="text-center px-2 font-medium" style="color: {{ ($f['atencao'] ?? 0) > 0 ? '#dc2626' : '#9ca3af' }}">{{ (int) ($f['atencao'] ?? 0) }}</td>
-                                                <td class="text-center px-2 font-medium" style="color: {{ ($f['indeterminado'] ?? 0) > 0 ? '#d97706' : '#9ca3af' }}">{{ (int) ($f['indeterminado'] ?? 0) }}</td>
+                                                <td class="text-center px-2 font-medium" style="color: {{ ($f['indeterminado'] ?? 0) > 0 ? '#b45309' : '#9ca3af' }}">{{ (int) ($f['indeterminado'] ?? 0) }}</td>
                                                 <td class="text-center px-2 font-medium" style="color: {{ ($f['falha'] ?? 0) > 0 ? '#b45309' : '#9ca3af' }}">{{ (int) ($f['falha'] ?? 0) }}</td>
                                                 <td class="text-center px-2 text-gray-400">{{ (int) ($f['neutro'] ?? 0) }}</td>
                                                 <td class="pl-3">
@@ -344,7 +344,7 @@
                                         <div class="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] mb-1.5">
                                             <span class="font-medium" style="color: {{ ($f['regular'] ?? 0) > 0 ? '#047857' : '#9ca3af' }}">Regular {{ (int) ($f['regular'] ?? 0) }}</span>
                                             <span class="font-medium" style="color: {{ ($f['atencao'] ?? 0) > 0 ? '#dc2626' : '#9ca3af' }}">Atenção {{ (int) ($f['atencao'] ?? 0) }}</span>
-                                            <span class="font-medium" style="color: {{ ($f['indeterminado'] ?? 0) > 0 ? '#d97706' : '#9ca3af' }}">Indeterm. {{ (int) ($f['indeterminado'] ?? 0) }}</span>
+                                            <span class="font-medium" style="color: {{ ($f['indeterminado'] ?? 0) > 0 ? '#b45309' : '#9ca3af' }}">Indeterm. {{ (int) ($f['indeterminado'] ?? 0) }}</span>
                                             <span class="font-medium" style="color: {{ ($f['falha'] ?? 0) > 0 ? '#b45309' : '#9ca3af' }}">Falha {{ (int) ($f['falha'] ?? 0) }}</span>
                                             <span class="text-gray-400">N/Consult. {{ (int) ($f['neutro'] ?? 0) }}</span>
                                         </div>

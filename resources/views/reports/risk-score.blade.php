@@ -8,6 +8,13 @@
     $truncado = count($registros) > Builder::LIMITE_PDF;
     $visiveis = $truncado ? array_slice($registros, 0, Builder::LIMITE_PDF) : $registros;
     $inteiro = fn ($valor) => $valor === null ? '—' : (string) $valor;
+
+    // Rótulo curto do badge — o rótulo longo ("Risco Não Conclusivo") vazava pra coluna
+    // vizinha; o cabeçalho "Classificação" já dá o contexto.
+    $labelCurto = [
+        'baixo' => 'Baixo', 'medio' => 'Médio', 'alto' => 'Alto',
+        'critico' => 'Crítico', 'inconclusivo' => 'Inconclusivo',
+    ];
 @endphp
 
 @section('titulo', $relatorio['titulo'])
@@ -21,11 +28,17 @@
 
 @push('estilos')
 <style>
+    .risk-table { table-layout:fixed; }
     .risk-table th, .risk-table td { font-size:6.8px; padding:3px; }
-    .risk-table .alvo { width:29%; }
-    .risk-table .tipo { width:12%; }
-    .risk-table .fontes { width:24%; }
-    .risk-table .consulta { width:12%; }
+    .risk-table .alvo { width:26%; }
+    .risk-table .tipo { width:10%; }
+    .risk-table .score { width:6%; }
+    .risk-table .classif { width:11%; }
+    .risk-table .fontes { width:21%; }
+    .risk-table .credito { width:8%; }
+    .risk-table .consulta { width:11%; }
+    /* Badge da classificação: pode quebrar em 2 linhas dentro da coluna (nunca vaza pro vizinho). */
+    .risk-table .badge { display:inline-block; white-space:normal; font-size:6px; padding:1px 4px; line-height:1.2; }
 </style>
 @endpush
 
@@ -65,10 +78,10 @@
                         <tr>
                             <th class="alvo">CNPJ / razão social</th>
                             <th class="tipo">Tipo / papel</th>
-                            <th class="right">Score</th>
-                            <th>Classificação</th>
+                            <th class="right score">Score</th>
+                            <th class="classif">Classificação</th>
                             <th class="fontes">Subscores (0–100)</th>
-                            <th>Crédito IBS/CBS</th>
+                            <th class="credito">Crédito IBS/CBS</th>
                             <th class="consulta">Última consulta</th>
                         </tr>
                     </thead>
@@ -80,10 +93,10 @@
                                     {{ $registro['razao_social'] }}{{ $registro['uf'] !== '—' ? ' · '.$registro['uf'] : '' }}
                                 </td>
                                 <td>{{ $registro['tipo'] }}{{ $registro['papel'] !== '—' ? ' · '.$registro['papel'] : '' }}</td>
-                                <td class="right">{{ $inteiro($registro['score_total']) }}</td>
-                                <td>
+                                <td class="right score">{{ $inteiro($registro['score_total']) }}</td>
+                                <td class="classif">
                                     <span class="badge" style="background-color:{{ Builder::corClassificacao($registro['classificacao_codigo']) }}">
-                                        {{ $registro['classificacao'] }}
+                                        {{ $labelCurto[$registro['classificacao_codigo']] ?? 'Não avaliado' }}
                                     </span>
                                 </td>
                                 <td class="mono">

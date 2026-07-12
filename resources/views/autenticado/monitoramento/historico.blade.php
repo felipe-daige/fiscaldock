@@ -143,7 +143,7 @@
                                     @if($consulta->status === 'sucesso')
                                         <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Sucesso</span>
                                     @elseif($consulta->status === 'pendente')
-                                        <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">Pendente</span>
+                                        <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b45309">Pendente</span>
                                     @elseif($consulta->status === 'processando')
                                         <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">Processando</span>
                                     @else
@@ -361,7 +361,7 @@
                     html += '<div class="bg-gray-50 rounded border border-gray-200 p-3">';
                     html += '<p class="text-xs text-gray-500">CND Federal</p>';
                     if (cnd.indeterminado) {
-                        html += '<p class="text-sm font-semibold" style="color: #d97706">Indeterminada</p>';
+                        html += '<p class="text-sm font-semibold" style="color: #b45309">Indeterminada</p>';
                         if (cnd.motivo) {
                             html += '<p class="text-xs text-gray-600 mt-1 leading-snug">' + cnd.motivo + '</p>';
                         }

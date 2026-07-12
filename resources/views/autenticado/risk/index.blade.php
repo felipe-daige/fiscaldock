@@ -1,14 +1,8 @@
 {{-- Score Fiscal - Dashboard (DANFE Modernizado) --}}
 @php
-    $scoreColor = function($s) {
-        if ($s >= 80) return '#b91c1c';
-        if ($s >= 50) return '#ea580c';
-        if ($s >= 20) return '#d97706';
-        return '#047857';
-    };
     $classBadge = [
         'baixo' => ['label' => 'BAIXO', 'hex' => '#047857'],
-        'medio' => ['label' => 'MÉDIO', 'hex' => '#d97706'],
+        'medio' => ['label' => 'MÉDIO', 'hex' => '#b45309'],
         'alto' => ['label' => 'ALTO', 'hex' => '#ea580c'],
         'critico' => ['label' => 'CRÍTICO', 'hex' => '#b91c1c'],
         'inconclusivo' => ['label' => 'INCONCLUSIVO', 'hex' => '#9ca3af'],
@@ -38,7 +32,7 @@
         if ($sc === null) return ['label' => '—', 'hex' => '#9ca3af'];
         if ($sc <= 0) return ['label' => 'Gera', 'hex' => '#047857'];
         if ($sc >= 100) return ['label' => 'Não gera', 'hex' => '#b91c1c'];
-        return ['label' => 'Parcial', 'hex' => '#d97706'];
+        return ['label' => 'Parcial', 'hex' => '#b45309'];
     };
 @endphp
 <div class="min-h-screen bg-gray-100" id="risk-container">
@@ -56,16 +50,16 @@
                 <x-export-grupo label="Documento" />
                 <x-export-option format="pdf" modal-id="modal-exportar-score" overlay="download-overlay-score"
                     path="/app/score-fiscal/exportar-pdf"
-                    :extras="['filtro-classificacao' => 'classificacao', 'busca-participante' => 'busca']"
+                    :extras="['filtro-classificacao' => 'classificacao', 'busca-participante' => 'busca', 'filtro-status-score' => 'status', 'filtro-tipo-score' => 'tipo', 'filtro-credito-score' => 'credito', 'score-min' => 'score_min', 'score-max' => 'score_max']"
                     descricao="Resumo e CNPJs avaliados/não consultados em papel A4 retrato." />
                 <x-export-grupo label="Planilhas" />
                 <x-export-option format="xlsx" modal-id="modal-exportar-score" overlay="download-overlay-score"
                     path="/app/score-fiscal/exportar-xlsx"
-                    :extras="['filtro-classificacao' => 'classificacao', 'busca-participante' => 'busca']"
+                    :extras="['filtro-classificacao' => 'classificacao', 'busca-participante' => 'busca', 'filtro-status-score' => 'status', 'filtro-tipo-score' => 'tipo', 'filtro-credito-score' => 'credito', 'score-min' => 'score_min', 'score-max' => 'score_max']"
                     descricao="Resumo em uma aba e dados completos em outra, sem corte de linhas." />
                 <x-export-option format="csv" modal-id="modal-exportar-score" overlay="download-overlay-score"
                     path="/app/score-fiscal/exportar-csv"
-                    :extras="['filtro-classificacao' => 'classificacao', 'busca-participante' => 'busca']"
+                    :extras="['filtro-classificacao' => 'classificacao', 'busca-participante' => 'busca', 'filtro-status-score' => 'status', 'filtro-tipo-score' => 'tipo', 'filtro-credito-score' => 'credito', 'score-min' => 'score_min', 'score-max' => 'score_max']"
                     descricao="Tabela única com todos os campos e sem corte de linhas." />
             </x-export-menu>
         </div>
@@ -94,7 +88,7 @@
                     <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Faixas de classificação</p>
                     <div class="flex flex-wrap gap-3 text-xs">
                         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #047857"></span><span class="text-gray-600">0–20 Baixo</span></span>
-                        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #d97706"></span><span class="text-gray-600">21–50 Médio</span></span>
+                        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #b45309"></span><span class="text-gray-600">21–50 Médio</span></span>
                         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #ea580c"></span><span class="text-gray-600">51–80 Alto</span></span>
                         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #b91c1c"></span><span class="text-gray-600">81–100 Crítico</span></span>
                         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #9ca3af"></span><span class="text-gray-600">Risco Não Conclusivo (cobertura insuficiente)</span></span>
@@ -186,7 +180,7 @@
                     <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Semáforo do crédito</p>
                     <div class="flex flex-wrap gap-3 text-xs">
                         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #047857"></span><span class="text-gray-600">Gera crédito integral</span></span>
-                        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #d97706"></span><span class="text-gray-600">Parcial (Simples)</span></span>
+                        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #b45309"></span><span class="text-gray-600">Parcial (Simples)</span></span>
                         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #b91c1c"></span><span class="text-gray-600">Não gera (MEI)</span></span>
                         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #9ca3af"></span><span class="text-gray-600">Regime não identificado</span></span>
                     </div>
@@ -232,54 +226,6 @@
             </div>
         </details>
 
-        {{-- Filtros --}}
-        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6" data-mobile-filters>
-            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
-            </div>
-            <div class="p-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-3">
-                <div class="w-full sm:w-auto">
-                    <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Cliente</label>
-                    <select id="filtro-cliente" class="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
-                        @foreach(($clientes ?? collect()) as $cli)
-                            <option value="{{ $cli->id }}" {{ (! ($verTodosCnpjs ?? false) && (int)($clienteSelecionadoId ?? 0) === (int)$cli->id) ? 'selected' : '' }}>
-                                {{ $cli->is_empresa_propria ? '★ '.$cli->nome.' (Minha Empresa)' : $cli->nome }}
-                            </option>
-                        @endforeach
-                        <option value="todos" {{ ($verTodosCnpjs ?? false) ? 'selected' : '' }}>Todos os CNPJs</option>
-                    </select>
-                </div>
-                <div class="w-full sm:w-auto">
-                    <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Classificação</label>
-                    <select id="filtro-classificacao" class="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
-                        <option value="todos" {{ ($filtroClassificacao ?? 'todos') === 'todos' ? 'selected' : '' }}>Todas as Classificações</option>
-                        <option value="baixo" {{ ($filtroClassificacao ?? '') === 'baixo' ? 'selected' : '' }}>Baixo Risco</option>
-                        <option value="medio" {{ ($filtroClassificacao ?? '') === 'medio' ? 'selected' : '' }}>Médio Risco</option>
-                        <option value="alto" {{ ($filtroClassificacao ?? '') === 'alto' ? 'selected' : '' }}>Alto Risco</option>
-                        <option value="critico" {{ ($filtroClassificacao ?? '') === 'critico' ? 'selected' : '' }}>Crítico</option>
-                        <option value="inconclusivo" {{ ($filtroClassificacao ?? '') === 'inconclusivo' ? 'selected' : '' }}>Risco Não Conclusivo</option>
-                    </select>
-                </div>
-                <div class="w-full sm:flex-1 sm:min-w-[240px]">
-                    <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Buscar</label>
-                    <div class="relative">
-                        <input type="text" id="busca-participante" placeholder="CNPJ ou razão social..." value="{{ $filtroBusca ?? '' }}" class="w-full px-3 py-2 pl-9 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
-                        <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="w-full sm:w-auto">
-                    <button type="button" id="btn-filtrar-score" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium transition">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L14 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 018 21v-7.586L3.293 6.707A1 1 0 013 6V4z"></path>
-                        </svg>
-                        Filtrar
-                    </button>
-                </div>
-            </div>
-        </div>
-
         {{-- KPIs --}}
         <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
@@ -298,7 +244,7 @@
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Médio Risco</p>
                     <p class="text-lg font-bold text-gray-900 font-mono">{{ $estatisticas['medio_risco'] ?? 0 }}</p>
-                    <span class="whitespace-nowrap inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">MÉDIO</span>
+                    <span class="whitespace-nowrap inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b45309">MÉDIO</span>
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Alto Risco</p>
@@ -348,6 +294,135 @@
         </div>
         @endif
 
+        {{-- Filtros --}}
+        @php
+            $statusLabels = ['todos' => 'Todos', 'consultados' => 'Consultados', 'nao_consultados' => 'Não consultados'];
+            $tipoLabels = ['todos' => 'Clientes e participantes', 'cliente' => 'Clientes', 'participante' => 'Participantes'];
+            $filtrosAtivos = collect([
+                ($verTodosCnpjs ?? false) ? null : 'Cliente',
+                ($filtroBusca ?? '') !== '' ? 'Busca' : null,
+                ($filtroStatus ?? 'todos') !== 'todos' ? 'Lista' : null,
+                ($filtroTipo ?? 'todos') !== 'todos' ? 'Tipo' : null,
+                ($filtroClassificacao ?? 'todos') !== 'todos' ? 'Risco' : null,
+                ($filtroCredito ?? 'todos') !== 'todos' ? 'Crédito' : null,
+                ($filtroScoreMin ?? null) !== null || ($filtroScoreMax ?? null) !== null ? 'Score' : null,
+            ])->filter()->values();
+        @endphp
+        <details class="bg-white rounded border border-gray-300 overflow-hidden mb-6 group" data-mobile-filters {{ $filtrosAtivos->isNotEmpty() ? 'open' : '' }}>
+            <summary class="cursor-pointer list-none bg-gray-50 px-4 py-3 border-b border-gray-200 hover:bg-gray-100">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="min-w-0 flex items-center gap-2">
+                        <span class="inline-flex h-7 w-7 items-center justify-center rounded border border-gray-300 bg-white text-gray-500 shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L14 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 018 21v-7.586L3.293 6.707A1 1 0 013 6V4z"></path>
+                            </svg>
+                        </span>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
+                                @if($filtrosAtivos->isNotEmpty())
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $filtrosAtivos->count() }}</span>
+                                @endif
+                            </div>
+                            <p class="text-xs text-gray-500 truncate">
+                                {{ $statusLabels[$filtroStatus ?? 'todos'] ?? 'Todos' }} · {{ $tipoLabels[$filtroTipo ?? 'todos'] ?? 'Clientes e participantes' }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="text-[11px] font-semibold text-gray-500 group-open:hidden">Abrir</span>
+                        <span class="text-[11px] font-semibold text-gray-500 hidden group-open:inline">Fechar</span>
+                        <svg class="w-4 h-4 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                </div>
+            </summary>
+            <div class="p-4 space-y-4">
+                <div class="grid grid-cols-1 lg:grid-cols-[minmax(220px,320px)_minmax(260px,1fr)_auto] gap-3 lg:items-end">
+                    <div>
+                        <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Cliente</label>
+                        <select id="filtro-cliente" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            @foreach(($clientes ?? collect()) as $cli)
+                                <option value="{{ $cli->id }}" {{ (! ($verTodosCnpjs ?? false) && (int)($clienteSelecionadoId ?? 0) === (int)$cli->id) ? 'selected' : '' }}>
+                                    {{ $cli->is_empresa_propria ? '★ '.$cli->nome.' (Minha Empresa)' : $cli->nome }}
+                                </option>
+                            @endforeach
+                            <option value="todos" {{ ($verTodosCnpjs ?? false) ? 'selected' : '' }}>Todos os CNPJs</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Buscar</label>
+                        <div class="relative">
+                            <input type="text" id="busca-participante" placeholder="CNPJ ou razão social..." value="{{ $filtroBusca ?? '' }}" class="w-full px-3 py-2 pl-9 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" id="btn-limpar-filtros-score" class="inline-flex items-center justify-center px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition">Limpar</button>
+                        <button type="button" id="btn-filtrar-score" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L14 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 018 21v-7.586L3.293 6.707A1 1 0 013 6V4z"></path>
+                            </svg>
+                            Filtrar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-100 pt-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Lista</label>
+                            <select id="filtro-status-score" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                                <option value="todos" {{ ($filtroStatus ?? 'todos') === 'todos' ? 'selected' : '' }}>Todos</option>
+                                <option value="consultados" {{ ($filtroStatus ?? '') === 'consultados' ? 'selected' : '' }}>Consultados</option>
+                                <option value="nao_consultados" {{ ($filtroStatus ?? '') === 'nao_consultados' ? 'selected' : '' }}>Não consultados</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Tipo</label>
+                            <select id="filtro-tipo-score" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                                <option value="todos" {{ ($filtroTipo ?? 'todos') === 'todos' ? 'selected' : '' }}>Todos</option>
+                                <option value="cliente" {{ ($filtroTipo ?? '') === 'cliente' ? 'selected' : '' }}>Clientes</option>
+                                <option value="participante" {{ ($filtroTipo ?? '') === 'participante' ? 'selected' : '' }}>Participantes</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Classificação</label>
+                            <select id="filtro-classificacao" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                                <option value="todos" {{ ($filtroClassificacao ?? 'todos') === 'todos' ? 'selected' : '' }}>Todas</option>
+                                <option value="baixo" {{ ($filtroClassificacao ?? '') === 'baixo' ? 'selected' : '' }}>Baixo</option>
+                                <option value="medio" {{ ($filtroClassificacao ?? '') === 'medio' ? 'selected' : '' }}>Médio</option>
+                                <option value="alto" {{ ($filtroClassificacao ?? '') === 'alto' ? 'selected' : '' }}>Alto</option>
+                                <option value="critico" {{ ($filtroClassificacao ?? '') === 'critico' ? 'selected' : '' }}>Crítico</option>
+                                <option value="inconclusivo" {{ ($filtroClassificacao ?? '') === 'inconclusivo' ? 'selected' : '' }}>Inconclusivo</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Crédito IBS/CBS</label>
+                            <select id="filtro-credito-score" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                                <option value="todos" {{ ($filtroCredito ?? 'todos') === 'todos' ? 'selected' : '' }}>Todos</option>
+                                <option value="gera" {{ ($filtroCredito ?? '') === 'gera' ? 'selected' : '' }}>Gera</option>
+                                <option value="parcial" {{ ($filtroCredito ?? '') === 'parcial' ? 'selected' : '' }}>Parcial</option>
+                                <option value="nao_gera" {{ ($filtroCredito ?? '') === 'nao_gera' ? 'selected' : '' }}>Não gera</option>
+                                <option value="indefinido" {{ ($filtroCredito ?? '') === 'indefinido' ? 'selected' : '' }}>Indefinido</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Score mín.</label>
+                            <input type="number" id="score-min" min="0" max="100" inputmode="numeric" placeholder="0" value="{{ $filtroScoreMin ?? '' }}" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Score máx.</label>
+                            <input type="number" id="score-max" min="0" max="100" inputmode="numeric" placeholder="100" value="{{ $filtroScoreMax ?? '' }}" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                        </div>
+                    </div>
+                    <p class="mt-2 text-[11px] text-gray-500">Score e crédito filtram apenas CNPJs já consultados.</p>
+                </div>
+            </div>
+        </details>
         {{-- CONSULTADOS — participantes que já têm score (ordenados por risco) --}}
         <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
@@ -370,7 +445,15 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                         @foreach($consultados as $sc)
-                        @php $tb = $tipoBadge($sc->alvo_tipo); @endphp
+                        @php
+                            $tb = $tipoBadge($sc->alvo_tipo);
+                            $b = $classBadge[$sc->classificacao] ?? ['label' => 'Não Avaliado', 'hex' => '#9ca3af'];
+                            $detalheId = $sc->participante_id ?: $sc->cliente_id;
+                            $detalheUrl = $sc->participante_id
+                                ? "/app/score-fiscal/participante/{$sc->participante_id}/detalhe"
+                                : "/app/score-fiscal/cliente/{$sc->cliente_id}/detalhe";
+                            $detalheTargetDesktop = "detalhe-row-d-{$sc->alvo_tipo}-{$detalheId}";
+                        @endphp
                         <tr class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-2 py-3 max-w-0 w-full">
                                 <div class="text-sm text-gray-900 font-medium truncate" title="{{ $sc->alvo_nome }}">{{ $sc->alvo_nome }}</div>
@@ -386,13 +469,12 @@
                             </td>
                             <td class="px-2 py-3 whitespace-nowrap text-center">
                                 @if($sc->score_total !== null)
-                                    <span class="text-lg font-bold font-mono leading-none" style="color: {{ $scoreColor($sc->score_total) }}">{{ $sc->score_total }}</span>
+                                    <span class="text-lg font-bold font-mono leading-none" style="color: {{ $b['hex'] }}">{{ $sc->score_total }}</span>
                                 @else
                                     <span class="text-sm text-gray-400">—</span>
                                 @endif
                                 <div class="mt-1">
                                     @if(isset($classBadge[$sc->classificacao]))
-                                        @php $b = $classBadge[$sc->classificacao]; @endphp
                                         <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $b['hex'] }}">
                                             {{ $b['label'] }}
                                         </span>
@@ -415,9 +497,7 @@
                                 @endif
                             </td>
                             <td class="px-2 py-3 whitespace-nowrap text-right text-xs">
-                                @if($sc->participante_id)
-                                    <button type="button" data-detalhe-participante="{{ $sc->participante_id }}" data-detalhe-target="detalhe-row-d-{{ $sc->participante_id }}" class="text-blue-600 hover:underline mr-2">Ver detalhes</button>
-                                @endif
+                                <button type="button" data-detalhe-url="{{ $detalheUrl }}" data-detalhe-target="{{ $detalheTargetDesktop }}" class="text-blue-600 hover:underline mr-2">Ver detalhes</button>
                                 <x-acoes-menu>
                                     @if($sc->participante_id)
                                         <x-acoes-item href="/app/score-fiscal/participante/{{ $sc->participante_id }}" data-link>Página completa</x-acoes-item>
@@ -426,13 +506,11 @@
                                 </x-acoes-menu>
                             </td>
                         </tr>
-                        @if($sc->participante_id)
-                            <tr id="detalhe-row-d-{{ $sc->participante_id }}" class="hidden bg-gray-50">
-                                <td colspan="6" class="px-3 py-0">
-                                    <div class="detalhe-content py-3"></div>
-                                </td>
-                            </tr>
-                        @endif
+                        <tr id="{{ $detalheTargetDesktop }}" class="hidden bg-gray-50">
+                            <td colspan="6" class="px-3 py-0">
+                                <div class="detalhe-content py-3"></div>
+                            </td>
+                        </tr>
                         @endforeach
                     </tbody>
                 </table>
@@ -445,6 +523,11 @@
                     $tb = $tipoBadge($sc->alvo_tipo);
                     $b = $classBadge[$sc->classificacao] ?? ['label' => 'Não Avaliado', 'hex' => '#9ca3af'];
                     $cb = $creditoBadge($sc->score_credito_reforma);
+                    $detalheId = $sc->participante_id ?: $sc->cliente_id;
+                    $detalheUrl = $sc->participante_id
+                        ? "/app/score-fiscal/participante/{$sc->participante_id}/detalhe"
+                        : "/app/score-fiscal/cliente/{$sc->cliente_id}/detalhe";
+                    $detalheTargetMobile = "detalhe-row-m-{$sc->alvo_tipo}-{$detalheId}";
                 @endphp
                 <div class="px-4 py-3 border-l-4" style="border-left-color: {{ $b['hex'] }}">
                     <div class="flex items-start justify-between gap-3">
@@ -454,7 +537,7 @@
                         </div>
                         <div class="flex-shrink-0 flex flex-col items-end gap-1">
                             @if($sc->score_total !== null)
-                                <span class="text-2xl font-bold font-mono leading-none" style="color: {{ $scoreColor($sc->score_total) }}">{{ $sc->score_total }}</span>
+                                <span class="text-2xl font-bold font-mono leading-none" style="color: {{ $b['hex'] }}">{{ $sc->score_total }}</span>
                             @else
                                 <span class="text-lg text-gray-400 leading-none">—</span>
                             @endif
@@ -477,9 +560,7 @@
                             @endif
                         </span>
                         <div class="flex items-center gap-3 text-xs">
-                            @if($sc->participante_id)
-                                <button type="button" data-detalhe-participante="{{ $sc->participante_id }}" data-detalhe-target="detalhe-row-m-{{ $sc->participante_id }}" class="text-blue-600 font-medium hover:underline">Ver detalhes</button>
-                            @endif
+                            <button type="button" data-detalhe-url="{{ $detalheUrl }}" data-detalhe-target="{{ $detalheTargetMobile }}" class="text-blue-600 font-medium hover:underline">Ver detalhes</button>
                             <x-acoes-menu>
                                 @if($sc->participante_id)
                                     <x-acoes-item href="/app/score-fiscal/participante/{{ $sc->participante_id }}" data-link>Página completa</x-acoes-item>
@@ -488,11 +569,9 @@
                             </x-acoes-menu>
                         </div>
                     </div>
-                    @if($sc->participante_id)
-                        <div id="detalhe-row-m-{{ $sc->participante_id }}" class="hidden mt-2">
-                            <div class="detalhe-content"></div>
-                        </div>
-                    @endif
+                    <div id="{{ $detalheTargetMobile }}" class="hidden mt-2">
+                        <div class="detalhe-content"></div>
+                    </div>
                 </div>
                 @endforeach
             </div>

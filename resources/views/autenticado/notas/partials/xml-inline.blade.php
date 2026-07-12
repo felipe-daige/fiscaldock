@@ -1,7 +1,7 @@
 @php
     $tipoBadge = $nota->tipo_nota === \App\Models\XmlNota::TIPO_ENTRADA
         ? ['label' => strtoupper($nota->tipo_nota_descricao), 'hex' => '#047857']
-        : ['label' => strtoupper($nota->tipo_nota_descricao), 'hex' => '#d97706'];
+        : ['label' => strtoupper($nota->tipo_nota_descricao), 'hex' => '#b45309'];
 
     $chaveFormatada = $nota->chave_acesso ? implode(' ', str_split($nota->chave_acesso, 4)) : null;
 

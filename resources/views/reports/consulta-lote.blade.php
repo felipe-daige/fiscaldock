@@ -96,7 +96,11 @@
             </thead>
             <tbody>
                 @foreach($resultados as $r)
-                    @php($situacao = $r['status_consulta'] === 'sucesso' ? ($r['situacao_cadastral'] ?? '-') : 'ERRO')
+                    @php
+                        $situacao = $r['status_consulta'] === 'sucesso' ? ($r['situacao_cadastral'] ?? '-') : 'ERRO';
+                        $regime = trim((string) ($r['regime_tributario'] ?? ''));
+                        $regime = $regime !== '' && $regime !== '—' ? $regime : 'Não consultado';
+                    @endphp
                     <tr>
                         <td class="mono">{{ $r['documento'] }}</td>
                         <td>
@@ -109,7 +113,9 @@
                         <td>
                             <span class="badge" style="background-color: {{ \App\Support\Reports\ReportTheme::statusHex($situacao) }}">{{ $situacao }}</span>
                         </td>
-                        <td>{{ $r['regime_tributario'] ?: '-' }}</td>
+                        <td>
+                            <span class="badge" style="background-color: {{ \App\Support\Reports\ReportTheme::regimeHex($regime) }}">{{ $regime }}</span>
+                        </td>
                         <td class="center"><strong style="color: #111827">{{ $r['score_total'] }}</strong></td>
                         <td>
                             <span class="badge" style="background-color: {{ \App\Support\Reports\ReportTheme::riscoHex($r['classificacao']) }}">{{ strtoupper($r['classificacao']) }}</span>

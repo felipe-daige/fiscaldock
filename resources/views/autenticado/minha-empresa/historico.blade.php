@@ -47,7 +47,7 @@
                                     $scoreData = $consulta->calcularScore();
                                     $scoreHex = match($scoreData['classificacao']) {
                                         'baixo' => '#047857',
-                                        'medio' => '#d97706',
+                                        'medio' => '#b45309',
                                         'alto' => '#ea580c',
                                         'critico' => '#b91c1c',
                                         default => '#9ca3af'
@@ -84,7 +84,7 @@
                                                   style="background-color: #b91c1c">Erro</span>
                                         @else
                                             <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white"
-                                                  style="background-color: #d97706">Pendente</span>
+                                                  style="background-color: #b45309">Pendente</span>
                                         @endif
                                         @if($consulta->getMensagemExibivel())
                                             <p class="mt-1 text-[11px] text-gray-500 normal-case whitespace-normal max-w-[18rem] mx-auto">{{ $consulta->getMensagemExibivel() }}</p>

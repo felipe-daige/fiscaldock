@@ -135,14 +135,14 @@
                                         $origemBadge = match($imp['tipo_documento'] ?? '') {
                                             'nfe' => ['label' => 'NF-e', 'hex' => '#0f766e'],
                                             'nfse' => ['label' => 'NFS-e', 'hex' => '#374151'],
-                                            'cte' => ['label' => 'CT-e', 'hex' => '#d97706'],
+                                            'cte' => ['label' => 'CT-e', 'hex' => '#b45309'],
                                             default => ['label' => 'XML', 'hex' => '#374151'],
                                         };
                                     }
 
                                     $statusBadge = match($imp['status'] ?? '') {
                                         'concluido' => ['label' => 'Concluído', 'hex' => '#047857'],
-                                        'processando' => ['label' => 'Processando', 'hex' => '#d97706'],
+                                        'processando' => ['label' => 'Processando', 'hex' => '#b45309'],
                                         'erro' => ['label' => 'Erro', 'hex' => '#dc2626'],
                                         default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
                                     };
@@ -241,14 +241,14 @@
                                 $origemBadge = match($imp['tipo_documento'] ?? '') {
                                     'nfe' => ['label' => 'NF-e', 'hex' => '#0f766e'],
                                     'nfse' => ['label' => 'NFS-e', 'hex' => '#374151'],
-                                    'cte' => ['label' => 'CT-e', 'hex' => '#d97706'],
+                                    'cte' => ['label' => 'CT-e', 'hex' => '#b45309'],
                                     default => ['label' => 'XML', 'hex' => '#374151'],
                                 };
                             }
 
                             $statusBadge = match($imp['status'] ?? '') {
                                 'concluido' => ['label' => 'Concluído', 'hex' => '#047857'],
-                                'processando' => ['label' => 'Processando', 'hex' => '#d97706'],
+                                'processando' => ['label' => 'Processando', 'hex' => '#b45309'],
                                 'erro' => ['label' => 'Erro', 'hex' => '#dc2626'],
                                 default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
                             };

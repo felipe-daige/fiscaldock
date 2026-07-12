@@ -545,7 +545,7 @@ class ParticipanteController extends Controller
                 if ($diasSemConsulta > 30) {
                     $consultaStatus = 'desatualizada';
                     $consultaStatusLabel = 'Consulta desatualizada';
-                    $consultaStatusHex = '#d97706';
+                    $consultaStatusHex = '#b45309';
                     $consultaStatusMeta = 'Última atualização em '.$ultimaConsulta->format('d/m/Y H:i');
                 } else {
                     $consultaStatus = 'consultado_recente';
@@ -567,7 +567,7 @@ class ParticipanteController extends Controller
                     $cndStatusHex = '#047857';
                 } elseif (str_contains($cndStatus, 'POSITIVA COM EFEITO') || str_contains($cndStatus, 'EFEITO DE NEGATIVA')) {
                     $cndStatusLabel = 'Positiva c/ efeito';
-                    $cndStatusHex = '#d97706';
+                    $cndStatusHex = '#b45309';
                 } elseif (in_array($cndStatus, ['POSITIVA', 'IRREGULAR', 'IRREGULARIDADE'])) {
                     $cndStatusLabel = 'Positiva';
                     $cndStatusHex = '#dc2626';

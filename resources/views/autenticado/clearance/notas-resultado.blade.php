@@ -36,7 +36,7 @@
     ];
     $veredictoHex = match ($divergencia['veredito']['severidade']) {
         'critica' => '#dc2626',
-        'revisar' => '#d97706',
+        'revisar' => '#b45309',
         default => '#047857',
     };
     $veredictoLabel = match ($divergencia['veredito']['severidade']) {
@@ -48,8 +48,8 @@
     $breakdownCards = [
         ['key' => 'notas_frias', 'label' => 'Notas frias', 'sub' => 'chave inexistente na SEFAZ', 'hex' => '#dc2626'],
         ['key' => 'canceladas_declaradas', 'label' => 'Canceladas declaradas', 'sub' => 'SEFAZ cancelou, escriturado', 'hex' => '#dc2626'],
-        ['key' => 'valor_divergente', 'label' => 'Valor divergente', 'sub' => 'acima da tolerância', 'hex' => '#d97706'],
-        ['key' => 'partes_divergentes', 'label' => 'Emitente / destinatário', 'sub' => 'CNPJ ou nome diferente', 'hex' => '#d97706'],
+        ['key' => 'valor_divergente', 'label' => 'Valor divergente', 'sub' => 'acima da tolerância', 'hex' => '#b45309'],
+        ['key' => 'partes_divergentes', 'label' => 'Emitente / destinatário', 'sub' => 'CNPJ ou nome diferente', 'hex' => '#b45309'],
         ['key' => 'operacionais', 'label' => 'Operacionais', 'sub' => 'NCM, quantidade, itens', 'hex' => '#6b7280'],
     ];
 @endphp
@@ -248,7 +248,7 @@
                         <tbody class="divide-y divide-gray-100">
                             @foreach($divergencia['divergencias'] as $linha)
                                 @php
-                                    $sevHex = $linha->severidade === 'critica' ? '#dc2626' : '#d97706';
+                                    $sevHex = $linha->severidade === 'critica' ? '#dc2626' : '#b45309';
                                     $sevLabel = $linha->severidade === 'critica' ? 'Crítica' : 'Revisar';
                                 @endphp
                                 <tr class="hover:bg-gray-50/50 transition-colors">

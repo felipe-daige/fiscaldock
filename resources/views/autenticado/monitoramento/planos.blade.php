@@ -143,7 +143,7 @@
                                     ? '#9ca3af'
                                     : ($plano['coming_soon']
                                     ? '#9ca3af'
-                                    : ($plano['promo'] ? '#d97706' : ($plano['gratuito'] ? '#047857' : '#374151'))));
+                                    : ($plano['promo'] ? '#b45309' : ($plano['gratuito'] ? '#047857' : '#374151'))));
                                 $statusLabel = $isEmBreve
                                     ? 'Em breve'
                                     : (($plano['locked'] ?? false)
@@ -174,7 +174,7 @@
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857">R$ 0,00</span>
                                     @elseif($plano['promo'])
                                         <div class="text-gray-400 line-through text-[11px] whitespace-nowrap">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($plano['preco_original'] ?? 0)))</div>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap mt-1" style="background-color: #d97706">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $plano['creditos']))</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap mt-1" style="background-color: #b45309">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $plano['creditos']))</span>
                                     @else
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #374151">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $plano['creditos']))</span>
                                     @endif
@@ -243,7 +243,7 @@
                             ? '#9ca3af'
                             : ($plano['coming_soon']
                             ? '#9ca3af'
-                            : ($plano['promo'] ? '#d97706' : ($plano['gratuito'] ? '#047857' : '#374151'))));
+                            : ($plano['promo'] ? '#b45309' : ($plano['gratuito'] ? '#047857' : '#374151'))));
                         $statusLabel = $isEmBreve
                             ? 'Em breve'
                             : (($plano['locked'] ?? false)
@@ -275,7 +275,7 @@
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857">R$ 0,00</span>
                                     @elseif($plano['promo'])
                                         <span class="text-gray-400 line-through text-[11px] whitespace-nowrap">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($plano['preco_original'] ?? 0)))</span>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap mt-1" style="background-color: #d97706">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $plano['creditos']))</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap mt-1" style="background-color: #b45309">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $plano['creditos']))</span>
                                     @else
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #374151">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $plano['creditos']))</span>
                                     @endif

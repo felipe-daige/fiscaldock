@@ -13,8 +13,8 @@
         'CANCELADA' => '#dc2626',
         'DENEGADA' => '#dc2626',
         'INUTILIZADA' => '#dc2626',
-        'INDETERMINADO' => '#d97706',
-        'NAO_ENCONTRADA' => '#d97706',
+        'INDETERMINADO' => '#b45309',
+        'NAO_ENCONTRADA' => '#b45309',
         'ERRO_PARAMETRO' => '#6b7280',
         'ERRO_PROVEDOR' => '#6b7280',
     ];

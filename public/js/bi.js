@@ -480,7 +480,7 @@
                 },
                 plotOptions: { bar: { horizontal: false, columnWidth: '50%' } },
                 dataLabels: { enabled: false },
-                colors: ['#047857', '#d97706'],
+                colors: ['#047857', '#b45309'],
                 tooltip: {
                     y: { formatter: (val) => formatCurrency(val) }
                 }
@@ -504,7 +504,7 @@
                 },
                 plotOptions: { bar: { horizontal: false, columnWidth: '60%' } },
                 dataLabels: { enabled: false },
-                colors: ['#d97706'],
+                colors: ['#b45309'],
                 tooltip: {
                     y: { formatter: (val) => formatCurrency(val) }
                 }
@@ -578,7 +578,7 @@
                     series: tributosFiltrados.map(d => d.valor),
                     labels: tributosFiltrados.map(d => d.tipo),
                     legend: { position: 'bottom' },
-                    colors: ['#374151', '#047857', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#ea580c', '#65a30d', '#db2777', '#4f46e5'],
+                    colors: ['#374151', '#047857', '#b45309', '#dc2626', '#7c3aed', '#0891b2', '#ea580c', '#65a30d', '#db2777', '#4f46e5'],
                     tooltip: {
                         y: { formatter: (val) => formatCurrency(val) }
                     }
@@ -659,7 +659,7 @@
                 },
                 plotOptions: { bar: { horizontal: false, columnWidth: '50%' } },
                 dataLabels: { enabled: false },
-                colors: ['#047857', '#d97706'],
+                colors: ['#047857', '#b45309'],
                 tooltip: {
                     y: { formatter: (val) => formatCurrency(val) }
                 }
@@ -698,7 +698,7 @@
                     series: tributosEfd.map(d => d.valor),
                     labels: tributosEfd.map(d => d.tipo),
                     legend: { position: 'bottom' },
-                    colors: ['#374151', '#d97706', '#dc2626'],
+                    colors: ['#374151', '#b45309', '#dc2626'],
                     tooltip: {
                         y: { formatter: (val) => formatCurrency(val) }
                     }
@@ -728,7 +728,7 @@
                 },
                 plotOptions: { bar: { horizontal: false, columnWidth: '60%' } },
                 dataLabels: { enabled: false },
-                colors: ['#d97706'],
+                colors: ['#b45309'],
                 tooltip: {
                     custom: function({ series, seriesIndex, dataPointIndex }) {
                         const d = data.top_fornecedores[dataPointIndex];
@@ -1113,7 +1113,7 @@
                 yaxis: { labels: { formatter: (val) => formatAxisCurrency(val) } },
                 plotOptions: { bar: { horizontal: false, columnWidth: '50%' } },
                 dataLabels: { enabled: false },
-                colors: ['#047857', '#d97706'],
+                colors: ['#047857', '#b45309'],
                 tooltip: { y: { formatter: (val) => formatCurrency(val) } },
             });
         }
@@ -1127,7 +1127,7 @@
                 tbody.innerHTML = '<tr><td colspan="7" class="px-3 py-4 text-center text-gray-400">Nenhuma nota</td></tr>';
             } else {
                 tbody.innerHTML = notas.map(n => {
-                    const corTipoStyle = n.tipo_nota === 'E' ? 'background-color: #047857' : 'background-color: #d97706';
+                    const corTipoStyle = n.tipo_nota === 'E' ? 'background-color: #047857' : 'background-color: #b45309';
                     const corTipo = 'text-white';
                     const numSerie = (n.numero || '—') + (n.serie ? ' / ' + n.serie : '');
                     const sefazUrl = n.chave_acesso
@@ -1392,7 +1392,7 @@
             emptyHtml: '<p class="text-sm text-gray-500 py-4">Nenhuma nota com participante irregular no período.</p>',
             buildTableHtml: (pageItems) => {
                 const linhas = pageItems.map(n => {
-                    const corTipoStyle = n.tipo_nota === 'E' ? 'background-color: #047857' : 'background-color: #d97706';
+                    const corTipoStyle = n.tipo_nota === 'E' ? 'background-color: #047857' : 'background-color: #b45309';
                     return `<tr class="hover:bg-gray-50/50 transition-colors">
                         <td class="px-2 sm:px-4 py-2 sm:py-3 text-gray-400 text-xs">${n.data_emissao || '—'}</td>
                         <td class="px-2 sm:px-4 py-2 sm:py-3"><span class="px-1.5 py-0.5 rounded text-xs font-medium text-white" style="${corTipoStyle}">${n.tipo_nota}</span></td>
@@ -1435,7 +1435,7 @@
         renderTabelaTribRegime(data.por_regime || []);
     }
 
-    const FLAG_HEX = { verde: '#16a34a', amarelo: '#d97706', vermelho: '#dc2626', neutro: '#9ca3af', sem_dado: '#9ca3af' };
+    const FLAG_HEX = { verde: '#16a34a', amarelo: '#b45309', vermelho: '#dc2626', neutro: '#9ca3af', sem_dado: '#9ca3af' };
 
     function renderApuracaoNotasCharts(data) {
         const mensal = data.mensal || [];
@@ -1660,7 +1660,7 @@
             yaxis: { labels: { formatter: (val) => formatAxisCurrency(val) } },
             plotOptions: { bar: { horizontal: false, columnWidth: '60%' } },
             dataLabels: { enabled: false },
-            colors: ['#374151', '#d97706', '#dc2626'],
+            colors: ['#374151', '#b45309', '#dc2626'],
             tooltip: { y: { formatter: (val) => formatCurrency(val) } },
         });
     }

@@ -158,7 +158,7 @@
                                 @php
                                     $statusMeta = match(\App\Models\ConsultaLote::normalizeStatus($lote->status)) {
                                         'finalizado' => ['label' => 'Finalizado', 'hex' => '#047857'],
-                                        'processando' => ['label' => 'Processando', 'hex' => '#d97706'],
+                                        'processando' => ['label' => 'Processando', 'hex' => '#b45309'],
                                         'erro' => ['label' => 'Erro', 'hex' => '#dc2626'],
                                         default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
                                     };
@@ -221,7 +221,7 @@
                         @php
                             $statusMeta = match(\App\Models\ConsultaLote::normalizeStatus($lote->status)) {
                                 'finalizado' => ['label' => 'Finalizado', 'hex' => '#047857'],
-                                'processando' => ['label' => 'Processando', 'hex' => '#d97706'],
+                                'processando' => ['label' => 'Processando', 'hex' => '#b45309'],
                                 'erro' => ['label' => 'Erro', 'hex' => '#dc2626'],
                                 default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
                             };

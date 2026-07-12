@@ -93,7 +93,7 @@ class IntegracaoStatus extends Model
     {
         return [
             self::STATUS_OPERACIONAL => '#047857',
-            self::STATUS_DEGRADADO => '#d97706',
+            self::STATUS_DEGRADADO => '#b45309',
             self::STATUS_FORA => '#dc2626',
             self::STATUS_MANUTENCAO => '#2563eb',
         ][$this->status] ?? '#9ca3af';

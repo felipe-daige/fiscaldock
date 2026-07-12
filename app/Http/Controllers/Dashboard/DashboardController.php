@@ -404,7 +404,7 @@ class DashboardController extends Controller
 
                 if ($diasSemConsulta > 30) {
                     $consultaStatusLabel = 'Consulta desatualizada';
-                    $consultaStatusHex = '#d97706';
+                    $consultaStatusHex = '#b45309';
                 } else {
                     $consultaStatusLabel = 'Consultado recentemente';
                     $consultaStatusHex = '#047857';
@@ -1225,7 +1225,7 @@ class DashboardController extends Controller
                     'label' => 'Importação XML',
                     'descricao' => 'Recepção e processamento de XMLs fiscais para composição do ambiente.',
                     'status_label' => 'Em evolução',
-                    'status_hex' => '#d97706',
+                    'status_hex' => '#b45309',
                 ],
                 'importacao_efd' => [
                     'label' => 'Importação EFD',
@@ -1237,7 +1237,7 @@ class DashboardController extends Controller
                     'label' => 'Monitoramento',
                     'descricao' => 'Acompanhamento contínuo de ocorrências e sinais relevantes da operação.',
                     'status_label' => 'Em evolução',
-                    'status_hex' => '#d97706',
+                    'status_hex' => '#b45309',
                 ],
             ],
             'preferencias' => [

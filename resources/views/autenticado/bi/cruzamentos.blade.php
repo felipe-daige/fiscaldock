@@ -1,16 +1,30 @@
 @php
     $fmtMoeda = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
-    $flagCores = ['verde' => '#16a34a', 'amarelo' => '#d97706', 'vermelho' => '#dc2626', 'neutro' => '#6b7280', 'sem_dado' => '#9ca3af'];
+    $flagCores = ['verde' => '#16a34a', 'amarelo' => '#b45309', 'vermelho' => '#dc2626', 'neutro' => '#6b7280', 'sem_dado' => '#9ca3af'];
     $flagLabels = ['verde' => 'OK', 'amarelo' => 'Atenção', 'vermelho' => 'Divergente', 'neutro' => 'Sem movimento', 'sem_dado' => 'Sem dado'];
     $fmtCompetencia = fn ($c) => \Illuminate\Support\Carbon::parse($c.'-01')->translatedFormat('m/Y');
 @endphp
 <div class="min-h-screen bg-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
 
-        <div class="mb-4 sm:mb-6">
-            <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Cruzamentos Fiscais</h1>
-            <p class="text-xs text-gray-500 mt-0.5">Consultas, notas e apuração cruzadas entre si: risco de fornecedor, receitas não tributadas, retenções na fonte e notas canceladas.</p>
+        <div class="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div>
+                <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Cruzamentos Fiscais</h1>
+                <p class="text-xs text-gray-500 mt-0.5">Consultas, notas e apuração cruzadas entre si: risco de fornecedor, receitas não tributadas, retenções na fonte e notas canceladas.</p>
+            </div>
+            {{-- Relatório A4: parecer executivo + fornecedor irregular × compras + notas canceladas + providências + metodologia.
+                 Preserva os filtros da URL (cliente/período). Sem data-link (é download). --}}
+            @php $qsCruzamentos = http_build_query(request()->only(['cliente_id', 'data_inicio', 'data_fim'])); @endphp
+            <x-export-menu id="modal-exportar-cruzamentos" titulo="Exportar cruzamentos"
+                           descricao="Relatório A4 com parecer, achados e providências — preserva os filtros da tela."
+                           overlay="download-overlay-cruzamentos">
+                <x-export-option format="pdf" modal-id="modal-exportar-cruzamentos" overlay="download-overlay-cruzamentos"
+                                 path="{{ route('app.bi.cruzamentos.exportar-pdf') }}" query="{{ $qsCruzamentos }}"
+                                 descricao="Fornecedores irregulares × compras, notas canceladas, parecer e checklist de providências." />
+            </x-export-menu>
         </div>
+
+        <x-download-overlay id="download-overlay-cruzamentos" texto="Gerando relatório…" />
 
         {{-- Como interpretamos: transparência + alinhamento de fonte com Score e Alertas --}}
         <details class="bg-white rounded border border-gray-300 border-l-4 mb-5 group" style="border-left-color: #2563eb;">
@@ -198,7 +212,7 @@
         <div class="bg-white rounded border border-gray-300 mb-5 overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: #d97706"></span>
+                    <span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: #b45309"></span>
                     <h2 class="text-sm font-bold text-gray-900">Receitas não tributadas declaradas (M400) × CST das saídas</h2>
                 </div>
                 <span class="text-[10px] text-gray-400 uppercase tracking-wide">PIS · por competência</span>
@@ -338,7 +352,7 @@
                                         @if($f['regime'] === null)
                                             <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background-color: #9ca3af">Não consultado</span>
                                         @elseif($f['regime'] === 'Simples Nacional' || $f['regime'] === 'MEI')
-                                            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background-color: #d97706">{{ $f['regime'] }}</span>
+                                            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background-color: #b45309">{{ $f['regime'] }}</span>
                                         @else
                                             <span class="text-gray-700">{{ $f['regime'] }}</span>
                                         @endif
@@ -406,7 +420,7 @@
                                     <td class="px-4 py-2.5 text-right text-gray-900" data-label="Saídas">{{ $fmtMoeda($item['mov_saidas']) }}</td>
                                     <td class="px-4 py-2.5" data-label="Giro">
                                         @if($item['sem_movimentacao'])
-                                            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background-color: #d97706">Sem giro 12m</span>
+                                            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background-color: #b45309">Sem giro 12m</span>
                                         @else
                                             <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background-color: #16a34a">Com giro</span>
                                         @endif

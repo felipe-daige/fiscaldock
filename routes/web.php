@@ -349,6 +349,8 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         Route::post('/catalogo-itens/alerta/descartar', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'descartarAlerta'])->middleware(RequiresEntitlement::class.':bi_completo')->name('catalogo-itens.descartar');
         Route::post('/catalogo-itens/alerta/restaurar', [\App\Http\Controllers\Dashboard\BiCatalogoItensController::class, 'restaurarAlerta'])->middleware(RequiresEntitlement::class.':bi_completo')->name('catalogo-itens.restaurar');
         Route::get('/cruzamentos', [\App\Http\Controllers\Dashboard\BiCruzamentosController::class, 'index'])->name('cruzamentos');
+        Route::get('/cruzamentos/exportar-pdf', [\App\Http\Controllers\Dashboard\BiCruzamentosController::class, 'exportarPdf'])
+            ->middleware([RequiresEntitlement::class.':bi_completo', RequiresEntitlement::class.':export'])->name('cruzamentos.exportar-pdf');
         Route::get('/cruzamentos/fornecedor/{participante}/notas', [\App\Http\Controllers\Dashboard\BiCruzamentosController::class, 'fornecedorNotas'])->whereNumber('participante')->name('cruzamentos.fornecedor-notas');
     });
 
@@ -362,6 +364,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         ->middleware(RequiresEntitlement::class.':export,csv')->name('app.risk.exportar-csv');
     Route::get('app/score-fiscal/participante/{id}', [\App\Http\Controllers\Dashboard\RiskScoreController::class, 'show'])->whereNumber('id')->name('app.risk.show');
     Route::get('app/score-fiscal/participante/{id}/detalhe', [\App\Http\Controllers\Dashboard\RiskScoreController::class, 'detalheParticipante'])->whereNumber('id')->name('app.risk.detalhe');
+    Route::get('app/score-fiscal/cliente/{id}/detalhe', [\App\Http\Controllers\Dashboard\RiskScoreController::class, 'detalheCliente'])->whereNumber('id')->name('app.risk.cliente-detalhe');
 
     // Redirect legado: /app/risk/* -> /app/score-fiscal/*
     Route::get('app/risk/{any?}', fn ($any = '') => redirect("/app/score-fiscal/{$any}"))->where('any', '.*');

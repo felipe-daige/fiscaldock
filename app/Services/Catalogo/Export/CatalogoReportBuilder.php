@@ -27,7 +27,7 @@ class CatalogoReportBuilder
 
     private const HEX_OK = '#047857';
 
-    private const HEX_DIVERGENTE = '#d97706';
+    private const HEX_DIVERGENTE = '#b45309';
 
     private const HEX_SEM_MOV = '#9ca3af';
 

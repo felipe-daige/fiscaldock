@@ -12,7 +12,9 @@ final class ReportTheme
 {
     public const OK = '#047857';
 
-    public const ALERTA = '#d97706';
+    // amber-700: com texto branco no badge, o #d97706 (amber-600) ficava claro demais e
+    // com contraste borderline; #b45309 lê bem em tela e impresso.
+    public const ALERTA = '#b45309';
 
     public const IRREGULAR = '#dc2626';
 
@@ -57,6 +59,21 @@ final class ReportTheme
             'alto' => '#ea580c',
             'critico', 'crítico' => self::IRREGULAR,
             default => self::NEUTRO,
+        };
+    }
+
+    /** Cor informativa para regime tributário em fichas cadastrais. */
+    public static function regimeHex(?string $regime): string
+    {
+        $r = mb_strtoupper(trim((string) $regime));
+
+        return match (true) {
+            $r === '', $r === '—', str_contains($r, 'NÃO CONSULTADO'), str_contains($r, 'NAO CONSULTADO') => self::NEUTRO,
+            str_contains($r, 'SIMPLES') || str_contains($r, 'MEI') => '#0f766e',
+            str_contains($r, 'PRESUMIDO') => self::ALERTA,
+            str_contains($r, 'REAL') => self::OUTRO,
+            str_contains($r, 'NÃO INFORMADO') || str_contains($r, 'NAO INFORMADO') => '#6b7280',
+            default => '#6b7280',
         };
     }
 

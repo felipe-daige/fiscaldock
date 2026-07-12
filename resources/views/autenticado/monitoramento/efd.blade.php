@@ -69,14 +69,14 @@
                                         <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">NF-e Mercadorias</span>
                                         <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">CT-e</span>
                                         <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">Catálogo</span>
-                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">Apuração ICMS</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b45309">Apuração ICMS</span>
                                     </div>
                                     <div id="info-efd-contrib" class="hidden flex flex-wrap gap-2">
                                         <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Participantes</span>
                                         <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Notas Serviço</span>
                                         <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">NF-e Mercadorias</span>
                                         <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #4338ca">Catálogo</span>
-                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #d97706">Apuração PIS/COFINS</span>
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #b45309">Apuração PIS/COFINS</span>
                                         <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Retenções</span>
                                     </div>
                                 </div>
@@ -172,7 +172,7 @@
                                         $recentTipoBadge = $tipoEfdBadgeMap[$recentTipoKey];
                                         $recentStatus = match($recentImp->status) {
                                             'concluido' => ['label' => 'Concluído', 'hex' => '#047857'],
-                                            'processando' => ['label' => 'Processando', 'hex' => '#d97706'],
+                                            'processando' => ['label' => 'Processando', 'hex' => '#b45309'],
                                             'erro' => ['label' => 'Erro', 'hex' => '#dc2626'],
                                             default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
                                         };
@@ -300,7 +300,7 @@
             </div>
             <div class="flex justify-end gap-3">
                 <button type="button" id="modal-duplicidade-cancelar" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-semibold shadow-sm transition hover:bg-gray-50">Cancelar</button>
-                <button type="button" id="modal-duplicidade-confirmar" class="px-4 py-2 rounded-lg text-white text-sm font-semibold shadow-sm transition" style="background-color: #d97706;" onmouseover="this.style.backgroundColor='#b45309'" onmouseout="this.style.backgroundColor='#d97706'">Substituir</button>
+                <button type="button" id="modal-duplicidade-confirmar" class="px-4 py-2 rounded-lg text-white text-sm font-semibold shadow-sm transition" style="background-color: #b45309;" onmouseover="this.style.backgroundColor='#b45309'" onmouseout="this.style.backgroundColor='#b45309'">Substituir</button>
             </div>
         </div>
     </div>

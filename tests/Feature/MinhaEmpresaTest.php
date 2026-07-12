@@ -536,7 +536,7 @@ test('score alto usa cor distinta do medio', function () {
 
     $response->assertOk();
     $response->assertSee('ALTO');
-    $response->assertSee('#ea580c', false); // laranja escuro distinto do âmbar #d97706 do médio
+    $response->assertSee('#ea580c', false); // laranja escuro distinto do âmbar #b45309 do médio
 });
 
 test('certidao positiva pura vira Irregular via CertidaoBadge e expoe comprovante', function () {
