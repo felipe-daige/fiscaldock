@@ -130,6 +130,12 @@ class AdminAcaoService
                 'privacy_version' => null,
             ]);
 
+            // email_verified_at fora do mass-assign (não é fillable): admin marca
+            // explícito a partir do toggle validado. Ver docs/emails/hardening.md F2.
+            if ($emailVerificado) {
+                $usuario->forceFill(['email_verified_at' => now()])->save();
+            }
+
             $this->registrar($admin, $usuario, 'usuario_criar', $motivo, [
                 'email' => $usuario->email,
                 'is_admin' => (bool) $usuario->is_admin,
