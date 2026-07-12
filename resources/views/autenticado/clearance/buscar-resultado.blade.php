@@ -95,9 +95,34 @@
             <div class="bg-white rounded border border-gray-300 overflow-hidden">
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                     <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resultado Final</span>
-                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white self-start sm:self-auto" style="background-color: {{ $notaResultado['situacao_hex'] ?? '#374151' }}">
-                        {{ $notaResultado['situacao'] ?? 'INDETERMINADO' }}
-                    </span>
+                    <div class="flex items-center gap-2 self-start sm:self-auto">
+                        @if(!empty($notaResultado['consulta_lote_id']))
+                            <x-export-menu id="modal-exportar-busca-avulsa" titulo="Exportar documento"
+                                           descricao="Resultado da consulta deste documento — mesmo conteúdo da tela."
+                                           overlay="download-overlay-busca-avulsa">
+                                <x-export-grupo label="Documento" />
+                                <x-export-option format="pdf"
+                                    :path="route('app.clearance.buscar.resultado-pdf', ['consultaLoteId' => $notaResultado['consulta_lote_id']])"
+                                    modalId="modal-exportar-busca-avulsa"
+                                    overlay="download-overlay-busca-avulsa"
+                                    descricao="Situação na SEFAZ, partes, eventos, totais e itens — pronto para enviar." />
+                                <x-export-grupo label="Planilhas" />
+                                <x-export-option format="xlsx"
+                                    :path="route('app.clearance.buscar.resultado-xlsx', ['consultaLoteId' => $notaResultado['consulta_lote_id']])"
+                                    modalId="modal-exportar-busca-avulsa"
+                                    overlay="download-overlay-busca-avulsa"
+                                    descricao="Abas Documento, Eventos e Produtos/Componentes." />
+                                <x-export-option format="csv"
+                                    :path="route('app.clearance.buscar.resultado-csv', ['consultaLoteId' => $notaResultado['consulta_lote_id']])"
+                                    modalId="modal-exportar-busca-avulsa"
+                                    overlay="download-overlay-busca-avulsa"
+                                    descricao="Seções empilhadas em texto puro (documento, eventos, itens)." />
+                            </x-export-menu>
+                        @endif
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $notaResultado['situacao_hex'] ?? '#374151' }}">
+                            {{ $notaResultado['situacao'] ?? 'INDETERMINADO' }}
+                        </span>
+                    </div>
                 </div>
                 <div class="p-4 space-y-3">
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
@@ -454,6 +479,8 @@
         @endif
     </div>
 </div>
+
+<x-download-overlay id="download-overlay-busca-avulsa" texto="Gerando arquivo…" />
 
 <script src="{{ asset('js/progresso-automacao.js') }}?v={{ @filemtime(public_path('js/progresso-automacao.js')) ?: time() }}"></script>
 <script src="{{ asset('js/clearance-resultado.js') }}?v={{ @filemtime(public_path('js/clearance-resultado.js')) ?: time() }}" defer></script>

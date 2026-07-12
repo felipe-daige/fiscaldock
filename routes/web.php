@@ -381,6 +381,12 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         Route::post('/buscar/classificar-partes', [ClearanceController::class, 'classificarPartesBusca'])->name('buscar.classificar-partes');
         Route::post('/buscar/consultar', [ClearanceController::class, 'consultarNfe'])->name('buscar.consultar');
         Route::get('/buscar/resultado/{consultaLoteId}', [ClearanceController::class, 'resultadoUltimaConsulta'])->name('buscar.resultado');
+        Route::get('/buscar/resultado/{consultaLoteId}/pdf', [ClearanceController::class, 'buscaResultadoPdf'])
+            ->middleware(RequiresEntitlement::class.':export')->name('buscar.resultado-pdf');
+        Route::get('/buscar/resultado/{consultaLoteId}/xlsx', [ClearanceController::class, 'buscaResultadoXlsx'])
+            ->middleware(RequiresEntitlement::class.':export,excel')->name('buscar.resultado-xlsx');
+        Route::get('/buscar/resultado/{consultaLoteId}/csv', [ClearanceController::class, 'buscaResultadoCsv'])
+            ->middleware(RequiresEntitlement::class.':export,csv')->name('buscar.resultado-csv');
         Route::get('/buscar/resultado-local/{token}', [ClearanceController::class, 'resultadoBuscaLocal'])->name('buscar.resultado-local');
         Route::post('/importacao/{id}/validar', [ClearanceController::class, 'validarImportacao'])
             ->middleware(RequiresEntitlement::class.':clearance_lote')->name('validar-importacao');

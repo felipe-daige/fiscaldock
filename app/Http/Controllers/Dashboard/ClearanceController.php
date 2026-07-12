@@ -1147,6 +1147,132 @@ class ClearanceController extends Controller
         ]);
     }
 
+    /**
+     * Monta os dados de export do resultado da busca avulsa (1 documento) — mesma fonte
+     * da tela (formatarResultadoConsultaDfe). Ownership: lote do usuário (404); o snapshot
+     * precisa estar persistido (404). Gates de plano ficam nas rotas (RequiresEntitlement).
+     */
+    private function montarExportBuscaAvulsa(int $consultaLoteId): array
+    {
+        $userId = Auth::id();
+
+        $lote = ConsultaLote::where('id', $consultaLoteId)->where('user_id', $userId)->first();
+        abort_if($lote === null, 404);
+
+        $nota = $this->buscarConsultaDfePorLote($userId, $lote->id);
+        abort_if($nota === null, 404, 'Resultado ainda não disponível para exportação.');
+
+        return [$lote, $this->formatarResultadoConsultaDfe($nota, $userId)];
+    }
+
+    /** PDF do resultado da busca avulsa. Gate: `:export` (PDF universal — Free sai com marca d'água). */
+    public function buscaResultadoPdf(Request $request, int $consultaLoteId)
+    {
+        if (! Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        [$lote, $nota] = $this->montarExportBuscaAvulsa($consultaLoteId);
+
+        $pdf = PdfReport::render('reports.clearance-busca-avulsa', ['nota' => $nota, 'lote' => $lote]);
+
+        return $this->comTokenDownload($pdf->download('clearance-documento-'.($nota['nfe_id'] ?: $lote->id).'.pdf'), $request);
+    }
+
+    /** XLSX do resultado da busca avulsa. Gate: `:export,excel`. */
+    public function buscaResultadoXlsx(Request $request, int $consultaLoteId)
+    {
+        if (! Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        if (! \App\Support\Reports\XlsxReport::disponivel()) {
+            abort(503, 'Exportação XLSX indisponível.');
+        }
+
+        [$lote, $nota] = $this->montarExportBuscaAvulsa($consultaLoteId);
+
+        return $this->comTokenDownload(
+            app(\App\Services\Clearance\Export\BuscaAvulsaXlsxBuilder::class)
+                ->download($nota, 'clearance-documento-'.($nota['nfe_id'] ?: $lote->id).'.xlsx'),
+            $request
+        );
+    }
+
+    /** CSV do resultado da busca avulsa (seções empilhadas: documento, eventos, itens). Gate: `:export,csv`. */
+    public function buscaResultadoCsv(Request $request, int $consultaLoteId)
+    {
+        if (! Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        [$lote, $nota] = $this->montarExportBuscaAvulsa($consultaLoteId);
+        $d = $nota['detalhes'] ?? [];
+        $isCte = ($nota['tipo_documento'] ?? '') === 'CTE';
+
+        $linhas = [
+            ['Chave de acesso', $nota['nfe_id'] ?? ''],
+            ['Tipo', ($nota['tipo_documento'] ?? 'NFE').(! empty($nota['modelo']) ? ' (modelo '.$nota['modelo'].')' : '')],
+            ['Situação', $nota['situacao'] ?? ''],
+            ['Número / Série', ($nota['numero'] ?? '').' / '.($nota['serie'] ?? '')],
+            ['Emissão', $nota['data_emissao'] ?? ''],
+            ['Valor total', $nota['valor_total_label'] ?? ''],
+            ['Natureza da operação', $d['natureza_operacao'] ?? ''],
+            ['Consultado na SEFAZ em', $nota['consultado_em'] ?? ''],
+            ['Abrangência', ($d['consulta_sem_certificado'] ?? false) ? 'Consulta pública (sem certificado)' : 'Consulta completa'],
+            ['Cliente associado', $nota['cliente_nome'] ?? ''],
+            ['Emitente', trim(($d['emit']['nome'] ?? '').' '.($d['emit']['documento'] ?? ''))],
+        ];
+
+        if ($isCte) {
+            foreach ($d['partes'] ?? [] as $parte) {
+                $linhas[] = [$parte['papel'], trim(($parte['nome'] ?? '').' '.($parte['documento'] ?? ''))];
+            }
+        } else {
+            $linhas[] = ['Destinatário', trim(($d['dest']['nome'] ?? '').' '.($d['dest']['documento'] ?? ''))];
+        }
+
+        if (! empty($d['eventos_timeline'])) {
+            $linhas[] = [];
+            $linhas[] = ['Eventos na SEFAZ'];
+            $linhas[] = ['Situação', 'Data', 'Evento', 'Protocolo'];
+            foreach ($d['eventos_timeline'] as $ev) {
+                $linhas[] = [$ev['label'] ?? '', $ev['data_label'] ?? '', $ev['descricao'] ?? '', $ev['protocolo'] ?? ''];
+            }
+        }
+
+        if (! $isCte && ! empty($d['totais'])) {
+            $linhas[] = [];
+            $linhas[] = ['Totais informados pela SEFAZ'];
+            foreach ($d['totais'] as $t) {
+                $linhas[] = [$t['label'], $t['valor']];
+            }
+        }
+
+        if ($isCte && ! empty($d['componentes'])) {
+            $linhas[] = [];
+            $linhas[] = ['Componentes da prestação'];
+            $linhas[] = ['Componente', 'Valor'];
+            foreach ($d['componentes'] as $c) {
+                $linhas[] = [$c['nome'] ?? '', $c['valor'] ?? ''];
+            }
+        }
+
+        if (! $isCte && ! empty($d['produtos'])) {
+            $linhas[] = [];
+            $linhas[] = ['Produtos'];
+            $linhas[] = ['Descrição', 'NCM', 'CFOP', 'Quantidade', 'Valor'];
+            foreach ($d['produtos'] as $p) {
+                $linhas[] = [$p['descricao'] ?? '', $p['ncm'] ?? '', $p['cfop'] ?? '', $p['quantidade'] ?? '', $p['valor'] ?? ''];
+            }
+        }
+
+        return $this->comTokenDownload(
+            \App\Support\CsvExport::download('clearance-documento-'.($nota['nfe_id'] ?: $lote->id).'.csv', ['Campo', 'Valor'], $linhas),
+            $request
+        );
+    }
+
     public function resultadoNotas(Request $request, int $consultaLoteId)
     {
         if (! Auth::check()) {
@@ -2581,7 +2707,7 @@ class ClearanceController extends Controller
         // que o usuário já tenha um válido (aí o copy muda: consumo do cert ainda não existe).
         $semCertificado = (bool) ($snap->consulta_sem_certificado ?? false);
         $certificadoCadastrado = $semCertificado && \App\Models\CertificadoDigital::query()
-            ->whereIn('cliente_id', Cliente::where('user_id', $snap->user_id)->select('id'))
+            ->where('user_id', $snap->user_id)
             ->whereDate('validade', '>=', now()->toDateString())
             ->exists();
 
