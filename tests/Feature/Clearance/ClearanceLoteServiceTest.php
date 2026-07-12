@@ -55,7 +55,8 @@ it('cria lote, debita N×tier e despacha um batch com N jobs', function () {
 
     expect($r['success'])->toBeTrue();
     expect($r['total_notas'])->toBe(2);
-    expect($r['creditos_cobrados'])->toBe(2 * $unit);
+    // Retorno expõe R$ (valor_utilizado_reais); a coluna persiste unidades (abaixo).
+    expect($r['valor_utilizado_reais'])->toBe(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(2 * $unit));
 
     $lote = ConsultaLote::find($r['consulta_lote_id']);
     expect($lote->status)->toBe(ConsultaLote::STATUS_PROCESSANDO);

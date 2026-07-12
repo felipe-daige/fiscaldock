@@ -161,7 +161,7 @@ it('painel renderiza a barra de consumo do ciclo quando há cap', function () {
         ->assertSee('id="consumo-ciclo-barra"', false)
         ->assertSee('id="input-limite-consumo" inputmode="decimal"', false)
         ->assertSee('value="10,00"', false)
-        ->assertSee('data-max-credits="1000000"', false);
+        ->assertSee('data-max-unidades="1000000"', false);
 });
 
 it('modal novo monitorado expõe o estimador de custo mensal/trimestral', function () {
@@ -179,7 +179,7 @@ it('modal novo monitorado expõe o estimador de custo mensal/trimestral', functi
         // nº de membros por grupo e preço unitário do crédito no form
         ->assertSee('data-custo="', false)
         ->assertSee('data-membros="1"', false)
-        ->assertSee('id="form-monitorar" data-credit-unit-price="', false);
+        ->assertSee('id="form-monitorar" data-saldo-unit-price="', false);
 });
 
 // ── Fase 5.1: gating de frequência por tier no modal "Novo monitorado" ──────

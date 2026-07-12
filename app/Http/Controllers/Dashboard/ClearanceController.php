@@ -18,6 +18,7 @@ use App\Services\Clearance\ClearanceLoteService;
 use App\Services\Clearance\DivergenciaService;
 use App\Services\Clearance\RelatorioExecutivoService;
 use App\Services\Consultas\FecharLoteService;
+use App\Services\PricingCatalogService;
 use App\Services\SaldoService;
 use App\Services\NotaFiscalService;
 use App\Services\ValidacaoContabilService;
@@ -51,7 +52,8 @@ class ClearanceController extends Controller
         protected ValidacaoContabilService $validacaoService,
         protected SaldoService $saldoService,
         protected NotaFiscalService $notaFiscalService,
-        protected ReconciliacaoXmlEfdService $reconciliacaoService
+        protected ReconciliacaoXmlEfdService $reconciliacaoService,
+        protected PricingCatalogService $pricingCatalogService
     ) {}
 
     /**

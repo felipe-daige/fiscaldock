@@ -34,7 +34,7 @@ it('a tela /app/consulta/nova reflete o preço de produto do override', function
         ->get('/app/consulta/painel')
         ->assertOk()
         ->assertSee("R$\u{A0}6,00")
-        ->assertSee('data-custo="30"', false);
+        ->assertSee('data-custo="6"', false);
 });
 
 it('a tela /app/planos reflete o preço por crédito do override (via saldo incluso)', function () {

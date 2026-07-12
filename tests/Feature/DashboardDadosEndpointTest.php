@@ -17,7 +17,7 @@ it('retorna o shape do cockpit', function () {
         ->getJson('/app/dashboard/dados?periodo=12')
         ->assertOk()
         ->assertJsonStructure([
-            'kpis' => ['volume', 'saude', 'creditos'],
+            'kpis' => ['volume', 'saude', 'saldo'],
             'triagem',
             'tendencia' => ['meses', 'saida_valor', 'saida_qtd', 'entrada_valor', 'entrada_qtd'],
             'top_fornecedores',

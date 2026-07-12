@@ -104,7 +104,8 @@ it('preview conta só participantes sem IE do lote e calcula custo', function ()
         ->assertJson([
             'success' => true,
             'total' => 1,
-            'custo_creditos' => 2, // 1 participante × 2 créditos
+            // Response expõe R$ (rename saldo): 1 participante × 2 unidades = R$ 0,40.
+            'valor_reais' => app(\App\Services\PricingCatalogService::class)->creditsToCurrency(2),
             'participante_ids' => [$semIeId],
         ]);
 });
@@ -118,7 +119,7 @@ it('executar debita saldo e despacha batch sintegra-only', function () use (&$te
     actingAs($user)
         ->postJson('/app/clearance/sintegra/executar', ['lote_id' => $lote->id, 'tab_id' => 'tab-sint'])
         ->assertOk()
-        ->assertJson(['success' => true, 'total' => 1, 'custo_creditos' => 2, 'participante_ids' => [$semIeId]]);
+        ->assertJson(['success' => true, 'total' => 1, 'valor_reais' => app(\App\Services\PricingCatalogService::class)->creditsToCurrency(2), 'participante_ids' => [$semIeId]]);
 
     expect(app(SaldoService::class)->getBalance($user))->toBe($saldoAntes - 2);
     Bus::assertBatched(fn ($batch) => str_starts_with($batch->name, 'sintegra-ie-') && $batch->jobs->count() === 1);

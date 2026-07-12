@@ -110,8 +110,11 @@ class ClearanceLoteService
                 'plano_id' => null,
                 'status' => ConsultaLote::STATUS_PROCESSANDO,
                 'total_participantes' => $itens->count(),
-                'valor_cobrado_reais' => app(\App\Services\PricingCatalogService::class)
-                    ->creditsToCurrency($custoTotal),
+                // Coluna canônica em unidades do ledger (lida por dashboards/relatórios/
+                // estorno). O rename saldo trocou por engano por 'valor_cobrado_reais',
+                // que NÃO é coluna → gravava 0 e sumia do relatório. R$ é campo de
+                // response (abaixo), não de persistência.
+                'creditos_cobrados' => $custoTotal,
                 'tab_id' => $tabId,
             ]);
 

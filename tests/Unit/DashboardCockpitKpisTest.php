@@ -11,7 +11,7 @@ it('monta os 3 KPIs do cockpit com o shape esperado', function () {
 
     $kpis = app(DashboardDataService::class)->getCockpitKpis($user->id, $user, null, null, null);
 
-    expect($kpis)->toHaveKeys(['volume', 'saude', 'creditos'])
+    expect($kpis)->toHaveKeys(['volume', 'saude', 'saldo'])
         ->and($kpis['volume'])->toHaveKeys(['notas', 'valor'])
         ->and($kpis['saude'])->toHaveKeys(['total', 'alertas_alta', 'risco'])
         ->and($kpis['saldo']['disponivel'])->toBe(42);
