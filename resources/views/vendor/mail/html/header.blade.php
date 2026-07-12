@@ -9,7 +9,7 @@
 <td align="center" style="padding: 0;">
 <table class="brand" width="600" cellpadding="0" cellspacing="0" role="presentation" style="width: 600px; margin: 0 auto;">
 <tr>
-<td style="background-color: #102c4d; padding: 20px 40px; text-align: left; border-radius: 6px 6px 0 0;">
+<td style="background-color: #102c4d; background-image: linear-gradient(#102c4d, #102c4d); padding: 20px 40px; text-align: left; border-radius: 6px 6px 0 0;">
 <a href="{{ $url }}" style="display: inline-block; text-decoration: none;">
 <table cellpadding="0" cellspacing="0" role="presentation">
 <tr>
@@ -27,7 +27,7 @@
 </td>
 </tr>
 <tr>
-<td style="height: 3px; line-height: 3px; font-size: 0; background-color: #d19a2e;">&nbsp;</td>
+<td style="height: 3px; line-height: 3px; font-size: 0; background-color: #d19a2e; background-image: linear-gradient(#d19a2e, #d19a2e);">&nbsp;</td>
 </tr>
 </table>
 </td>

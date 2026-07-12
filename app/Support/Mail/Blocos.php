@@ -98,7 +98,7 @@ class Blocos
         return new HtmlString(
             '<table cellpadding="0" cellspacing="0" role="presentation" style="margin: 0 0 14px 0;"><tr>'
             .'<td style="width: 22px; padding-right: 9px; vertical-align: middle;">'
-            .'<div style="height: 2px; width: 22px; background-color: '.$cor.'; font-size: 0; line-height: 2px;">&nbsp;</div>'
+            .'<div style="height: 2px; width: 22px; '.self::bgSolido($cor).' font-size: 0; line-height: 2px;">&nbsp;</div>'
             .'</td>'
             .'<td style="vertical-align: middle; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; '
             .'text-transform: uppercase; color: '.$cor.';">'.e($texto).'</td>'
@@ -125,7 +125,7 @@ class Blocos
 
         return new HtmlString(
             '<table cellpadding="0" cellspacing="0" role="presentation" style="margin: 0 0 16px 0;"><tr>'
-            .'<td style="padding: 6px 13px; background-color: '.$cor.'; border-radius: 3px; '
+            .'<td style="padding: 6px 13px; '.self::bgSolido($cor).' border-radius: 3px; '
             .'font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; '
             .'color: #ffffff;">'.e($label).'</td>'
             .'</tr></table>'
@@ -155,9 +155,9 @@ class Blocos
 
         return new HtmlString(
             '<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin: 26px 0;">'
-            .'<tr><td style="height: 4px; line-height: 4px; font-size: 0; background-color: '.$fio.'; '
+            .'<tr><td style="height: 4px; line-height: 4px; font-size: 0; '.self::bgSolido($fio).' '
             .'border-radius: 5px 5px 0 0;">&nbsp;</td></tr>'
-            .'<tr><td align="center" style="padding: 30px 20px; background-color: '.$fundo.'; border-radius: 0 0 5px 5px;">'
+            .'<tr><td align="center" style="padding: 30px 20px; '.self::bgSolido($fundo).' border-radius: 0 0 5px 5px;">'
             .'<div style="font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: '.$tinta.';">'.e($rotulo).'</div>'
             .'<div style="margin-top: 10px; font-size: 38px; font-weight: 700; letter-spacing: -0.02em; color: #ffffff; line-height: 1.05;">'.e($valor).'</div>'
             .$notaHtml
@@ -187,7 +187,7 @@ class Blocos
         return new HtmlString(
             '<table width="100%" cellpadding="0" cellspacing="0" role="presentation" '
             .'style="margin: 22px 0; border: 1px solid '.self::BORDA.'; border-radius: 4px; '
-            .'background-color: '.self::FUNDO_SUAVE.';"><tr>'.$celulas.'</tr></table>'
+            .self::bgSolido(self::FUNDO_SUAVE).'"><tr>'.$celulas.'</tr></table>'
         );
     }
 
@@ -208,7 +208,7 @@ class Blocos
                 .'<td width="34" valign="top" style="padding: 0 12px '.($ultimo ? '0' : '18px').' 0;">'
                 .'<table cellpadding="0" cellspacing="0" role="presentation"><tr>'
                 .'<td width="26" height="26" align="center" valign="middle" style="width: 26px; height: 26px; '
-                .'background-color: '.self::NAVY.'; border-radius: 13px; color: #ffffff; font-size: 13px; '
+                .self::bgSolido(self::NAVY).' border-radius: 13px; color: #ffffff; font-size: 13px; '
                 .'font-weight: 700; text-align: center; line-height: 26px;">'.($i + 1).'</td>'
                 .'</tr></table>'
                 .'</td>'
@@ -242,9 +242,9 @@ class Blocos
 
             $linhas .= '<tr>'
                 .'<td style="padding: 11px 16px; font-size: 13px; color: '.self::TEXTO_SUAVE.'; '
-                .'background-color: '.$fundo.'; white-space: nowrap;">'.e($rotulo).'</td>'
+                .self::bgSolido($fundo).' white-space: nowrap;">'.e($rotulo).'</td>'
                 .'<td align="right" style="padding: 11px 16px; font-size: 13px; font-weight: 600; '
-                .'color: '.self::TEXTO.'; background-color: '.$fundo.'; text-align: right;">'.e($valor).'</td>'
+                .'color: '.self::TEXTO.'; '.self::bgSolido($fundo).' text-align: right;">'.e($valor).'</td>'
                 .'</tr>';
         }
 
@@ -252,7 +252,7 @@ class Blocos
             '<table width="100%" cellpadding="0" cellspacing="0" role="presentation" '
             .'style="margin: 22px 0; border: 1px solid '.self::BORDA.'; border-radius: 4px; '
             .'border-collapse: separate; overflow: hidden;">'
-            .'<tr><td colspan="2" style="padding: 10px 16px; background-color: #eef1f5; '
+            .'<tr><td colspan="2" style="padding: 10px 16px; '.self::bgSolido('#eef1f5').' '
             .'border-bottom: 1px solid '.self::BORDA.'; font-size: 10px; font-weight: 700; '
             .'letter-spacing: 0.1em; text-transform: uppercase; color: #56616f;">'.e($titulo).'</td></tr>'
             .$linhas
@@ -266,7 +266,7 @@ class Blocos
         return new HtmlString(
             '<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin: 22px 0;">'
             .'<tr><td style="padding: 16px 18px; border-left: 3px solid '.$cor.'; '
-            .'background-color: '.self::FUNDO_SUAVE.'; border-radius: 0 4px 4px 0; font-size: 14px; '
+            .self::bgSolido(self::FUNDO_SUAVE).' border-radius: 0 4px 4px 0; font-size: 14px; '
             .'color: '.self::TEXTO_SUAVE.'; line-height: 1.6;">'.$texto.'</td></tr></table>'
         );
     }
@@ -291,8 +291,8 @@ class Blocos
                 : '';
 
             $linhas .= '<tr>'
-                .'<td width="4" style="background-color: '.$cor.';"></td>'
-                .'<td style="padding: 13px 16px; border-bottom: '.$borda.';">'
+                .'<td width="4" style="'.self::bgSolido($cor).'"></td>'
+                .'<td style="padding: 13px 16px; '.self::bgSolido('#ffffff').' border-bottom: '.$borda.';">'
                 .'<div style="font-size: 14px; font-weight: 600; color: '.self::TEXTO.'; line-height: 1.4;">'.e($item['titulo']).'</div>'
                 .$valor
                 .'</td>'
@@ -310,5 +310,20 @@ class Blocos
     public static function brl(float $valor): string
     {
         return 'R$ '.number_format($valor, 2, ',', '.');
+    }
+
+    /**
+     * Snippet de fundo sólido que SOBREVIVE ao dark mode do iOS Mail.
+     *
+     * iOS Mail (iPhone) transforma `background-color` no dark mode mesmo com
+     * `color-scheme: light` — clareia navy para azul-bebê. Mas NÃO transforma
+     * `background-image`. Então declaramos a cor como um gradiente sólido (mesma cor
+     * nas duas pontas) além do `background-color`: o iOS respeita o gradiente e mantém
+     * a cor; o Outlook (motor Word, ignora gradiente) cai no `background-color`. macOS
+     * Mail já respeitava `color-scheme`, então não muda nada lá.
+     */
+    public static function bgSolido(string $cor): string
+    {
+        return 'background-color: '.$cor.'; background-image: linear-gradient('.$cor.', '.$cor.');';
     }
 }
