@@ -254,9 +254,33 @@ class RiskScoreController extends Controller
             'detalheConsultaHtml' => $this->htmlDetalheUltimaConsulta($participante),
             'origemLabel' => $this->origemLabel($participante),
             'volumePeriodo' => $volumePeriodo,
+            'papel' => $this->papelParticipante($participante),
+            'metodologia' => $this->riskScoreService->metodologia(),
         ];
 
         return $this->render($request, 'show', $data);
+    }
+
+    /**
+     * Papel do participante pelo fluxo das notas EFD (mesma regra da listagem/export:
+     * RiskScoreReportBuilder::papeisParticipante): entrada = Fornecedor, saída = Comprador.
+     */
+    private function papelParticipante(Participante $participante): ?string
+    {
+        $tipos = \App\Models\EfdNota::where('user_id', $participante->user_id)
+            ->where('participante_id', $participante->id)
+            ->distinct()
+            ->pluck('tipo_operacao');
+
+        $entrada = $tipos->contains('entrada');
+        $saida = $tipos->contains('saida');
+
+        return match (true) {
+            $entrada && $saida => 'Fornecedor e Comprador',
+            $entrada => 'Fornecedor',
+            $saida => 'Comprador',
+            default => null,
+        };
     }
 
     /**
@@ -339,7 +363,7 @@ class RiskScoreController extends Controller
             ->first();
 
         if (! $ultima) {
-            return response()->json(['html' => '<div class="text-xs text-gray-500 py-3">Sem consulta de certidões para este CNPJ. <a href="/app/consulta" data-link class="text-blue-600 hover:underline">Consultar agora</a>.</div>']);
+            return response()->json(['html' => '<div class="text-xs text-gray-500 py-3">Sem consulta de certidões para este CNPJ. <a href="/app/consulta/painel" data-link class="text-blue-600 hover:underline">Consultar agora</a>.</div>']);
         }
 
         // Certidões que o PLANO desta consulta realmente incluiu → fonte pedida mas sem retorno

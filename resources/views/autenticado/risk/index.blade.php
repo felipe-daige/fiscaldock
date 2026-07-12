@@ -86,7 +86,7 @@
             <div class="border-t border-gray-200 px-4 py-4 space-y-4">
                 <p class="text-xs text-gray-600 leading-relaxed">
                     O Score é uma nota de <strong>0 (ótimo)</strong> a <strong>100 (pior)</strong>, calculada
-                    automaticamente ao final de cada <a href="/app/consulta" data-link class="text-blue-600 hover:underline">Consulta de CNPJ</a>.
+                    automaticamente ao final de cada <a href="/app/consulta/painel" data-link class="text-blue-600 hover:underline">Consulta de CNPJ</a>.
                     Quanto menor, mais regular o CNPJ. Vale para participantes (contrapartes) e clientes (suas empresas).
                 </p>
 
@@ -414,7 +414,7 @@
                                     @if($sc->participante_id)
                                         <x-acoes-item href="/app/score-fiscal/participante/{{ $sc->participante_id }}" data-link>Página completa</x-acoes-item>
                                     @endif
-                                    <x-acoes-item href="/app/consulta" data-link>Reconsultar</x-acoes-item>
+                                    <x-acoes-item href="/app/consulta/painel" data-link>Reconsultar</x-acoes-item>
                                 </x-acoes-menu>
                             </td>
                         </tr>
@@ -476,7 +476,7 @@
                                 @if($sc->participante_id)
                                     <x-acoes-item href="/app/score-fiscal/participante/{{ $sc->participante_id }}" data-link>Página completa</x-acoes-item>
                                 @endif
-                                <x-acoes-item href="/app/consulta" data-link>Reconsultar</x-acoes-item>
+                                <x-acoes-item href="/app/consulta/painel" data-link>Reconsultar</x-acoes-item>
                             </x-acoes-menu>
                         </div>
                     </div>
@@ -499,7 +499,7 @@
             <div class="px-6 py-10 text-center">
                 <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide">Nenhum CNPJ consultado ainda</h3>
                 <p class="mt-2 text-xs text-gray-500">O score é calculado automaticamente ao final de cada Consulta de CNPJ.</p>
-                <a href="/app/consulta" data-link class="mt-4 inline-flex items-center gap-2 px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">Fazer uma consulta</a>
+                <a href="/app/consulta/painel" data-link class="mt-4 inline-flex items-center gap-2 px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">Fazer uma consulta</a>
             </div>
             @endif
         </div>
@@ -540,7 +540,7 @@
                             </td>
                             <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-700">{{ $item->uf ?? '—' }}</td>
                             <td class="px-3 py-3 whitespace-nowrap text-right text-xs">
-                                <a href="/app/consulta" data-link class="text-gray-600 hover:text-gray-900 hover:underline">Consultar</a>
+                                <a href="/app/consulta/painel" data-link class="text-gray-600 hover:text-gray-900 hover:underline">Consultar</a>
                             </td>
                         </tr>
                         @endforeach
@@ -566,7 +566,7 @@
                         </div>
                     </div>
                     <div class="mt-3 pt-2 border-t border-gray-100 flex items-center justify-end">
-                        <a href="/app/consulta" data-link class="text-xs text-gray-700 font-medium hover:text-gray-900 hover:underline">Consultar agora</a>
+                        <a href="/app/consulta/painel" data-link class="text-xs text-gray-700 font-medium hover:text-gray-900 hover:underline">Consultar agora</a>
                     </div>
                 </div>
                 @endforeach

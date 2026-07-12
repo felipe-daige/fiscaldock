@@ -8,7 +8,8 @@
     $situacaoBadge = match($situacaoUpper) {
         'ATIVA', '02' => ['label' => 'ATIVA', 'hex' => '#047857'],
         'INAPTA', 'SUSPENSA', 'NULA' => ['label' => $situacaoUpper, 'hex' => '#dc2626'],
-        'BAIXADA' => ['label' => 'BAIXADA', 'hex' => '#9ca3af'],
+        // BAIXADA gera subscore 100 + piso crítico — badge no vermelho crítico, não cinza apagado.
+        'BAIXADA' => ['label' => 'BAIXADA', 'hex' => '#b91c1c'],
         default => $situacaoUpper ? ['label' => $situacaoUpper, 'hex' => '#6b7280'] : null,
     };
     $regimeUpper = strtoupper((string) ($participante->regime_tributario ?? ''));
@@ -49,6 +50,9 @@
                         @if($regimeBadge)
                             <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $regimeBadge['hex'] }}">{{ $regimeBadge['label'] }}</span>
                         @endif
+                        @if(!empty($papel))
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border border-gray-300 text-gray-600 bg-white">{{ $papel }}</span>
+                        @endif
                     </div>
                 </div>
                 <div class="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
@@ -81,7 +85,8 @@
                         </div>
                     @endif
                     <div class="flex flex-col gap-2 flex-shrink-0">
-                        <a href="/app/consulta" data-link class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">
+                        {{-- ?participantes= pré-seleciona o CNPJ no painel de consulta (consulta-lote.js) --}}
+                        <a href="/app/consulta/painel?participantes={{ $participante->id }}" data-link class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                             </svg>
@@ -90,6 +95,13 @@
                         </a>
                         <a href="/app/participante/{{ $participante->id }}" data-link class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-xs font-semibold transition">
                             Ficha completa
+                        </a>
+                        {{-- Download: sem data-link (regra SPA — link de arquivo nunca navega no shell) --}}
+                        <a href="/app/participante/{{ $participante->id }}/dossie" target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-xs font-semibold transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Dossiê PDF
                         </a>
                     </div>
                 </div>
@@ -248,6 +260,45 @@
                         </div>
                         @endif
 
+                        {{-- Metodologia (mesma fonte do PDF: RiskScoreService::metodologia) --}}
+                        @if(!empty($metodologia))
+                            <details class="mt-4 border border-gray-200 rounded">
+                                <summary class="px-3 py-2 text-[11px] font-semibold text-gray-600 uppercase tracking-wide cursor-pointer select-none bg-gray-50 hover:bg-gray-100">Como o risco é classificado</summary>
+                                <div class="px-3 py-3 space-y-3 text-[11px] text-gray-600 leading-relaxed border-t border-gray-200">
+                                    <div>
+                                        <p class="font-semibold text-gray-700 mb-1">1. Fontes, pesos e penalidades</p>
+                                        <table class="w-full text-[11px]">
+                                            <thead>
+                                                <tr class="text-left text-[10px] text-gray-400 uppercase tracking-wide">
+                                                    <th class="py-1">Fonte</th><th class="py-1 text-right">Peso</th><th class="py-1 text-right">Se irregular</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-100">
+                                                @foreach($metodologia['categorias'] as $cat)
+                                                    <tr>
+                                                        <td class="py-1">{{ $cat['label'] }}</td>
+                                                        <td class="py-1 text-right font-mono">{{ $cat['peso_pct'] }}%</td>
+                                                        <td class="py-1 text-right font-mono">{{ $cat['penalidade'] !== null ? '+'.$cat['penalidade'].' pts' : 'até +100 pts' }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                        <p class="mt-1 text-gray-500">Média ponderada só das fontes avaliadas — fonte não consultada não penaliza. Situação cadastral: ATIVA = 0 · SUSPENSA = 50 · INAPTA/BAIXADA/NULA = 100.</p>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-gray-700 mb-1">2. Piso por irregularidade conhecida</p>
+                                        <p class="text-gray-500 mb-1">Débito ou situação irregular conhecida nunca fica "Baixo Risco" — a classificação mínima vence a média:</p>
+                                        <ul class="space-y-0.5">
+                                            @foreach($metodologia['pisos'] as $p)
+                                                <li>{{ $p['fonte'] }} → mínimo <strong>{{ $p['piso'] }}</strong></li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                    <p class="text-gray-500"><strong>Cobertura mínima:</strong> {{ $metodologia['cobertura'] }}</p>
+                                </div>
+                            </details>
+                        @endif
+
                     @else
                         <div class="text-center py-8">
                             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -255,7 +306,7 @@
                             </svg>
                             <h4 class="mt-4 text-sm font-semibold text-gray-900 uppercase tracking-wide">Score não calculado</h4>
                             <p class="mt-2 text-xs text-gray-500">Faça uma Consulta de CNPJ deste participante para calcular o risco. O score é atualizado automaticamente ao final de cada consulta.</p>
-                            <a href="/app/consulta" data-link class="mt-4 inline-flex items-center gap-2 px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">Nova consulta</a>
+                            <a href="/app/consulta/painel" data-link class="mt-4 inline-flex items-center gap-2 px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">Nova consulta</a>
                         </div>
                     @endif
 
@@ -272,7 +323,7 @@
                         @if(!empty($detalheConsultaHtml))
                             {!! $detalheConsultaHtml !!}
                         @else
-                            <p class="text-sm text-gray-500">Nenhuma consulta de certidões realizada ainda. <a href="/app/consulta" data-link class="text-gray-700 underline hover:text-gray-900">Consultar agora</a>.</p>
+                            <p class="text-sm text-gray-500">Nenhuma consulta de certidões realizada ainda. <a href="/app/consulta/painel" data-link class="text-gray-700 underline hover:text-gray-900">Consultar agora</a>.</p>
                         @endif
                     </div>
                 </div>

@@ -329,6 +329,50 @@ it('origem NULL com notas EFD vinculadas exibe "EFD (SPED importado)" e o card e
         ->assertSee('acumulado do período');
 });
 
+it('detalhe tem consulta pré-selecionada, dossiê PDF, papel e metodologia expansível', function () {
+    $user = User::factory()->create();
+    $cliente = \App\Models\Cliente::create([
+        'user_id' => $user->id, 'is_empresa_propria' => true, 'tipo_pessoa' => 'PJ',
+        'documento' => '00000000000191', 'razao_social' => 'Propria',
+    ]);
+    $part = Participante::create([
+        'user_id' => $user->id, 'documento' => '11222333000181', 'razao_social' => 'FORN LTDA',
+        'situacao_cadastral' => 'BAIXADA',
+    ]);
+    \App\Models\ParticipanteScore::create([
+        'participante_id' => $part->id, 'user_id' => $user->id,
+        'score_cadastral' => 100, 'score_total' => 100, 'classificacao' => 'critico', 'ultima_consulta_em' => now(),
+    ]);
+    $imp = \App\Models\EfdImportacao::create([
+        'user_id' => $user->id, 'cliente_id' => $cliente->id, 'tipo_efd' => 'EFD ICMS/IPI', 'status' => 'concluido',
+    ]);
+    \App\Models\EfdNota::create([
+        'user_id' => $user->id, 'cliente_id' => $cliente->id, 'participante_id' => $part->id,
+        'importacao_id' => $imp->id,
+        'chave_acesso' => str_pad('88', 44, '0', STR_PAD_LEFT), 'modelo' => '55', 'numero' => 88, 'serie' => '0',
+        'data_emissao' => '2026-01-15', 'tipo_operacao' => 'entrada', 'valor_total' => 500,
+        'valor_desconto' => 0, 'origem_arquivo' => 'fiscal', 'metadados' => [],
+    ]);
+
+    $resp = actingAs($user)
+        ->get("/app/score-fiscal/participante/{$part->id}")
+        ->assertOk()
+        // Consulta pré-preenchida (rota /painel — /app/consulta cru dava 404)
+        ->assertSee('/app/consulta/painel?participantes='.$part->id, false)
+        // Dossiê PDF sem data-link (download)
+        ->assertSee('/app/participante/'.$part->id.'/dossie', false)
+        ->assertSee('Dossiê PDF')
+        // Papel derivado das notas EFD (entrada = fornecedor)
+        ->assertSee('Fornecedor')
+        // Metodologia expansível
+        ->assertSee('Como o risco é classificado')
+        ->assertSee('Piso por irregularidade conhecida')
+        // BAIXADA no vermelho crítico, não cinza
+        ->assertSee('background-color: #b91c1c', false);
+
+    expect($resp->getContent())->not->toContain('href="/app/consulta"');
+});
+
 it('origem NULL sem vínculo EFD segue exibindo traço', function () {
     $user = User::factory()->create();
     $part = Participante::create([

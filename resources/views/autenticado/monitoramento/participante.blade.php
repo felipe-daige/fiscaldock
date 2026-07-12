@@ -7,7 +7,8 @@
     $situacaoBadge = match($situacaoUpper) {
         'ATIVA', '02' => ['label' => 'ATIVA', 'hex' => '#047857'],
         'INAPTA', 'SUSPENSA' => ['label' => $situacaoUpper, 'hex' => '#dc2626'],
-        'BAIXADA' => ['label' => 'BAIXADA', 'hex' => '#9ca3af'],
+        // BAIXADA gera subscore 100 + piso crítico — vermelho crítico, não cinza apagado.
+        'BAIXADA' => ['label' => 'BAIXADA', 'hex' => '#b91c1c'],
         default => ['label' => $situacaoUpper ?: 'SEM STATUS', 'hex' => '#6b7280'],
     };
     $regimeUpper = strtoupper((string) ($participante->regime_tributario ?? ''));
