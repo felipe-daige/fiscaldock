@@ -324,13 +324,21 @@
                     <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wide">CNPJs em Risco Crítico</h4>
                     <ul class="mt-2 space-y-1">
                         @foreach($emRiscoCritico as $scoreItem)
+                            @php
+                                $motivoPrincipal = $scoreItem->motivo_principal_risco;
+                                $motivosRisco = $scoreItem->motivos_risco;
+                                $outrosMotivos = max(0, count($motivosRisco) - 1);
+                                $motivoTexto = $motivoPrincipal
+                                    ? $motivoPrincipal.($outrosMotivos > 0 ? ' + '.$outrosMotivos.' '.($outrosMotivos === 1 ? 'outro sinal' : 'outros sinais') : '')
+                                    : 'Score na faixa crítica';
+                            @endphp
                             <li class="text-sm text-gray-700">
                                 @if($scoreItem->participante_id)
                                     <a href="/app/score-fiscal/participante/{{ $scoreItem->participante_id }}" data-link class="text-gray-900 hover:text-gray-600 hover:underline">
-                                        {{ $scoreItem->alvo_nome }} <span class="font-mono text-[11px] text-gray-500">({{ $scoreItem->alvo_documento }})</span> — Score: <span class="font-bold" style="color: #b91c1c">{{ $scoreItem->score_total }}</span>
+                                        {{ $scoreItem->alvo_nome }} <span class="font-mono text-[11px] text-gray-500">({{ $scoreItem->alvo_documento }})</span> — Score: <span class="font-bold" style="color: #b91c1c">{{ $scoreItem->score_total }}</span> <span class="text-gray-500">· Motivo:</span> <span class="font-medium text-gray-800" title="{{ implode(' · ', $motivosRisco) }}">{{ $motivoTexto }}</span>
                                     </a>
                                 @else
-                                    {{ $scoreItem->alvo_nome }} <span class="font-mono text-[11px] text-gray-500">({{ $scoreItem->alvo_documento }})</span> — Score: <span class="font-bold" style="color: #b91c1c">{{ $scoreItem->score_total }}</span>
+                                    {{ $scoreItem->alvo_nome }} <span class="font-mono text-[11px] text-gray-500">({{ $scoreItem->alvo_documento }})</span> — Score: <span class="font-bold" style="color: #b91c1c">{{ $scoreItem->score_total }}</span> <span class="text-gray-500">· Motivo:</span> <span class="font-medium text-gray-800" title="{{ implode(' · ', $motivosRisco) }}">{{ $motivoTexto }}</span>
                                 @endif
                             </li>
                         @endforeach

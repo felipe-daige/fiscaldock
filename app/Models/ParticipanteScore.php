@@ -184,6 +184,52 @@ class ParticipanteScore extends Model
     }
 
     /**
+     * Motivos de risco derivados dos subscores persistidos, em ordem de gravidade.
+     *
+     * @return array<int, string>
+     */
+    public function getMotivosRiscoAttribute(): array
+    {
+        $dados = is_array($this->dados_consultados) ? $this->dados_consultados : [];
+        $motivos = [];
+
+        $situacao = strtoupper(trim((string) ($dados['situacao_cadastral'] ?? '')));
+        if (($this->score_cadastral ?? 0) > 0) {
+            $motivos[] = [
+                'score' => (int) $this->score_cadastral,
+                'ordem' => 1,
+                'label' => $situacao !== ''
+                    ? "Situação cadastral: {$situacao}"
+                    : 'Situação cadastral irregular',
+            ];
+        }
+
+        foreach ([
+            ['score_cnd_federal', 'CND Federal positiva', 2],
+            ['score_cnd_estadual', 'CND Estadual positiva', 3],
+            ['score_fgts', 'FGTS/CRF positivo', 4],
+            ['score_trabalhista', 'CNDT positiva', 5],
+        ] as [$coluna, $label, $ordem]) {
+            if (($this->{$coluna} ?? 0) > 0) {
+                $motivos[] = [
+                    'score' => (int) $this->{$coluna},
+                    'ordem' => $ordem,
+                    'label' => $label,
+                ];
+            }
+        }
+
+        usort($motivos, fn (array $a, array $b) => [$b['score'], $a['ordem']] <=> [$a['score'], $b['ordem']]);
+
+        return array_column($motivos, 'label');
+    }
+
+    public function getMotivoPrincipalRiscoAttribute(): ?string
+    {
+        return $this->motivos_risco[0] ?? null;
+    }
+
+    /**
      * Verifica se o score esta desatualizado (mais de 30 dias).
      */
     public function isDesatualizado(): bool

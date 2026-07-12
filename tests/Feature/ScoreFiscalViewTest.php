@@ -373,6 +373,33 @@ it('detalhe tem consulta pré-selecionada, dossiê PDF, papel e metodologia expa
     expect($resp->getContent())->not->toContain('href="/app/consulta"');
 });
 
+it('card de risco crítico mostra o motivo ao lado do score', function () {
+    $user = User::factory()->create();
+    $part = Participante::create([
+        'user_id' => $user->id,
+        'documento' => '11222333000181',
+        'razao_social' => 'CRITICA LTDA',
+    ]);
+
+    \App\Models\ParticipanteScore::create([
+        'participante_id' => $part->id,
+        'user_id' => $user->id,
+        'score_cadastral' => 100,
+        'score_total' => 100,
+        'classificacao' => 'critico',
+        'ultima_consulta_em' => now(),
+        'dados_consultados' => ['situacao_cadastral' => 'BAIXADA'],
+    ]);
+
+    actingAs($user)
+        ->get('/app/score-fiscal?cliente_id=todos')
+        ->assertOk()
+        ->assertSee('CNPJs em Risco Crítico')
+        ->assertSee('Score:')
+        ->assertSee('Motivo:')
+        ->assertSee('Situação cadastral: BAIXADA');
+});
+
 it('origem NULL sem vínculo EFD segue exibindo traço', function () {
     $user = User::factory()->create();
     $part = Participante::create([
