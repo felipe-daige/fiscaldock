@@ -286,7 +286,7 @@
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo</span>
             </div>
             <div class="grid grid-cols-2 lg:grid-cols-5 divide-x divide-y lg:divide-y-0 divide-gray-200">
-                <div class="p-4 sm:p-6">
+                <div class="p-4 sm:p-6 col-span-2 lg:col-span-1">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Avaliados</p>
                     <p class="text-lg font-bold text-gray-900 font-mono">{{ $estatisticas['total_avaliados'] ?? 0 }}</p>
                 </div>
@@ -352,66 +352,63 @@
                 <table class="min-w-full">
                     <thead>
                         <tr class="border-b border-gray-300">
-                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">CNPJ / Razão Social</th>
-                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Tipo</th>
-                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">UF</th>
-                            <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Score</th>
-                            <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Classificação</th>
-                            <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Crédito IBS/CBS</th>
-                            <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Última Consulta</th>
-                            <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Ações</th>
+                            <th class="px-2 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">CNPJ / Razão Social</th>
+                            <th class="px-2 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Tipo</th>
+                            <th class="px-2 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Score / Risco</th>
+                            <th class="px-2 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Crédito IBS/CBS</th>
+                            <th class="px-2 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Última Consulta</th>
+                            <th class="px-2 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Ações</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                         @foreach($consultados as $sc)
                         @php $tb = $tipoBadge($sc->alvo_tipo); @endphp
                         <tr class="hover:bg-gray-50/50 transition-colors">
-                            <td class="px-3 py-3 whitespace-nowrap">
-                                <div class="text-sm text-gray-900 font-medium">{{ $sc->alvo_nome }}</div>
-                                <div class="text-[11px] text-gray-500 font-mono">{{ $sc->alvo_documento }}</div>
+                            <td class="px-2 py-3 max-w-0 w-full">
+                                <div class="text-sm text-gray-900 font-medium truncate" title="{{ $sc->alvo_nome }}">{{ $sc->alvo_nome }}</div>
+                                <div class="text-[11px] text-gray-500 font-mono truncate">{{ $sc->alvo_documento }}@if($sc->alvo_uf) · {{ $sc->alvo_uf }}@endif</div>
                             </td>
-                            <td class="px-3 py-3 whitespace-nowrap">
-                                <div class="flex flex-wrap items-center gap-1">
+                            <td class="px-2 py-3">
+                                <div class="flex flex-col items-start gap-1">
                                     <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tb['hex'] }}">{{ $tb['label'] }}</span>
                                     @if($sc->participante_id && ($pb = $papelBadge($papeisParticipante[$sc->participante_id] ?? null)))
                                         <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $pb['hex'] }}">{{ $pb['label'] }}</span>
                                     @endif
                                 </div>
                             </td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-700">{{ $sc->alvo_uf ?? '—' }}</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-center">
+                            <td class="px-2 py-3 whitespace-nowrap text-center">
                                 @if($sc->score_total !== null)
-                                    <span class="text-lg font-bold font-mono" style="color: {{ $scoreColor($sc->score_total) }}">{{ $sc->score_total }}</span>
+                                    <span class="text-lg font-bold font-mono leading-none" style="color: {{ $scoreColor($sc->score_total) }}">{{ $sc->score_total }}</span>
                                 @else
                                     <span class="text-sm text-gray-400">—</span>
                                 @endif
+                                <div class="mt-1">
+                                    @if(isset($classBadge[$sc->classificacao]))
+                                        @php $b = $classBadge[$sc->classificacao]; @endphp
+                                        <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $b['hex'] }}">
+                                            {{ $b['label'] }}
+                                        </span>
+                                    @else
+                                        <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">
+                                            Não Avaliado
+                                        </span>
+                                    @endif
+                                </div>
                             </td>
-                            <td class="px-3 py-3 whitespace-nowrap text-center">
-                                @if(isset($classBadge[$sc->classificacao]))
-                                    @php $b = $classBadge[$sc->classificacao]; @endphp
-                                    <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $b['hex'] }}">
-                                        {{ $b['label'] }}
-                                    </span>
-                                @else
-                                    <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">
-                                        Não Avaliado
-                                    </span>
-                                @endif
-                            </td>
-                            <td class="px-3 py-3 whitespace-nowrap text-center">
+                            <td class="px-2 py-3 whitespace-nowrap text-center">
                                 @php $cb = $creditoBadge($sc->score_credito_reforma); @endphp
                                 <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cb['hex'] }}">{{ $cb['label'] }}</span>
                             </td>
-                            <td class="px-3 py-3 whitespace-nowrap text-center text-sm text-gray-700 font-mono">
+                            <td class="px-2 py-3 whitespace-nowrap text-center text-sm text-gray-700 font-mono">
                                 @if($sc->ultima_consulta_em)
                                     {{ $sc->ultima_consulta_em->format('d/m/Y') }}
                                 @else
                                     —
                                 @endif
                             </td>
-                            <td class="px-3 py-3 whitespace-nowrap text-right text-xs">
+                            <td class="px-2 py-3 whitespace-nowrap text-right text-xs">
                                 @if($sc->participante_id)
-                                    <button type="button" data-detalhe-participante="{{ $sc->participante_id }}" data-detalhe-target="detalhe-row-d-{{ $sc->participante_id }}" class="text-blue-600 hover:underline mr-3">Ver detalhes</button>
+                                    <button type="button" data-detalhe-participante="{{ $sc->participante_id }}" data-detalhe-target="detalhe-row-d-{{ $sc->participante_id }}" class="text-blue-600 hover:underline mr-2">Ver detalhes</button>
                                 @endif
                                 <x-acoes-menu>
                                     @if($sc->participante_id)
@@ -423,7 +420,7 @@
                         </tr>
                         @if($sc->participante_id)
                             <tr id="detalhe-row-d-{{ $sc->participante_id }}" class="hidden bg-gray-50">
-                                <td colspan="8" class="px-3 py-0">
+                                <td colspan="6" class="px-3 py-0">
                                     <div class="detalhe-content py-3"></div>
                                 </td>
                             </tr>
@@ -436,51 +433,52 @@
             {{-- Mobile: cards --}}
             <div class="divide-y divide-gray-100 md:hidden">
                 @foreach($consultados as $sc)
-                @php $tb = $tipoBadge($sc->alvo_tipo); @endphp
-                <div class="px-4 py-3">
+                @php
+                    $tb = $tipoBadge($sc->alvo_tipo);
+                    $b = $classBadge[$sc->classificacao] ?? ['label' => 'Não Avaliado', 'hex' => '#9ca3af'];
+                    $cb = $creditoBadge($sc->score_credito_reforma);
+                @endphp
+                <div class="px-4 py-3 border-l-4" style="border-left-color: {{ $b['hex'] }}">
                     <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0">
-                            <p class="text-sm text-gray-900 font-medium truncate">{{ $sc->alvo_nome }}</p>
-                            <p class="text-[11px] text-gray-500 font-mono">{{ $sc->alvo_documento }}</p>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm text-gray-900 font-medium leading-snug line-clamp-2">{{ $sc->alvo_nome }}</p>
+                            <p class="text-[11px] text-gray-500 font-mono mt-0.5">{{ $sc->alvo_documento }}@if($sc->alvo_uf) · {{ $sc->alvo_uf }}@endif</p>
                         </div>
-                        <div class="flex-shrink-0 text-right">
+                        <div class="flex-shrink-0 flex flex-col items-end gap-1">
                             @if($sc->score_total !== null)
-                                <span class="text-xl font-bold font-mono" style="color: {{ $scoreColor($sc->score_total) }}">{{ $sc->score_total }}</span>
+                                <span class="text-2xl font-bold font-mono leading-none" style="color: {{ $scoreColor($sc->score_total) }}">{{ $sc->score_total }}</span>
                             @else
-                                <span class="text-sm text-gray-400">—</span>
+                                <span class="text-lg text-gray-400 leading-none">—</span>
                             @endif
+                            <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $b['hex'] }}">{{ $b['label'] }}</span>
                         </div>
                     </div>
-                    <div class="flex flex-wrap items-center gap-2 mt-2">
+                    <div class="flex flex-wrap items-center gap-1.5 mt-2">
                         <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tb['hex'] }}">{{ $tb['label'] }}</span>
                         @if($sc->participante_id && ($pb = $papelBadge($papeisParticipante[$sc->participante_id] ?? null)))
                             <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $pb['hex'] }}">{{ $pb['label'] }}</span>
                         @endif
-                        @if(isset($classBadge[$sc->classificacao]))
-                            @php $b = $classBadge[$sc->classificacao]; @endphp
-                            <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $b['hex'] }}">{{ $b['label'] }}</span>
-                        @else
-                            <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">Não Avaliado</span>
-                        @endif
-                        @php $cb = $creditoBadge($sc->score_credito_reforma); @endphp
                         <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $cb['hex'] }}" title="Crédito IBS/CBS na Reforma">Créd: {{ $cb['label'] }}</span>
-                        @if($sc->alvo_uf)
-                            <span class="text-[11px] text-gray-500">{{ $sc->alvo_uf }}</span>
-                        @endif
-                        @if($sc->ultima_consulta_em)
-                            <span class="text-[11px] text-gray-400">· {{ $sc->ultima_consulta_em->format('d/m/Y') }}</span>
-                        @endif
                     </div>
-                    <div class="mt-2 text-xs flex items-center gap-3">
-                        @if($sc->participante_id)
-                            <button type="button" data-detalhe-participante="{{ $sc->participante_id }}" data-detalhe-target="detalhe-row-m-{{ $sc->participante_id }}" class="text-blue-600 hover:underline">Ver detalhes</button>
-                        @endif
-                        <x-acoes-menu align="left">
-                            @if($sc->participante_id)
-                                <x-acoes-item href="/app/score-fiscal/participante/{{ $sc->participante_id }}" data-link>Página completa</x-acoes-item>
+                    <div class="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between">
+                        <span class="text-[11px] text-gray-400 font-mono">
+                            @if($sc->ultima_consulta_em)
+                                Consultado em {{ $sc->ultima_consulta_em->format('d/m/Y') }}
+                            @else
+                                —
                             @endif
-                            <x-acoes-item href="/app/consulta" data-link>Reconsultar</x-acoes-item>
-                        </x-acoes-menu>
+                        </span>
+                        <div class="flex items-center gap-3 text-xs">
+                            @if($sc->participante_id)
+                                <button type="button" data-detalhe-participante="{{ $sc->participante_id }}" data-detalhe-target="detalhe-row-m-{{ $sc->participante_id }}" class="text-blue-600 font-medium hover:underline">Ver detalhes</button>
+                            @endif
+                            <x-acoes-menu>
+                                @if($sc->participante_id)
+                                    <x-acoes-item href="/app/score-fiscal/participante/{{ $sc->participante_id }}" data-link>Página completa</x-acoes-item>
+                                @endif
+                                <x-acoes-item href="/app/consulta" data-link>Reconsultar</x-acoes-item>
+                            </x-acoes-menu>
+                        </div>
                     </div>
                     @if($sc->participante_id)
                         <div id="detalhe-row-m-{{ $sc->participante_id }}" class="hidden mt-2">
@@ -528,9 +526,9 @@
                         @foreach($naoConsultados as $item)
                         @php $tb = $tipoBadge($item->tipo); @endphp
                         <tr class="hover:bg-gray-50/50 transition-colors">
-                            <td class="px-3 py-3 whitespace-nowrap">
-                                <div class="text-sm text-gray-900 font-medium">{{ $item->razao_social ?? 'N/A' }}</div>
-                                <div class="text-[11px] text-gray-500 font-mono">{{ $fmtCnpj($item->documento) }}</div>
+                            <td class="px-3 py-3 max-w-0 w-full">
+                                <div class="text-sm text-gray-900 font-medium truncate" title="{{ $item->razao_social ?? 'N/A' }}">{{ $item->razao_social ?? 'N/A' }}</div>
+                                <div class="text-[11px] text-gray-500 font-mono truncate">{{ $fmtCnpj($item->documento) }}</div>
                             </td>
                             <td class="px-3 py-3 whitespace-nowrap">
                                 <div class="flex flex-wrap items-center gap-1">
@@ -554,11 +552,11 @@
             <div class="divide-y divide-gray-100 md:hidden">
                 @foreach($naoConsultados as $item)
                 @php $tb = $tipoBadge($item->tipo); @endphp
-                <div class="px-4 py-3">
+                <div class="px-4 py-3 border-l-4" style="border-left-color: #e5e7eb">
                     <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0">
-                            <p class="text-sm text-gray-900 font-medium truncate">{{ $item->razao_social ?? 'N/A' }}</p>
-                            <p class="text-[11px] text-gray-500 font-mono">{{ $fmtCnpj($item->documento) }}</p>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm text-gray-900 font-medium leading-snug line-clamp-2">{{ $item->razao_social ?? 'N/A' }}</p>
+                            <p class="text-[11px] text-gray-500 font-mono mt-0.5">{{ $fmtCnpj($item->documento) }}@if($item->uf) · {{ $item->uf }}@endif</p>
                         </div>
                         <div class="flex-shrink-0 flex flex-col items-end gap-1">
                             <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tb['hex'] }}">{{ $tb['label'] }}</span>
@@ -567,9 +565,8 @@
                             @endif
                         </div>
                     </div>
-                    <div class="flex items-center justify-between mt-2">
-                        <span class="text-[11px] text-gray-500">{{ $item->uf ?? '—' }}</span>
-                        <a href="/app/consulta" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">Consultar</a>
+                    <div class="mt-3 pt-2 border-t border-gray-100 flex items-center justify-end">
+                        <a href="/app/consulta" data-link class="text-xs text-gray-700 font-medium hover:text-gray-900 hover:underline">Consultar agora</a>
                     </div>
                 </div>
                 @endforeach
