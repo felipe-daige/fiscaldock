@@ -58,6 +58,61 @@ it('--force preserva os dados fiscais (clientes) do titular', function () {
     expect(Cliente::where('user_id', $user->id)->count())->toBe(1);
 });
 
+it('--force anonimiza a PII da empresa própria do titular (fase 2.3)', function () {
+    $user = User::factory()->create([
+        'deletion_requested_at' => now()->subDays(40),
+    ]);
+    $empresa = Cliente::create([
+        'user_id' => $user->id,
+        'tipo_pessoa' => 'PJ',
+        'documento' => '11222333000181',
+        'nome' => 'Minha Empresa',
+        'razao_social' => 'Minha Empresa LTDA',
+        'nome_fantasia' => 'MinhaEmp',
+        'email' => 'contato@minhaempresa.com',
+        'telefone' => '6733334444',
+        'endereco' => 'Rua Real',
+        'cep' => '79000000',
+        'qsa' => [['nome' => 'Sócio Fulano', 'cpf' => '12345678900']],
+        'is_empresa_propria' => true,
+    ]);
+
+    $this->artisan('lgpd:processar-exclusoes --force')->assertExitCode(0);
+
+    $fresh = $empresa->fresh();
+    expect($fresh)->not->toBeNull();
+    expect($fresh->documento)->not->toBe('11222333000181');
+    expect($fresh->razao_social)->not->toBe('Minha Empresa LTDA');
+    expect($fresh->nome_fantasia)->toBeNull();
+    expect($fresh->email)->toBeNull();
+    expect($fresh->telefone)->toBeNull();
+    expect($fresh->endereco)->toBeNull();
+    expect($fresh->cep)->toBeNull();
+    expect($fresh->qsa)->toBeNull();
+});
+
+it('--force NÃO toca na PII da carteira administrada (retenção fiscal de terceiros)', function () {
+    $user = User::factory()->create([
+        'deletion_requested_at' => now()->subDays(40),
+    ]);
+    $administrado = Cliente::create([
+        'user_id' => $user->id,
+        'tipo_pessoa' => 'PJ',
+        'documento' => '11222333000181',
+        'nome' => 'Cliente do Contador',
+        'razao_social' => 'Cliente do Contador LTDA',
+        'email' => 'fiscal@cliente.com',
+        'is_empresa_propria' => false,
+    ]);
+
+    $this->artisan('lgpd:processar-exclusoes --force')->assertExitCode(0);
+
+    $fresh = $administrado->fresh();
+    expect($fresh->documento)->toBe('11222333000181');
+    expect($fresh->razao_social)->toBe('Cliente do Contador LTDA');
+    expect($fresh->email)->toBe('fiscal@cliente.com');
+});
+
 it('respeita --apos-dias e ignora pedidos recentes', function () {
     $user = User::factory()->create([
         'deletion_requested_at' => now()->subDays(2),
