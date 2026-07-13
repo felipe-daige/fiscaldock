@@ -51,6 +51,8 @@
 
 <div class="min-h-screen bg-gray-100" id="validacao-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <x-clearance.certificado-banner />
+
         <div class="mb-4 sm:mb-8 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
                 <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Clearance DF-e — Painel</h1>

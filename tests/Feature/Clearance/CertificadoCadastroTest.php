@@ -97,3 +97,45 @@ it('Empresa mostra status quando há certificado', function () {
         ->assertSee('Válido até', false)
         ->assertSee('Remover', false);
 });
+
+it('Clearance orienta o cadastro quando o usuário ainda não tem certificado', function () {
+    $user = User::factory()->create();
+    cadastroEmpresa($user);
+
+    actingAs($user)->get('/app/clearance/dashboard')
+        ->assertOk()
+        ->assertSee('data-clearance-certificado-banner', false)
+        ->assertSee('Cadastre o certificado digital A1')
+        ->assertSee('/app/minha-empresa#certificado-digital', false)
+        ->assertSee('Cadastrar certificado');
+});
+
+it('Clearance não exibe orientação quando o certificado já está cadastrado', function () {
+    Storage::fake('local');
+    $user = User::factory()->create();
+    $empresa = cadastroEmpresa($user);
+    app(\App\Services\Clearance\CertificadoDigitalService::class)
+        ->validarEArmazenar(certUploadFile(gerarPfx('s')), 's', $empresa);
+
+    actingAs($user)->get('/app/clearance/dashboard')
+        ->assertOk()
+        ->assertDontSee('data-clearance-certificado-banner', false);
+});
+
+it('todas as telas HTML de Clearance incluem o banner compartilhado', function () {
+    $views = [
+        'index',
+        'notas',
+        'buscar',
+        'buscar-resultado',
+        'notas-resultado',
+        'nota',
+        'alertas',
+    ];
+
+    foreach ($views as $view) {
+        $conteudo = file_get_contents(resource_path("views/autenticado/clearance/{$view}.blade.php"));
+
+        expect($conteudo)->toContain('<x-clearance.certificado-banner />');
+    }
+});

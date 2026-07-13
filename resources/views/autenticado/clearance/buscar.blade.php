@@ -82,6 +82,8 @@
 
 <div class="min-h-screen bg-gray-100" id="buscar-nfe-container">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <x-clearance.certificado-banner />
+
         @unless(config('clearance.busca_avulsa.habilitada'))
             <div class="bg-amber-50 border border-amber-200 rounded p-3 mb-4">
                 <p class="text-[13px] text-amber-800"><strong>Busca avulsa em desenvolvimento.</strong> Em breve você poderá consultar uma chave avulsa na SEFAZ. Por ora, use o clearance em lote sobre as notas já importadas.</p>
