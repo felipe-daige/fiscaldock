@@ -33,7 +33,7 @@ class ArquivoController extends Controller
         $resumo = $this->arquivos->resumo($user, $todos);
         $busca = trim((string) $request->query('q', ''));
         $origem = (string) $request->query('origem', 'todos');
-        if (! in_array($origem, ['todos', 'upload', 'comprovante'], true)) {
+        if (! in_array($origem, ['todos', 'upload', 'comprovante', 'importacao'], true)) {
             $origem = 'todos';
         }
 
@@ -117,6 +117,11 @@ class ArquivoController extends Controller
     {
         $item = $this->arquivos->localizar($request->user(), $arquivo);
         abort_if($item === null, 404, 'Arquivo não encontrado.');
+        abort_unless($item['baixavel'], 404, 'O arquivo original desta importação não é retido pelo FiscalDock.');
+
+        if ($item['origem'] === 'importacao') {
+            return $this->arquivos->downloadImportacaoEfd($request->user(), $item);
+        }
 
         return \Illuminate\Support\Facades\Storage::disk('local')->download(
             $item['path'],
@@ -128,6 +133,7 @@ class ArquivoController extends Controller
     {
         $item = $this->arquivos->localizar($request->user(), $arquivo);
         abort_if($item === null, 404, 'Arquivo não encontrado.');
+        abort_unless($item['previewavel'], 404, 'Este arquivo não possui visualização.');
 
         $contentType = $this->arquivos->previewContentType($item['extensao']);
         abort_if($contentType === null, 404, 'Este formato não possui visualização.');

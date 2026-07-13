@@ -8,8 +8,8 @@ use App\Models\Cliente;
 use App\Models\Participante;
 use App\Models\XmlImportacao;
 use App\Models\XmlNota;
-use App\Services\SaldoService;
 use App\Services\Entitlements\EntitlementService;
+use App\Services\SaldoService;
 use App\Services\Xml\NfeXmlParser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -423,6 +423,18 @@ class XmlImportacaoController extends Controller
         }
         if ($tamanhoTotal > 200 * 1024 * 1024) {
             return response()->json(['success' => false, 'error' => 'Tamanho total excede 200MB.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Peso da importação conta na quota de armazenamento do plano — quota
+        // cheia bloqueia importação nova, igual ao upload manual em /app/arquivos.
+        try {
+            app(\App\Services\Arquivos\ArquivoUsuarioService::class)
+                ->garantirEspaco($user, $tamanhoTotal);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'error' => collect($e->errors())->flatten()->first(),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         // Dono/perspectiva: cliente JÁ cadastrado (ownerDoc forçado) | criar pelo lado

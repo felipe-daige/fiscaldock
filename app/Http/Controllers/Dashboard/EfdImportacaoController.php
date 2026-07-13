@@ -9,9 +9,9 @@ use App\Models\EfdImportacao;
 use App\Models\EfdNota;
 use App\Models\Participante;
 use App\Models\XmlImportacao;
-use App\Services\SaldoService;
 use App\Services\EfdProgressoBuilder;
 use App\Services\Entitlements\EntitlementService;
+use App\Services\SaldoService;
 use App\Services\SpedDetectorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -412,6 +412,18 @@ class EfdImportacaoController extends Controller
         // O FK cascadeOnDelete limpa notas/itens/apuração/retenções da importação removida.
         if ($substituir && $conflito['caso'] !== null) {
             $conflito['importacao']->delete();
+        }
+
+        // O SPED bruto fica preservado (arquivo_base64) e conta na quota de
+        // armazenamento do plano — quota cheia bloqueia importação nova.
+        try {
+            app(\App\Services\Arquivos\ArquivoUsuarioService::class)
+                ->garantirEspaco($user, strlen($conteudoArquivo));
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'error' => collect($e->errors())->flatten()->first(),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         if (empty($webhookUrl)) {

@@ -61,6 +61,7 @@ class ArquivoUsuarioService
                     'nome' => $nome,
                     'nome_download' => $this->nomeDownload($nome, $extensao, $origem),
                     'previewavel' => $this->previewContentType($extensao) !== null,
+                    'baixavel' => true,
                     'historico_url' => $origens[$path]['url'] ?? null,
                     'dono_documento' => $this->donoDocumento($origens[$path] ?? null, $origem, $path),
                     'dono_nome' => $origens[$path]['nome'] ?? null,
@@ -77,8 +78,111 @@ class ArquivoUsuarioService
         }
 
         return $arquivos
+            ->merge($this->itensImportacao($user))
             ->sortByDesc(fn (array $arquivo) => $arquivo['modificado_em']->timestamp)
             ->values();
+    }
+
+    /**
+     * Itens virtuais das importações EFD/XML (vivem no banco, não no disco).
+     * EFD guarda o SPED bruto em `arquivo_base64` e é baixável; do XML só restam
+     * os metadados (o job apaga os originais após processar) — lista sem download.
+     * O peso de ambos conta na quota do plano.
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function itensImportacao(User $user): Collection
+    {
+        $efds = \App\Models\EfdImportacao::query()
+            ->where('user_id', $user->id)
+            ->select('id', 'filename', 'tipo_efd', 'cnpj', 'cliente_id', 'created_at')
+            // Peso real do arquivo (base64 infla 33%); nunca carregar o blob aqui.
+            ->selectRaw('COALESCE(FLOOR(LENGTH(arquivo_base64) * 3 / 4), 0)::bigint AS tamanho_estimado')
+            ->get();
+
+        $xmls = \App\Models\XmlImportacao::query()
+            ->where('user_id', $user->id)
+            ->get(['id', 'filename', 'tipo_documento', 'tamanho_total_bytes', 'total_xmls', 'cliente_id', 'created_at']);
+
+        $clientes = \App\Models\Cliente::query()
+            ->where('user_id', $user->id)
+            ->whereIn('id', $efds->pluck('cliente_id')->merge($xmls->pluck('cliente_id'))->filter()->unique()->all())
+            ->get(['id', 'documento', 'nome', 'razao_social'])
+            ->keyBy('id');
+
+        $itens = collect();
+
+        foreach ($efds as $efd) {
+            $cliente = $clientes[$efd->cliente_id] ?? null;
+            $itens->push($this->itemImportacao(
+                pseudoPath: "importacao/efd/{$efd->id}",
+                nome: (string) ($efd->filename ?: "Importação EFD #{$efd->id}"),
+                tipoLabel: (string) ($efd->tipo_efd ?: 'EFD'),
+                tamanho: (int) $efd->tamanho_estimado,
+                criadoEm: $efd->created_at ?? now(),
+                historicoUrl: route('app.importacao.efd.detalhes', $efd->id),
+                documento: $cliente?->documento ?? ($efd->cnpj ?: null),
+                donoNome: $cliente?->razao_social ?? $cliente?->nome,
+                baixavel: $efd->tamanho_estimado > 0,
+                extensaoPadrao: 'TXT',
+            ));
+        }
+
+        foreach ($xmls as $xml) {
+            $cliente = $clientes[$xml->cliente_id] ?? null;
+            $notas = (int) $xml->total_xmls;
+            $itens->push($this->itemImportacao(
+                pseudoPath: "importacao/xml/{$xml->id}",
+                nome: (string) ($xml->filename ?: "Importação XML #{$xml->id}"),
+                tipoLabel: 'Lote XML '.($xml->tipo_documento ?: 'NFE').($notas > 0 ? " · {$notas} nota(s)" : ''),
+                tamanho: max(0, (int) $xml->tamanho_total_bytes),
+                criadoEm: $xml->created_at ?? now(),
+                historicoUrl: route('app.importacao.xml.detalhes', $xml->id),
+                documento: $cliente?->documento,
+                donoNome: $cliente?->razao_social ?? $cliente?->nome,
+                baixavel: false,
+                extensaoPadrao: 'XML',
+            ));
+        }
+
+        return $itens;
+    }
+
+    /** @return array<string, mixed> */
+    private function itemImportacao(
+        string $pseudoPath,
+        string $nome,
+        string $tipoLabel,
+        int $tamanho,
+        Carbon $criadoEm,
+        string $historicoUrl,
+        ?string $documento,
+        ?string $donoNome,
+        bool $baixavel,
+        string $extensaoPadrao,
+    ): array {
+        $extensao = strtoupper((string) pathinfo($nome, PATHINFO_EXTENSION)) ?: $extensaoPadrao;
+        $documento = $documento !== null && $documento !== '' ? Cnpj::formatar($documento) : null;
+
+        return [
+            'id' => $this->identificador($pseudoPath),
+            'path' => $pseudoPath,
+            'nome' => $nome,
+            'nome_download' => $this->nomeDownload($nome, '', 'importacao'),
+            'previewavel' => false,
+            'baixavel' => $baixavel,
+            'historico_url' => $historicoUrl,
+            'dono_documento' => $documento,
+            'dono_nome' => $donoNome,
+            'origem' => 'importacao',
+            'origem_label' => 'Importado por você',
+            'extensao' => $extensao,
+            'mime_type' => $tipoLabel,
+            'tamanho_bytes' => $tamanho,
+            'tamanho_formatado' => $this->formatarBytes($tamanho),
+            'modificado_em' => Carbon::instance($criadoEm),
+            'pode_excluir' => false,
+        ];
     }
 
     /** @return array<string, int|float|string|null> */
@@ -102,7 +206,30 @@ class ArquivoUsuarioService
             'total_arquivos' => $arquivos->count(),
             'total_uploads' => $arquivos->where('origem', 'upload')->count(),
             'total_comprovantes' => $arquivos->where('origem', 'comprovante')->count(),
+            'total_importados' => $arquivos->where('origem', 'importacao')->count(),
         ];
+    }
+
+    /**
+     * Bloqueia gravação/importação que estoure a quota do plano. Compartilhado
+     * entre upload manual, importação EFD e importação XML — quota cheia trava
+     * os três até o usuário liberar espaço ou subir de plano.
+     *
+     * @throws ValidationException
+     */
+    public function garantirEspaco(User $user, int $bytesNovos, string $campo = 'arquivos'): void
+    {
+        $resumo = $this->resumo($user);
+        $quota = $resumo['quota_bytes'];
+
+        if ($quota !== null && ((int) $resumo['usado_bytes'] + $bytesNovos) > $quota) {
+            $faltam = ((int) $resumo['usado_bytes'] + $bytesNovos) - $quota;
+
+            throw ValidationException::withMessages([
+                $campo => 'Este envio ultrapassa o espaço do seu plano em '
+                    .$this->formatarBytes($faltam).'. Remova uploads ou aumente seu armazenamento.',
+            ]);
+        }
     }
 
     /**
@@ -116,17 +243,7 @@ class ArquivoUsuarioService
                 fn (UploadedFile $arquivo) => max(0, (int) $arquivo->getSize()),
                 $uploads,
             ));
-            $resumo = $this->resumo($user);
-            $quota = $resumo['quota_bytes'];
-
-            if ($quota !== null && ((int) $resumo['usado_bytes'] + $bytesNovos) > $quota) {
-                $faltam = ((int) $resumo['usado_bytes'] + $bytesNovos) - $quota;
-
-                throw ValidationException::withMessages([
-                    'arquivos' => 'Este envio ultrapassa o espaço do seu plano em '
-                        .$this->formatarBytes($faltam).'. Remova uploads ou aumente seu armazenamento.',
-                ]);
-            }
+            $this->garantirEspaco($user, $bytesNovos);
 
             $gravados = [];
 
@@ -169,11 +286,44 @@ class ArquivoUsuarioService
     public function localizar(User $user, string $id): ?array
     {
         $path = $this->pathDoIdentificador($id);
-        if ($path === null || ! $this->pathPermitido($path, $user)) {
+        if ($path === null) {
+            return null;
+        }
+
+        // Pseudo-path de importação (importacao/efd/{id} | importacao/xml/{id}):
+        // o escopo por usuário já vem do listar — id de outro usuário não aparece.
+        if (! preg_match('#^importacao/(efd|xml)/\d+$#', $path) && ! $this->pathPermitido($path, $user)) {
             return null;
         }
 
         return $this->listar($user)->firstWhere('path', $path);
+    }
+
+    /**
+     * Download do SPED bruto de uma importação EFD (vive em arquivo_base64).
+     * Só chega aqui item já localizado/escopado pelo listar do próprio usuário.
+     *
+     * @param  array<string, mixed>  $item
+     */
+    public function downloadImportacaoEfd(User $user, array $item): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        if (! preg_match('#^importacao/efd/(\d+)$#', (string) $item['path'], $m)) {
+            abort(404, 'Arquivo não encontrado.');
+        }
+
+        $base64 = \App\Models\EfdImportacao::query()
+            ->where('user_id', $user->id)
+            ->where('id', (int) $m[1])
+            ->value('arquivo_base64');
+        abort_if($base64 === null || $base64 === '', 404, 'O arquivo original desta importação não está disponível.');
+
+        return response()->streamDownload(
+            function () use ($base64) {
+                echo base64_decode($base64);
+            },
+            $item['nome_download'],
+            ['Content-Type' => 'text/plain; charset=UTF-8', 'X-Content-Type-Options' => 'nosniff'],
+        );
     }
 
     public function excluirUpload(User $user, string $id): bool

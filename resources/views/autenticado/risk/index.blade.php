@@ -315,12 +315,12 @@
                         <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Buscar</label>
                         <div class="relative mt-1">
                             <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                            <input type="text" id="busca-participante" placeholder="CNPJ ou razão social..." value="{{ $filtroBusca ?? '' }}" class="h-11 md:h-9 w-full border border-gray-300 rounded pl-9 pr-2 py-1.5 text-base md:text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <input type="text" id="busca-participante" placeholder="CNPJ ou razão social..." value="{{ $filtroBusca ?? '' }}" class="h-11 md:h-[42px] w-full border border-gray-300 rounded pl-9 pr-2 py-1.5 text-base md:text-[13px] focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         </div>
                     </div>
                     <div>
                         <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Cliente</label>
-                        <select id="filtro-cliente" class="mt-1 h-11 md:h-9 w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                        <select id="filtro-cliente" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px] focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                             @foreach(($clientes ?? collect()) as $cli)
                                 <option value="{{ $cli->id }}" {{ (! ($verTodosCnpjs ?? false) && (int)($clienteSelecionadoId ?? 0) === (int)$cli->id) ? 'selected' : '' }}>
                                     {{ $cli->is_empresa_propria ? '★ '.$cli->nome.' (Minha Empresa)' : $cli->nome }}
@@ -341,7 +341,7 @@
                     <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         <div>
                             <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Lista</label>
-                            <select id="filtro-status-score" class="mt-1 h-11 md:h-9 w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <select id="filtro-status-score" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px] focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                                 <option value="todos" {{ ($filtroStatus ?? 'todos') === 'todos' ? 'selected' : '' }}>Todos</option>
                                 <option value="consultados" {{ ($filtroStatus ?? '') === 'consultados' ? 'selected' : '' }}>Consultados</option>
                                 <option value="nao_consultados" {{ ($filtroStatus ?? '') === 'nao_consultados' ? 'selected' : '' }}>Não consultados</option>
@@ -349,7 +349,7 @@
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Tipo</label>
-                            <select id="filtro-tipo-score" class="mt-1 h-11 md:h-9 w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <select id="filtro-tipo-score" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px] focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                                 <option value="todos" {{ ($filtroTipo ?? 'todos') === 'todos' ? 'selected' : '' }}>Todos</option>
                                 <option value="cliente" {{ ($filtroTipo ?? '') === 'cliente' ? 'selected' : '' }}>Clientes</option>
                                 <option value="participante" {{ ($filtroTipo ?? '') === 'participante' ? 'selected' : '' }}>Participantes</option>
@@ -357,7 +357,7 @@
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Classificação</label>
-                            <select id="filtro-classificacao" class="mt-1 h-11 md:h-9 w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <select id="filtro-classificacao" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px] focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                                 <option value="todos" {{ ($filtroClassificacao ?? 'todos') === 'todos' ? 'selected' : '' }}>Todas</option>
                                 <option value="baixo" {{ ($filtroClassificacao ?? '') === 'baixo' ? 'selected' : '' }}>Baixo</option>
                                 <option value="medio" {{ ($filtroClassificacao ?? '') === 'medio' ? 'selected' : '' }}>Médio</option>
@@ -368,7 +368,7 @@
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Crédito IBS/CBS</label>
-                            <select id="filtro-credito-score" class="mt-1 h-11 md:h-9 w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <select id="filtro-credito-score" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px] focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                                 <option value="todos" {{ ($filtroCredito ?? 'todos') === 'todos' ? 'selected' : '' }}>Todos</option>
                                 <option value="gera" {{ ($filtroCredito ?? '') === 'gera' ? 'selected' : '' }}>Gera</option>
                                 <option value="parcial" {{ ($filtroCredito ?? '') === 'parcial' ? 'selected' : '' }}>Parcial</option>
@@ -378,19 +378,19 @@
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Score mín.</label>
-                            <input type="number" id="score-min" min="0" max="100" inputmode="numeric" placeholder="0" value="{{ $filtroScoreMin ?? '' }}" class="mt-1 h-11 md:h-9 w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <input type="number" id="score-min" min="0" max="100" inputmode="numeric" placeholder="0" value="{{ $filtroScoreMin ?? '' }}" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px] focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Score máx.</label>
-                            <input type="number" id="score-max" min="0" max="100" inputmode="numeric" placeholder="100" value="{{ $filtroScoreMax ?? '' }}" class="mt-1 h-11 md:h-9 w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <input type="number" id="score-max" min="0" max="100" inputmode="numeric" placeholder="100" value="{{ $filtroScoreMax ?? '' }}" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px] focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         </div>
                     </div>
                     <p class="mt-2 text-[11px] text-gray-500">Score e crédito filtram apenas CNPJs já consultados.</p>
                 </details>
             </div>
             <div class="mobile-filter-actions bg-gray-50 px-3 sm:px-4 py-2 border-t border-gray-200 grid grid-cols-2 md:flex gap-2">
-                <button type="button" id="btn-filtrar-score" class="h-11 md:h-9 px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Filtrar</button>
-                <button type="button" id="btn-limpar-filtros-score" class="h-11 md:h-9 px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide border border-gray-300 bg-white text-gray-700">Limpar</button>
+                <button type="button" id="btn-filtrar-score" class="h-11 md:h-[42px] px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Filtrar</button>
+                <button type="button" id="btn-limpar-filtros-score" class="h-11 md:h-[42px] px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide border border-gray-300 bg-white text-gray-700">Limpar</button>
             </div>
         </div>
         {{-- CONSULTADOS — participantes que já têm score (ordenados por risco) --}}

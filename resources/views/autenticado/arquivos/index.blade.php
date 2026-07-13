@@ -3,6 +3,11 @@
     $quotaIlimitada = ($resumoArquivos['quota_bytes'] ?? null) === null;
     $corUso = $percentual >= 95 ? '#dc2626' : ($percentual >= 80 ? '#b45309' : '#1e4679');
     $accept = collect($extensoesArquivos)->map(fn ($ext) => '.'.$ext)->implode(',');
+    $badgeOrigem = [
+        'upload' => ['Upload', '#1e4679'],
+        'comprovante' => ['Sistema', '#047857'],
+        'importacao' => ['Importação', '#7c3aed'],
+    ];
 @endphp
 
 <div class="min-h-screen bg-gray-100" id="arquivos-container">
@@ -52,7 +57,7 @@
                             @if($quotaIlimitada)
                                 Seu plano não possui limite de armazenamento.
                             @else
-                                {{ $resumoArquivos['disponivel_formatado'] }} disponíveis para novos uploads.
+                                {{ $resumoArquivos['disponivel_formatado'] }} disponíveis para novos uploads e importações.
                             @endif
                         </p>
                     </div>
@@ -74,7 +79,7 @@
                 @endunless
             </div>
 
-            <div class="grid grid-cols-3 border-t border-gray-200 divide-x divide-gray-200">
+            <div class="grid grid-cols-4 border-t border-gray-200 divide-x divide-gray-200">
                 <div class="px-3 py-3 sm:px-5">
                     <p class="text-[10px] text-gray-400 uppercase tracking-wide">Total</p>
                     <p class="text-base font-bold text-gray-900 mt-0.5">{{ number_format($resumoArquivos['total_arquivos'], 0, ',', '.') }}</p>
@@ -86,6 +91,10 @@
                 <div class="px-3 py-3 sm:px-5">
                     <p class="text-[10px] text-gray-400 uppercase tracking-wide">Comprovantes</p>
                     <p class="text-base font-bold text-gray-900 mt-0.5">{{ number_format($resumoArquivos['total_comprovantes'], 0, ',', '.') }}</p>
+                </div>
+                <div class="px-3 py-3 sm:px-5">
+                    <p class="text-[10px] text-gray-400 uppercase tracking-wide">Importados</p>
+                    <p class="text-base font-bold text-gray-900 mt-0.5">{{ number_format($resumoArquivos['total_importados'] ?? 0, 0, ',', '.') }}</p>
                 </div>
             </div>
         </div>
@@ -126,6 +135,7 @@
                             <option value="todos" @selected($origemArquivos === 'todos')>Todos os arquivos</option>
                             <option value="upload" @selected($origemArquivos === 'upload')>Enviados por mim</option>
                             <option value="comprovante" @selected($origemArquivos === 'comprovante')>Comprovantes</option>
+                            <option value="importacao" @selected($origemArquivos === 'importacao')>Importados (EFD/XML)</option>
                         </select>
                         <button type="submit" class="rounded px-4 py-2 text-xs font-semibold text-white" style="background-color: #374151">Filtrar</button>
                     </form>
@@ -195,8 +205,8 @@
                                                 </div>
                                             </td>
                                             <td class="px-3 py-3">
-                                                <span class="inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $arquivo['origem'] === 'upload' ? '#1e4679' : '#047857' }}">
-                                                    {{ $arquivo['origem'] === 'upload' ? 'Upload' : 'Sistema' }}
+                                                <span class="inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" title="{{ $arquivo['origem_label'] }}" style="background-color: {{ $badgeOrigem[$arquivo['origem']][1] ?? '#047857' }}">
+                                                    {{ $badgeOrigem[$arquivo['origem']][0] ?? 'Sistema' }}
                                                 </span>
                                             </td>
                                             <td class="px-3 py-3 text-[11px] text-gray-600">{{ $arquivo['tamanho_formatado'] }}</td>
@@ -208,9 +218,15 @@
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l2.5 2.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                                         </a>
                                                     @endif
-                                                    <a href="{{ route('app.arquivos.download', $arquivo['id']) }}" class="p-1.5 rounded text-gray-500 hover:text-blue-700 hover:bg-gray-100" title="Baixar arquivo" aria-label="Baixar {{ $arquivo['nome'] }}">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v12m0 0l-4-4m4 4l4-4M5 20h14"></path></svg>
-                                                    </a>
+                                                    @if($arquivo['baixavel'] ?? true)
+                                                        <a href="{{ route('app.arquivos.download', $arquivo['id']) }}" class="p-1.5 rounded text-gray-500 hover:text-blue-700 hover:bg-gray-100" title="Baixar arquivo" aria-label="Baixar {{ $arquivo['nome'] }}">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v12m0 0l-4-4m4 4l4-4M5 20h14"></path></svg>
+                                                        </a>
+                                                    @else
+                                                        <span class="p-1.5 text-gray-300" title="Original não retido — as notas extraídas estão no seu acervo">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v12m0 0l-4-4m4 4l4-4M5 20h14M4 4l16 16"></path></svg>
+                                                        </span>
+                                                    @endif
                                                     @if($arquivo['pode_excluir'])
                                                         <form action="{{ route('app.arquivos.destroy', $arquivo['id']) }}" method="POST" onsubmit="return confirm('Excluir este arquivo permanentemente?')">
                                                             @csrf
@@ -220,7 +236,7 @@
                                                             </button>
                                                         </form>
                                                     @else
-                                                        <span class="p-1.5 text-gray-300" title="Comprovante protegido">
+                                                        <span class="p-1.5 text-gray-300" title="{{ $arquivo['origem'] === 'importacao' ? 'Exclusão pela tela de importações' : 'Comprovante protegido' }}">
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V8a4 4 0 018 0v3m-9 0h10v9H7v-9z"></path></svg>
                                                         </span>
                                                     @endif
@@ -246,7 +262,7 @@
                                                 </p>
                                             @endif
                                             <div class="flex items-center gap-2 mt-1.5 flex-wrap">
-                                                <span class="inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $arquivo['origem'] === 'upload' ? '#1e4679' : '#047857' }}">{{ $arquivo['origem'] === 'upload' ? 'Upload' : 'Sistema' }}</span>
+                                                <span class="inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeOrigem[$arquivo['origem']][1] ?? '#047857' }}">{{ $badgeOrigem[$arquivo['origem']][0] ?? 'Sistema' }}</span>
                                                 <span class="text-[10px] text-gray-500">{{ $arquivo['tamanho_formatado'] }}</span>
                                                 <span class="text-[10px] text-gray-400">{{ $arquivo['modificado_em']->format('d/m/Y H:i') }}</span>
                                             </div>
@@ -261,7 +277,11 @@
                                                 onclick="(function(b){var m=document.getElementById('arquivo-preview-modal');if(!m)return;document.getElementById('arquivo-preview-titulo').textContent=b.dataset.previewNome;document.getElementById('arquivo-preview-baixar').setAttribute('href',b.dataset.previewDownload);document.getElementById('arquivo-preview-abrir').setAttribute('href',b.dataset.previewUrl);document.getElementById('arquivo-preview-frame').src=b.dataset.previewUrl;m.classList.remove('hidden');document.body.classList.add('overflow-hidden')})(this)"
                                                 class="flex-1 text-center rounded border px-3 py-2 text-[11px] font-semibold text-white" style="background-color: #1e4679; border-color: #1e4679">Visualizar</button>
                                         @endif
-                                        <a href="{{ route('app.arquivos.download', $arquivo['id']) }}" class="flex-1 text-center rounded border border-gray-300 px-3 py-2 text-[11px] font-semibold text-gray-700">Baixar</a>
+                                        @if($arquivo['baixavel'] ?? true)
+                                            <a href="{{ route('app.arquivos.download', $arquivo['id']) }}" class="flex-1 text-center rounded border border-gray-300 px-3 py-2 text-[11px] font-semibold text-gray-700">Baixar</a>
+                                        @else
+                                            <span class="flex-1 text-center rounded border border-gray-200 px-3 py-2 text-[11px] font-semibold text-gray-400" title="Original não retido — as notas extraídas estão no seu acervo">Sem original</span>
+                                        @endif
                                         @if($arquivo['historico_url'])
                                             <a href="{{ $arquivo['historico_url'] }}" data-link class="flex-1 text-center rounded border border-gray-300 px-3 py-2 text-[11px] font-semibold text-gray-700">Ver origem</a>
                                         @endif
@@ -285,7 +305,7 @@
         </div>
 
         <div class="rounded border border-gray-300 bg-white px-4 py-3 text-[11px] text-gray-500 leading-relaxed">
-            <strong class="text-gray-700">O que aparece aqui?</strong> Uploads manuais e comprovantes preservados pelo sistema. Arquivos de importação EFD/XML são processados nas telas próprias e o acervo resultante fica estruturado no FiscalDock; certificados digitais permanecem protegidos na área da Empresa.
+            <strong class="text-gray-700">O que aparece aqui?</strong> Uploads manuais, comprovantes preservados pelo sistema e os arquivos das suas importações EFD/XML — o peso de todos conta no armazenamento do plano. O SPED original das importações EFD pode ser baixado; lotes XML guardam só as notas extraídas (o arquivo bruto não é retido). Certificados digitais permanecem protegidos na área da Empresa.
         </div>
     </div>
 
