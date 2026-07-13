@@ -46,7 +46,7 @@
             </div>
             <x-export-menu id="modal-exportar-score" titulo="Exportar Score Fiscal"
                            descricao="O arquivo inclui todo o recorte filtrado, sem a paginação da tela."
-                           overlay="download-overlay-score" size="lg">
+                           overlay="download-overlay-score">
                 <x-export-grupo label="Documento" />
                 <x-export-option format="pdf" modal-id="modal-exportar-score" overlay="download-overlay-score"
                     path="/app/score-fiscal/exportar-pdf"

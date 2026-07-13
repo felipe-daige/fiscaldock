@@ -94,7 +94,7 @@
                 @if($statusLote === 'finalizado' && empty($aguardaPersistencia) && config('consultas.infosimples_ativo'))
                     <button type="button" id="btn-sintegra-lote"
                         onclick="window.clearanceSintegra && window.clearanceSintegra.abrirLote()"
-                        class="inline-flex items-center gap-1.5 rounded border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50 hidden">
+                        class="auth-control inline-flex items-center gap-1.5 rounded border border-gray-300 bg-white text-gray-700 transition-colors hover:bg-gray-50 hidden">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>

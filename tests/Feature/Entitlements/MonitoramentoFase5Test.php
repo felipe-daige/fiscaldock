@@ -188,6 +188,9 @@ it('painel mostra o card de freio para quem tem assinatura', function () {
 
     actingAs($user)->get(route('app.monitoramento.painel'))
         ->assertOk()
+        ->assertSee('<details id="painel-trava"', false)
+        ->assertSee('data-consumo-toggle', false)
+        ->assertSee('Ajustar limite')
         ->assertSee('Freio de consumo do auto-monitor')
         ->assertSee('Teto personalizado (R$)');
 });
@@ -197,6 +200,8 @@ it('painel mostra versão informativa do freio para usuário sem assinatura', fu
 
     actingAs($user)->get(route('app.monitoramento.painel'))
         ->assertOk()
+        ->assertSee('<details id="painel-trava"', false)
+        ->assertSee('Entender o freio')
         ->assertSee('Freio de consumo do auto-monitor')        // cabeçalho sempre visível
         ->assertSee('O freio se ativa com uma assinatura')     // nota informativa
         ->assertDontSee('Teto personalizado (R$)');      // sem o campo editável

@@ -266,12 +266,39 @@
         @endif
     </div>
 
-    {{-- Freio de consumo do auto-monitor (trava). Migrado da antiga view "clientes" (2026-07-04). --}}
-    <div id="painel-trava" class="bg-white rounded border border-gray-300 overflow-hidden">
-        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Freio de consumo do auto-monitor</span>
-        </div>
-        <div class="p-4">
+    {{-- Freio de consumo do auto-monitor (trava). O resumo fica sempre visível e os
+         detalhes abrem nativamente via <details>, sem depender do ciclo de vida da SPA. --}}
+    <details id="painel-trava" class="group bg-white rounded border border-gray-300 overflow-hidden">
+        <summary data-consumo-toggle class="cursor-pointer select-none list-none bg-gray-50 px-4 py-3 [&::-webkit-details-marker]:hidden">
+            <div class="flex items-center justify-between gap-4">
+                <div class="min-w-0">
+                    <span class="block text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Freio de consumo do auto-monitor</span>
+                    @if($assinaturaConta)
+                        <span class="block mt-1 text-xs text-gray-600">
+                            @if($capEfetivo > 0)
+                                {{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $consumoCiclo)) }} de {{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $capEfetivo)) }} usados neste ciclo · {{ $pctConsumo }}%
+                            @else
+                                Sem teto definido · {{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $consumoCiclo)) }} consumidos neste ciclo
+                            @endif
+                        </span>
+                    @else
+                        <span class="block mt-1 text-xs text-gray-500">Disponível com uma assinatura de monitoramento</span>
+                    @endif
+                </div>
+                <div class="flex shrink-0 items-center gap-2 text-xs font-medium text-gray-600">
+                    <span class="hidden sm:inline">{{ $assinaturaConta ? 'Ajustar limite' : 'Entender o freio' }}</span>
+                    <svg class="h-4 w-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </div>
+            </div>
+            @if($assinaturaConta && $capEfetivo > 0)
+                <div class="mt-2 h-1 w-full overflow-hidden rounded bg-gray-200" aria-hidden="true">
+                    <div class="h-1 rounded" style="width: {{ $pctConsumo }}%; background-color: {{ $corBarra }}"></div>
+                </div>
+            @endif
+        </summary>
+        <div class="border-t border-gray-200 p-4">
             <p class="text-xs text-gray-500 mb-4 max-w-2xl">Defina o limite de gasto em R$ que o monitoramento automático pode consumir por ciclo. Ao atingir o limite, as próximas consultas automáticas aguardam o próximo ciclo — nada é pausado nem cancelado, e elas retomam sozinhas. Seu saldo fica protegido de consumo inesperado.</p>
             @if(! $assinaturaConta)
                 <div class="bg-blue-50 border border-blue-200 rounded p-3 text-xs text-gray-700 flex items-start gap-2">
@@ -314,15 +341,15 @@
                                value="{{ $limiteAtual !== null && $limiteAtual !== '' ? number_format($precos->creditsToCurrency((int) $limiteAtual), 2, ',', '.') : '' }}"
                                data-saldo-unit-price="{{ $precos->creditUnitPrice() }}"
                                data-max-unidades="1000000" aria-describedby="limite-feedback"
-                               placeholder="Padrão do plano" class="text-[13px] py-2.5 px-3 border border-gray-300 rounded w-48">
+                               placeholder="Padrão do plano" class="h-10 text-[13px] py-2 px-3 border border-gray-300 rounded w-48">
                     </div>
-                    <button id="btn-salvar-limite" type="button" class="px-3 py-2.5 rounded bg-gray-800 hover:bg-gray-700 text-white text-[13px] font-semibold transition">Salvar</button>
+                    <button id="btn-salvar-limite" type="button" class="auth-control rounded bg-gray-800 hover:bg-gray-700 text-white transition">Salvar</button>
                     <span id="limite-feedback" class="text-[12px]"></span>
                 </div>
                 <p class="text-[11px] text-gray-400 mt-2">Deixe em branco para usar o padrão do plano ({{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $capPadrao)) }} em saldo incluso). Use <span class="font-semibold">0</span> para não impor limite (o saldo passa a ser o único controle).</p>
             @endif
         </div>
-    </div>
+    </details>
 
     <div id="painel-grupos" class="bg-white rounded border border-gray-300 overflow-hidden">
         <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">

@@ -978,3 +978,37 @@
 @keyframes spa-list-spin {
     to { transform: rotate(360deg); }
 }
+
+/* ===========================================================================
+   Controles autenticados — tamanho canônico entre views.
+
+   O bloco fica fora de @layer para prevalecer sobre combinações antigas de
+   utilities (py-1, py-2, py-2.5) sem exigir uma reescrita frágil de cada view.
+   `auth-control` cobre ações regulares; selects simples herdam o contrato pelo
+   escopo `.auth-ui`. Controles densos de tabela/paginação continuam explícitos.
+   =========================================================================== */
+.auth-ui .auth-control,
+.auth-ui select:not([multiple]):not([size]) {
+    box-sizing: border-box;
+    min-height: 2.5rem;
+    height: 2.5rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+}
+
+.auth-ui .auth-control {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+@media (max-width: 767px) {
+    .auth-ui .auth-control,
+    .auth-ui select:not([multiple]):not([size]) {
+        min-height: 2.75rem;
+        height: 2.75rem;
+        font-size: 1rem;
+    }
+}

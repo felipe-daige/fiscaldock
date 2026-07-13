@@ -24,7 +24,7 @@
                 </div>
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                     <span id="alerta-ultima-atualizacao" class="text-[10px] text-gray-500 uppercase tracking-wide hidden sm:inline"></span>
-                    <a href="/app/alertas/historico" data-link class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white text-gray-800 border border-gray-300 hover:bg-gray-50 rounded text-sm font-medium transition-colors">
+                    <a href="/app/alertas/historico" data-link class="auth-control inline-flex items-center justify-center gap-2 bg-white text-gray-800 border border-gray-300 hover:bg-gray-50 rounded transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
@@ -32,7 +32,7 @@
                     </a>
                     {{-- Botão único Exportar → modal de formato → overlay. Respeita o filtro de
                          cliente da página (clienteSelect=alerta-filtro-cliente). --}}
-                    <x-export-menu id="modal-exportar-alertas" titulo="Exportar alertas" size="lg"
+                    <x-export-menu id="modal-exportar-alertas" titulo="Exportar alertas"
                                    descricao="O arquivo cobre os alertas ativos do cliente filtrado."
                                    overlay="download-overlay-alertas">
                         <x-export-grupo label="Documento" />

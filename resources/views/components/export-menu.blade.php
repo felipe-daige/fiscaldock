@@ -3,21 +3,15 @@
     'label' => 'Exportar',
     'titulo' => 'Exportar',
     'descricao' => null,
-    'size' => 'sm',            // sm = compacto (barra de seleção) | lg = header
 ])
 
-@php
-    // Botão único "Exportar" + modal de formato. As opções vêm no slot como
-    // export-option (download GET, download POST com ids[], ou encadeia num 2º modal).
-    // Cache-robusto: abre por onclick inline, sem JS-file (padrão do design system).
-    $btnSize = $size === 'lg'
-        ? 'px-4 py-2 text-sm font-medium text-gray-800'
-        : 'px-3 py-2 text-xs font-semibold text-gray-700';
-@endphp
+{{-- Botão único "Exportar" + modal de formato. As opções vêm no slot como
+     export-option (download GET, download POST com ids[], ou encadeia num 2º modal).
+     Cache-robusto: abre por onclick inline, sem JS-file (padrão do design system). --}}
 
 <button type="button" data-export-menu="{{ $id }}"
     onclick="document.getElementById('{{ $id }}').classList.remove('hidden')"
-    {{ $attributes->merge(['class' => 'inline-flex items-center justify-center gap-1.5 rounded border border-gray-300 bg-white '.$btnSize.' transition-colors hover:bg-gray-50']) }}>
+    {{ $attributes->merge(['class' => 'auth-control inline-flex items-center justify-center gap-1.5 rounded border border-gray-300 bg-white text-gray-700 transition-colors hover:bg-gray-50']) }}>
     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>

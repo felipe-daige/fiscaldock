@@ -39,7 +39,9 @@ it('renderiza o botão único Exportar e o modal de formato', function (string $
     $html = $resp->getContent();
 
     // Botão único + modal de formato com as 3 opções.
+    expect($html)->toContain('id="app" class="auth-ui flex-1"');
     expect($html)->toContain('data-export-menu="'.$modalId.'"');
+    expect($html)->toContain('auth-control');
     expect($html)->toContain('data-export-option="pdf"');
     expect($html)->toContain('data-export-option="xlsx"');
     expect($html)->toContain('data-export-option="csv"');
