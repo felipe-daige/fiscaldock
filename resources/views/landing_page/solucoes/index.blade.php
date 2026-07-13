@@ -144,13 +144,22 @@
     .sol-radar-stage-head span:first-child { font-family: ui-monospace, monospace; font-size: .6rem; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.5); }
     .sol-radar-stage-head strong { font-size: .72rem; white-space: nowrap; color: #fff; }
     .sol-radar-track { position: relative; height: 4px; margin-top: .65rem; border-radius: 999px; background: rgba(255,255,255,.1); overflow: hidden; }
-    .sol-radar-track i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#fde68a,#34d399); }
-    .sol-radar-stage--live .sol-radar-track::after {
-        content: ''; position: absolute; inset: 0; border-radius: inherit;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
-        transform: translateX(-100%); animation: sol-radar-scan 2.4s ease-in-out infinite;
+    .sol-radar-track i {
+        position: relative; display: block; height: 100%; border-radius: inherit; overflow: hidden;
+        background: linear-gradient(90deg,#fde68a,#34d399);
+        transform-origin: left center;
+        animation: sol-radar-fill .95s cubic-bezier(.22,.9,.24,1) both;
+        animation-delay: var(--delay, 0ms);
     }
-    @keyframes sol-radar-scan { 0% { transform: translateX(-100%); } 60%, 100% { transform: translateX(100%); } }
+    .sol-radar-track i::after {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,.75), transparent);
+        transform: translateX(-100%);
+        animation: sol-radar-scan 3.6s ease-in-out infinite;
+        animation-delay: var(--delay, 0ms);
+    }
+    @keyframes sol-radar-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    @keyframes sol-radar-scan { 0%, 35% { transform: translateX(-100%); } 70%, 100% { transform: translateX(100%); } }
     .sol-radar-stage-foot { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; margin-top: .55rem; }
     .sol-radar-stage-foot em { min-width: 0; font-size: .6rem; font-style: normal; line-height: 1.35; color: rgba(255,255,255,.42); }
     .sol-radar-stage-foot b { flex: 0 0 auto; font-family: ui-monospace, monospace; font-size: .58rem; font-weight: 700; white-space: nowrap; color: rgba(255,255,255,.72); }
@@ -163,7 +172,10 @@
     .sol-radar-kpi--risk { background: linear-gradient(145deg,#fff8ec,#fbe3c0); }
     .sol-radar-kpi--risk strong { color: #92400e; }
     .sol-radar-foot { margin-top: .75rem; padding-top: .7rem; border-top: 1px dashed rgba(255,255,255,.12); font-family: ui-monospace, monospace; font-size: .53rem; line-height: 1.5; letter-spacing: .04em; text-transform: uppercase; color: rgba(255,255,255,.38); }
-    @media (prefers-reduced-motion: reduce) { .sol-radar-live::before, .sol-radar-stage--live .sol-radar-track::after { animation: none; } }
+    @media (prefers-reduced-motion: reduce) {
+        .sol-radar-live::before, .sol-radar-track i { animation: none; }
+        .sol-radar-track i::after { animation: none; opacity: 0; }
+    }
 
     .sol-anchor-nav { position: sticky; top: 0; z-index: 35; border-bottom: 1px solid rgba(207,216,227,.9); background: rgba(255,255,255,.91); backdrop-filter: blur(14px) saturate(150%); }
     .sol-anchor-list { display: flex; gap: .25rem; align-items: center; overflow-x: auto; padding: .65rem 0; scrollbar-width: none; }
@@ -528,19 +540,19 @@
 
                 <div class="sol-radar-stage sol-radar-stage--done">
                     <div class="sol-radar-stage-head"><span>01 · Entrada</span><strong>SPED + XML</strong></div>
-                    <div class="sol-radar-track"><i style="width: 100%"></i></div>
+                    <div class="sol-radar-track"><i style="width: 100%; --delay: 0ms"></i></div>
                     <div class="sol-radar-stage-foot"><em>EFD ICMS/IPI · PIS/COFINS · NF-e</em><b>4.918 docs</b></div>
                 </div>
 
                 <div class="sol-radar-stage sol-radar-stage--live">
                     <div class="sol-radar-stage-head"><span>02 · Contexto</span><strong>CNPJs · Catálogo 0200</strong></div>
-                    <div class="sol-radar-track"><i style="width: 74%"></i></div>
+                    <div class="sol-radar-track"><i style="width: 74%; --delay: 260ms"></i></div>
                     <div class="sol-radar-stage-foot"><em>Certidões, regime e movimentação</em><b>62 / 84 CNPJs</b></div>
                 </div>
 
                 <div class="sol-radar-stage sol-radar-stage--done">
                     <div class="sol-radar-stage-head"><span>03 · Inteligência</span><strong>BI · Score · Clearance</strong></div>
-                    <div class="sol-radar-track"><i style="width: 100%"></i></div>
+                    <div class="sol-radar-track"><i style="width: 100%; --delay: 520ms"></i></div>
                     <div class="sol-radar-stage-foot"><em>Apuração, cruzamentos e crédito IBS/CBS</em><b>pronto</b></div>
                 </div>
 

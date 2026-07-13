@@ -39,3 +39,14 @@ it('usa o saldo de trial configurado no CTA da página', function () {
         ->assertSee("R$\u{A0}37,50 grátis")
         ->assertSee('por 45 dias');
 });
+
+it('anima as barras do radar operacional com preenchimento e varredura escalonados', function () {
+    get('/solucoes')
+        ->assertOk()
+        ->assertSee('@keyframes sol-radar-fill', false)
+        ->assertSee('.sol-radar-track i::after', false)
+        ->assertSee('--delay: 0ms', false)
+        ->assertSee('--delay: 260ms', false)
+        ->assertSee('--delay: 520ms', false)
+        ->assertSee('prefers-reduced-motion: reduce', false);
+});
