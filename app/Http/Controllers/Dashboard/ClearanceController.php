@@ -150,6 +150,8 @@ class ClearanceController extends Controller
             return $row;
         });
 
+        $this->enriquecerDetalhesListagem($notas->getCollection(), $userId);
+
         $clientes = \App\Models\Cliente::where('user_id', $userId)
             ->orderBy('razao_social')
             ->get(['id', 'razao_social', 'documento']);
@@ -1792,6 +1794,14 @@ class ClearanceController extends Controller
     private function xmlSubquery(int $userId, array $f): \Illuminate\Database\Query\Builder
     {
         $q = DB::table('xml_notas')
+            ->leftJoin('nfe_consultas as nfe_status', function ($join) {
+                $join->on('nfe_status.user_id', '=', 'xml_notas.user_id')
+                    ->on('nfe_status.chave_acesso', '=', 'xml_notas.chave_acesso');
+            })
+            ->leftJoin('cte_consultas as cte_status', function ($join) {
+                $join->on('cte_status.user_id', '=', 'xml_notas.user_id')
+                    ->on('cte_status.chave_acesso', '=', 'xml_notas.chave_acesso');
+            })
             ->selectRaw("
                 'xml'::text                                   as origem,
                 xml_notas.id                                   as id,
@@ -1804,15 +1814,42 @@ class ClearanceController extends Controller
                 CASE xml_notas.tipo_nota WHEN 0 THEN 'entrada' ELSE 'saida' END as tipo_nota,
                 xml_notas.emit_razao_social                    as emit_razao_social,
                 xml_notas.dest_razao_social                    as dest_razao_social,
-                COALESCE(xml_notas.emit_documento, xml_notas.dest_documento) as participante_cnpj,
-                COALESCE(xml_notas.emit_cliente_id, xml_notas.dest_cliente_id) as cliente_id,
+                CASE xml_notas.tipo_nota
+                    WHEN 0 THEN xml_notas.emit_razao_social
+                    ELSE xml_notas.dest_razao_social
+                END                                             as participante_nome,
+                CASE xml_notas.tipo_nota
+                    WHEN 0 THEN xml_notas.emit_documento
+                    ELSE xml_notas.dest_documento
+                END                                             as participante_cnpj,
+                CASE xml_notas.tipo_nota
+                    WHEN 0 THEN xml_notas.emit_participante_id
+                    ELSE xml_notas.dest_participante_id
+                END                                             as participante_id,
+                CASE xml_notas.tipo_nota
+                    WHEN 0 THEN xml_notas.dest_razao_social
+                    ELSE xml_notas.emit_razao_social
+                END                                             as cliente_nome,
+                CASE xml_notas.tipo_nota
+                    WHEN 0 THEN xml_notas.dest_documento
+                    ELSE xml_notas.emit_documento
+                END                                             as cliente_documento,
+                COALESCE(
+                    CASE xml_notas.tipo_nota
+                        WHEN 0 THEN xml_notas.dest_cliente_id
+                        ELSE xml_notas.emit_cliente_id
+                    END,
+                    xml_notas.cliente_id
+                )                                               as cliente_id,
                 xml_notas.icms_valor                           as icms_valor,
                 xml_notas.pis_valor                            as pis_valor,
                 xml_notas.cofins_valor                         as cofins_valor,
                 xml_notas.ipi_valor                            as ipi_valor,
                 xml_notas.tributos_total                       as tributos_total,
                 NULL::text                                     as situacao_cadastral,
-                xml_notas.validacao::text                      as validacao_json
+                xml_notas.validacao::text                      as validacao_json,
+                COALESCE(nfe_status.status, cte_status.status)::text as status_consulta,
+                COALESCE(nfe_status.consultado_em, cte_status.consultado_em) as consultado_em
             ")
             ->where('xml_notas.user_id', $userId)
             ->whereRaw("UPPER(COALESCE(xml_notas.tipo_documento, '')) NOT IN ('NFSE', 'NFS-E')");
@@ -1827,6 +1864,14 @@ class ClearanceController extends Controller
         $q = DB::table('efd_notas')
             ->leftJoin('participantes', 'participantes.id', '=', 'efd_notas.participante_id')
             ->leftJoin('clientes', 'clientes.id', '=', 'efd_notas.cliente_id')
+            ->leftJoin('nfe_consultas as nfe_status', function ($join) {
+                $join->on('nfe_status.user_id', '=', 'efd_notas.user_id')
+                    ->on('nfe_status.chave_acesso', '=', 'efd_notas.chave_acesso');
+            })
+            ->leftJoin('cte_consultas as cte_status', function ($join) {
+                $join->on('cte_status.user_id', '=', 'efd_notas.user_id')
+                    ->on('cte_status.chave_acesso', '=', 'efd_notas.chave_acesso');
+            })
             ->selectRaw("
                 'efd'::text                                   as origem,
                 efd_notas.id                                   as id,
@@ -1843,7 +1888,11 @@ class ClearanceController extends Controller
                 CASE WHEN efd_notas.tipo_operacao = 'saida'
                      THEN participantes.razao_social
                      ELSE clientes.razao_social END            as dest_razao_social,
+                participantes.razao_social                     as participante_nome,
                 participantes.documento                        as participante_cnpj,
+                participantes.id                               as participante_id,
+                clientes.razao_social                          as cliente_nome,
+                clientes.documento                             as cliente_documento,
                 efd_notas.cliente_id                           as cliente_id,
                 NULL::numeric                                  as icms_valor,
                 NULL::numeric                                  as pis_valor,
@@ -1851,7 +1900,9 @@ class ClearanceController extends Controller
                 NULL::numeric                                  as ipi_valor,
                 NULL::numeric                                  as tributos_total,
                 participantes.situacao_cadastral               as situacao_cadastral,
-                NULL::text                                     as validacao_json
+                NULL::text                                     as validacao_json,
+                COALESCE(nfe_status.status, cte_status.status)::text as status_consulta,
+                COALESCE(nfe_status.consultado_em, cte_status.consultado_em) as consultado_em
             ")
             ->where('efd_notas.user_id', $userId)
             ->where('efd_notas.cancelada', false) // P4: cancelada não é selecionável/cobrável
@@ -1864,6 +1915,162 @@ class ClearanceController extends Controller
         $this->applyCommonFiltersEfd($q, $f);
 
         return $q;
+    }
+
+    /**
+     * Anexa ao recorte paginado os mesmos sinais usados no resultado do clearance e os
+     * perfis das duas partes. Toda a carga e a auditoria são feitas em lote para não criar
+     * N+1 ao abrir uma página com até 50 documentos.
+     */
+    private function enriquecerDetalhesListagem(Collection $notas, int $userId): void
+    {
+        if ($notas->isEmpty()) {
+            return;
+        }
+
+        $clientes = Cliente::query()
+            ->where('user_id', $userId)
+            ->whereIn('id', $notas->pluck('cliente_id')->filter()->unique())
+            ->get()
+            ->keyBy('id');
+
+        $participanteIds = $notas->pluck('participante_id')->filter()->unique()->values();
+        $participanteDocumentos = $notas->pluck('participante_cnpj')
+            ->map(fn ($documento) => preg_replace('/\D/', '', (string) $documento))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $participantes = ($participanteIds->isEmpty() && $participanteDocumentos->isEmpty())
+            ? collect()
+            : Participante::query()
+                ->where('user_id', $userId)
+                ->where(function ($query) use ($participanteIds, $participanteDocumentos) {
+                    if ($participanteIds->isNotEmpty()) {
+                        $query->whereIn('id', $participanteIds);
+                    }
+
+                    if ($participanteDocumentos->isNotEmpty()) {
+                        $method = $participanteIds->isNotEmpty() ? 'orWhereIn' : 'whereIn';
+                        $query->{$method}('documento', $participanteDocumentos);
+                    }
+                })
+                ->get();
+
+        $participantesPorId = $participantes->keyBy('id');
+        $participantesPorDocumento = $participantes->keyBy(
+            fn (Participante $participante) => preg_replace('/\D/', '', (string) $participante->documento)
+        );
+
+        $chaves = $notas->pluck('chave')->filter()->unique()->values();
+        $snapshots = collect();
+
+        if ($chaves->isNotEmpty()) {
+            $snapshots = \App\Models\NfeConsulta::query()
+                ->where('user_id', $userId)
+                ->whereIn('chave_acesso', $chaves)
+                ->get()
+                ->map(fn ($snapshot) => $this->formatarSnapshotDetalheListagem($snapshot, 'nfe'))
+                ->concat(
+                    \App\Models\CteConsulta::query()
+                        ->where('user_id', $userId)
+                        ->whereIn('chave_acesso', $chaves)
+                        ->get()
+                        ->map(fn ($snapshot) => $this->formatarSnapshotDetalheListagem($snapshot, 'cte'))
+                )
+                ->keyBy('chave_acesso');
+        }
+
+        $auditorias = collect();
+        if ($snapshots->isNotEmpty()) {
+            $analise = app(DivergenciaService::class)->analisar($snapshots->values(), $userId, 0);
+            $auditorias = $analise['divergencias']
+                ->concat($analise['sem_divergencia'])
+                ->concat($analise['ruido'])
+                ->keyBy('chave_acesso');
+        }
+
+        $notas->each(function ($nota) use (
+            $clientes,
+            $participantesPorId,
+            $participantesPorDocumento,
+            $snapshots,
+            $auditorias
+        ) {
+            $documento = preg_replace('/\D/', '', (string) ($nota->participante_cnpj ?? ''));
+            $nota->cliente_perfil = $clientes->get((int) ($nota->cliente_id ?? 0));
+            $nota->participante_perfil = $participantesPorId->get((int) ($nota->participante_id ?? 0))
+                ?? $participantesPorDocumento->get($documento);
+            $nota->clearance_resultado = $auditorias->get($nota->chave)
+                ?? $snapshots->get($nota->chave);
+        });
+    }
+
+    /**
+     * Normaliza NF-e e CT-e para o contrato consumido por DivergenciaService e pela Blade.
+     */
+    private function formatarSnapshotDetalheListagem(object $snapshot, string $tipo): object
+    {
+        $isCte = $tipo === 'cte';
+        $payload = is_array($snapshot->payload ?? null) ? $snapshot->payload : [];
+        $eventos = is_array($snapshot->eventos ?? null) ? $snapshot->eventos : [];
+        $status = strtoupper((string) ($snapshot->status ?? 'INDETERMINADO'));
+        $valor = $isCte ? ($snapshot->valor_prestacao ?? null) : ($snapshot->valor_total ?? null);
+        $tipoDocumento = $isCte ? 'CTE' : strtoupper((string) ($snapshot->tipo_documento ?? 'NFE'));
+        $tipoRota = $isCte ? 'cte' : 'nfe';
+        $comprovanteLocal = null;
+
+        if (\Illuminate\Support\Facades\Route::has('app.clearance.comprovante')
+            && method_exists($this, 'arquivoLocalDfeUrl')) {
+            $comprovanteLocal = $this->arquivoLocalDfeUrl($tipoRota, (int) $snapshot->id, 'html', $payload)
+                ?: $this->arquivoLocalDfeUrl($tipoRota, (int) $snapshot->id, 'site_receipt', $payload);
+        }
+
+        return (object) [
+            'id' => $snapshot->id,
+            'chave_acesso' => $snapshot->chave_acesso,
+            'tipo_documento' => $tipoDocumento,
+            'modelo' => $snapshot->modelo ?? ($isCte ? '57' : '55'),
+            'numero' => $snapshot->numero ?? null,
+            'serie' => $snapshot->serie ?? null,
+            'status' => $status,
+            'status_label' => $status,
+            'status_hex' => $this->statusHexConsultaDfe($status),
+            'valor_total' => $valor,
+            'valor_total_label' => $valor !== null
+                ? 'R$ '.number_format((float) $valor, 2, ',', '.')
+                : '—',
+            'data_emissao' => $snapshot->data_emissao ?? null,
+            'emit_nome' => $snapshot->emit_nome ?? null,
+            'emit_cnpj' => $snapshot->emit_cnpj ?? null,
+            'emit_uf' => $snapshot->emit_uf ?? null,
+            'emit_ie' => $snapshot->emit_ie ?? null,
+            'dest_nome' => $snapshot->dest_nome ?? null,
+            'dest_cnpj' => $snapshot->dest_cnpj ?? null,
+            'dest_uf' => $snapshot->dest_uf ?? null,
+            'tomador_nome' => $snapshot->tomador_nome ?? null,
+            'tomador_cnpj' => $snapshot->tomador_cnpj ?? null,
+            'natureza_operacao' => $snapshot->natureza_operacao ?? null,
+            'situacao_ambiente' => data_get(
+                $payload,
+                ($isCte ? 'cte_clearance' : 'nfe_clearance').'.situacao_ambiente'
+            ),
+            'consultado_em_label' => $this->formatarDataConsulta(
+                $snapshot->consultado_em ?? $snapshot->created_at ?? null
+            ),
+            'eventos_chips' => collect($eventos)
+                ->map(fn ($evento) => [
+                    'label' => $this->rotuloEventoDfe((string) ($evento['evento'] ?? '')),
+                    'hex' => $this->hexEventoDfe((string) ($evento['evento'] ?? '')),
+                    'protocolo' => $evento['protocolo'] ?? null,
+                    'data' => $evento['data_autorizacao'] ?? ($evento['data_inclusao'] ?? null),
+                ])
+                ->filter(fn ($evento) => $evento['label'] !== '')
+                ->values()
+                ->all(),
+            'comprovante_url' => $comprovanteLocal
+                ?: ($snapshot->url_html ?? ($snapshot->url_site_receipt ?? null)),
+        ];
     }
 
     private function applyCommonFiltersXml(\Illuminate\Database\Query\Builder $q, array $f): void

@@ -577,9 +577,9 @@ function onDocumentClick(e) {
     const toggle = target.closest('.nota-details-toggle');
     if (toggle) {
         e.preventDefault();
-        const id = toggle.dataset.notaId;
-        if (!id) return;
-        const row = document.querySelector(`tr.nota-expand-row[data-expand-for="${id}"]`);
+        const key = toggle.dataset.notaKey;
+        if (!key) return;
+        const row = document.querySelector(`tr.nota-expand-row[data-expand-for="${key}"]`);
         if (!row) return;
         row.classList.toggle('hidden');
         const isOpen = !row.classList.contains('hidden');

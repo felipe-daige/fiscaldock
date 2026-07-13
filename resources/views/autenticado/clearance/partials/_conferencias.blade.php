@@ -23,7 +23,7 @@
                 @if(!empty($c['nota']))
                     <p class="mt-0.5 text-[10px] italic text-gray-400 leading-snug">{{ $c['nota'] }}</p>
                 @endif
-                @if(!empty($c['participante_id']) && config('consultas.infosimples_ativo'))
+                @if(($permitirConsultaSintegra ?? true) && !empty($c['participante_id']) && config('consultas.infosimples_ativo'))
                     <button type="button"
                         onclick="window.clearanceSintegra && window.clearanceSintegra.abrirParticipante({{ (int) $c['participante_id'] }})"
                         class="mt-1 inline-flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-gray-600 transition-colors hover:bg-gray-50">

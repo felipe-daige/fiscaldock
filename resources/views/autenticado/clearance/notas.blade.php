@@ -555,18 +555,7 @@
                                     : "/app/notas?chave={$n->chave}";
                                 $modeloLabel = $n->modelo_label ?? 'N/D';
                                 $modeloHex = $n->modelo_hex ?? '#9ca3af';
-                                $participanteCnpjFmt = null;
-                                if (! empty($n->participante_cnpj)) {
-                                    $raw = preg_replace('/\D/', '', (string) $n->participante_cnpj);
-                                    if (strlen($raw) === 14) {
-                                        $participanteCnpjFmt = preg_replace('/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/', '$1.$2.$3/$4-$5', $raw);
-                                    } elseif (strlen($raw) === 11) {
-                                        $participanteCnpjFmt = preg_replace('/^(\d{3})(\d{3})(\d{3})(\d{2})$/', '$1.$2.$3-$4', $raw);
-                                    } else {
-                                        $participanteCnpjFmt = $raw;
-                                    }
-                                }
-                                $participanteRazao = $n->tipo_nota === 'entrada' ? $n->emit_razao_social : $n->dest_razao_social;
+                                $notaKey = $n->origem.'-'.$n->id;
                                 $motivo = null;
                                 if (is_array($n->validacao ?? null)) {
                                     $alertas = $n->validacao['alertas'] ?? [];
@@ -606,7 +595,7 @@
                                     <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white td-status" style="background-color: {{ $s['hex'] }}">{{ $s['label'] }}</span>
                                 </td>
                                 <td class="px-3 py-2 text-right">
-                                    <button type="button" class="nota-details-toggle inline-flex items-center gap-1 text-xs text-gray-600 hover:text-gray-900" data-nota-id="{{ $n->id }}" aria-expanded="false">
+                                    <button type="button" class="nota-details-toggle inline-flex items-center gap-1 text-xs text-gray-600 hover:text-gray-900" data-nota-key="{{ $notaKey }}" aria-expanded="false">
                                         <span>Detalhes</span>
                                         <svg class="w-3.5 h-3.5 nota-details-chevron transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
@@ -614,65 +603,15 @@
                                     </button>
                                 </td>
                             </tr>
-                            <tr class="nota-expand-row hidden" data-expand-for="{{ $n->id }}">
+                            <tr class="nota-expand-row hidden" data-expand-for="{{ $notaKey }}">
                                 <td colspan="11" class="px-4 py-3 bg-gray-50">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                        <div class="rounded border border-gray-200 bg-white px-3 py-2.5">
-                                            <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Participante</p>
-                                            <p class="text-xs text-gray-900 mt-0.5">{{ $participanteRazao ?? '—' }}</p>
-                                            <p class="text-[11px] font-mono text-gray-600 mt-0.5">{{ $participanteCnpjFmt ?? '—' }}</p>
-                                            @if (! empty($n->situacao_cadastral))
-                                                <p class="text-[10px] text-gray-500 mt-0.5">Situação: {{ $n->situacao_cadastral }}</p>
-                                            @endif
-                                        </div>
-                                        <div class="rounded border border-gray-200 bg-white px-3 py-2.5">
-                                            <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Datas</p>
-                                            <p class="text-xs text-gray-900 mt-0.5">Emissão: {{ $dataEmissao?->format('d/m/Y') ?? '—' }}</p>
-                                        </div>
-                                        <div class="rounded border border-gray-200 bg-white px-3 py-2.5 md:col-span-2">
-                                            <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Chave de acesso</p>
-                                            <p class="text-[11px] font-mono text-gray-900 mt-0.5 break-all">{{ $n->chave ?? '—' }}</p>
-                                        </div>
-                                        <div class="rounded border border-gray-200 bg-white px-3 py-2.5">
-                                            <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Status clearance</p>
-                                            <p class="mt-1">
-                                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $s['hex'] }}">{{ $s['label'] }}</span>
-                                            </p>
-                                            @if ($motivo)
-                                                <p class="text-[11px] text-gray-600 mt-1">{{ $motivo }}</p>
-                                            @endif
-                                        </div>
-                                        <div class="rounded border border-gray-200 bg-white px-3 py-2.5">
-                                            <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Valores</p>
-                                            <div class="mt-1 text-[11px] leading-tight space-y-1">
-                                                <div class="flex items-baseline gap-1.5">
-                                                    <span class="text-gray-500">Total:</span>
-                                                    <span class="font-mono font-semibold text-gray-900">R$&nbsp;{{ number_format((float) $n->valor_total, 2, ',', '.') }}</span>
-                                                </div>
-                                                <div class="grid grid-cols-2 gap-x-4 gap-y-0.5 pt-1 border-t border-gray-100">
-                                                    <div class="flex items-baseline gap-1.5">
-                                                        <span class="text-gray-500">ICMS:</span>
-                                                        <span class="font-mono text-gray-900">{{ isset($n->icms_valor) ? 'R$ '.number_format((float) $n->icms_valor, 2, ',', '.') : '—' }}</span>
-                                                    </div>
-                                                    <div class="flex items-baseline gap-1.5">
-                                                        <span class="text-gray-500">PIS:</span>
-                                                        <span class="font-mono text-gray-900">{{ isset($n->pis_valor) ? 'R$ '.number_format((float) $n->pis_valor, 2, ',', '.') : '—' }}</span>
-                                                    </div>
-                                                    <div class="flex items-baseline gap-1.5">
-                                                        <span class="text-gray-500">IPI:</span>
-                                                        <span class="font-mono text-gray-900">{{ isset($n->ipi_valor) ? 'R$ '.number_format((float) $n->ipi_valor, 2, ',', '.') : '—' }}</span>
-                                                    </div>
-                                                    <div class="flex items-baseline gap-1.5">
-                                                        <span class="text-gray-500">COFINS:</span>
-                                                        <span class="font-mono text-gray-900">{{ isset($n->cofins_valor) ? 'R$ '.number_format((float) $n->cofins_valor, 2, ',', '.') : '—' }}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="md:col-span-2 flex justify-end">
-                                            <a href="{{ $detalheUrl }}" data-link class="text-xs font-medium text-gray-700 hover:text-gray-900 hover:underline">Ver nota completa →</a>
-                                        </div>
-                                    </div>
+                                    @include('autenticado.clearance.partials._detalhes-nota-listagem', [
+                                        'nota' => $n,
+                                        'status' => $s,
+                                        'dataEmissao' => $dataEmissao,
+                                        'detalheUrl' => $detalheUrl,
+                                        'motivo' => $motivo,
+                                    ])
                                 </td>
                             </tr>
                         @empty
