@@ -112,6 +112,17 @@ it('mostra zerado para usuario sem notas', function () {
     $response->assertSee('Nenhuma verificação ainda');
 });
 
+it('padroniza saldo e verificar nota com o controle de exportação', function () {
+    $u = dashUser();
+
+    actingAs($u)
+        ->get('/app/clearance/dashboard')
+        ->assertOk()
+        ->assertSee('<span class="auth-control inline-flex items-center justify-center', false)
+        ->assertSee('data-export-menu="modal-exportar-clr"', false)
+        ->assertSee('href="/app/clearance/buscar" data-link class="auth-control inline-flex items-center justify-center', false);
+});
+
 it('agrega XML+EFD deduplicando por chave de acesso', function () {
     $u = dashUser();
     $chave = str_repeat('1', 44);

@@ -57,7 +57,7 @@
                 <p class="text-xs text-gray-500 mt-1">Posição de NF-e/CT-e/NFS-e na Receita Federal, unificando notas importadas via XML e extraídas do SPED/EFD.</p>
             </div>
             <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
-                <span class="inline-flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded text-xs text-gray-700">
+                <span class="auth-control inline-flex items-center justify-center gap-2 bg-white border border-gray-300 rounded text-gray-700">
                     <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Saldo</span>
                     <span class="font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $saldoCreditos))</span>
                 </span>
@@ -76,7 +76,7 @@
                                      path="/app/clearance/dashboard/exportar-csv-zip"
                                      descricao="ZIP com um CSV por seção." />
                 </x-export-menu>
-                <a href="/app/clearance/buscar" data-link class="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium self-start">
+                <a href="/app/clearance/buscar" data-link class="auth-control inline-flex items-center justify-center gap-2 bg-gray-800 text-white hover:bg-gray-700 rounded self-start">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M16 10a6 6 0 11-12 0 6 6 0 0112 0z"></path>
                     </svg>
