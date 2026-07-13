@@ -96,6 +96,10 @@ it('mantém índice, tema e artigo preparados para telas móveis', function () {
 it('mantém o header público fixo e acessível durante a rolagem mobile', function () {
     get('/conteudos')
         ->assertOk()
+        ->assertSee('.lp-header-burger {', false)
+        ->assertSee('display: none', false)
+        ->assertSee('@media (max-width: 1023px)', false)
+        ->assertSee('.lp-header-burger { display: inline-flex; }', false)
         ->assertSee('position: fixed', false)
         ->assertSee('lp-header-mobile-spacer', false)
         ->assertSee('aria-controls="mobile-menu"', false)

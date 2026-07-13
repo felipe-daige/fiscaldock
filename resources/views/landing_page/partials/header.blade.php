@@ -68,7 +68,7 @@
         border-color: rgba(255, 255, 255, 0.45);
     }
     .lp-header-burger {
-        display: inline-flex;
+        display: none;
         align-items: center;
         justify-content: center;
         width: 44px;
@@ -90,6 +90,9 @@
         .lp-header-link, .lp-header-btn, .lp-header-burger, .lp-header-mobile-link { transition: none; }
     }
     .lp-header-mobile-spacer { display: none; }
+    @media (max-width: 1023px) {
+        .lp-header-burger { display: inline-flex; }
+    }
     @media (max-width: 767px) {
         :root { --lp-header-mobile-height: 72px; }
         html { scroll-padding-top: calc(var(--lp-header-mobile-height) + env(safe-area-inset-top)); }
