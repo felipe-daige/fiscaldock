@@ -1204,65 +1204,20 @@ class DashboardController extends Controller
         }
 
         $user = Auth::user();
-        $empresaAtual = $user->empresaPropria();
 
-        $configuracoes = [
-            'notificacoes' => [
-                'email_ativo' => ! empty($user->email),
-                'alertas_operacionais' => (bool) $user->alertas_operacionais,
-                'alertas_monitoramento' => (bool) $user->alertas_monitoramento,
-                'resumo_periodico' => (bool) $user->resumo_periodico,
-                'alertas_severidade_minima' => $user->alertas_severidade_minima ?? 'media',
-                'resumo_frequencia' => $user->resumo_frequencia ?? 'semanal',
-                'canal_principal' => ! empty($user->email) ? 'E-mail' : 'Não configurado',
-            ],
-            'recursos' => [
-                'consultas' => [
-                    'label' => 'Consultas',
-                    'descricao' => 'Consultas cadastrais e fiscais para acompanhamento operacional da base.',
-                    'status_label' => 'Disponível',
-                    'status_hex' => '#047857',
-                ],
-                'importacao_xml' => [
-                    'label' => 'Importação XML',
-                    'descricao' => 'Recepção e processamento de XMLs fiscais para composição do ambiente.',
-                    'status_label' => 'Em evolução',
-                    'status_hex' => '#b45309',
-                ],
-                'importacao_efd' => [
-                    'label' => 'Importação EFD',
-                    'descricao' => 'Carga de arquivos EFD para extração, auditoria e cruzamentos fiscais.',
-                    'status_label' => 'Disponível',
-                    'status_hex' => '#047857',
-                ],
-                'monitoramento' => [
-                    'label' => 'Monitoramento',
-                    'descricao' => 'Acompanhamento contínuo de ocorrências e sinais relevantes da operação.',
-                    'status_label' => 'Em evolução',
-                    'status_hex' => '#b45309',
-                ],
-            ],
-            'preferencias' => [
-                'dashboard_inicial' => 'Dashboard',
-                'empresa_inicial_label' => $empresaAtual?->razao_social ?? $empresaAtual?->nome,
-                'filtros_salvos' => false,
-            ],
-        ];
-
+        // Só o que a view consome. (Antes montava 'recursos'/'preferencias'/'resumo' e
+        // rodava a query `empresaPropria()` — nada disso é renderizado.)
         $data = [
             'user' => $user,
-            'empresaAtual' => $empresaAtual,
-            'configuracoes' => $configuracoes,
-            'resumo' => [
-                'notificacoes_ativas' => collect($configuracoes['notificacoes'])
-                    ->only(['email_ativo', 'alertas_operacionais', 'alertas_monitoramento', 'resumo_periodico'])
-                    ->filter(fn ($valor) => $valor === true)
-                    ->count(),
-                'canais_ativos' => ! empty($user->email) ? 1 : 0,
-                'recursos_disponiveis' => collect($configuracoes['recursos'])
-                    ->filter(fn (array $recurso) => ($recurso['status_label'] ?? null) === 'Disponível')
-                    ->count(),
-                'empresa_principal_configurada' => $empresaAtual !== null,
+            'configuracoes' => [
+                'notificacoes' => [
+                    'email_ativo' => ! empty($user->email),
+                    'alertas_operacionais' => (bool) $user->alertas_operacionais,
+                    'alertas_monitoramento' => (bool) $user->alertas_monitoramento,
+                    'resumo_periodico' => (bool) $user->resumo_periodico,
+                    'alertas_severidade_minima' => $user->alertas_severidade_minima ?? 'media',
+                    'resumo_frequencia' => $user->resumo_frequencia ?? 'semanal',
+                ],
             ],
         ];
 
@@ -1284,17 +1239,21 @@ class DashboardController extends Controller
             'resumo_frequencia' => ['semanal', 'mensal'],
         ];
 
-        $campo = (string) $request->input('campo');
+        // `campo` PRECISA ser string antes de virar chave: um array no payload fazia o
+        // cast `(string)` emitir "Array to string conversion" → ErrorException → 500.
+        // Input malformado tem que dar 422, não derrubar o endpoint.
+        $bruto = $request->input('campo');
+        $campo = is_string($bruto) ? $bruto : '';
 
         if (isset($enums[$campo])) {
             $payload = $request->validate([
-                'campo' => ['required', Rule::in(array_keys($enums))],
+                'campo' => ['required', 'string'],
                 'valor' => ['required', 'string', Rule::in($enums[$campo])],
             ]);
             $valor = $payload['valor'];
         } else {
             $payload = $request->validate([
-                'campo' => ['required', Rule::in([
+                'campo' => ['required', 'string', Rule::in([
                     'alertas_operacionais',
                     'alertas_monitoramento',
                     'resumo_periodico',

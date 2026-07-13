@@ -56,6 +56,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'resumo_periodico',
         'alertas_severidade_minima',
         'resumo_frequencia',
+        'ultimo_resumo_em',
         'dashboard_prefs',
     ];
 
@@ -86,6 +87,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'alertas_operacionais' => 'boolean',
             'alertas_monitoramento' => 'boolean',
             'resumo_periodico' => 'boolean',
+            'ultimo_resumo_em' => 'datetime',
             'dashboard_prefs' => 'array',
         ];
     }

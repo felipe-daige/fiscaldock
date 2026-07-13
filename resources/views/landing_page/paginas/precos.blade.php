@@ -111,7 +111,11 @@
     .pricing-hero {
         position: relative;
         isolation: isolate;
-        padding: clamp(4rem, 8vw, 7rem) 0 clamp(3.5rem, 7vw, 6rem);
+        /* Altura e respiro do topo são compartilhados com .sol-hero (/solucoes) — manter em sincronia. */
+        display: flex;
+        align-items: center;
+        min-height: clamp(32rem, 54vw, 48rem);
+        padding: clamp(4.5rem, 9vw, 7.5rem) 0 clamp(4rem, 8vw, 7rem);
         background:
             radial-gradient(circle at 84% 16%, rgba(57, 118, 198, .24), transparent 29rem),
             linear-gradient(145deg, #081322 0%, #10233f 60%, #0d1c32 100%);
@@ -128,10 +132,10 @@
         -webkit-mask-image: radial-gradient(100% 100% at 70% 20%, #000 10%, transparent 75%);
         mask-image: radial-gradient(100% 100% at 70% 20%, #000 10%, transparent 75%);
     }
-    .pricing-hero-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(22rem, .75fr); gap: clamp(2.5rem, 7vw, 6rem); align-items: center; }
-    .pricing-hero h1 { margin-top: 1.15rem; max-width: 46rem; font-size: clamp(2.75rem, 6vw, 5.15rem); font-weight: 600; line-height: .98; color: #fff; }
+    .pricing-hero-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(23rem, .8fr); gap: clamp(2.5rem, 7vw, 6rem); align-items: center; }
+    .pricing-hero h1 { margin-top: 1.15rem; max-width: 48rem; font-size: clamp(2.9rem, 6vw, 5.45rem); font-weight: 600; line-height: .97; color: #fff; }
     .pricing-hero h1 em { color: #fde68a; font-style: normal; }
-    .pricing-hero-copy { margin-top: 1.4rem; max-width: 41rem; font-size: clamp(1rem, 1.5vw, 1.15rem); line-height: 1.75; color: rgba(255,255,255,.72); }
+    .pricing-hero-copy { margin-top: 1.35rem; max-width: 42rem; font-size: clamp(1rem, 1.45vw, 1.16rem); line-height: 1.75; color: rgba(255,255,255,.72); }
     .pricing-hero-actions { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 1.8rem; }
     .pricing-secondary-btn {
         display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 48px;
@@ -310,7 +314,7 @@
     }
     @media (max-width: 680px) {
         .pricing-shell { width: min(100% - 1.25rem, 80rem); }
-        .pricing-hero { padding-top: 3.35rem; }
+        .pricing-hero { padding-top: 3.5rem; }
         .pricing-hero h1 { font-size: clamp(2.55rem,13vw,3.55rem); }
         .pricing-hero-copy { font-size: .96rem; line-height: 1.65; }
         .pricing-hero-actions { display: grid; grid-template-columns: 1fr; }

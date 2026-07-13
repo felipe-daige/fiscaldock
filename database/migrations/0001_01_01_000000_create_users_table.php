@@ -58,6 +58,11 @@ return new class extends Migration
             // e cadência do resumo periódico ('semanal' | 'mensal').
             $table->string('alertas_severidade_minima')->default('media');
             $table->string('resumo_frequencia')->default('semanal');
+            // Âncora + guarda de idempotência do resumo: a janela do próximo resumo começa
+            // onde o último terminou (janela fixa de 7/30 dias deixava buraco quando o
+            // intervalo entre 1as segundas era 35 dias), e um 2º run no mesmo período não
+            // reenvia.
+            $table->timestamp('ultimo_resumo_em')->nullable();
             $table->jsonb('dashboard_prefs')->nullable();
             $table->timestamps();
         });

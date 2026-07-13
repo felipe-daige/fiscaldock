@@ -41,13 +41,16 @@
             </div>
             <div class="divide-y divide-gray-100">
 
-                {{-- Toggle: operacionais --}}
+                {{-- Toggle: operacionais. O <input> é real (sr-only): dá acesso por teclado
+                     (Tab + Espaço), estado anunciável por leitor de tela, e faz o <label>
+                     inteiro ficar clicável — um <span> com onclick não dá nada disso. --}}
                 <label class="px-4 py-4 flex items-center justify-between gap-4 cursor-pointer">
                     <span class="min-w-0">
                         <span class="block text-[13px] text-gray-900 font-medium">Alertas operacionais</span>
                         <span class="block text-[11px] text-gray-500">Certidão positiva, fornecedor irregular, gap de importação, divergências.</span>
                     </span>
-                    <span class="config-toggle" data-campo="alertas_operacionais" data-on="{{ ($n['alertas_operacionais'] ?? false) ? '1' : '0' }}"></span>
+                    <input type="checkbox" class="config-toggle-input sr-only" data-campo="alertas_operacionais" @checked($n['alertas_operacionais'] ?? false)>
+                    <span class="config-toggle" aria-hidden="true"></span>
                 </label>
 
                 {{-- Toggle: monitoramento --}}
@@ -56,7 +59,8 @@
                         <span class="block text-[13px] text-gray-900 font-medium">Alertas de monitoramento</span>
                         <span class="block text-[11px] text-gray-500">Mudança de situação cadastral de um CNPJ que você monitora.</span>
                     </span>
-                    <span class="config-toggle" data-campo="alertas_monitoramento" data-on="{{ ($n['alertas_monitoramento'] ?? false) ? '1' : '0' }}"></span>
+                    <input type="checkbox" class="config-toggle-input sr-only" data-campo="alertas_monitoramento" @checked($n['alertas_monitoramento'] ?? false)>
+                    <span class="config-toggle" aria-hidden="true"></span>
                 </label>
 
                 {{-- Select: severidade mínima --}}
@@ -85,13 +89,14 @@
                         <span class="block text-[13px] text-gray-900 font-medium">Receber resumo</span>
                         <span class="block text-[11px] text-gray-500">Um panorama com os alertas e a atividade do período. Período vazio não gera e-mail.</span>
                     </span>
-                    <span class="config-toggle" data-campo="resumo_periodico" data-on="{{ ($n['resumo_periodico'] ?? false) ? '1' : '0' }}"></span>
+                    <input type="checkbox" class="config-toggle-input sr-only" data-campo="resumo_periodico" @checked($n['resumo_periodico'] ?? false)>
+                    <span class="config-toggle" aria-hidden="true"></span>
                 </label>
 
                 <div class="px-4 py-4 flex items-center justify-between gap-4 flex-wrap">
                     <span class="min-w-0">
                         <span class="block text-[13px] text-gray-900 font-medium">Frequência do resumo</span>
-                        <span class="block text-[11px] text-gray-500">Semanal (toda segunda) ou mensal (1ª segunda do mês).</span>
+                        <span class="block text-[11px] text-gray-500">Semanal (toda segunda) ou mensal (uma vez por mês). Nada se perde: o resumo cobre todo o período desde o anterior.</span>
                     </span>
                     <select class="config-select text-[13px] py-2 px-3 border border-gray-300 rounded bg-white" data-campo="resumo_frequencia">
                         <option value="semanal" @selected($resumoFreq === 'semanal')>Semanal</option>
@@ -109,11 +114,14 @@
 </div>
 
 <style>
-    .config-toggle { position: relative; display: inline-block; width: 42px; height: 24px; border-radius: 12px; background-color: #d1d5db; flex-shrink: 0; cursor: pointer; transition: background-color .15s; }
+    /* O trilho é decorativo (aria-hidden); o estado real mora no <input> irmão. */
+    .config-toggle { position: relative; display: inline-block; width: 42px; height: 24px; border-radius: 12px; background-color: #d1d5db; flex-shrink: 0; transition: background-color .15s; }
     .config-toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background-color: #fff; transition: left .15s; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
-    .config-toggle[data-on="1"] { background-color: #1f4679; }
-    .config-toggle[data-on="1"]::after { left: 20px; }
-    .config-toggle[data-busy="1"] { opacity: .5; pointer-events: none; }
+    .config-toggle-input:checked + .config-toggle { background-color: #1f4679; }
+    .config-toggle-input:checked + .config-toggle::after { left: 20px; }
+    .config-toggle-input:disabled + .config-toggle { opacity: .5; }
+    /* Foco por teclado precisa ser visível — o input é sr-only. */
+    .config-toggle-input:focus-visible + .config-toggle { outline: 2px solid #1f4679; outline-offset: 2px; }
 </style>
 
 <script>
@@ -156,16 +164,15 @@
         });
     }
 
-    // Toggles (booleanos)
-    Array.prototype.forEach.call(document.querySelectorAll('.config-toggle'), function (el) {
-        el.addEventListener('click', function () {
-            if (el.getAttribute('data-busy') === '1') return;
+    // Toggles (checkbox real — clique no label e teclado disparam 'change' nativo).
+    Array.prototype.forEach.call(document.querySelectorAll('.config-toggle-input'), function (el) {
+        el.addEventListener('change', function () {
             var campo = el.getAttribute('data-campo');
-            var novo = el.getAttribute('data-on') === '1' ? '0' : '1';
-            el.setAttribute('data-busy', '1');
-            salvar(campo, novo === '1',
-                function () { el.setAttribute('data-on', novo); el.removeAttribute('data-busy'); },
-                function () { el.removeAttribute('data-busy'); }
+            var novo = el.checked;
+            el.disabled = true;
+            salvar(campo, novo,
+                function () { el.disabled = false; },
+                function () { el.checked = !novo; el.disabled = false; } // rollback visual
             );
         });
     });

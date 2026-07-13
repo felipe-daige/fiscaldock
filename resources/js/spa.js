@@ -67,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearance: null, // Código inline/script externo por view de clearance
         cliente: null, // Código inline na view
         clientes: null, // Código inline na view
+        configuracoes: null, // Código inline na view (sem isso o SPA busca /js/configuracoes.js → 404)
     };
 
     // Converte slug (com hífen/underscore) para camelCase
