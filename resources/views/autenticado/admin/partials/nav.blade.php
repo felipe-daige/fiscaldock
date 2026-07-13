@@ -5,6 +5,7 @@
     @foreach([
         'visao' => ['Visão Geral', '/app/admin'],
         'usuarios' => ['Usuários', '/app/admin/usuarios'],
+        'armazenamento' => ['Armazenamento', '/app/admin/armazenamento'],
         'comercial' => ['Comercial', '/app/admin/comercial'],
         'planos' => ['Planos', '/app/admin/planos'],
         'auditoria' => ['Auditoria', '/app/admin/auditoria'],

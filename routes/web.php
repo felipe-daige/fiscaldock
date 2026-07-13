@@ -482,6 +482,10 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
             Route::post('/usuarios/{id}/impersonar', [\App\Http\Controllers\Dashboard\AdminUsuarioAcaoController::class, 'impersonar'])->name('usuarios.impersonar')->where('id', '[0-9]+');
             Route::get('/auditoria', [\App\Http\Controllers\Dashboard\AdminUsuarioAcaoController::class, 'auditoria'])->name('auditoria');
 
+            // Saúde física da VPS + quota lógica das contas (somente leitura)
+            Route::get('/armazenamento', [\App\Http\Controllers\Dashboard\AdminArmazenamentoController::class, 'index'])
+                ->name('armazenamento.index');
+
             // Pendências/notas operacionais do operador FiscalDock
             Route::get('/pendencias', [\App\Http\Controllers\Dashboard\AdminPendenciaController::class, 'index'])->name('pendencias.index');
             Route::post('/pendencias', [\App\Http\Controllers\Dashboard\AdminPendenciaController::class, 'store'])->name('pendencias.store');

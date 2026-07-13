@@ -1,122 +1,191 @@
 @php
-    $fmtR = fn ($v) => 'R$ '.number_format((float) $v, 2, ',', '.');
-    $fmtN = fn ($v) => number_format((float) $v, 0, ',', '.');
-    $periodos = ['30' => '30 dias', '90' => '90 dias', '365' => '12 meses', 'tudo' => 'Tudo'];
+    $fmtR = fn ($valor) => 'R$ '.number_format((float) $valor, 2, ',', '.');
+    $fmtN = fn ($valor) => number_format((float) $valor, 0, ',', '.');
+    $periodos = ['30' => '30 dias', '90' => '90 dias', '365' => '12 meses', 'tudo' => 'Todo o histórico'];
+    $periodoLabel = $periodos[$m['periodo']] ?? '30 dias';
+    $precos = app(\App\Services\PricingCatalogService::class);
+    $saldoUsuarios = $precos->creditsToCurrency((int) $m['creditos']['saldo_base']);
+    $saldoVendido = $precos->creditsToCurrency((int) $m['creditos']['vendidos']);
+    $saldoConsumido = $precos->creditsToCurrency((int) $m['creditos']['consumidos']);
+    $disco = $operacao['disco'];
+    $totalAlertas = ($disco['status'] === 'saudavel' ? 0 : 1)
+        + ($operacao['pendencias_vencidas'] > 0 ? 1 : 0)
+        + ($operacao['integracoes_problemas'] > 0 ? 1 : 0);
+    $ultimaCompra = $m['receita']['ultima_compra_em']
+        ? \Carbon\Carbon::parse($m['receita']['ultima_compra_em'])->format('d/m/Y H:i')
+        : 'nenhuma compra aprovada';
 @endphp
+
 <div class="min-h-screen bg-gray-100">
     <div class="admin-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <div class="mb-4 sm:mb-6">
-            <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Admin — Visão Geral</h1>
-            <p class="text-xs text-gray-500 mt-0.5">Analytics do negócio. Somente o operador FiscalDock vê esta área.</p>
+        <div class="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+            <div>
+                <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Admin — Visão Geral</h1>
+                <p class="text-xs text-gray-500 mt-0.5">Indicadores essenciais do negócio e pontos que precisam de atenção.</p>
+            </div>
+            <span class="text-[10px] text-gray-400 uppercase tracking-wide whitespace-nowrap">Atualizado em {{ now()->format('d/m/Y H:i') }}</span>
         </div>
 
         @include('autenticado.admin.partials.nav', ['tab' => 'visao'])
 
-        {{-- Filtro de período --}}
-        <form method="GET" class="mb-4 flex items-center gap-2 text-[13px]" data-mobile-filters>
-            <label class="text-[11px] text-gray-500">Período</label>
-            <select name="periodo" onchange="this.form.submit()" class="min-w-0 flex-1 sm:flex-none text-[13px] py-2.5 px-3 border border-gray-300 rounded">
-                @foreach($periodos as $k => $label)
-                    <option value="{{ $k }}" @selected($m['periodo'] === $k)>{{ $label }}</option>
-                @endforeach
-            </select>
+        <form method="GET" class="bg-white rounded border border-gray-300 overflow-hidden mb-4" data-mobile-filters>
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Período de análise</p>
+            </div>
+            <div class="p-3 flex flex-col min-[420px]:flex-row min-[420px]:items-center gap-3">
+                <label for="admin-periodo" class="text-[11px] text-gray-600 min-[420px]:mr-auto">Novos usuários, receita aprovada e uso do produto</label>
+                <select id="admin-periodo" name="periodo" onchange="this.form.submit()" class="auth-control w-full min-[420px]:w-52 text-[13px] px-3 border border-gray-300 rounded bg-white focus:border-gray-400 focus:ring-1 focus:ring-gray-400">
+                    @foreach($periodos as $codigo => $label)
+                        <option value="{{ $codigo }}" @selected($m['periodo'] === $codigo)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
         </form>
 
-        {{-- Headline (4 números-chave; o resto vira gráfico ou stat inline) --}}
-        <div class="grid grid-cols-1 min-[380px]:grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-            @foreach([
-                ['Usuários', $fmtN($m['crescimento']['total_usuarios']), $fmtN($m['crescimento']['novos']).' novos · '.$fmtN($m['crescimento']['ativos']).' ativos (30d)', '#1d4ed8'],
-                ['Receita total', $fmtR($m['receita']['aprovada_total']), $fmtR($m['receita']['aprovada_periodo']).' no período', '#047857'],
-                ['MRR estimado', $fmtR($m['receita']['mrr']), $fmtN($m['receita']['assinaturas_ativas']).' assinatura(s) · '.$fmtN($m['receita']['recargas_ativas']).' recarga(s)', '#047857'],
-                ['Saldo dos usuários', $fmtR(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int)$m['creditos']['saldo_base'])), $fmtR(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int)$m['creditos']['vendidos'])).' vendidos · '.$fmtR(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int)$m['creditos']['consumidos'])).' consumidos', '#334155'],
-            ] as [$label, $valor, $sub, $cor])
-                <div class="bg-white rounded border border-gray-300 border-l-4 p-3" style="border-left-color: {{ $cor }}">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{{ $label }}</p>
-                    <p class="text-xl font-bold text-gray-900">{{ $valor }}</p>
-                    <p class="text-[11px] text-gray-500 mt-0.5">{{ $sub }}</p>
-                </div>
-            @endforeach
-        </div>
-
-        {{-- Tendências --}}
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-            <div class="bg-white rounded border border-gray-300 p-4">
-                <div class="flex flex-col min-[380px]:flex-row min-[380px]:items-baseline min-[380px]:justify-between gap-1 mb-2">
-                    <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Novos usuários</p>
-                    <p class="text-[11px] text-gray-500"><span class="font-bold" style="color:#047857">{{ $fmtN($m['trial']['convertidos']) }}</span> trial convertido</p>
-                </div>
-                <div id="chartSignups"></div>
+        <section class="bg-white rounded border border-gray-300 overflow-hidden mb-4" aria-labelledby="resumo-negocio-titulo">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
+                <h2 id="resumo-negocio-titulo" class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo do negócio</h2>
+                <span class="text-[10px] text-gray-400">{{ $periodoLabel }}</span>
             </div>
-            <div class="bg-white rounded border border-gray-300 p-4">
-                <div class="flex flex-col min-[380px]:flex-row min-[380px]:items-baseline min-[380px]:justify-between gap-1 mb-2">
-                    <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Receita aprovada</p>
-                    <p class="text-[11px] text-gray-500"><span class="font-bold text-gray-900">{{ $fmtR($m['receita']['aprovada_periodo']) }}</span> no período</p>
-                </div>
-                <div id="chartReceita"></div>
+            <div class="grid grid-cols-2 lg:grid-cols-4">
+                @foreach([
+                    ['Usuários', $fmtN($m['crescimento']['total_usuarios']), $fmtN($m['crescimento']['novos']).' novos no período · '.$fmtN($m['crescimento']['ativos']).' ativos em 30d'],
+                    ['Receita aprovada', $fmtR($m['receita']['aprovada_periodo']), $fmtR($m['receita']['aprovada_total']).' acumulados'],
+                    ['MRR estimado', $fmtR($m['receita']['mrr']), $fmtN($m['receita']['assinaturas_ativas']).' assinatura(s) ativa(s)'],
+                    ['Saldo dos usuários', $fmtR($saldoUsuarios), $fmtR($saldoVendido).' vendidos · '.$fmtR($saldoConsumido).' consumidos'],
+                ] as [$rotulo, $valor, $detalhe])
+                    <div @class([
+                        'p-3 sm:p-4 min-w-0',
+                        'border-l border-gray-200' => $loop->index % 2 === 1,
+                        'border-t border-gray-200' => $loop->index >= 2,
+                        'lg:border-l lg:border-gray-200' => ! $loop->first,
+                        'lg:border-t-0' => $loop->index >= 2,
+                    ])>
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{{ $rotulo }}</p>
+                        <p class="text-lg sm:text-xl font-bold text-gray-900 mt-0.5 truncate">{{ $valor }}</p>
+                        <p class="text-[11px] text-gray-500 mt-0.5 leading-snug">{{ $detalhe }}</p>
+                    </div>
+                @endforeach
             </div>
-        </div>
+        </section>
 
-        {{-- Uso do produto + consumo de saldo --}}
+        <section class="bg-white rounded border border-gray-300 overflow-hidden mb-4" aria-labelledby="operacao-agora-titulo">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
+                <h2 id="operacao-agora-titulo" class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Operação agora</h2>
+                <span class="inline-flex whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:{{ $totalAlertas > 0 ? '#b45309' : '#047857' }}">
+                    {{ $totalAlertas > 0 ? $totalAlertas.' ponto(s) de atenção' : 'Tudo em ordem' }}
+                </span>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3">
+                <article class="p-4 border-b lg:border-b-0 border-gray-200">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Disco da VPS</p>
+                            <p class="text-sm font-bold text-gray-900 mt-1">{{ $disco['livre_formatado'] }} livres</p>
+                        </div>
+                        <span class="inline-flex whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:{{ $disco['status_cor'] }}">{{ $disco['status_label'] }}</span>
+                    </div>
+                    <p class="text-[11px] text-gray-500 mt-2">
+                        @if($disco['disponivel'])
+                            {{ number_format((float) $disco['percentual'], 1, ',', '.') }}% ocupado · {{ $disco['usado_formatado'] }} de {{ $disco['total_formatado'] }}
+                        @else
+                            A capacidade física não pôde ser lida.
+                        @endif
+                    </p>
+                    <a href="{{ route('app.admin.armazenamento.index') }}" data-link class="inline-flex mt-3 text-[11px] font-semibold text-gray-700 hover:text-gray-900 hover:underline">Ver armazenamento →</a>
+                </article>
+
+                @php
+                    $pendenciasCor = $operacao['pendencias_vencidas'] > 0 ? '#b91c1c' : '#047857';
+                    $pendenciasLabel = $operacao['pendencias_vencidas'] > 0 ? 'Priorizar' : 'Em dia';
+                @endphp
+                <article class="p-4 border-b lg:border-b-0 lg:border-l border-gray-200">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Pendências admin</p>
+                            <p class="text-sm font-bold text-gray-900 mt-1">{{ $fmtN($operacao['pendencias_abertas']) }} aberta(s)</p>
+                        </div>
+                        <span class="inline-flex whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:{{ $pendenciasCor }}">{{ $pendenciasLabel }}</span>
+                    </div>
+                    <p class="text-[11px] text-gray-500 mt-2">{{ $fmtN($operacao['pendencias_vencidas']) }} vencida(s) exigindo acompanhamento do operador.</p>
+                    <a href="{{ route('app.admin.pendencias.index') }}" data-link class="inline-flex mt-3 text-[11px] font-semibold text-gray-700 hover:text-gray-900 hover:underline">Abrir pendências →</a>
+                </article>
+
+                @php
+                    $integracoesCor = $operacao['integracoes_problemas'] > 0 ? '#b91c1c' : '#047857';
+                    $integracoesLabel = $operacao['integracoes_problemas'] > 0 ? 'Verificar' : 'Operacional';
+                @endphp
+                <article class="p-4 lg:border-l border-gray-200">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Integrações</p>
+                            <p class="text-sm font-bold text-gray-900 mt-1">{{ $fmtN($operacao['integracoes_problemas']) }} com problema</p>
+                        </div>
+                        <span class="inline-flex whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:{{ $integracoesCor }}">{{ $integracoesLabel }}</span>
+                    </div>
+                    <p class="text-[11px] text-gray-500 mt-2">Disponibilidade informada ao usuário e mantida pelo time FiscalDock.</p>
+                    <a href="{{ route('app.admin.integracoes.index') }}" data-link class="inline-flex mt-3 text-[11px] font-semibold text-gray-700 hover:text-gray-900 hover:underline">Ver integrações →</a>
+                </article>
+            </div>
+        </section>
+
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div class="bg-white rounded border border-gray-300 p-4">
-                <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Uso do produto (período)</p>
-                <div id="chartUso"></div>
-            </div>
-            <div class="bg-white rounded border border-gray-300 p-4">
-                <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Consumo por tipo</p>
-                @if(empty($m['creditos']['consumo_por_tipo']))
-                    <p class="text-center text-gray-400 text-sm py-10">Sem consumo no período.</p>
-                @else
-                    <div id="chartCreditos"></div>
-                @endif
-            </div>
+            <section class="bg-white rounded border border-gray-300 overflow-hidden" aria-labelledby="comercial-titulo">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
+                    <h2 id="comercial-titulo" class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Comercial e conversão</h2>
+                    <a href="{{ route('app.admin.usuarios.index') }}" data-link class="text-[10px] text-gray-500 hover:text-gray-900 hover:underline">Ver usuários</a>
+                </div>
+                <div class="grid grid-cols-2">
+                    @foreach([
+                        ['Trials em curso', $fmtN($m['trial']['em_curso']), 'fotografia atual'],
+                        ['Convertidos', $fmtN($m['trial']['convertidos']), 'compra confirmada'],
+                        ['Conversão do trial', number_format((float) $m['trial']['taxa_conversao'], 1, ',', '.').'%', $fmtN($m['trial']['total']).' trials usados'],
+                        ['Assinaturas ativas', $fmtN($m['receita']['assinaturas_ativas']), $fmtN($m['receita']['recargas_ativas']).' recarga(s) ativa(s)'],
+                    ] as [$rotulo, $valor, $detalhe])
+                        <div @class([
+                            'p-3 sm:p-4',
+                            'border-l border-gray-200' => $loop->index % 2 === 1,
+                            'border-t border-gray-200' => $loop->index >= 2,
+                        ])>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{{ $rotulo }}</p>
+                            <p class="text-lg font-bold text-gray-900 mt-0.5">{{ $valor }}</p>
+                            <p class="text-[11px] text-gray-500">{{ $detalhe }}</p>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="border-t border-gray-200 px-4 py-2.5 text-[11px] text-gray-500">
+                    {{ $fmtN($m['trial']['expirados']) }} trial(s) expirado(s) · última compra: {{ $ultimaCompra }}
+                </div>
+            </section>
+
+            <section class="bg-white rounded border border-gray-300 overflow-hidden" aria-labelledby="uso-produto-titulo">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
+                    <h2 id="uso-produto-titulo" class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Uso do produto</h2>
+                    <span class="text-[10px] text-gray-400">{{ $periodoLabel }}</span>
+                </div>
+                <div class="grid grid-cols-2">
+                    @foreach([
+                        ['Consultas CNPJ', $fmtN($m['uso']['consultas']), 'lotes iniciados'],
+                        ['Importações', $fmtN($m['uso']['importacoes']), 'EFD + XML'],
+                        ['Clearance', $fmtN($m['uso']['clearance']), 'NF-e + CT-e'],
+                        ['Monitoramentos', $fmtN($m['uso']['monitoramentos_ativos']), 'ativos agora'],
+                    ] as [$rotulo, $valor, $detalhe])
+                        <div @class([
+                            'p-3 sm:p-4',
+                            'border-l border-gray-200' => $loop->index % 2 === 1,
+                            'border-t border-gray-200' => $loop->index >= 2,
+                        ])>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{{ $rotulo }}</p>
+                            <p class="text-lg font-bold text-gray-900 mt-0.5">{{ $valor }}</p>
+                            <p class="text-[11px] text-gray-500">{{ $detalhe }}</p>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="border-t border-gray-200 px-4 py-2.5 text-[11px] text-gray-500">
+                    Saldo acumulado: {{ $fmtR($saldoVendido) }} vendido · {{ $fmtR($saldoConsumido) }} consumido
+                </div>
+            </section>
         </div>
     </div>
 </div>
-
-<script src="/js/apexcharts.min.js"></script>
-<script>
-(function () {
-    if (typeof ApexCharts === 'undefined') return;
-    const signups = @json($m['crescimento']['serie_signups']);
-    const receita = @json($m['receita']['serie_receita']);
-    const uso = @json($m['uso']);
-    const consumo = @json($m['creditos']['consumo_por_tipo']);
-
-    const area = (sel, dados, nome, cor) => {
-        const el = document.querySelector(sel);
-        if (!el) return;
-        new ApexCharts(el, {
-            chart: { type: 'area', height: 220, toolbar: { show: false } },
-            series: [{ name: nome, data: dados.map(d => d.total) }],
-            xaxis: { categories: dados.map(d => d.data) },
-            colors: [cor], dataLabels: { enabled: false }, stroke: { curve: 'smooth', width: 2 },
-        }).render();
-    };
-    area('#chartSignups', signups, 'Novos', '#1d4ed8');
-    area('#chartReceita', receita, 'Receita', '#047857');
-
-    const usoEl = document.querySelector('#chartUso');
-    if (usoEl) {
-        new ApexCharts(usoEl, {
-            chart: { type: 'bar', height: 240, toolbar: { show: false } },
-            series: [{ name: 'Volume', data: [uso.consultas, uso.importacoes, uso.clearance, uso.monitoramentos_ativos] }],
-            xaxis: { categories: ['Consultas', 'Importações', 'Clearance', 'Monit. ativos'] },
-            plotOptions: { bar: { horizontal: true, borderRadius: 3, distributed: true } },
-            colors: ['#1d4ed8', '#7c3aed', '#0891b2', '#047857'],
-            dataLabels: { enabled: true }, legend: { show: false },
-        }).render();
-    }
-
-    const credEl = document.querySelector('#chartCreditos');
-    if (credEl && consumo.length) {
-        new ApexCharts(credEl, {
-            chart: { type: 'donut', height: 240 },
-            series: consumo.map(c => Math.abs(c.total)),
-            labels: consumo.map(c => c.type),
-            colors: ['#1d4ed8', '#b45309', '#047857', '#7c3aed', '#0891b2', '#dc2626', '#334155'],
-            dataLabels: { enabled: false }, legend: { position: 'bottom', fontSize: '11px' },
-        }).render();
-    }
-})();
-</script>

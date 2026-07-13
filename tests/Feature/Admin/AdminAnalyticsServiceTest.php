@@ -42,7 +42,9 @@ it('conta conversão de trial (trial_used + compra)', function () {
 
     $r = app(AdminAnalyticsService::class)->resumo();
 
-    expect($r['trial']['convertidos'])->toBe(1);
+    expect($r['trial']['convertidos'])->toBe(1)
+        ->and($r['trial']['total'])->toBe(2)
+        ->and($r['trial']['taxa_conversao'])->toBe(50.0);
 });
 
 it('saldo_base não dobra crédito de trial (trial_credits_remaining é subconjunto de credits)', function () {
@@ -61,4 +63,12 @@ it('periodo "tudo" não filtra por data', function () {
     $r = app(AdminAnalyticsService::class)->resumo(['periodo' => 'tudo']);
 
     expect($r['crescimento']['novos'])->toBe($r['crescimento']['total_usuarios']);
+});
+
+it('entrega contrato compacto sem séries destinadas aos gráficos removidos', function () {
+    $r = app(AdminAnalyticsService::class)->resumo();
+
+    expect($r['crescimento'])->not->toHaveKey('serie_signups')
+        ->and($r['receita'])->not->toHaveKey('serie_receita')
+        ->and($r['creditos'])->not->toHaveKey('consumo_por_tipo');
 });
