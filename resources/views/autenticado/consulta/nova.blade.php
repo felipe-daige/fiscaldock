@@ -981,6 +981,9 @@
                 </div>
 
             </div>{{-- /consulta-progresso-section --}}
+
+            @include('autenticado.consulta.partials._historico-recente')
+
             {{-- Modal: Carousel de Planos --}}
             <div id="modal-planos-carousel-lote" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
                 <div class="bg-white rounded border border-gray-300 shadow-lg max-w-lg w-full mx-4 max-h-[90vh] flex flex-col relative overflow-visible">

@@ -91,6 +91,7 @@ class AdminPlanosController extends Controller
             'cap_score_historico' => ['nullable', 'boolean'],
             'cap_retencao_meses' => ['nullable', 'integer', 'min:1'],
             'cap_frequencia_minima_dias' => ['required', 'integer', 'min:1'],
+            'cap_armazenamento_mb' => ['nullable', 'integer', 'min:1', 'max:1048576'],
         ]);
 
         $anterior = $plano->only([
@@ -103,7 +104,9 @@ class AdminPlanosController extends Controller
         // Export: lista sem duplicatas, na ordem canônica.
         $export = array_values(array_intersect(self::EXPORT_FORMATS, $dados['cap_export'] ?? []));
 
-        $capabilities = [
+        // Preserva capabilities futuras/desconhecidas quando o formulário edita só
+        // este subconjunto. Evita que uma edição comercial apague um entitlement novo.
+        $capabilities = array_merge($plano->capabilities ?? [], [
             'bi' => $dados['cap_bi'],
             'export' => $export,
             'pdf_executivo' => (bool) ($dados['cap_pdf_executivo'] ?? false),
@@ -113,7 +116,10 @@ class AdminPlanosController extends Controller
             // retenção: vazio = ilimitado (null), espelha o seeder.
             'retencao_meses' => $dados['cap_retencao_meses'] ?? null,
             'frequencia_minima_dias' => (int) $dados['cap_frequencia_minima_dias'],
-        ];
+            'armazenamento_mb' => array_key_exists('cap_armazenamento_mb', $dados)
+                ? ($dados['cap_armazenamento_mb'] ?? null)
+                : $plano->capability('armazenamento_mb', null),
+        ]);
 
         $plano->update([
             'nome' => $dados['nome'],

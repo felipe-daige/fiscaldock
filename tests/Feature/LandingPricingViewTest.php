@@ -22,11 +22,16 @@ it('apresenta planos, consultas CNPJ e clearance com os catálogos atuais', func
         ->assertSee('Plano Essencial')
         ->assertSee('Plano Profissional')
         ->assertSee('Plano Escritório')
+        ->assertSee('10 GB para arquivos e comprovantes')
         ->assertSee('Validação')
         ->assertSee('Licitação')
         ->assertSee('Compliance')
-        ->assertSee('Clearance Básico')
-        ->assertSee('Busca avulsa');
+        // Clearance tem preço ÚNICO por documento desde 2026-07-13: os dois cards são pontos de
+        // entrada (acervo × chave), não tiers. Não existe mais "Básico" (que implicava um "Full").
+        ->assertSee('Clearance do acervo')
+        ->assertSee('Busca avulsa')
+        ->assertDontSee('Clearance Básico')
+        ->assertSee('mesmo preço por documento');
 
     expect(collect(app(PricingCatalogService::class)->getComplianceSources())->pluck('status')->unique()->all())
         ->toBe(['ativo']);

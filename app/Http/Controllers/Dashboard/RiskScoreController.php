@@ -363,30 +363,14 @@ class RiskScoreController extends Controller
      */
     private function htmlDetalheUltimaConsulta(Participante $participante): ?string
     {
-        $ultima = ConsultaResultado::where('participante_id', $participante->id)
-            ->where('status', ConsultaResultado::STATUS_SUCESSO)
-            ->with('lote.plano')
-            ->orderByDesc('consultado_em')
-            ->first();
+        // Fonte única com a Consulta CNPJ e o Clearance completo.
+        $detalhe = app(ResultadoDetalhePresenter::class)->detalheDoParticipante($participante);
 
-        if (! $ultima) {
+        if (! $detalhe) {
             return null;
         }
 
-        $presenter = app(ResultadoDetalhePresenter::class);
-        $esperadas = $presenter->esperadasDoResultado($ultima);
-
-        return view('autenticado.consulta.partials.detalhe-blocos', [
-            'blocos' => $presenter->blocos($ultima, $esperadas),
-            'resumo' => $presenter->resumoTextual($ultima),
-            'certidoes' => $presenter->certidoes($ultima, $esperadas),
-            'cabecalho' => [
-                'razao' => $participante->razao_social,
-                'documento' => $participante->cnpj_formatado ?? $participante->documento,
-                'uf' => $participante->uf,
-                'situacao' => $participante->situacao_cadastral ?? ($ultima->resultado_dados['situacao_cadastral'] ?? null),
-            ],
-        ])->render();
+        return view('autenticado.consulta.partials.detalhe-blocos', $detalhe)->render();
     }
 
     /**

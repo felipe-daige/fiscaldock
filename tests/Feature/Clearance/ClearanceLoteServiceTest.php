@@ -61,6 +61,7 @@ it('cria lote, debita N×tier e despacha um batch com N jobs', function () {
     $lote = ConsultaLote::find($r['consulta_lote_id']);
     expect($lote->status)->toBe(ConsultaLote::STATUS_PROCESSANDO);
     expect($lote->creditos_cobrados)->toBe(2 * $unit);
+    expect($lote->resultado_resumo['fluxo_origem'] ?? null)->toBe('lote');
 
     expect(app(\App\Services\SaldoService::class)->getBalance($user->fresh()))->toBe($saldoAntes - 2 * $unit);
     expect(Cache::get("clearance_lote_chaves:{$lote->id}"))->toHaveCount(2);

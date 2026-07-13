@@ -63,11 +63,20 @@
 
                     $exportList = collect($caps['export'] ?? [])->map(fn ($e) => $exportMap[$e] ?? $e)->implode(' + ');
                     $retencao = ($caps['retencao_meses'] ?? null) === null ? 'ilimitada' : ($caps['retencao_meses'].' meses');
+                    $armazenamentoMb = array_key_exists('armazenamento_mb', $caps)
+                        ? $caps['armazenamento_mb']
+                        : config("arquivos.quota_por_plano_mb.{$plano->codigo}", config('arquivos.quota_padrao_mb', 250));
+                    $armazenamento = $armazenamentoMb === null
+                        ? 'Armazenamento ilimitado'
+                        : ($armazenamentoMb >= 1024
+                            ? number_format($armazenamentoMb / 1024, 0, ',', '.').' GB de armazenamento'
+                            : number_format($armazenamentoMb, 0, ',', '.').' MB de armazenamento');
 
                     $features = [];
                     $features[] = [$plano->creditos_inclusos > 0, \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $plano->creditos_inclusos)).' em saldo/mês', $isEnterprise ? 'Saldo sob medida' : 'Sem saldo incluso'];
                     $features[] = [true, ($plano->limite_clientes === null ? 'Clientes ilimitados' : $plano->limite_clientes.' clientes monitorados'), null];
                     $features[] = [true, ($plano->limite_cnpjs_monitorados === null ? 'CNPJs ilimitados' : $plano->limite_cnpjs_monitorados.' CNPJs monitorados'), null];
+                    $features[] = [true, $armazenamento, null];
                     $features[] = [true, 'Auto-monitor: '.($profundidadeMap[$plano->profundidade_auto_monitor] ?? $plano->profundidade_auto_monitor).' / '.($frequenciaMap[$plano->frequencia_padrao_dias] ?? $plano->frequencia_padrao_dias.'d'), null];
                     $features[] = [true, $biMap[$caps['bi'] ?? 'basico'] ?? 'BI', null];
                     $features[] = [! empty($exportList), 'Export: '.$exportList, 'Sem export'];

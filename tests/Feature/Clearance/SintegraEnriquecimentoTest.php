@@ -104,8 +104,8 @@ it('preview conta só participantes sem IE do lote e calcula custo', function ()
         ->assertJson([
             'success' => true,
             'total' => 1,
-            // Response expõe R$ (rename saldo): 1 participante × 2 unidades = R$ 0,40.
-            'valor_reais' => app(\App\Services\PricingCatalogService::class)->creditsToCurrency(2),
+            // Response expõe somente R$: 1 participante × 5 unidades = R$ 1,00.
+            'valor_reais' => 1.0,
             'participante_ids' => [$semIeId],
         ]);
 });
@@ -119,9 +119,9 @@ it('executar debita saldo e despacha batch sintegra-only', function () use (&$te
     actingAs($user)
         ->postJson('/app/clearance/sintegra/executar', ['lote_id' => $lote->id, 'tab_id' => 'tab-sint'])
         ->assertOk()
-        ->assertJson(['success' => true, 'total' => 1, 'valor_reais' => app(\App\Services\PricingCatalogService::class)->creditsToCurrency(2), 'participante_ids' => [$semIeId]]);
+        ->assertJson(['success' => true, 'total' => 1, 'valor_reais' => 1.0, 'participante_ids' => [$semIeId]]);
 
-    expect(app(SaldoService::class)->getBalance($user))->toBe($saldoAntes - 2);
+    expect(app(SaldoService::class)->getBalance($user))->toBe($saldoAntes - 5);
     Bus::assertBatched(fn ($batch) => str_starts_with($batch->name, 'sintegra-ie-') && $batch->jobs->count() === 1);
 });
 
@@ -164,4 +164,16 @@ it('preview de participante já com IE retorna total 0', function () use (&$test
         ->postJson('/app/clearance/sintegra/preview', ['lote_id' => $lote->id])
         ->assertOk()
         ->assertJson(['success' => true, 'total' => 0]);
+});
+
+it('modal apresenta custo e saldo usando os campos monetarios em reais', function () use (&$testUserIds) {
+    [$user, $lote] = sintegraCenario($testUserIds);
+
+    actingAs($user)
+        ->get(route('app.clearance.notas.resultado', ['consultaLoteId' => $lote->id]))
+        ->assertOk()
+        ->assertSee('money(j.valor_reais)', false)
+        ->assertSee('money(j.saldo_reais)', false)
+        ->assertDontSee('j.custo_creditos', false)
+        ->assertDontSee('money(j.saldo)', false);
 });

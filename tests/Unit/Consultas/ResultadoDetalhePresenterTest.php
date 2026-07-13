@@ -5,12 +5,35 @@ use App\Services\Consultas\ResultadoDetalhePresenter;
 
 function resultadoComDados(array $dados): ConsultaResultado
 {
-    $r = new ConsultaResultado();
+    $r = new ConsultaResultado;
     $r->status = ConsultaResultado::STATUS_SUCESSO;
     $r->resultado_dados = $dados;
 
     return $r;
 }
+
+it('prefere a rota local do comprovante e mantém a URL original como fallback', function () {
+    $comArquivo = resultadoComDados([
+        'cnd_federal' => [
+            'status' => 'Negativa',
+            'comprovante' => 'https://origem.example/cnd.pdf',
+            'comprovante_arquivo' => 'comprovantes/1/2026/07/cnd.pdf',
+        ],
+    ]);
+    $comArquivo->id = 123;
+    $semArquivo = resultadoComDados([
+        'cnd_federal' => [
+            'status' => 'Negativa',
+            'comprovante' => 'https://origem.example/cnd.pdf',
+        ],
+    ]);
+
+    $presenter = new ResultadoDetalhePresenter;
+    expect(bloco($presenter->blocos($comArquivo), 'cnd_federal')['comprovante_url'])
+        ->toBe(route('app.consulta.comprovante', [123, 'cnd_federal']))
+        ->and(bloco($presenter->blocos($semArquivo), 'cnd_federal')['comprovante_url'])
+        ->toBe('https://origem.example/cnd.pdf');
+});
 
 function bloco(array $blocos, string $chave): ?array
 {
@@ -32,7 +55,7 @@ it('lida com _fontes_erro no shape objeto (retry) sem TypeError', function () {
             'sintegra' => ['codigo' => 609, 'origem' => 'interno', 'status' => 'erro', 'tentativas' => 0],
         ],
     ]);
-    $presenter = new ResultadoDetalhePresenter();
+    $presenter = new ResultadoDetalhePresenter;
 
     // blocos(): cnd_federal pedido mas ausente → card de falha; status retry/615 = órgão fora do ar
     $cnd = bloco($presenter->blocos($resultado, ['cnd_federal', 'sintegra']), 'cnd_federal');
@@ -45,7 +68,7 @@ it('lida com _fontes_erro no shape objeto (retry) sem TypeError', function () {
 });
 
 it('monta bloco de dados cadastrais com itens e listas (CNAEs/QSA)', function () {
-    $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
+    $blocos = (new ResultadoDetalhePresenter)->blocos(resultadoComDados([
         'razao_social' => 'ACME LTDA',
         'nome_fantasia' => 'Acme',
         'situacao_cadastral' => 'ATIVA',
@@ -72,7 +95,7 @@ it('monta bloco de dados cadastrais com itens e listas (CNAEs/QSA)', function ()
 });
 
 it('monta blocos de certidões com código, validade e mensagem oficial', function () {
-    $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
+    $blocos = (new ResultadoDetalhePresenter)->blocos(resultadoComDados([
         'cnd_federal' => [
             'status' => 'Positiva com efeitos de negativa',
             'mensagem' => 'CERTIDÃO POSITIVA COM EFEITOS DE NEGATIVA',
@@ -96,7 +119,7 @@ it('monta blocos de certidões com código, validade e mensagem oficial', functi
 });
 
 it('inclui CND Estadual e SINTEGRA que hoje não aparecem na tabela', function () {
-    $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
+    $blocos = (new ResultadoDetalhePresenter)->blocos(resultadoComDados([
         'cnd_estadual' => ['status' => 'Negativa', 'certidao_codigo' => '573628/2026', 'data_validade' => '04/08/2026'],
         'sintegra' => ['situacao' => 'HABILITADO', 'inscricao_estadual' => '28.368.441-0', 'atividade_economica' => 'C3314702'],
     ]));
@@ -112,7 +135,7 @@ it('inclui CND Estadual e SINTEGRA que hoje não aparecem na tabela', function (
 });
 
 it('compõe linha-resumo para FGTS e SINTEGRA, que não trazem frase do provedor', function () {
-    $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
+    $blocos = (new ResultadoDetalhePresenter)->blocos(resultadoComDados([
         'endereco' => ['uf' => 'MS'],
         'crf_fgts' => ['status' => 'REGULAR', 'data_validade' => '16/07/2026'],
         'sintegra' => ['situacao' => 'HABILITADO', 'inscricao_estadual' => '28.337.553-1', 'uf' => null],
@@ -127,7 +150,7 @@ it('compõe linha-resumo para FGTS e SINTEGRA, que não trazem frase do provedor
 });
 
 it('FGTS irregular ganha linha-resumo de pendência', function () {
-    $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
+    $blocos = (new ResultadoDetalhePresenter)->blocos(resultadoComDados([
         'crf_fgts' => ['status' => 'IRREGULAR'],
     ]));
 
@@ -136,7 +159,7 @@ it('FGTS irregular ganha linha-resumo de pendência', function () {
 });
 
 it('completa a UF da CND Estadual a partir do endereço quando a resposta vem sem UF', function () {
-    $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
+    $blocos = (new ResultadoDetalhePresenter)->blocos(resultadoComDados([
         'endereco' => ['uf' => 'MS'],
         'cnd_estadual' => ['uf' => null, 'status' => 'Negativa', 'certidao_codigo' => '573628/2026'],
     ]));
@@ -148,7 +171,7 @@ it('completa a UF da CND Estadual a partir do endereço quando a resposta vem se
 });
 
 it('mostra CND Municipal INDISPONIVEL com mensagem em vez de sumir', function () {
-    $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
+    $blocos = (new ResultadoDetalhePresenter)->blocos(resultadoComDados([
         'cnd_municipal' => ['status' => 'INDISPONIVEL', 'mensagem' => 'CND Municipal não disponível para DOURADOS/MS.'],
     ]));
 
@@ -159,7 +182,7 @@ it('mostra CND Municipal INDISPONIVEL com mensagem em vez de sumir', function ()
 });
 
 it('não cria bloco para fonte ausente', function () {
-    $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
+    $blocos = (new ResultadoDetalhePresenter)->blocos(resultadoComDados([
         'situacao_cadastral' => 'ATIVA',
     ]));
 
@@ -168,7 +191,7 @@ it('não cria bloco para fonte ausente', function () {
 });
 
 it('gera resumo textual com situação cadastral e regularidade quando tudo OK', function () {
-    $texto = (new ResultadoDetalhePresenter())->resumoTextual(resultadoComDados([
+    $texto = (new ResultadoDetalhePresenter)->resumoTextual(resultadoComDados([
         'razao_social' => 'ACME LTDA',
         'situacao_cadastral' => 'ATIVA',
         'regime_tributario' => 'Simples Nacional',
@@ -181,7 +204,7 @@ it('gera resumo textual com situação cadastral e regularidade quando tudo OK',
 });
 
 it('gera resumo textual sinalizando pendências e inatividade', function () {
-    $texto = (new ResultadoDetalhePresenter())->resumoTextual(resultadoComDados([
+    $texto = (new ResultadoDetalhePresenter)->resumoTextual(resultadoComDados([
         'situacao_cadastral' => 'BAIXADA',
         'cnd_federal' => ['status' => 'Positiva'],
     ]));
@@ -192,7 +215,7 @@ it('gera resumo textual sinalizando pendências e inatividade', function () {
 });
 
 it('agrega a análise do lote por fonte e por CNPJ', function () {
-    $presenter = new ResultadoDetalhePresenter();
+    $presenter = new ResultadoDetalhePresenter;
 
     $rows = [
         ['detalhe_blocos' => $presenter->blocos(resultadoComDados([
@@ -221,7 +244,7 @@ it('agrega a análise do lote por fonte e por CNPJ', function () {
 });
 
 it('ordena cadastro primeiro e mantém ordem canônica das fontes', function () {
-    $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
+    $blocos = (new ResultadoDetalhePresenter)->blocos(resultadoComDados([
         'sintegra' => ['situacao' => 'Habilitado'],
         'cnd_federal' => ['status' => 'Negativa'],
         'razao_social' => 'ACME',
@@ -236,7 +259,7 @@ it('ordena cadastro primeiro e mantém ordem canônica das fontes', function () 
 // ── Strip de certidões (coluna agrupada) + estado "Falhou" ───────────────────
 
 it('certidoes() classifica fontes presentes com sigla e badge', function () {
-    $certs = (new ResultadoDetalhePresenter())->certidoes(resultadoComDados([
+    $certs = (new ResultadoDetalhePresenter)->certidoes(resultadoComDados([
         'cnd_federal' => ['status' => 'Negativa'],
         'crf_fgts' => ['status' => 'Regular'],
         'cndt' => ['status' => 'Positiva'],
@@ -253,7 +276,7 @@ it('certidoes() classifica fontes presentes com sigla e badge', function () {
 
 it('certidoes() marca erro do provedor (default) fonte esperada ausente sem marcador', function () {
     // cnd_federal pedido pelo plano mas sem blob (fonte externa falhou → chave ausente)
-    $certs = (new ResultadoDetalhePresenter())->certidoes(resultadoComDados([
+    $certs = (new ResultadoDetalhePresenter)->certidoes(resultadoComDados([
         'crf_fgts' => ['status' => 'Regular'],
     ]), ['cnd_federal', 'crf_fgts']);
 
@@ -266,7 +289,7 @@ it('certidoes() marca erro do provedor (default) fonte esperada ausente sem marc
 });
 
 it('certidoes() separa "Erro interno" quando o marcador _fontes_erro aponta interno', function () {
-    $certs = (new ResultadoDetalhePresenter())->certidoes(resultadoComDados([
+    $certs = (new ResultadoDetalhePresenter)->certidoes(resultadoComDados([
         'crf_fgts' => ['status' => 'Regular'],
         '_fontes_erro' => ['cnd_federal' => 'interno'],
     ]), ['cnd_federal', 'crf_fgts']);
@@ -278,7 +301,7 @@ it('certidoes() separa "Erro interno" quando o marcador _fontes_erro aponta inte
 });
 
 it('certidoes() omite fonte fora do plano e ausente', function () {
-    $certs = (new ResultadoDetalhePresenter())->certidoes(resultadoComDados([
+    $certs = (new ResultadoDetalhePresenter)->certidoes(resultadoComDados([
         'cnd_federal' => ['status' => 'Negativa'],
     ]), ['cnd_federal']); // plano só inclui federal
 
@@ -289,7 +312,7 @@ it('certidoes() omite fonte fora do plano e ausente', function () {
 });
 
 it('blocos() injeta placeholder "Falhou" para certidão esperada ausente', function () {
-    $presenter = new ResultadoDetalhePresenter();
+    $presenter = new ResultadoDetalhePresenter;
     $dados = ['situacao_cadastral' => 'ATIVA', 'crf_fgts' => ['status' => 'Regular']];
 
     $comEsperadas = $presenter->blocos(resultadoComDados($dados), ['cnd_federal', 'crf_fgts']);
@@ -303,7 +326,7 @@ it('blocos() injeta placeholder "Falhou" para certidão esperada ausente', funct
 });
 
 it('analiseLote conta fonte que falhou no bucket falha (distinto de não consultado)', function () {
-    $presenter = new ResultadoDetalhePresenter();
+    $presenter = new ResultadoDetalhePresenter;
     $rows = [
         ['detalhe_blocos' => $presenter->blocos(resultadoComDados([
             'situacao_cadastral' => 'ATIVA',
@@ -323,7 +346,7 @@ it('analiseLote conta fonte que falhou no bucket falha (distinto de não consult
 
 it('certidão estadual sem emissão vira Indeterminada com nota didática e situação honesta', function () {
     // Caso real (SEFAZ-MS): status "Positiva" derivado de conseguiu_emitir=false, sem nº/data.
-    $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
+    $blocos = (new ResultadoDetalhePresenter)->blocos(resultadoComDados([
         'endereco' => ['uf' => 'MS'],
         'cnd_estadual' => [
             'uf' => null, 'status' => 'Positiva', 'conseguiu_emitir' => false,
@@ -341,7 +364,7 @@ it('certidão estadual sem emissão vira Indeterminada com nota didática e situ
 });
 
 it('certidão Positiva EMITIDA segue Irregular, sem nota de sem-emissão', function () {
-    $blocos = (new ResultadoDetalhePresenter())->blocos(resultadoComDados([
+    $blocos = (new ResultadoDetalhePresenter)->blocos(resultadoComDados([
         'cnd_estadual' => [
             'status' => 'Positiva', 'conseguiu_emitir' => false,
             'certidao_codigo' => '2026/123', 'emissao_data' => '02/07/2026',

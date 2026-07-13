@@ -2,6 +2,14 @@
     use App\Services\PricingCatalogService;
     $precos = app(PricingCatalogService::class);
     $fmtLim = fn ($v) => $v === null ? 'Ilimitado' : number_format((int) $v, 0, ',', '.');
+    $fmtStorage = function ($p) {
+        $caps = $p->capabilities ?? [];
+        $mb = array_key_exists('armazenamento_mb', $caps)
+            ? $caps['armazenamento_mb']
+            : config("arquivos.quota_por_plano_mb.{$p->codigo}", config('arquivos.quota_padrao_mb', 250));
+
+        return $mb === null ? 'Ilimitado' : ($mb >= 1024 ? number_format($mb / 1024, 0, ',', '.').' GB' : $mb.' MB');
+    };
 @endphp
 <div class="min-h-screen bg-gray-100">
     <div class="admin-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -33,6 +41,7 @@
                             <th class="text-right px-3 py-2">Saldo incluso/mês</th>
                             <th class="text-right px-3 py-2">Clientes</th>
                             <th class="text-right px-3 py-2">Monitorados</th>
+                            <th class="text-right px-3 py-2">Arquivos</th>
                             <th class="text-left px-3 py-2">Profundidade</th>
                             <th class="text-center px-3 py-2">Ativo</th>
                             <th class="px-3 py-2"></th>
@@ -49,6 +58,7 @@
                                 <td class="px-3 py-2.5 text-right text-gray-700" data-label="Saldo incluso/mês">{{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $p->creditos_inclusos)) }}</td>
                                 <td class="px-3 py-2.5 text-right text-gray-700" data-label="Clientes">{{ $fmtLim($p->limite_clientes) }}</td>
                                 <td class="px-3 py-2.5 text-right text-gray-700" data-label="Monitorados">{{ $fmtLim($p->limite_cnpjs_monitorados) }}</td>
+                                <td class="px-3 py-2.5 text-right text-gray-700" data-label="Arquivos">{{ $fmtStorage($p) }}</td>
                                 <td class="px-3 py-2.5 text-gray-700" data-label="Profundidade">{{ $p->profundidade_auto_monitor ?? '—' }}</td>
                                 <td class="px-3 py-2.5 text-center" data-label="Ativo">
                                     @if($p->is_active)

@@ -4,8 +4,8 @@
     $filtros = $filtros ?? [];
     $escopoNotas = $escopoNotas ?? [];
     $saldoAtual = (int) ($saldoAtual ?? 0);
-    $custosTiers = $custosTiers ?? ['basico' => 10, 'full' => 20];
-    $sort = $sort ?? 'data_emissao';
+    $custosTiers = $custosTiers ?? ['basico' => 5, 'full' => 5];
+    $sort = $sort ?? 'valor_total';
     $dir = $dir ?? 'desc';
 
     $buildSortUrl = function (string $col) use ($filtros, $sort, $dir) {
@@ -23,7 +23,7 @@
             : '<svg class="w-3 h-3 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>';
     };
 
-    $sortCustom = $sort !== 'data_emissao' || $dir !== 'desc';
+    $sortCustom = $sort !== 'valor_total' || $dir !== 'desc';
     $resetSortUrl = '/app/clearance/notas?'.http_build_query(array_filter($filtros, fn ($v) => $v !== null && $v !== ''));
     $sortLabels = [
         'origem' => 'Origem',
@@ -37,29 +37,25 @@
         'status' => 'Status',
     ];
 
-    $statusOptions = [
-        'todos' => 'Todos',
-        'nao_validadas' => 'Não validadas',
-        'validadas' => 'Validadas',
-        'com_alertas' => 'Com alertas bloqueantes',
+    $statusConsultaOptions = [
+        'todos' => 'Todas',
+        'consultadas' => 'Consultadas',
+        'nao_consultadas' => 'Não consultadas',
     ];
 
     $statusBadge = function ($nota) {
-        if (is_null($nota->validacao)) {
-            return ['label' => 'Não validada', 'hex' => '#6b7280'];
-        }
-        $alertas = $nota->validacao['alertas'] ?? [];
-        foreach ($alertas as $a) {
-            if (($a['nivel'] ?? null) === 'bloqueante') {
-                return ['label' => 'Bloqueante', 'hex' => '#b91c1c'];
-            }
-        }
-        foreach ($alertas as $a) {
-            if (($a['nivel'] ?? null) === 'atencao') {
-                return ['label' => 'Atenção', 'hex' => '#b45309'];
-            }
-        }
-        return ['label' => 'Validada', 'hex' => '#047857'];
+        $status = strtoupper(trim((string) ($nota->status_consulta ?? '')));
+
+        return match ($status) {
+            '' => ['label' => 'Não consultada', 'hex' => '#6b7280'],
+            'AUTORIZADA' => ['label' => 'Autorizada', 'hex' => '#047857'],
+            'CANCELADA' => ['label' => 'Cancelada', 'hex' => '#b91c1c'],
+            'DENEGADA' => ['label' => 'Denegada', 'hex' => '#b91c1c'],
+            'INUTILIZADA' => ['label' => 'Inutilizada', 'hex' => '#b45309'],
+            'NAO_ENCONTRADA' => ['label' => 'Não encontrada', 'hex' => '#b91c1c'],
+            'INDETERMINADO' => ['label' => 'Indeterminada', 'hex' => '#b45309'],
+            default => ['label' => ucfirst(mb_strtolower(str_replace('_', ' ', $status))), 'hex' => '#2563eb'],
+        };
     };
 
     $modeloLabels = ['55' => 'NF-e (55)', '65' => 'NFC-e (65)', '57' => 'CT-e (57/67)'];
@@ -77,7 +73,7 @@
     // Filtros que vivem na gaveta "avançados" — abre sozinha se algum estiver ativo.
     $temAvancado = ! empty($filtros['periodo_de']) || ! empty($filtros['periodo_ate'])
         || ! empty($filtros['participante_cnpj']) || ! empty($filtros['tipo_nota'])
-        || ! empty($filtros['modelo']) || (($filtros['status_validacao'] ?? 'todos') !== 'todos');
+        || ! empty($filtros['modelo']);
 
     $clienteNome = null;
     if (! empty($filtros['cliente_id'])) {
@@ -87,8 +83,8 @@
     // URL preservando sort/dir e demais filtros, removendo/alterando os informados.
     $mkFiltroUrl = function (array $overrides) use ($filtros, $sort, $dir) {
         $base = array_merge($filtros, $overrides);
-        if (($base['status_validacao'] ?? 'todos') === 'todos') {
-            unset($base['status_validacao']);
+        if (($base['status_consulta'] ?? 'todos') === 'todos') {
+            unset($base['status_consulta']);
         }
         $base['sort'] = $sort;
         $base['dir'] = $dir;
@@ -117,8 +113,8 @@
     if (! empty($filtros['modelo'])) {
         $chips[] = ['label' => $modeloLabels[$filtros['modelo']] ?? $filtros['modelo'], 'url' => $mkFiltroUrl(['modelo' => null])];
     }
-    if (($filtros['status_validacao'] ?? 'todos') !== 'todos') {
-        $chips[] = ['label' => 'Verificação: '.($statusOptions[$filtros['status_validacao']] ?? $filtros['status_validacao']), 'url' => $mkFiltroUrl(['status_validacao' => 'todos'])];
+    if (($filtros['status_consulta'] ?? 'todos') !== 'todos') {
+        $chips[] = ['label' => 'Consulta: '.($statusConsultaOptions[$filtros['status_consulta']] ?? $filtros['status_consulta']), 'url' => $mkFiltroUrl(['status_consulta' => 'todos'])];
     }
     if (! empty($filtros['situacao_receita'])) {
         $chips[] = ['label' => 'Receita: '.($situacaoReceitaLabels[$filtros['situacao_receita']] ?? $filtros['situacao_receita']), 'url' => $mkFiltroUrl(['situacao_receita' => null])];
@@ -141,9 +137,17 @@
                 <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Verificar Notas</h1>
                 <p class="text-xs text-gray-500 mt-1">Selecione notas (XML ou EFD) e dispare a validação contábil em lote.</p>
             </div>
-            <a href="/app/clearance/dashboard" data-link class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-sm font-medium self-start">
-                Voltar ao Painel
-            </a>
+            <div class="grid w-full grid-cols-2 gap-2 sm:w-auto sm:flex sm:items-center sm:justify-end">
+                <a href="/app/clearance/dashboard" data-link class="inline-flex min-w-0 items-center justify-center gap-1.5 px-3 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium sm:gap-2 sm:px-4 sm:text-sm">
+                    Voltar ao Painel
+                </a>
+                <a href="{{ route('app.clearance.notas.historico') }}" data-link class="inline-flex min-w-0 items-center justify-center gap-1.5 px-3 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium sm:gap-2 sm:px-4 sm:text-sm">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="truncate">Histórico</span>
+                </a>
+            </div>
         </div>
 
         <details class="bg-white rounded border border-gray-300 border-l-4 mb-4 group" style="border-left-color: #2563eb;">
@@ -239,23 +243,13 @@
                         <p class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Como é cobrado</p>
                         <span class="text-[10px] font-semibold text-gray-400">Por nota verificada</span>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div class="border border-gray-300 rounded p-3">
-                            <div class="flex items-center justify-between mb-1">
-                                <p class="text-sm font-semibold text-gray-900">Básico</p>
-                                <span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #6b7280;">Essencial</span>
-                            </div>
-                            <p class="text-lg font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $custosTiers['basico'])) <span class="text-xs font-medium text-gray-500">/nota</span></p>
-                            <p class="text-[11px] text-gray-500 mt-1">Situação oficial + eventos de cancelamento.</p>
+                    <div class="border border-gray-300 rounded p-3">
+                        <div class="flex items-center justify-between mb-1">
+                            <p class="text-sm font-semibold text-gray-900">Clearance</p>
+                            <span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #6b7280;">Preço único</span>
                         </div>
-                        <div class="border border-gray-300 rounded p-3">
-                            <div class="flex items-center justify-between mb-1">
-                                <p class="text-sm font-semibold text-gray-900">Full</p>
-                                <span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #2563eb;">Completo</span>
-                            </div>
-                            <p class="text-lg font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $custosTiers['full'])) <span class="text-xs font-medium text-gray-500">/nota</span></p>
-                            <p class="text-[11px] text-gray-500 mt-1">Situação + eventos + confronto de valores e alertas contábeis.</p>
-                        </div>
+                        <p class="text-lg font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $custosTiers['basico'])) <span class="text-xs font-medium text-gray-500">/nota</span></p>
+                        <p class="text-[11px] text-gray-500 mt-1">Situação oficial + eventos de cancelamento + confronto de valores e alertas contábeis. Mesmo preço da busca por chave avulsa.</p>
                     </div>
                     <p class="text-[11px] text-gray-500 mt-3">A cobrança acontece na hora da confirmação. <strong>Falhas do provedor estornam o valor</strong> automaticamente.</p>
                 </div>
@@ -290,7 +284,7 @@
                         <p class="text-[10px] font-semibold uppercase tracking-wide" style="color: #047857">Saldo</p>
                         <span class="text-[9px] font-bold uppercase tracking-wide text-white px-1.5 py-0.5 rounded" style="background-color: #047857">Saldo</span>
                     </div>
-                    <p class="text-xl font-bold mt-0.5" style="color: #047857">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($saldoAtual))</p>
+                    <p id="clearance-saldo-atual" class="text-xl font-bold mt-0.5" style="color: #047857">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($saldoAtual))</p>
                     <p class="text-[11px] mt-1" style="color: #065f46">Disponível para validações</p>
                 </div>
             </div>
@@ -301,19 +295,19 @@
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
             </div>
-            <div class="p-4 space-y-3">
+            <div class="p-3 sm:p-4 space-y-3">
                 {{-- Filtros primários (sempre visíveis) --}}
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    <div class="sm:col-span-2">
-                        <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Buscar (nº ou chave)</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 items-end gap-3" data-primary-clearance-filters>
+                    <div class="sm:col-span-2 md:col-span-3 lg:col-span-2">
+                        <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Buscar (nº ou chave)</label>
                         <div class="relative mt-1">
                             <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                            <input type="text" name="busca" value="{{ $filtros['busca'] ?? '' }}" placeholder="Número do documento ou chave de acesso" class="w-full border border-gray-300 rounded pl-9 pr-2 py-1.5 text-sm">
+                            <input type="text" name="busca" value="{{ $filtros['busca'] ?? '' }}" placeholder="Número do documento ou chave de acesso" class="h-11 md:h-9 w-full border border-gray-300 rounded pl-9 pr-2 py-1.5 text-base md:text-sm">
                         </div>
                     </div>
                     <div>
-                        <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Cliente</label>
-                        <select name="cliente_id" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+                        <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Cliente</label>
+                        <select name="cliente_id" class="mt-1 h-11 md:h-9 w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-sm">
                             <option value="">Todos</option>
                             @foreach($clientes as $c)
                                 <option value="{{ $c->id }}" {{ ($filtros['cliente_id'] ?? '') == $c->id ? 'selected' : '' }}>{{ $c->razao_social }}</option>
@@ -321,8 +315,16 @@
                         </select>
                     </div>
                     <div>
-                        <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Situação na Receita</label>
-                        <select name="situacao_receita" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+                        <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Consulta</label>
+                        <select name="status_consulta" class="mt-1 h-11 md:h-9 w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-sm">
+                            @foreach($statusConsultaOptions as $value => $label)
+                                <option value="{{ $value }}" {{ ($filtros['status_consulta'] ?? 'todos') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="sm:col-span-2 md:col-span-1">
+                        <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Situação na Receita</label>
+                        <select name="situacao_receita" class="mt-1 h-11 md:h-9 w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-sm">
                             <option value="">Todas</option>
                             @foreach($situacaoReceitaLabels as $sv => $sl)
                                 <option value="{{ $sv }}" {{ ($filtros['situacao_receita'] ?? '') === $sv ? 'selected' : '' }}>{{ $sl }}</option>
@@ -333,44 +335,36 @@
 
                 {{-- Filtros avançados (gaveta) — abre sozinha quando algum está ativo. `details`
                      nativo mantém os inputs no DOM mesmo fechado, então o GET envia tudo. --}}
-                <details class="border-t border-gray-200 pt-3 group" {{ $temAvancado ? 'open' : '' }}>
-                    <summary class="cursor-pointer select-none inline-flex items-center gap-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700">
+                <details class="border-t border-gray-200 pt-2 sm:pt-3 group" {{ $temAvancado ? 'open' : '' }}>
+                    <summary class="cursor-pointer select-none inline-flex min-h-11 w-full sm:w-auto items-center gap-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700">
                         <svg class="w-3.5 h-3.5 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                         Filtros avançados
                         @if($temAvancado)<span class="normal-case text-[9px] font-bold text-gray-600 bg-gray-200 rounded px-1.5 py-0.5 tracking-normal">ativos</span>@endif
                     </summary>
-                    <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                         <div>
-                            <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Emissão — De</label>
-                            <input type="date" name="periodo_de" value="{{ $filtros['periodo_de'] ?? '' }}" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Emissão — De</label>
+                            <input type="date" name="periodo_de" value="{{ $filtros['periodo_de'] ?? '' }}" class="mt-1 h-11 md:h-9 w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-sm">
                         </div>
                         <div>
-                            <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Emissão — Até</label>
-                            <input type="date" name="periodo_ate" value="{{ $filtros['periodo_ate'] ?? '' }}" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Emissão — Até</label>
+                            <input type="date" name="periodo_ate" value="{{ $filtros['periodo_ate'] ?? '' }}" class="mt-1 h-11 md:h-9 w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-sm">
                         </div>
                         <div>
-                            <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">CNPJ Participante</label>
-                            <input type="text" name="participante_cnpj" value="{{ $filtros['participante_cnpj'] ?? '' }}" placeholder="00.000.000/0000-00" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">CNPJ Participante</label>
+                            <input type="text" name="participante_cnpj" value="{{ $filtros['participante_cnpj'] ?? '' }}" placeholder="00.000.000/0000-00" class="mt-1 h-11 md:h-9 w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-sm">
                         </div>
                         <div>
-                            <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Verificação</label>
-                            <select name="status_validacao" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
-                                @foreach($statusOptions as $value => $label)
-                                    <option value="{{ $value }}" {{ ($filtros['status_validacao'] ?? 'todos') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Tipo</label>
-                            <select name="tipo_nota" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Tipo</label>
+                            <select name="tipo_nota" class="mt-1 h-11 md:h-9 w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-sm">
                                 <option value="">Todos</option>
                                 <option value="entrada" {{ ($filtros['tipo_nota'] ?? '') === 'entrada' ? 'selected' : '' }}>Entrada</option>
                                 <option value="saida" {{ ($filtros['tipo_nota'] ?? '') === 'saida' ? 'selected' : '' }}>Saída</option>
                             </select>
                         </div>
                         <div>
-                            <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Modelo</label>
-                            <select name="modelo" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Modelo</label>
+                            <select name="modelo" class="mt-1 h-11 md:h-9 w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-sm">
                                 <option value="">Todos</option>
                                 @foreach($modeloLabels as $mv => $ml)
                                     <option value="{{ $mv }}" {{ ($filtros['modelo'] ?? '') === $mv ? 'selected' : '' }}>{{ $ml }}</option>
@@ -380,22 +374,22 @@
                     </div>
                 </details>
             </div>
-            <div class="mobile-filter-actions bg-gray-50 px-4 py-2 border-t border-gray-200 flex gap-2">
-                <button type="submit" class="px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Aplicar</button>
-                <a href="/app/clearance/notas" data-link class="px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide border border-gray-300 text-gray-700">Limpar</a>
+            <div class="mobile-filter-actions bg-gray-50 px-3 sm:px-4 py-2 border-t border-gray-200 grid grid-cols-2 md:flex gap-2">
+                <button type="submit" class="h-11 md:h-9 px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Aplicar</button>
+                <a href="/app/clearance/notas" data-link class="h-11 md:h-9 inline-flex items-center justify-center px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide border border-gray-300 text-gray-700">Limpar</a>
             </div>
         </form>
 
         @if(! empty($chips))
-            <div class="mb-4 flex flex-wrap items-center gap-2">
-                <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Filtros ativos</span>
+            <div class="mobile-filter-scroll mb-4 flex flex-nowrap md:flex-wrap items-center gap-2 overflow-x-auto md:overflow-visible pb-1 md:pb-0">
+                <span class="shrink-0 whitespace-nowrap text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Filtros ativos</span>
                 @foreach($chips as $chip)
                     <a href="{{ $chip['url'] }}" data-link class="inline-flex items-center gap-1.5 bg-white border border-gray-300 rounded-full pl-3 pr-2 py-1 text-[11px] font-medium text-gray-700 hover:bg-gray-50">
                         {{ $chip['label'] }}
                         <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
                     </a>
                 @endforeach
-                <a href="/app/clearance/notas" data-link class="text-[11px] font-semibold text-gray-500 hover:text-gray-900 underline underline-offset-2">Limpar tudo</a>
+                <a href="/app/clearance/notas" data-link class="shrink-0 whitespace-nowrap text-[11px] font-semibold text-gray-500 hover:text-gray-900 underline underline-offset-2">Limpar tudo</a>
             </div>
         @endif
 
@@ -426,13 +420,17 @@
         {{-- Plan cards + CTA (escondido sem seleção) --}}
         <div id="clearance-planos" class="mb-4 hidden">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div id="plan-card-basico" class="bg-white rounded border p-4 cursor-pointer transition" role="radio" aria-checked="true" tabindex="0" data-tier="basico" style="border-color: #1f2937">
-                    <div class="flex items-start justify-between mb-3">
+                {{-- Escolha EXCLUSIVA de tier (radio): ou Clearance, ou Clearance completo.
+                     O completo é CUMULATIVO — faz tudo do básico e ainda investiga a contraparte. --}}
+                <label id="plan-card-basico" for="tier-basico"
+                       class="plan-card block cursor-pointer bg-white rounded border p-4 transition" data-tier="basico" style="border-color: #1f2937">
+                    <div class="flex items-start gap-2.5 mb-3">
+                        <input type="radio" name="clearance_tier" id="tier-basico" value="basico" class="mt-0.5 h-4 w-4" style="accent-color: #1f2937" checked>
                         <div>
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Clearance</p>
-                            <p class="text-base font-bold text-gray-900">Básico</p>
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Verificação oficial</p>
+                            <p class="text-base font-bold text-gray-900">Clearance</p>
+                            <p class="text-[11px] text-gray-500 mt-0.5">Confere o documento.</p>
                         </div>
-                        <span class="whitespace-nowrap plan-chip px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #1f2937">Selecionado</span>
                     </div>
                     <ul class="space-y-1.5 text-xs text-gray-700 mb-3">
                         <li class="flex items-start gap-2"><svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #047857"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>Status SEFAZ (NF-e)</li>
@@ -446,33 +444,64 @@
                             <span class="text-[10px] font-bold text-white px-2 py-0.5 rounded uppercase tracking-wide" style="background-color: #374151"><span class="plan-total" data-tier="basico">R$ 0,00</span></span>
                         </span>
                     </div>
-                </div>
-                <div id="plan-card-full" class="bg-white rounded border p-4 transition {{ config('clearance.full.habilitado') ? 'cursor-pointer' : 'pointer-events-none opacity-60' }}" role="radio" aria-checked="false" tabindex="0" data-tier="full" style="border-color: #e5e7eb">
-                    <div class="flex items-start justify-between mb-3">
-                        <div>
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Clearance</p>
-                            <p class="text-base font-bold text-gray-900">Full</p>
+                </label>
+
+                {{-- Clearance completo: CUMULATIVO — tudo do Clearance + regularidade da contraparte
+                     (situação cadastral grátis + SINTEGRA + CND Federal). Preço fechado por nota.
+                     Spec: docs/clearance/clearance-full-camada-a.md --}}
+                @if(config('clearance.full.habilitado'))
+                    <label id="plan-card-full" for="tier-full"
+                           class="plan-card block cursor-pointer rounded border p-4 transition bg-white" data-tier="full" style="border-color: #d1d5db">
+                        <div class="flex items-start gap-2.5 mb-3">
+                            <input type="radio" name="clearance_tier" id="tier-full" value="full" class="mt-0.5 h-4 w-4" style="accent-color: #1f2937">
+                            <div>
+                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Documento + contraparte</p>
+                                <p class="text-base font-bold text-gray-900">Clearance completo</p>
+                                <p class="text-[11px] text-gray-500 mt-0.5">Confere o documento <strong>e</strong> quem emitiu.</p>
+                            </div>
                         </div>
-                        @if(config('clearance.full.habilitado'))
-                            <span class="whitespace-nowrap plan-chip hidden px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #1f2937">Selecionado</span>
-                        @else
+                        <ul class="space-y-1.5 text-xs text-gray-700 mb-3">
+                            {{-- Deixa EXPLÍCITO que inclui o básico — não é alternativa, é upgrade. --}}
+                            <li class="flex items-start gap-2 font-semibold text-gray-900"><svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #047857"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>Tudo do Clearance (status SEFAZ, validação contábil, cruzamento EFD)</li>
+                            <li class="flex items-start gap-2"><span class="w-3.5 flex-shrink-0 text-center font-bold" style="color: #047857">+</span>Situação cadastral da contraparte na Receita Federal</li>
+                            <li class="flex items-start gap-2"><span class="w-3.5 flex-shrink-0 text-center font-bold" style="color: #047857">+</span>SINTEGRA — inscrição estadual (crédito de ICMS)</li>
+                            <li class="flex items-start gap-2"><span class="w-3.5 flex-shrink-0 text-center font-bold" style="color: #047857">+</span>CND Federal (PGFN) da contraparte</li>
+                        </ul>
+                        <div class="border-t border-gray-200 pt-3 flex items-center justify-between">
+                            <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded uppercase tracking-wide">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $custosTiers['full'])) / nota</span>
+                            <span class="flex items-center gap-1.5">
+                                <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Total</span>
+                                <span class="text-[10px] font-bold text-white px-2 py-0.5 rounded uppercase tracking-wide" style="background-color: #374151"><span class="plan-total" data-tier="full">R$ 0,00</span></span>
+                            </span>
+                        </div>
+                    </label>
+                @else
+                    <div class="rounded border border-dashed p-4" style="border-color: #d1d5db; background-color: #f9fafb;">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Documento + contraparte</p>
+                                <p class="text-base font-bold text-gray-500">Clearance completo</p>
+                            </div>
                             <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #6b7280">Em breve</span>
-                        @endif
+                        </div>
+                        <p class="text-[11px] text-gray-500">Tudo do Clearance + a regularidade da contraparte de cada nota (situação cadastral, SINTEGRA e CND Federal).</p>
                     </div>
-                    <ul class="space-y-1.5 text-xs text-gray-700 mb-3">
-                        <li class="flex items-start gap-2"><svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #047857"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>Tudo do Básico</li>
-                        <li class="flex items-start gap-2"><svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #047857"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>CND Federal do emitente na data</li>
-                        <li class="flex items-start gap-2"><svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #047857"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>CNDT do emitente na data</li>
-                    </ul>
-                    <div class="border-t border-gray-200 pt-3 flex items-center justify-between">
-                        <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded uppercase tracking-wide">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $custosTiers['full'])) / nota</span>
-                        <span class="flex items-center gap-1.5">
-                            <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Total</span>
-                            <span class="text-[10px] font-bold text-white px-2 py-0.5 rounded uppercase tracking-wide" style="background-color: #374151"><span class="plan-total" data-tier="full">R$ 0,00</span></span>
-                        </span>
-                    </div>
-                </div>
+                @endif
             </div>
+
+            {{-- Certificado A1: capability de conta, NÃO tier por documento. Com o cert cadastrado, a
+                 MESMA consulta (mesmo preço) volta completa — a SEFAZ só devolve tributos, itens e XML
+                 pra quem se autentica. O consumo do cert já está implementado; o confronto
+                 Declarado × SEFAZ desses dados é que ainda não. Ver docs/clearance/certificado-a1.md --}}
+            <div class="mt-3 rounded border bg-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2" style="border-color: #e5e7eb">
+                <p class="text-[11px] text-gray-600">
+                    <strong class="text-gray-900">Certificado digital A1:</strong>
+                    com o certificado da empresa cadastrado, a consulta acima vem completa (tributos, itens com NCM/CFOP/CST, XML e contraparte sem máscara) — <strong>sem custo adicional por nota</strong>.
+                </p>
+                <a href="/app/minha-empresa#certificado-digital" target="_blank" rel="noopener"
+                   class="text-[11px] font-semibold whitespace-nowrap px-2.5 py-1 rounded text-white" style="background-color: #1f2937">Cadastrar certificado</a>
+            </div>
+
             <div class="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white rounded border border-gray-300 px-4 py-3">
                 <span class="flex items-center gap-2">
                     <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Saldo após</span>
@@ -641,6 +670,8 @@
                 {{ $notas->withQueryString()->links() }}
             </div>
         </div>
+
+        @include('autenticado.clearance.partials._historico-verificacoes')
     </div>
 
     {{-- Barra fixa de ação: sempre visível enquanto há seleção --}}
@@ -662,11 +693,11 @@
     <div class="bg-white rounded border border-gray-300 shadow-lg max-w-md w-full">
         <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
             <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Confirmar Clearance</span>
-            <span id="modal-confirm-tier-chip" class="text-[9px] font-bold uppercase tracking-wide text-white px-2 py-0.5 rounded" style="background-color: #1f2937">Básico</span>
+            <span id="modal-confirm-tier-chip" class="text-[9px] font-bold uppercase tracking-wide text-white px-2 py-0.5 rounded" style="background-color: #1f2937">Clearance</span>
         </div>
         <div class="p-5 space-y-4">
             <p class="text-sm text-gray-700">
-                Será executada a validação <strong id="modal-confirm-tier-label">Clearance Básico</strong>
+                Será executada a verificação <strong id="modal-confirm-tier-label">Clearance</strong>
                 em <strong id="modal-confirm-qtd">0</strong> nota(s).
             </p>
             <div class="grid grid-cols-2 divide-x divide-gray-200 border border-gray-200 rounded overflow-hidden">
@@ -678,6 +709,14 @@
                     <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Saldo após</p>
                     <p class="text-lg font-bold mt-0.5" id="modal-confirm-saldo-apos">R$ 0,00</p>
                 </div>
+            </div>
+
+            {{-- Preço FECHADO por nota (R$ 2,00): inclui a regularidade da contraparte. O total acima
+                 já é o total — não há cobrança posterior. --}}
+            <div id="modal-confirm-regularidade" class="hidden rounded p-3" style="background-color: #f0fdf4; border: 1px solid #bbf7d0">
+                <p class="text-[12px]" style="color: #166534">
+                    <strong>Inclui a regularidade da contraparte</strong> de cada nota — situação cadastral, SINTEGRA (IE) e CND Federal. Sem cobrança adicional: o valor acima é o total.
+                </p>
             </div>
         </div>
         <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-2">

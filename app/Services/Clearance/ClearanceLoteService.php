@@ -59,7 +59,8 @@ class ClearanceLoteService
             $userId,
             $tabId,
             "Clearance em lote ({$tier}) · {$itens->count()} documento(s)",
-            'app.clearance.notas.resultado'
+            'app.clearance.notas.resultado',
+            $tier === 'full',
         );
     }
 
@@ -76,7 +77,9 @@ class ClearanceLoteService
         int $userId,
         ?string $tabId,
         string $descricaoDebito,
-        string $resultadoRouteName = 'app.clearance.notas.resultado'
+        string $resultadoRouteName = 'app.clearance.notas.resultado',
+        bool $regularidade = false,
+        string $fluxoOrigem = 'lote'
     ): array {
         if ($itens->isEmpty()) {
             return [
@@ -88,6 +91,7 @@ class ClearanceLoteService
 
         $user = User::findOrFail($userId);
         $custoTotal = $itens->count() * $custoUnit;
+        $fluxoOrigem = $fluxoOrigem === 'avulsa' ? 'avulsa' : 'lote';
 
         if (! $this->saldoService->hasEnough($user, $custoTotal)) {
             return [
@@ -116,12 +120,41 @@ class ClearanceLoteService
                 // response (abaixo), não de persistência.
                 'creditos_cobrados' => $custoTotal,
                 'tab_id' => $tabId,
+                // Tier contratado — a tela de resultado usa isto pra saber se a regularidade da
+                // contraparte foi paga/disparada (num lote básico o bloco nem aparece).
+                'resultado_resumo' => [
+                    'tier' => $regularidade ? 'full' : 'basico',
+                    'fluxo_origem' => $fluxoOrigem,
+                ],
             ]);
 
             // Lista de chaves do lote → FecharClearanceLoteService soma o estorno por doc.
             Cache::put("clearance_lote_chaves:{$lote->id}", $itens->pluck('chave')->all(), 86400);
 
             $total = $itens->count();
+            $tier = $regularidade ? 'full' : 'basico';
+
+            // Faixa da barra: no completo os documentos vão até 50% e a regularidade das
+            // contrapartes ocupa 50→95 (o 100 vem do 'finalizado'). No básico, os documentos
+            // usam a faixa toda.
+            $spanDocs = $regularidade ? 50 : 95;
+            $totalEtapas = ClearanceEtapas::total($tier);
+
+            // Etapa 1 (Preparando consulta) publicada JÁ — antes de qualquer chamada externa, como
+            // no contrato de etapas da Consulta CNPJ. Sem isto a tela abria sem etapa corrente e o
+            // strip só ganhava vida quando o 1º documento começava.
+            if ($tabId) {
+                Cache::put("progresso:{$userId}:{$tabId}", [
+                    'tab_id' => $tabId,
+                    'etapa' => 1,
+                    'total_etapas' => $totalEtapas,
+                    'etapa_label' => ClearanceEtapas::para($tier)[0]['label'],
+                    'status' => 'processando',
+                    'progresso' => 0,
+                    'mensagem' => "Preparando {$total} documento(s)…",
+                ], 600);
+            }
+
             $jobs = $itens->values()->map(fn (array $item, int $i) => new ProcessarClearanceJob(
                 loteId: $lote->id,
                 chave: $item['chave'],
@@ -132,11 +165,31 @@ class ClearanceLoteService
                 custoCreditos: $custoUnit,
                 indice: $i + 1,
                 total: $total,
+                pctSpan: $spanDocs,
+                totalEtapas: $totalEtapas,
             ))->all();
 
+            $loteId = $lote->id;
             Bus::batch($jobs)
-                ->name("clearance-lote-{$lote->id}")
-                ->then(fn () => app(FecharClearanceLoteService::class)->fechar($lote->id))
+                ->name("clearance-lote-{$loteId}")
+                ->then(function () use ($loteId, $regularidade, $userId, $tabId) {
+                    // Clearance completo: investiga a regularidade das contrapartes ANTES de
+                    // fechar. Fechar aqui emitiria 'finalizado' → o front recarregaria a tela de
+                    // resultado com as contrapartes ainda "em apuração", e nada as atualizaria.
+                    // Quem fecha o lote é o batch da regularidade (ver dispararConsulta).
+                    if ($regularidade) {
+                        $out = app(RegularidadeContraparteService::class)
+                            ->investigarPorLoteClearance($loteId, $userId, $tabId, fecharClearanceLoteId: $loteId);
+
+                        // Nada a consultar (sem contraparte cadastrável, ou todas já frescas):
+                        // não há batch pra fechar o lote — fecha agora.
+                        if (($out['lote_id'] ?? null) !== null) {
+                            return;
+                        }
+                    }
+
+                    app(FecharClearanceLoteService::class)->fechar($loteId);
+                })
                 ->dispatch();
 
             return [

@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Services\Consultas\ComprovanteArquivador;
 use App\Services\Consultas\Contracts\ConsultaProvider;
 use App\Services\Consultas\Contracts\Fonte;
 use App\Services\Consultas\Dto\RespostaProvider;
@@ -41,20 +42,33 @@ class ProcessarConsultaJob implements ShouldQueue
         // plano é pulado. Usado pelo retry pra re-bater a InfoSimples apenas nas fontes que
         // falharam, sem custo nas que já deram certo. Default null = processa o plano inteiro.
         public ?array $somenteFontes = null,
+        // Faixa da barra ocupada por esta fase (default 0→100 = a Consulta CNPJ inteira, sem
+        // mudança de comportamento). O clearance completo usa 50→95, porque os documentos já
+        // consumiram a primeira metade — sem isso a barra voltava pra 0 na fase da contraparte.
+        public int $pctBase = 0,
+        public int $pctSpan = 100,
+        // Emitir a etapa `inicializacao` (1) ao começar o alvo. No clearance completo isso é
+        // desligado: a etapa 1 já foi cumprida pela fase dos documentos, e reemiti-la faria o strip
+        // VOLTAR pra "Preparando consulta" no meio da consulta da contraparte.
+        public bool $emitirInicializacao = true,
     ) {}
 
     public function handle(
         FonteRegistry $registry,
         ThrottleProvider $throttle,
         PersistenciaCnpj $persistencia,
+        ComprovanteArquivador $comprovanteArquivador,
     ): void {
         $total = count($this->etapas);
-        // Etapa inicial: inicializacao.
-        [$nIni, $lIni] = $this->etapaPorChave('inicializacao', 'Preparando consulta');
-        $this->progresso(
-            etapa: $nIni, total: $total, label: $lIni, status: 'processando',
-            progresso: $this->pctGlobal(0, 1), mensagem: $this->prefixoAlvo().$lIni,
-        );
+        // Etapa inicial: inicializacao. Suprimida quando esta é a 2ª fase de um fluxo maior
+        // (clearance completo) — ver $emitirInicializacao.
+        if ($this->emitirInicializacao) {
+            [$nIni, $lIni] = $this->etapaPorChave('inicializacao', 'Preparando consulta');
+            $this->progresso(
+                etapa: $nIni, total: $total, label: $lIni, status: 'processando',
+                progresso: $this->pctGlobal(0, 1), mensagem: $this->prefixoAlvo().$lIni,
+            );
+        }
 
         // Alvo mutável: a UF autoritativa vem do cadastro (minhareceita) e alimenta as
         // fontes UF-dependentes (ex: CND Estadual). O cadastro é a 1ª fonte de todo plano.
@@ -125,7 +139,7 @@ class ProcessarConsultaJob implements ShouldQueue
                 continue;
             }
 
-            $resultado = $this->consultarFonte($fonte, $alvo, $throttle, $persistencia);
+            $resultado = $this->consultarFonte($fonte, $alvo, $throttle, $persistencia, $comprovanteArquivador);
 
             if ($resultado?->ehFalhaEstornavel()) {
                 $creditosFalhos += $resultado->custoCreditos;
@@ -139,7 +153,16 @@ class ProcessarConsultaJob implements ShouldQueue
             }
         }
 
-        $creditosFalhos = $this->retentarFontes($retentaveis, $alvo, $throttle, $persistencia, $creditosFalhos, $totalFontes, $total);
+        $creditosFalhos = $this->retentarFontes(
+            $retentaveis,
+            $alvo,
+            $throttle,
+            $persistencia,
+            $comprovanteArquivador,
+            $creditosFalhos,
+            $totalFontes,
+            $total,
+        );
 
         // Fecha o progresso DESTE alvo em pctGlobal(total, total). Sem isso a última emissão
         // parava em (N-1)/N — e num retry escopado a 1 fonte a ÚNICA emissão era 0%, deixando
@@ -166,13 +189,32 @@ class ProcessarConsultaJob implements ShouldQueue
      * erro interno). Retorna null quando a fonte estourou exceção nossa (já marcada como
      * 'interno'). $alvo é mutável: o cadastro grava UF/município autoritativos nele.
      */
-    private function consultarFonte(Fonte $fonte, array &$alvo, ThrottleProvider $throttle, PersistenciaCnpj $persistencia): ?ResultadoFonte
-    {
+    private function consultarFonte(
+        Fonte $fonte,
+        array &$alvo,
+        ThrottleProvider $throttle,
+        PersistenciaCnpj $persistencia,
+        ComprovanteArquivador $comprovanteArquivador,
+    ): ?ResultadoFonte {
         try {
             $provider = $this->resolverProvider($fonte->provider());
             $resp = $this->consultarProvider($fonte, $alvo, $provider, $throttle);
 
             $dados = $fonte->normalizar($resp->raw, $resp->status);
+
+            $bloco = $dados[$fonte->chave()] ?? null;
+            if (is_array($bloco) && ! empty($bloco['comprovante'])) {
+                $arquivo = $comprovanteArquivador->arquivar(
+                    (string) $bloco['comprovante'],
+                    $this->userId,
+                    ComprovanteArquivador::rotuloFonte($fonte->chave(), (string) ($alvo['cnpj'] ?? '')),
+                );
+
+                if ($arquivo !== null) {
+                    $dados[$fonte->chave()]['comprovante_arquivo'] = $arquivo['path'];
+                    $dados[$fonte->chave()]['comprovante_arquivado_em'] = $arquivo['arquivado_em'];
+                }
+            }
 
             // UF e município do cadastro são autoritativos p/ as fontes UF/cidade-dependentes.
             if ($fonte->chave() === 'cadastro') {
@@ -284,8 +326,16 @@ class ProcessarConsultaJob implements ShouldQueue
      * @param  array<int, array{fonte: Fonte, falhouEm: float}>  $retentaveis
      * @return int unidades internas do valor a estornar
      */
-    private function retentarFontes(array $retentaveis, array $alvo, ThrottleProvider $throttle, PersistenciaCnpj $persistencia, int $creditosFalhos, int $totalFontes, int $totalEtapas): int
-    {
+    private function retentarFontes(
+        array $retentaveis,
+        array $alvo,
+        ThrottleProvider $throttle,
+        PersistenciaCnpj $persistencia,
+        ComprovanteArquivador $comprovanteArquivador,
+        int $creditosFalhos,
+        int $totalFontes,
+        int $totalEtapas,
+    ): int {
         $maxTentativas = (int) config('consultas.retry.auto.max_tentativas', 1);
         $cooldown = (int) config('consultas.retry.auto.cooldown_segundos', 30);
 
@@ -311,7 +361,13 @@ class ProcessarConsultaJob implements ShouldQueue
                 );
 
                 $persistencia->incrementarTentativaFonte($this->loteId, $this->alvoTipo, $this->alvoId, $fonte->chave());
-                $resultado = $this->consultarFonte($fonte, $alvo, $throttle, $persistencia);
+                $resultado = $this->consultarFonte(
+                    $fonte,
+                    $alvo,
+                    $throttle,
+                    $persistencia,
+                    $comprovanteArquivador,
+                );
 
                 if ($resultado?->status === 'retry') {
                     $aindaFalhando[] = ['fonte' => $fonte, 'falhouEm' => microtime(true)];
@@ -372,8 +428,9 @@ class ProcessarConsultaJob implements ShouldQueue
     {
         $base = max(0, $this->alvoIndice - 1);            // alvos concluídos antes deste (0-based)
         $frac = $totalFontes > 0 ? $fonteIndice / $totalFontes : 0;
+        $fracao = ($base + $frac) / max(1, $this->totalAlvos);   // 0..1 desta fase
 
-        return (int) round((($base + $frac) / max(1, $this->totalAlvos)) * 100);
+        return (int) round($this->pctBase + $fracao * $this->pctSpan);
     }
 
     /** Prefixo "Empresa X de N · " na mensagem quando o lote tem mais de um alvo. */

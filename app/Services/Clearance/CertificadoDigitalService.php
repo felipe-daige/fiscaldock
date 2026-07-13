@@ -61,6 +61,57 @@ class CertificadoDigitalService
         ]);
     }
 
+    /**
+     * Material do certificado A1 pronto pra ir na consulta InfoSimples (`pkcs12_cert` +
+     * `pkcs12_pass`). Null quando o cliente não tem certificado, ele está expirado/inativo
+     * ou o arquivo sumiu do storage — nesses casos a consulta roda pública (sem cert), que
+     * é o comportamento de sempre.
+     *
+     * O .pfx é binário; a chamada do provider é form-urlencoded → vai em base64. O formato
+     * exato NÃO está na doc pública do InfoSimples (só os nomes dos params) — por isso o
+     * DocumentoConsultaService tem fallback pra consulta sem cert se o provedor recusar o
+     * parâmetro. Validar com `clearance:smoke {chave} {tipo} --cliente={id}` antes de confiar.
+     *
+     * ATENÇÃO (segurança): isto envia o certificado A1 do cliente + a senha em claro ao
+     * InfoSimples a cada consulta. É o contrato que o provedor impõe (não há cofre/upload
+     * prévio nesta API). A senha sai do `Crypt` só aqui, no momento do envio.
+     *
+     * @return array{pkcs12_cert: string, pkcs12_pass: string}|null
+     */
+    public function materialParaConsulta(?int $clienteId): ?array
+    {
+        if (! $clienteId) {
+            return null;
+        }
+
+        $cert = CertificadoDigital::where('cliente_id', $clienteId)
+            ->where('status', 'ativo')
+            ->whereDate('validade', '>=', now()->toDateString())
+            ->first();
+
+        if (! $cert || ! $cert->arquivo_path || ! Storage::disk(self::DISK)->exists($cert->arquivo_path)) {
+            return null;
+        }
+
+        try {
+            $conteudo = Storage::disk(self::DISK)->get($cert->arquivo_path);
+            $senha = Crypt::decryptString($cert->senha_cifrada);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return null;
+        }
+
+        if (! $conteudo) {
+            return null;
+        }
+
+        return [
+            'pkcs12_cert' => base64_encode($conteudo),
+            'pkcs12_pass' => $senha,
+        ];
+    }
+
     public function remover(Cliente $cliente): void
     {
         $cert = CertificadoDigital::where('cliente_id', $cliente->id)->first();

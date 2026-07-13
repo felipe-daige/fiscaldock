@@ -50,7 +50,9 @@ it('cria alerta quando a certidão regular vence em ≤30 dias, com vence_em', f
         ->and($alerta->severidade)->toBe('media')      // 10 dias > 7 → média
         ->and($alerta->vence_em->toDateString())->toBe($venc->toDateString())
         ->and($alerta->cliente_id)->toBe($this->cliente)
-        ->and($alerta->descricao)->toContain('FGTS');
+        ->and($alerta->descricao)->toContain('FGTS')
+        ->and($alerta->descricao)->toContain('vence em 10 dias')
+        ->and($alerta->descricao)->not->toContain('dia(s)');
 });
 
 it('severidade alta quando vence em ≤7 dias', function () {
@@ -60,6 +62,36 @@ it('severidade alta quando vence em ≤7 dias', function () {
     $this->svc->recalcular($this->user->id);
 
     expect(Alerta::where('tipo', 'certidao_vencendo')->where('participante_id', $pid)->value('severidade'))->toBe('alta');
+});
+
+it('usa o singular quando a certidão vence em um dia', function () {
+    $pid = ($this->mkParticipante)('FORNECEDOR SINGULAR', '77777777000177');
+    ($this->scoreComValidade)($pid, now()->addDay()->format('d/m/Y'));
+
+    $this->svc->recalcular($this->user->id);
+
+    $descricao = Alerta::where('tipo', 'certidao_vencendo')
+        ->where('participante_id', $pid)
+        ->value('descricao');
+
+    expect($descricao)->toContain('vence em 1 dia')
+        ->not->toContain('1 dias')
+        ->not->toContain('dia(s)');
+});
+
+it('a central usa um expansível próprio e português correto para certidões vencendo', function () {
+    $html = view('autenticado.alertas.central', [
+        'clientes' => collect(),
+        'resumo' => [],
+    ])->render();
+
+    expect($html)
+        ->toContain("tipo === 'certidao_vencendo'")
+        ->toContain('renderCertidaoVencendo(detalhes, alerta)')
+        ->toContain('Prazos das certidões')
+        ->toContain("certidao_vencendo: 'Certidão vencendo'")
+        ->not->toContain("certidao_vencendo: 'Certidão Vencendo'")
+        ->not->toContain("displayVal = escapeHtml(val.join(', '))");
 });
 
 it('certidão já vencida gera alerta alta', function () {

@@ -34,6 +34,7 @@ class SubscriptionPlanSeeder extends Seeder
                     'clearance_lote' => false, 'clearance_full' => false,
                     'score_historico' => false, 'retencao_meses' => 6,
                     'frequencia_minima_dias' => 30,
+                    'armazenamento_mb' => 250,
                 ],
             ],
             [
@@ -48,6 +49,7 @@ class SubscriptionPlanSeeder extends Seeder
                     'clearance_lote' => true, 'clearance_full' => false,
                     'score_historico' => false, 'retencao_meses' => null,
                     'frequencia_minima_dias' => 30,
+                    'armazenamento_mb' => 2 * 1024,
                 ],
             ],
             [
@@ -62,6 +64,7 @@ class SubscriptionPlanSeeder extends Seeder
                     'clearance_lote' => true, 'clearance_full' => false,
                     'score_historico' => true, 'retencao_meses' => null,
                     'frequencia_minima_dias' => 15,
+                    'armazenamento_mb' => 10 * 1024,
                 ],
             ],
             [
@@ -76,6 +79,7 @@ class SubscriptionPlanSeeder extends Seeder
                     'clearance_lote' => true, 'clearance_full' => true,
                     'score_historico' => true, 'retencao_meses' => null,
                     'frequencia_minima_dias' => 7,
+                    'armazenamento_mb' => 50 * 1024,
                 ],
             ],
             [
@@ -90,6 +94,7 @@ class SubscriptionPlanSeeder extends Seeder
                     'clearance_lote' => true, 'clearance_full' => true,
                     'score_historico' => true, 'retencao_meses' => null,
                     'frequencia_minima_dias' => 1,
+                    'armazenamento_mb' => 200 * 1024,
                 ],
             ],
         ];

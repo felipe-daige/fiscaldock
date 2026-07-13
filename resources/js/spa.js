@@ -68,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cliente: null, // Código inline na view
         clientes: null, // Código inline na view
         configuracoes: null, // Código inline na view (sem isso o SPA busca /js/configuracoes.js → 404)
+        arquivos: null, // Página usa formulários/downloads nativos; não há bundle JS dedicado
     };
 
     // Converte slug (com hífen/underscore) para camelCase

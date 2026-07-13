@@ -5,6 +5,8 @@ use App\Models\User;
 use App\Services\Clearance\Sefaz\ContextoPersistencia;
 use App\Services\Clearance\Sefaz\DocumentoSnapshot;
 use App\Services\Clearance\Sefaz\SnapshotPersister;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 
 uses(Illuminate\Foundation\Testing\RefreshDatabase::class);
 
@@ -50,4 +52,37 @@ it('isola por user_id (mesma chave, usuários distintos = 2 linhas)', function (
     $p->upsert(snap(), new ContextoPersistencia(userId: $b->id));
 
     expect(NfeConsulta::where('chave_acesso', str_repeat('5', 44))->count())->toBe(2);
+});
+
+it('arquiva links DF-e dentro de payload.comprovantes_arquivos', function () {
+    Storage::fake('local');
+    config()->set('consultas.comprovantes.arquivar', true);
+    Http::fake([
+        'arquivos.example/*' => Http::response('%PDF', 200, ['Content-Type' => 'application/pdf']),
+    ]);
+    $user = User::factory()->create();
+    $snapshot = new DocumentoSnapshot(
+        'NFE',
+        str_repeat('7', 44),
+        'AUTORIZADA',
+        [
+            'status' => 'AUTORIZADA',
+            'url_html' => 'https://arquivos.example/nfe.html',
+            'url_xml' => 'https://arquivos.example/nfe.xml',
+            'url_site_receipt' => 'https://arquivos.example/receipt.pdf',
+        ],
+        ['nfe_clearance' => ['status' => 'AUTORIZADA']],
+        true,
+        false,
+        true,
+    );
+
+    app(SnapshotPersister::class)->upsert($snapshot, new ContextoPersistencia(userId: $user->id));
+
+    $arquivos = NfeConsulta::where('user_id', $user->id)->firstOrFail()
+        ->payload['comprovantes_arquivos'];
+    expect($arquivos)->toHaveKeys(['html', 'xml', 'site_receipt']);
+    foreach ($arquivos as $path) {
+        Storage::disk('local')->assertExists($path);
+    }
 });

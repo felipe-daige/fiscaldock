@@ -6,6 +6,7 @@ use App\Models\EfdNota;
 use App\Models\NfeConsulta;
 use App\Models\User;
 use App\Services\Clearance\Export\ClearanceDashboardReportBuilder;
+use App\Services\ValidacaoContabilService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use function Pest\Laravel\actingAs;
@@ -71,9 +72,9 @@ it('agrega valor, exposição bloqueante e cobertura no payload do relatório', 
         ->and($r['valor_bloqueante'])->toBe(5000.0)
         ->and($r['valor_pendente'])->toBe(300.0);
 
-    // Backlog = pendentes × custo básico (3 créditos).
+    // Backlog = pendentes × custo do documento (preço único do clearance).
     expect($relatorio['backlog']['notas'])->toBe(1)
-        ->and($relatorio['backlog']['custo_creditos'])->toBe(3);
+        ->and($relatorio['backlog']['custo_creditos'])->toBe(ValidacaoContabilService::CUSTO_DOCUMENTO);
 
     // A nota cancelada de R$ 5.000 aparece na exposição.
     $exposicao = $relatorio['secoes']['exposicao-bloqueante']['linhas'];

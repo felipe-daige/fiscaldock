@@ -2,8 +2,10 @@
 
 namespace App\Services\Clearance\Sefaz;
 
+use App\Services\Clearance\CertificadoDigitalService;
 use App\Services\Consultas\Providers\InfoSimplesProvider;
 use App\Services\Consultas\ThrottleProvider;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
 class DocumentoConsultaService
@@ -13,11 +15,18 @@ class DocumentoConsultaService
         private ThrottleProvider $throttle,
         private NfeSnapshotNormalizer $nfeNormalizer,
         private CteSnapshotNormalizer $cteNormalizer,
+        private CertificadoDigitalService $certificados,
     ) {}
 
     /**
      * Núcleo PURO: consulta a SEFAZ por chave e devolve o snapshot normalizado.
      * NÃO persiste — o caller (lote/busca-notas) decide a persistência.
+     *
+     * Quando o cliente tem certificado digital A1 válido cadastrado, a consulta vai
+     * ASSINADA (`pkcs12_cert`/`pkcs12_pass`) e a SEFAZ devolve o documento COMPLETO
+     * (tributos, itens com NCM/CFOP/CST, XML, contraparte sem máscara). Sem certificado,
+     * roda a consulta pública (comportamento de sempre). O gate é o próprio dado — não há
+     * flag: quem tem cert recebe completo, quem não tem recebe público.
      *
      * @param  string  $tipoDocumento  'nfe' | 'cte'
      */
@@ -43,14 +52,36 @@ class DocumentoConsultaService
             throw new InvalidArgumentException("Modelo {$modelo} incompatível com {$tipoDocumento}.");
         }
 
-        $resp = $this->chamar($slug, $param, $chave);
+        $cert = config('clearance.certificado.habilitado')
+            ? $this->certificados->materialParaConsulta($clienteId)
+            : null;
+
+        $resp = $this->chamar($slug, $param, $chave, $cert);
 
         // Retry 1x em status retryável (espelha "Wait 30s + Retry" dos Code Nodes).
         $statusFinal = $resp->status;
         if ($resp->status === 'retry') {
-            $resp2 = $this->chamar($slug, $param, $chave);
+            $resp2 = $this->chamar($slug, $param, $chave, $cert);
             $resp = $resp2;
             $statusFinal = $resp2->status === 'sucesso' ? 'sucesso' : 'retry';
+        }
+
+        // Rede de segurança do certificado: o formato exato de `pkcs12_cert` não está na doc
+        // pública do InfoSimples. Se a consulta ASSINADA for recusada (erro de parâmetro
+        // 608/619/620 ou fatal), reconsulta SEM o certificado — o clearance básico (pago!)
+        // não pode regredir por causa do cert. Log alto: se isto disparar, o contrato do
+        // parâmetro está errado e precisa de ajuste (ver docs/clearance/certificado-a1.md).
+        if ($cert !== null && in_array($statusFinal, ['erro_participante', 'fatal'], true)) {
+            Log::warning('Clearance: consulta com certificado recusada — refazendo sem certificado', [
+                'slug' => $slug,
+                'cliente_id' => $clienteId,
+                'code' => $resp->httpCode,
+                'status' => $statusFinal,
+                'mensagem' => $resp->mensagem,
+            ]);
+
+            $resp = $this->chamar($slug, $param, $chave, null);
+            $statusFinal = $resp->status;
         }
 
         $billable = (bool) ($resp->raw['header']['billable'] ?? false);
@@ -58,11 +89,18 @@ class DocumentoConsultaService
         return $normalizer->normalizar($resp->raw, $statusFinal, $chave, $billable);
     }
 
-    private function chamar(string $slug, string $param, string $chave)
+    /** @param array{pkcs12_cert: string, pkcs12_pass: string}|null $cert */
+    private function chamar(string $slug, string $param, string $chave, ?array $cert = null)
     {
         $this->throttle->aguardar('infosimples');
 
         // O nome do argumento é o tipo do doc ('nfe'/'cte'), não 'chave'/'chave_acesso'.
-        return $this->provider->consultar($slug, [$param => $chave]);
+        $params = [$param => $chave];
+
+        if ($cert !== null) {
+            $params += $cert; // pkcs12_cert (base64 do .pfx) + pkcs12_pass
+        }
+
+        return $this->provider->consultar($slug, $params);
     }
 }

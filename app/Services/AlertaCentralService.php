@@ -1028,7 +1028,7 @@ class AlertaCentralService
     {
         $primeira = $alvo['certidoes'][0];
         $tipoTxt = $alvo['tipo_alvo'] === 'cliente' ? 'Cliente' : 'Fornecedor';
-        $labels = implode(', ', array_map(fn ($c) => $c['label'], $alvo['certidoes']));
+        $outrasLabels = implode(', ', array_map(fn ($c) => $c['label'], array_slice($alvo['certidoes'], 1)));
 
         $venceEm = $primeira['validade'];
         $vencida = $primeira['vencida'];
@@ -1040,12 +1040,14 @@ class AlertaCentralService
             $prazoTxt = 'venceu em '.$venceEm->format('d/m/Y');
         } elseif ($dias === 0) {
             $prazoTxt = 'vence hoje ('.$venceEm->format('d/m/Y').')';
+        } elseif ($dias === 1) {
+            $prazoTxt = 'vence em 1 dia — '.$venceEm->format('d/m/Y');
         } else {
-            $prazoTxt = "vence em {$dias} dia(s) — ".$venceEm->format('d/m/Y');
+            $prazoTxt = "vence em {$dias} dias — ".$venceEm->format('d/m/Y');
         }
 
         $descricao = "{$alvo['razao_social']} ({$alvo['documento']}): a certidão {$primeira['label']} {$prazoTxt}."
-            .(count($alvo['certidoes']) > 1 ? ' Outras certidões no período: '.$labels.'.' : '')
+            .($outrasLabels !== '' ? ' Outras certidões no período: '.$outrasLabels.'.' : '')
             .' Renove antes do vencimento para manter a regularidade em dia.';
 
         return [

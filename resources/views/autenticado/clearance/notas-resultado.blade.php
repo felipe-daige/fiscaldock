@@ -65,6 +65,9 @@
     data-await-result-message="{{ $awaitResultMessage }}"
     data-poll-result="1"
     data-progress-snapshot='@json($progressSnapshot ?? null)'
+    {{-- Trilha de etapas do lote (ClearanceEtapas) — o strip é montado a partir DELA, como no
+         Consulta CNPJ. Sem isso o JS adivinhava os rótulos e imprimia "Etapa N" ao finalizar. --}}
+    data-etapas='@json($etapasClearance ?? [])'
     data-iniciado-em="{{ optional($lote->created_at)->timestamp }}"
 >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -406,13 +409,19 @@
                 </div>
             </details>
 
-            @unless(config('clearance.full.habilitado'))
+            {{-- Clearance Full — Camada A: regularidade da contraparte (cadastral + SINTEGRA + CND Federal). --}}
+            @include('autenticado.clearance.partials._regularidade-contraparte', ['regularidade' => $regularidade ?? []])
+
+            {{-- Camada B: a consulta COM certificado já traz tributos/itens completos, mas o
+                 confronto com o declarado (EFD/XML) ainda não foi construído — segue "em breve".
+                 Gate próprio (não `full.habilitado`, que é a Camada A). --}}
+            @unless(config('clearance.comparacao_declarado'))
                 <div class="bg-white rounded border border-dashed border-gray-300 p-4 mb-4">
                     <div class="flex items-center gap-2">
                         <span class="text-[10px] font-bold uppercase tracking-wide text-white px-2 py-0.5 rounded" style="background-color: #6b7280">Em breve</span>
                         <p class="text-sm font-semibold text-gray-700">Tributos e itens (Declarado × SEFAZ)</p>
                     </div>
-                    <p class="text-[12px] text-gray-500 mt-1">Comparação de ICMS/PIS/COFINS/IPI e confronto item-a-item — requer certificado digital A1/A3 da empresa. Cadastre o certificado para habilitar (em breve).</p>
+                    <p class="text-[12px] text-gray-500 mt-1">Comparação de ICMS/PIS/COFINS/IPI e confronto item-a-item entre o que foi declarado (EFD/XML) e o que a SEFAZ tem. Com o certificado digital A1 cadastrado, a consulta já traz esses dados — falta o confronto nas telas.</p>
                 </div>
             @endunless
 
@@ -444,13 +453,13 @@
     <script>
     (function () {
         var LOTE_ID = {{ (int) $lote->id }};
-        var CUSTO_UNIT = {{ (int) config('consultas.fontes.sintegra', 2) }};
-        var UNIT_PRICE = {{ (float) app(\App\Services\PricingCatalogService::class)->creditUnitPrice() }};
         var csrf = document.querySelector('meta[name=csrf-token]');
         csrf = csrf ? csrf.content : '';
         var pendingIds = [];
 
-        function money(cred) { return 'R$ ' + (cred * UNIT_PRICE).toFixed(2).replace('.', ','); }
+        function money(value) {
+            return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
         function post(url, body) {
             return fetch(url, {
                 method: 'POST',
@@ -478,11 +487,11 @@
                     return;
                 }
                 pendingIds = j.participante_ids;
-                var aviso = j.suficiente ? '' : '<p class="mt-2 text-[12px] font-semibold text-red-600">Saldo insuficiente (' + money(j.saldo) + ').</p>';
+                var aviso = j.suficiente ? '' : '<p class="mt-2 text-[12px] font-semibold text-red-600">Saldo insuficiente (' + money(j.saldo_reais) + ').</p>';
                 body.innerHTML =
                     '<p class="text-sm text-gray-700">Consultar SINTEGRA de <strong>' + j.total + '</strong> participante(s) sem Inscrição Estadual.</p>' +
-                    '<p class="mt-2 text-sm text-gray-900">Custo: <strong>' + money(j.custo_creditos) + '</strong></p>' +
-                    '<p class="text-[11px] text-gray-400">Saldo atual: ' + money(j.saldo) + '. Estorno automático em fontes que falharem.</p>' + aviso;
+                    '<p class="mt-2 text-sm text-gray-900">Custo: <strong>' + money(j.valor_reais) + '</strong></p>' +
+                    '<p class="text-[11px] text-gray-400">Saldo atual: ' + money(j.saldo_reais) + '. Estorno automático em fontes que falharem.</p>' + aviso;
                 btn.disabled = !j.suficiente;
             }).catch(function () {
                 body.innerHTML = '<p class="text-sm text-red-600">Erro de rede ao calcular custo.</p>';

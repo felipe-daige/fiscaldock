@@ -3,8 +3,8 @@
 use App\Models\Cliente;
 use App\Models\ConsultaLote;
 use App\Models\User;
+use App\Services\ValidacaoContabilService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Http;
 
 use function Pest\Laravel\actingAs;
 
@@ -26,7 +26,7 @@ function buscarNfeValidKey(string $base43 = '35240413305697000150550000000404041
     $resto = $soma % 11;
     $dv = ($resto === 0 || $resto === 1) ? 0 : 11 - $resto;
 
-    return $base43 . $dv;
+    return $base43.$dv;
 }
 
 function buscarNfeUser(int $credits = 100): User
@@ -132,7 +132,10 @@ it('rejeita cliente_id que pertence a outro usuário (403)', function () {
 });
 
 it('rejeita quando usuário não tem créditos suficientes (402)', function () {
-    $user = buscarNfeUser(credits: 5);
+    // Saldo 1 unidade abaixo do custo do documento — o ponto do teste é a INSUFICIÊNCIA,
+    // então deriva do preço em vez de cravar o número (que já mudou uma vez).
+    $saldo = ValidacaoContabilService::CUSTO_DOCUMENTO - 1;
+    $user = buscarNfeUser(credits: $saldo);
     $empresaPropria = buscarNfeEmpresaPropria($user);
 
     $response = actingAs($user)->postJson('/app/clearance/buscar/consultar', [
@@ -143,9 +146,9 @@ it('rejeita quando usuário não tem créditos suficientes (402)', function () {
     ]);
 
     $response->assertStatus(402)
-        ->assertJsonPath('custo_necessario', 14)
-        ->assertJsonPath('saldo_atual', 5);
+        ->assertJsonPath('custo_necessario', ValidacaoContabilService::CUSTO_DOCUMENTO)
+        ->assertJsonPath('saldo_atual', $saldo);
 
     expect(ConsultaLote::count())->toBe(0);
-    expect($user->fresh()->credits)->toBe(5);
+    expect($user->fresh()->credits)->toBe($saldo);
 });

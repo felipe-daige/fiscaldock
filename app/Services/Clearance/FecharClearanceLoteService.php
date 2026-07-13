@@ -30,7 +30,13 @@ class FecharClearanceLoteService
             $lote = ConsultaLote::lockForUpdate()->findOrFail($loteId);
 
             $lote->status = ConsultaLote::STATUS_CONCLUIDO;
-            $lote->resultado_resumo = array_merge(['engine' => 'laravel-clearance'], $resumo);
+            // Preserva o que foi gravado na criação (ex.: `tier`) — sobrescrever aqui apagava o
+            // tier contratado e a tela de resultado deixava de saber se era clearance completo.
+            $lote->resultado_resumo = array_merge(
+                (array) ($lote->resultado_resumo ?? []),
+                ['engine' => 'laravel-clearance'],
+                $resumo,
+            );
             $lote->processado_em = now();
             $lote->save();
 
@@ -50,13 +56,19 @@ class FecharClearanceLoteService
         // Terminal no cache de progresso → o SSE (streamProgresso) emite 'finalizado' e o
         // clearance-resultado.js para de mostrar a barra e carrega o resultado (sem F4 manual).
         if ($lote->tab_id) {
+            // Fecha na ÚLTIMA etapa da trilha do tier, com o NOME dela — não com um rótulo
+            // genérico. Antes fechava sempre em "etapa 2 de 2", o que no clearance completo
+            // (5 etapas) desalinhava o strip e fazia o JS cair no fallback "Etapa N".
+            $tier = ClearanceEtapas::tierDoLote($lote->resultado_resumo);
+            $ultima = ClearanceEtapas::ultima($tier);
+
             Cache::put("progresso:{$lote->user_id}:{$lote->tab_id}", [
                 'tab_id' => $lote->tab_id,
                 'status' => ConsultaLote::STATUS_FINALIZADO,
                 'progresso' => 100,
-                'etapa' => 2,
-                'total_etapas' => 2,
-                'etapa_label' => 'Resultados prontos',
+                'etapa' => $ultima['numero'],
+                'total_etapas' => ClearanceEtapas::total($tier),
+                'etapa_label' => $ultima['label'],
                 'mensagem' => 'Clearance finalizado.',
             ], 600);
         }

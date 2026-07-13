@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'comprovantes' => [
+        // Best-effort: uma falha de arquivamento nunca pode invalidar a consulta já cobrada.
+        'arquivar' => (bool) env('CONSULTAS_ARQUIVAR_COMPROVANTES', true),
+    ],
+
     'providers' => [
         'minhareceita' => [
             'base_url' => env('MINHARECEITA_BASE_URL', 'https://minhareceita.org'),
@@ -194,8 +199,8 @@ return [
         'cndt' => (int) env('CONSULTA_CREDITOS_CNDT', 2),
         'crf_fgts' => (int) env('CONSULTA_CREDITOS_CRF_FGTS', 2),
         'cnd_estadual' => (int) env('CONSULTA_CREDITOS_CND_ESTADUAL', 2),
-        // SINTEGRA: R$ 0,40 cobre o custo InfoSimples de R$ 0,27 com margem ~48%.
-        'sintegra' => (int) env('CONSULTA_CREDITOS_SINTEGRA', 2),
+        // SINTEGRA: R$ 1,00 por CNPJ (5 unidades internas de R$ 0,20).
+        'sintegra' => (int) env('CONSULTA_CREDITOS_SINTEGRA', 5),
         'cnd_municipal' => (int) env('CONSULTA_CREDITOS_CND_MUNICIPAL', 2),
     ],
 

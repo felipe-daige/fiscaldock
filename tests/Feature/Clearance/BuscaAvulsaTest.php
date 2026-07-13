@@ -4,6 +4,7 @@ use App\Models\Cliente;
 use App\Models\ConsultaLote;
 use App\Models\NfeConsulta;
 use App\Models\User;
+use App\Services\ValidacaoContabilService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
@@ -55,7 +56,7 @@ it('flag off → 503, sem cobrar nem despachar', function () {
     Bus::assertNothingBatched();
 });
 
-it('flag on, chave nova → debita 14 e despacha batch com cliente_id', function () {
+it('flag on, chave nova → debita o custo do documento e despacha batch com cliente_id', function () {
     config()->set('clearance.busca_avulsa.habilitada', true);
     Bus::fake();
     Http::fake();
@@ -67,7 +68,8 @@ it('flag on, chave nova → debita 14 e despacha batch com cliente_id', function
         'tipo_documento' => 'nfe', 'chave_acesso' => baChaveNfe(), 'cliente_id' => $cli->id, 'tab_id' => 'tab-ba',
     ])->assertOk()->assertJsonPath('success', true);
 
-    expect($user->fresh()->credits)->toBe($saldo - 14);
+    expect($user->fresh()->credits)->toBe($saldo - ValidacaoContabilService::CUSTO_DOCUMENTO);
+    expect(ConsultaLote::latest('id')->first()?->resultado_resumo['fluxo_origem'] ?? null)->toBe('avulsa');
     Bus::assertBatched(fn ($b) => collect($b->jobs)->every(fn ($j) => $j->clienteId === $cli->id));
 });
 
@@ -102,7 +104,7 @@ it('chave com snapshot + reconsultar=true → cobra e despacha', function () {
         'tipo_documento' => 'nfe', 'chave_acesso' => $chave, 'cliente_id' => $cli->id, 'tab_id' => 'tab-ba', 'reconsultar' => true,
     ])->assertOk();
 
-    expect($user->fresh()->credits)->toBe($saldo - 14);
+    expect($user->fresh()->credits)->toBe($saldo - ValidacaoContabilService::CUSTO_DOCUMENTO);
     Bus::assertBatched(fn ($b) => count($b->jobs) === 1);
 });
 

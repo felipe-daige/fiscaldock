@@ -3,10 +3,13 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\Dashboard\ArquivoController;
 use App\Http\Controllers\Dashboard\BiController;
 use App\Http\Controllers\Dashboard\CatalogoController;
+use App\Http\Controllers\Dashboard\ClearanceComprovanteController;
 use App\Http\Controllers\Dashboard\ClearanceController;
 use App\Http\Controllers\Dashboard\ClienteController;
+use App\Http\Controllers\Dashboard\ConsultaComprovanteController;
 use App\Http\Controllers\Dashboard\ConsultaController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\DashboardNotasFiscaisController;
@@ -121,6 +124,18 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     Route::patch('/app/perfil/email', [EmailVerificationController::class, 'solicitarTroca'])->middleware('throttle:5,10')->name('app.perfil.email.trocar');
     Route::delete('/app/perfil/email', [EmailVerificationController::class, 'cancelarTroca'])->name('app.perfil.email.cancelar');
     Route::post('/app/perfil/email/reenviar', [EmailVerificationController::class, 'reenviar'])->middleware('throttle:5,10')->name('verification.send');
+
+    // Central privada de arquivos da conta (uploads + comprovantes arquivados).
+    Route::prefix('/app/arquivos')->name('app.arquivos.')->group(function () {
+        Route::get('/', [ArquivoController::class, 'index'])->name('index');
+        Route::post('/', [ArquivoController::class, 'store'])->name('store');
+        Route::get('/{arquivo}/download', [ArquivoController::class, 'download'])
+            ->where('arquivo', '[A-Za-z0-9_-]+')->name('download');
+        Route::get('/{arquivo}/preview', [ArquivoController::class, 'preview'])
+            ->where('arquivo', '[A-Za-z0-9_-]+')->name('preview');
+        Route::delete('/{arquivo}', [ArquivoController::class, 'destroy'])
+            ->where('arquivo', '[A-Za-z0-9_-]+')->name('destroy');
+    });
 
     Route::get('/app/alertas', [DashboardController::class, 'alertas'])->name('app.alertas');
     Route::get('/app/alertas/dados', [DashboardController::class, 'alertasDados'])->name('app.alertas.dados');
@@ -396,6 +411,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         Route::get('/dashboard/exportar-csv-zip', [ClearanceController::class, 'exportarDashboardCsvZip'])
             ->middleware(RequiresEntitlement::class.':export,csv')->name('dashboard.exportar-csv-zip');
         Route::get('/notas', [ClearanceController::class, 'notas'])->name('notas');
+        Route::get('/notas/historico', [ClearanceController::class, 'historicoNotas'])->name('notas.historico');
         Route::get('/notas/todos-ids', [ClearanceController::class, 'todosIds'])->name('todos-ids');
         Route::post('/notas/validar', [ClearanceController::class, 'validarNotas'])
             ->middleware(RequiresEntitlement::class.':clearance_lote')->name('validar');
@@ -408,6 +424,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         Route::post('/sintegra/executar', [ClearanceController::class, 'sintegraExecutar'])->name('sintegra.executar');
         Route::post('/sintegra/status', [ClearanceController::class, 'sintegraStatus'])->name('sintegra.status');
         Route::get('/buscar', [ClearanceController::class, 'buscarNfe'])->name('buscar');
+        Route::get('/buscar/historico', [ClearanceController::class, 'historicoBusca'])->name('buscar.historico');
         Route::post('/buscar/precheck', [ClearanceController::class, 'buscarPrecheck'])->name('buscar.precheck');
         Route::post('/buscar/classificar-partes', [ClearanceController::class, 'classificarPartesBusca'])->name('buscar.classificar-partes');
         Route::post('/buscar/consultar', [ClearanceController::class, 'consultarNfe'])->name('buscar.consultar');
@@ -424,6 +441,11 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         Route::post('/calcular-custo', [ClearanceController::class, 'calcularCusto'])->name('calcular-custo');
         Route::get('/nota/{id}', [ClearanceController::class, 'notaDetalhes'])->name('nota');
         Route::get('/alertas', [ClearanceController::class, 'alertas'])->name('alertas');
+        Route::get('/comprovante/{tipo}/{id}/{arquivo}', ClearanceComprovanteController::class)
+            ->whereIn('tipo', ['nfe', 'cte'])
+            ->whereNumber('id')
+            ->whereIn('arquivo', ['html', 'xml', 'site_receipt'])
+            ->name('comprovante');
     });
 
     // Catálogo de Produtos/Serviços
@@ -513,6 +535,11 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
 
     // CONSULTA (estrutura unificada)
     Route::prefix('app/consulta')->name('app.consulta.')->group(function () {
+        Route::get('/resultado/{resultado}/comprovante/{fonte}', ConsultaComprovanteController::class)
+            ->whereNumber('resultado')
+            ->where('fonte', '[a-z_]+')
+            ->name('comprovante');
+
         // Painel de consulta (ex-"Nova Consulta"). O route name 'nova' fica na rota /painel de
         // propósito: name é identidade interna (dezenas de refs app.consulta.nova.*), URI é o
         // endereço público. Os endpoints AJAX seguem sob /nova/* — só a página HTML mudou.
@@ -584,3 +611,54 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         Route::get('/nova/grupos', [ConsultaController::class, 'getGrupos']);
     });
 });
+
+if (app()->environment('testing')) {
+    Route::get('/__codex/alertas-mobile', function () {
+        $user = \App\Models\User::where('email', 'auditoria-mobile@fiscaldock.test')->first();
+        if (! $user) {
+            return response()->json([
+                'environment' => app()->environment(),
+                'database' => config('database.connections.pgsql.database'),
+                'users' => \App\Models\User::count(),
+            ], 404);
+        }
+        \Illuminate\Support\Facades\Auth::onceUsingId($user->id);
+        $clientes = \App\Models\Cliente::where('user_id', $user->id)
+            ->select('id', 'razao_social')
+            ->orderBy('razao_social')
+            ->get();
+        $resumo = app(\App\Services\AlertaCentralService::class)->obterResumo($user->id);
+
+        return view('autenticado.layouts.app', [
+            'initialView' => 'autenticado.alertas.central',
+            'clientes' => $clientes,
+            'resumo' => $resumo,
+        ]);
+    });
+
+    Route::get('/__codex/alertas-mobile/dados', function (\Illuminate\Http\Request $request) {
+        $user = \App\Models\User::where('email', 'auditoria-mobile@fiscaldock.test')->firstOrFail();
+        $filtros = [
+            'status' => $request->input('status', 'ativo'),
+            'severidade' => $request->input('severidade'),
+            'categoria' => $request->input('categoria'),
+            'cliente_id' => $request->input('cliente_id'),
+            'busca' => $request->input('busca'),
+            'ordem' => $request->input('ordem'),
+        ];
+
+        return response()->json(app(\App\Services\AlertaCentralService::class)->obterAlertas($user->id, $filtros));
+    });
+
+    Route::get('/__codex/alertas-mobile/resumo', function () {
+        $user = \App\Models\User::where('email', 'auditoria-mobile@fiscaldock.test')->firstOrFail();
+
+        return response()->json(app(\App\Services\AlertaCentralService::class)->obterResumo($user->id));
+    });
+
+    Route::get('/__codex/alertas-mobile/evolucao', function () {
+        $user = \App\Models\User::where('email', 'auditoria-mobile@fiscaldock.test')->firstOrFail();
+
+        return response()->json(app(\App\Services\AlertaCentralService::class)->obterEvolucao($user->id));
+    });
+}

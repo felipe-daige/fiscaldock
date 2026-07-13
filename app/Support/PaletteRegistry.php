@@ -24,6 +24,7 @@ class PaletteRegistry
             ['label' => 'Importar EFD', 'href' => '/app/importacao/efd', 'grupo' => 'Documentos', 'keywords' => ['sped', 'upload', 'icms', 'pis', 'cofins']],
             ['label' => 'Importar XML', 'href' => '/app/importacao/xml', 'grupo' => 'Documentos', 'keywords' => ['nfe', 'upload', 'zip']],
             ['label' => 'Histórico de importações', 'href' => '/app/importacao/historico', 'grupo' => 'Documentos', 'keywords' => ['importacao', 'arquivos']],
+            ['label' => 'Meus Arquivos', 'href' => '/app/arquivos', 'grupo' => 'Documentos', 'keywords' => ['upload', 'download', 'comprovantes', 'armazenamento', 'espaco']],
             ['label' => 'Clearance — Dashboard', 'href' => '/app/clearance/dashboard', 'grupo' => 'Inteligência', 'keywords' => ['sefaz', 'kpi']],
             ['label' => 'Clearance — Verificar Notas', 'href' => '/app/clearance/notas', 'grupo' => 'Inteligência', 'keywords' => ['validar', 'sefaz', 'situacao']],
             ['label' => 'BI Fiscal', 'href' => '/app/bi/dashboard', 'grupo' => 'Inteligência', 'keywords' => ['business intelligence', 'graficos', 'saldo']],

@@ -531,6 +531,14 @@
                         $frequency = $frequencyLabels[$plan->frequencia_padrao_dias] ?? "a cada {$plan->frequencia_padrao_dias} dias";
                         $depth = $depthLabels[$plan->profundidade_auto_monitor] ?? $plan->profundidade_auto_monitor;
                         $exports = collect($caps['export'] ?? [])->map(fn ($export) => strtoupper($export === 'excel' ? 'XLSX' : $export))->implode(' + ');
+                        $storageMb = array_key_exists('armazenamento_mb', $caps)
+                            ? $caps['armazenamento_mb']
+                            : config("arquivos.quota_por_plano_mb.{$plan->codigo}", config('arquivos.quota_padrao_mb', 250));
+                        $storageLabel = $storageMb === null
+                            ? 'Armazenamento de arquivos ilimitado'
+                            : ($storageMb >= 1024
+                                ? number_format($storageMb / 1024, 0, ',', '.').' GB para arquivos e comprovantes'
+                                : number_format($storageMb, 0, ',', '.').' MB para arquivos e comprovantes');
                     @endphp
                     <article class="pricing-plan {{ $isFeatured ? 'pricing-plan--featured' : '' }}">
                         <div class="pricing-plan-band">{{ $isFeatured ? 'Mais completo para crescer' : ($isEnterprise ? 'Projeto sob medida' : 'Plano '.$plan->ordem) }}</div>
@@ -552,6 +560,7 @@
                                 <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M5 13l4 4L19 7"/></svg><span>{{ $includedBalance > 0 ? \App\Support\Dinheiro::brl($includedBalance).' de saldo por mês' : ($isEnterprise ? 'Saldo dimensionado para a operação' : 'Use o bônus ou saldo avulso') }}</span></li>
                                 <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M5 13l4 4L19 7"/></svg><span>{{ $plan->limite_clientes === null ? 'Clientes monitorados ilimitados' : $plan->limite_clientes.' cliente'.($plan->limite_clientes > 1 ? 's' : '').' monitorado'.($plan->limite_clientes > 1 ? 's' : '') }}</span></li>
                                 <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M5 13l4 4L19 7"/></svg><span>{{ $plan->limite_cnpjs_monitorados === null ? 'CNPJs monitorados ilimitados' : $plan->limite_cnpjs_monitorados.' CNPJ'.($plan->limite_cnpjs_monitorados > 1 ? 's' : '').' no monitoramento' }}</span></li>
+                                <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M5 13l4 4L19 7"/></svg><span>{{ $storageLabel }}</span></li>
                                 <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M5 13l4 4L19 7"/></svg><span>Monitoramento {{ $frequency }} · {{ $depth }}</span></li>
                                 <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M5 13l4 4L19 7"/></svg><span>{{ ($caps['bi'] ?? 'basico') === 'completo' ? 'BI Fiscal completo' : 'BI Fiscal básico' }}{{ $exports ? ' · exportação '.$exports : '' }}</span></li>
                                 @if(($caps['pdf_executivo'] ?? false) || ($caps['score_historico'] ?? false))

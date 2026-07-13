@@ -294,55 +294,33 @@
         </div>
         @endif
 
-        {{-- Filtros --}}
+        {{-- Filtros — mesmo contrato das demais telas: card `data-mobile-filters` (o
+             mobile-filters.js colapsa em botão "Filtros" no mobile) + gaveta de avançados. --}}
         @php
-            $statusLabels = ['todos' => 'Todos', 'consultados' => 'Consultados', 'nao_consultados' => 'Não consultados'];
-            $tipoLabels = ['todos' => 'Clientes e participantes', 'cliente' => 'Clientes', 'participante' => 'Participantes'];
-            $filtrosAtivos = collect([
-                ($verTodosCnpjs ?? false) ? null : 'Cliente',
-                ($filtroBusca ?? '') !== '' ? 'Busca' : null,
-                ($filtroStatus ?? 'todos') !== 'todos' ? 'Lista' : null,
-                ($filtroTipo ?? 'todos') !== 'todos' ? 'Tipo' : null,
-                ($filtroClassificacao ?? 'todos') !== 'todos' ? 'Risco' : null,
-                ($filtroCredito ?? 'todos') !== 'todos' ? 'Crédito' : null,
-                ($filtroScoreMin ?? null) !== null || ($filtroScoreMax ?? null) !== null ? 'Score' : null,
-            ])->filter()->values();
+            $temAvancadoScore = ($filtroStatus ?? 'todos') !== 'todos'
+                || ($filtroTipo ?? 'todos') !== 'todos'
+                || ($filtroClassificacao ?? 'todos') !== 'todos'
+                || ($filtroCredito ?? 'todos') !== 'todos'
+                || ($filtroScoreMin ?? null) !== null
+                || ($filtroScoreMax ?? null) !== null;
         @endphp
-        <details class="bg-white rounded border border-gray-300 overflow-hidden mb-6 group" data-mobile-filters {{ $filtrosAtivos->isNotEmpty() ? 'open' : '' }}>
-            <summary class="cursor-pointer list-none bg-gray-50 px-4 py-3 border-b border-gray-200 hover:bg-gray-100">
-                <div class="flex items-center justify-between gap-3">
-                    <div class="min-w-0 flex items-center gap-2">
-                        <span class="inline-flex h-7 w-7 items-center justify-center rounded border border-gray-300 bg-white text-gray-500 shrink-0">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L14 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 018 21v-7.586L3.293 6.707A1 1 0 013 6V4z"></path>
-                            </svg>
-                        </span>
-                        <div class="min-w-0">
-                            <div class="flex items-center gap-2">
-                                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
-                                @if($filtrosAtivos->isNotEmpty())
-                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $filtrosAtivos->count() }}</span>
-                                @endif
-                            </div>
-                            <p class="text-xs text-gray-500 truncate">
-                                {{ $statusLabels[$filtroStatus ?? 'todos'] ?? 'Todos' }} · {{ $tipoLabels[$filtroTipo ?? 'todos'] ?? 'Clientes e participantes' }}
-                            </p>
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6" data-mobile-filters>
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
+            </div>
+            <div class="p-4 space-y-3">
+                {{-- Filtros primários (sempre visíveis) --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-end gap-3">
+                    <div class="lg:col-span-2">
+                        <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Buscar</label>
+                        <div class="relative mt-1">
+                            <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            <input type="text" id="busca-participante" placeholder="CNPJ ou razão social..." value="{{ $filtroBusca ?? '' }}" class="w-full border border-gray-300 rounded pl-9 pr-2 py-2 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         </div>
                     </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <span class="text-[11px] font-semibold text-gray-500 group-open:hidden">Abrir</span>
-                        <span class="text-[11px] font-semibold text-gray-500 hidden group-open:inline">Fechar</span>
-                        <svg class="w-4 h-4 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                        </svg>
-                    </div>
-                </div>
-            </summary>
-            <div class="p-4 space-y-4">
-                <div class="grid grid-cols-1 lg:grid-cols-[minmax(220px,320px)_minmax(260px,1fr)_auto] gap-3 lg:items-end">
                     <div>
-                        <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Cliente</label>
-                        <select id="filtro-cliente" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                        <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Cliente</label>
+                        <select id="filtro-cliente" class="mt-1 w-full border border-gray-300 rounded px-2 py-2 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                             @foreach(($clientes ?? collect()) as $cli)
                                 <option value="{{ $cli->id }}" {{ (! ($verTodosCnpjs ?? false) && (int)($clienteSelecionadoId ?? 0) === (int)$cli->id) ? 'selected' : '' }}>
                                     {{ $cli->is_empresa_propria ? '★ '.$cli->nome.' (Minha Empresa)' : $cli->nome }}
@@ -351,47 +329,35 @@
                             <option value="todos" {{ ($verTodosCnpjs ?? false) ? 'selected' : '' }}>Todos os CNPJs</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Buscar</label>
-                        <div class="relative">
-                            <input type="text" id="busca-participante" placeholder="CNPJ ou razão social..." value="{{ $filtroBusca ?? '' }}" class="w-full px-3 py-2 pl-9 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
-                            <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button type="button" id="btn-limpar-filtros-score" class="inline-flex items-center justify-center px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition">Limpar</button>
-                        <button type="button" id="btn-filtrar-score" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium transition">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L14 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 018 21v-7.586L3.293 6.707A1 1 0 013 6V4z"></path>
-                            </svg>
-                            Filtrar
-                        </button>
-                    </div>
                 </div>
 
-                <div class="border-t border-gray-100 pt-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-3">
+                {{-- Filtros avançados (gaveta) — abre sozinha quando algum está ativo. --}}
+                <details class="border-t border-gray-200 pt-3 group" {{ $temAvancadoScore ? 'open' : '' }}>
+                    <summary class="cursor-pointer select-none inline-flex items-center gap-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700">
+                        <svg class="w-3.5 h-3.5 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        Filtros avançados
+                        @if($temAvancadoScore)<span class="normal-case text-[9px] font-bold text-gray-600 bg-gray-200 rounded px-1.5 py-0.5 tracking-normal">ativos</span>@endif
+                    </summary>
+                    <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         <div>
-                            <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Lista</label>
-                            <select id="filtro-status-score" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Lista</label>
+                            <select id="filtro-status-score" class="mt-1 w-full border border-gray-300 rounded px-2 py-2 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                                 <option value="todos" {{ ($filtroStatus ?? 'todos') === 'todos' ? 'selected' : '' }}>Todos</option>
                                 <option value="consultados" {{ ($filtroStatus ?? '') === 'consultados' ? 'selected' : '' }}>Consultados</option>
                                 <option value="nao_consultados" {{ ($filtroStatus ?? '') === 'nao_consultados' ? 'selected' : '' }}>Não consultados</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Tipo</label>
-                            <select id="filtro-tipo-score" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Tipo</label>
+                            <select id="filtro-tipo-score" class="mt-1 w-full border border-gray-300 rounded px-2 py-2 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                                 <option value="todos" {{ ($filtroTipo ?? 'todos') === 'todos' ? 'selected' : '' }}>Todos</option>
                                 <option value="cliente" {{ ($filtroTipo ?? '') === 'cliente' ? 'selected' : '' }}>Clientes</option>
                                 <option value="participante" {{ ($filtroTipo ?? '') === 'participante' ? 'selected' : '' }}>Participantes</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Classificação</label>
-                            <select id="filtro-classificacao" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Classificação</label>
+                            <select id="filtro-classificacao" class="mt-1 w-full border border-gray-300 rounded px-2 py-2 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                                 <option value="todos" {{ ($filtroClassificacao ?? 'todos') === 'todos' ? 'selected' : '' }}>Todas</option>
                                 <option value="baixo" {{ ($filtroClassificacao ?? '') === 'baixo' ? 'selected' : '' }}>Baixo</option>
                                 <option value="medio" {{ ($filtroClassificacao ?? '') === 'medio' ? 'selected' : '' }}>Médio</option>
@@ -401,8 +367,8 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Crédito IBS/CBS</label>
-                            <select id="filtro-credito-score" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Crédito IBS/CBS</label>
+                            <select id="filtro-credito-score" class="mt-1 w-full border border-gray-300 rounded px-2 py-2 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                                 <option value="todos" {{ ($filtroCredito ?? 'todos') === 'todos' ? 'selected' : '' }}>Todos</option>
                                 <option value="gera" {{ ($filtroCredito ?? '') === 'gera' ? 'selected' : '' }}>Gera</option>
                                 <option value="parcial" {{ ($filtroCredito ?? '') === 'parcial' ? 'selected' : '' }}>Parcial</option>
@@ -411,18 +377,22 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Score mín.</label>
-                            <input type="number" id="score-min" min="0" max="100" inputmode="numeric" placeholder="0" value="{{ $filtroScoreMin ?? '' }}" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Score mín.</label>
+                            <input type="number" id="score-min" min="0" max="100" inputmode="numeric" placeholder="0" value="{{ $filtroScoreMin ?? '' }}" class="mt-1 w-full border border-gray-300 rounded px-2 py-2 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         </div>
                         <div>
-                            <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Score máx.</label>
-                            <input type="number" id="score-max" min="0" max="100" inputmode="numeric" placeholder="100" value="{{ $filtroScoreMax ?? '' }}" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Score máx.</label>
+                            <input type="number" id="score-max" min="0" max="100" inputmode="numeric" placeholder="100" value="{{ $filtroScoreMax ?? '' }}" class="mt-1 w-full border border-gray-300 rounded px-2 py-2 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         </div>
                     </div>
                     <p class="mt-2 text-[11px] text-gray-500">Score e crédito filtram apenas CNPJs já consultados.</p>
-                </div>
+                </details>
             </div>
-        </details>
+            <div class="mobile-filter-actions bg-gray-50 px-4 py-2 border-t border-gray-200 flex gap-2">
+                <button type="button" id="btn-filtrar-score" class="px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Filtrar</button>
+                <button type="button" id="btn-limpar-filtros-score" class="px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide border border-gray-300 bg-white text-gray-700">Limpar</button>
+            </div>
+        </div>
         {{-- CONSULTADOS — participantes que já têm score (ordenados por risco) --}}
         <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6">
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">

@@ -1,4 +1,10 @@
-function initClearanceResultado() {
+// NÃO renomear para `initClearanceResultado`: esse nome é reatribuído lá embaixo
+// (`window.initClearanceResultado = bootClearanceResultado`), e como uma declaração de função no
+// topo do arquivo É a propriedade global de mesmo nome, a reatribuição trocava ESTA função por
+// `bootClearanceResultado` — que a chama. Resultado: recursão infinita ("Maximum call stack size
+// exceeded"), o script inteiro morria e a tela de resultado ficava sem SSE (barra travada em 0%)
+// e sem auto-reload. Bug real, 2026-07-13.
+function initClearanceResultadoPagina() {
     const root = document.getElementById('clearance-resultado-root');
     if (!root) return;
     if (root.dataset.clearanceResultadoInitialized === '1') return;
@@ -11,6 +17,8 @@ function initClearanceResultado() {
     const awaitResult = root.dataset.awaitResult === '1';
     const pollResult = root.dataset.pollResult === '1';
     const initialProgressSnapshot = parseProgressSnapshot(root.dataset.progressSnapshot || '');
+    // Etapas nomeadas do lote (ClearanceEtapas). Fonte da verdade do strip — ver getDefaultStepLabel.
+    const etapasDefinidas = parseEtapasDefinidas(root.dataset.etapas || '[]');
 
     const progressBar = document.getElementById('clearance-resultado-bar');
     const progressPercent = document.getElementById('clearance-resultado-percent');
@@ -96,7 +104,28 @@ function initClearanceResultado() {
         return Number.isNaN(value) ? 0 : Math.max(0, Math.min(100, value));
     }
 
+    // Trilha vinda do servidor (ClearanceEtapas): [{numero, chave, label}]. É a fonte da verdade
+    // dos rótulos — mesmo padrão do Consulta CNPJ (consulta-lote-detalhe.js lê root.dataset.etapas).
+    // Sem ela o código caía nos defaults hardcoded abaixo e imprimia "Etapa N".
+    function parseEtapasDefinidas(raw) {
+        try {
+            const parsed = JSON.parse(raw || '[]');
+            return Array.isArray(parsed) ? parsed.filter((e) => e && e.numero && e.label) : [];
+        } catch (_) {
+            return [];
+        }
+    }
+
+    function getLabelDaTrilha(index) {
+        const etapa = etapasDefinidas.find((e) => Number(e.numero) === Number(index));
+        return etapa ? String(etapa.label) : null;
+    }
+
     function getDefaultStepLabel(index, totalSteps) {
+        // A trilha do servidor manda. Só cai nos defaults quando ela não veio.
+        const daTrilha = getLabelDaTrilha(index);
+        if (daTrilha) return daTrilha;
+
         switch (Number(totalSteps)) {
         case 4:
             switch (Number(index)) {
@@ -125,6 +154,14 @@ function initClearanceResultado() {
     }
 
     function getStepSequence(totalSteps) {
+        // Trilha do servidor: a ordem é a dela (1..N), não uma sequência adivinhada.
+        if (etapasDefinidas.length) {
+            return etapasDefinidas
+                .slice()
+                .sort((a, b) => Number(a.numero) - Number(b.numero))
+                .map((e) => Number(e.numero));
+        }
+
         if (Number(totalSteps) === 4) {
             return [1, 2, 3, 0];
         }
@@ -234,9 +271,12 @@ function initClearanceResultado() {
                 };
             })
             .filter(Boolean)
+            // Etapa 0 é terminal ("Preparando resultados") e vai por último; o resto é crescente.
+            // A ordem antiga era a lista fixa [1,2,3,0] — com 5 etapas (clearance completo) as
+            // etapas 4 e 5 caíam em indexOf === -1 e iam parar na frente da 1.
             .sort((a, b) => {
-                const order = [1, 2, 3, 0];
-                return order.indexOf(a.etapa) - order.indexOf(b.etapa);
+                const rank = (etapa) => (etapa === 0 ? Number.MAX_SAFE_INTEGER : etapa);
+                return rank(a.etapa) - rank(b.etapa);
             });
     }
 
@@ -535,10 +575,12 @@ function initClassificarPartes() {
 }
 
 function bootClearanceResultado() {
-    initClearanceResultado();
+    initClearanceResultadoPagina();
     initClassificarPartes();
 }
 
+// Export p/ o SPA reinicializar a tela (hoje as rotas de resultado não estão mapeadas em spa.js,
+// mas o contrato fica). Nome distinto do da função acima — ver comentário no topo do arquivo.
 window.initClearanceResultado = bootClearanceResultado;
 
 if (document.readyState === 'loading') {

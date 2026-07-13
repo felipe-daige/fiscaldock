@@ -5,6 +5,7 @@ use App\Models\NfeConsulta;
 use App\Models\User;
 use App\Models\XmlImportacao;
 use App\Models\XmlNota;
+use App\Services\ValidacaoContabilService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use function Pest\Laravel\actingAs;
@@ -85,7 +86,7 @@ it('chave nova (sem acervo nem snapshot) → no_acervo=false, snapshot=null', fu
         ->assertJsonPath('success', true)
         ->assertJsonPath('no_acervo', false)
         ->assertJsonPath('snapshot', null)
-        ->assertJsonPath('custo_avulsa', 14);
+        ->assertJsonPath('custo_avulsa', ValidacaoContabilService::CUSTO_DOCUMENTO);
 });
 
 it('chave no acervo XML → no_acervo=true com nota, urls e custos', function () {
@@ -102,8 +103,8 @@ it('chave no acervo XML → no_acervo=true com nota, urls e custos', function ()
         ->assertJsonPath('no_acervo', true)
         ->assertJsonPath('origem', 'xml')
         ->assertJsonPath('nota_id', $nota->id)
-        ->assertJsonPath('custo_clearance', 3)
-        ->assertJsonPath('custo_avulsa', 14)
+        ->assertJsonPath('custo_clearance', ValidacaoContabilService::CUSTO_DOCUMENTO)
+        ->assertJsonPath('custo_avulsa', ValidacaoContabilService::CUSTO_DOCUMENTO)
         ->assertJsonPath('nota.tipo_documento', 'NFE');
 
     expect($resp->json('listagem_url'))->toContain('/app/notas')->toContain($chave);

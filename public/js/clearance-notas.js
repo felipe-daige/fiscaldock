@@ -1,20 +1,39 @@
-const TIER_STORAGE_KEY = 'clearance:tier';
 const SELECTION_STORAGE_KEY = 'clearance:selection';
 const SORT_SCROLL_STORAGE_KEY = 'clearance:sort-scroll-y';
-const TIERS_VALIDOS = ['basico', 'full'];
-const TIER_LABEL = { basico: 'Básico', full: 'Full' };
+
+// O clearance do DOCUMENTO tem preço único (o certificado A1 enriquece a MESMA consulta sem custo
+// extra). O tier 'full' NÃO altera o preço por nota: ele liga o Clearance completo — regularidade
+// da CONTRAPARTE (cadastral + SINTEGRA + CND Federal), cobrada à parte, POR CONTRAPARTE NOVA.
+// Por isso o total por nota abaixo é o mesmo nos dois tiers. Ver docs/clearance/clearance-full-camada-a.md
+const TIER_BASICO = 'basico';
+const TIER_FULL = 'full';
+
+// Escolha EXCLUSIVA de tier (radio): ou 'basico', ou 'full'. Sem radio na tela (flag off) = basico.
+function tierAtual() {
+    const marcado = document.querySelector('input[name="clearance_tier"]:checked');
+    return marcado && marcado.value === TIER_FULL ? TIER_FULL : TIER_BASICO;
+}
+
+// Destaca o card do tier selecionado (borda escura) e apaga o outro.
+function realcarCardTier() {
+    const atual = tierAtual();
+    document.querySelectorAll('.plan-card').forEach((card) => {
+        const selecionado = card.dataset.tier === atual;
+        card.style.borderColor = selecionado ? '#1f2937' : '#d1d5db';
+        card.style.backgroundColor = selecionado ? '#f9fafb' : '#ffffff';
+    });
+}
 
 let idsUrl = '';
 let validarUrl = '';
 let temMaisPagina = false;
 let saldoAtual = 0;
-let custos = { basico: 10, full: 20 };
+let custos = { basico: 5, full: 5 };
 // Conversão monetária vinda do backend; toda exibição é em R$.
 let saldoUnitPrice = 0.20;
 
 let selecionados = new Set();
 let origens = new Map();
-let tierSelecionado = 'basico';
 let currentEventSource = null;
 let currentSseTimeout = null;
 
@@ -24,6 +43,23 @@ function $(id) { return document.getElementById(id); }
 function brl(unidades) {
     const reais = Math.round((unidades || 0) * saldoUnitPrice * 100) / 100;
     return 'R$ ' + reais.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function aplicarNovoSaldoReais(valor) {
+    const reais = Number(valor);
+    if (!Number.isFinite(reais) || saldoUnitPrice <= 0) return;
+
+    saldoAtual = Math.round(reais / saldoUnitPrice);
+    const root = $('validacao-notas-container');
+    if (root) root.dataset.saldoAtual = String(saldoAtual);
+
+    const label = $('clearance-saldo-atual');
+    if (label) {
+        label.textContent = 'R$\u00a0' + reais.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
+    }
 }
 
 function gerarTabId() {
@@ -93,7 +129,7 @@ function abrirSseProgresso(tabId) {
         );
     }, 120000);
 
-    es.onmessage = (event) => {
+    es.onmessage = async (event) => {
         let data;
         try { data = JSON.parse(event.data); } catch (_) { return; }
         const status = data.status || 'processando';
@@ -114,7 +150,16 @@ function abrirSseProgresso(tabId) {
             mostrarProgresso(100, 'Clearance finalizado, atualizando…');
             fecharSse();
             limparSelecaoStorage();
-            window.location.reload();
+            try {
+                await atualizarListaSemRecarregar();
+                esconderProgresso();
+            } catch (error) {
+                esconderProgresso();
+                showError(
+                    'A consulta terminou, mas não foi possível atualizar a lista automaticamente.',
+                    'clearance-atualizar-lista'
+                );
+            }
             return;
         }
         if (status === 'erro') {
@@ -141,18 +186,6 @@ function abrirSseProgresso(tabId) {
     es.onerror = () => {
         // Se o SSE cair mas ainda estiver processando, o timeout global cobre
     };
-}
-
-function tierInicial() {
-    try {
-        const saved = localStorage.getItem(TIER_STORAGE_KEY);
-        if (saved && TIERS_VALIDOS.includes(saved)) return saved;
-    } catch (e) {}
-    return 'basico';
-}
-
-function persistirTier(tier) {
-    try { localStorage.setItem(TIER_STORAGE_KEY, tier); } catch (e) {}
 }
 
 function carregarSelecaoDoStorage() {
@@ -240,6 +273,66 @@ function hideSortLoading() {
     if (overlay) overlay.classList.add('hidden');
 }
 
+function bindSortLinks() {
+    sortLinks().forEach((link) => {
+        link.removeEventListener('click', storeSortScroll);
+        link.removeEventListener('click', showSortLoading);
+        link.addEventListener('click', storeSortScroll);
+        link.addEventListener('click', showSortLoading);
+    });
+}
+
+async function atualizarListaSemRecarregar() {
+    const container = $('clearance-listagem-card');
+    if (!container) throw new Error('Lista de notas não encontrada.');
+
+    const scrollY = window.scrollY || 0;
+    container.setAttribute('data-spa-loading', '');
+
+    try {
+        const response = await fetch(window.location.href, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            },
+            credentials: 'same-origin',
+            cache: 'no-store',
+        });
+
+        if (response.status === 401 || response.status === 419) {
+            window.location.href = '/login';
+            return;
+        }
+        if (!response.ok) {
+            throw new Error(`Falha ao atualizar a lista (${response.status}).`);
+        }
+
+        const html = await response.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const novaLista = doc.getElementById('clearance-listagem-card');
+        if (!novaLista) {
+            throw new Error('Resposta sem a lista de notas.');
+        }
+
+        // Troca somente a grade/paginação. Filtros, cards, modais e posição da página ficam intactos.
+        container.innerHTML = novaLista.innerHTML;
+        selecionados.clear();
+        origens.clear();
+        limparSelecaoStorage();
+        registrarOrigens();
+        bindSortLinks();
+        atualizarSelecao();
+
+        document.dispatchEvent(new CustomEvent('spa:list-updated', {
+            detail: { container, url: window.location.href },
+        }));
+
+        window.requestAnimationFrame(() => window.scrollTo(0, scrollY));
+    } finally {
+        container.removeAttribute('data-spa-loading');
+    }
+}
+
 function origemDoCheckbox(chk) {
     const tr = chk.closest('tr');
     return tr && tr.dataset ? tr.dataset.origem : 'xml';
@@ -264,24 +357,6 @@ function origensSelecionadas() {
     return map;
 }
 
-function selecionarTier(tier) {
-    if (!TIERS_VALIDOS.includes(tier)) return;
-    tierSelecionado = tier;
-    persistirTier(tier);
-
-    TIERS_VALIDOS.forEach((t) => {
-        const card = $('plan-card-' + t);
-        if (!card) return;
-        const ativo = t === tier;
-        card.setAttribute('aria-checked', ativo ? 'true' : 'false');
-        card.style.borderColor = ativo ? '#1f2937' : '#e5e7eb';
-        const chip = card.querySelector('.plan-chip');
-        if (chip) chip.classList.toggle('hidden', !ativo);
-    });
-
-    atualizarCusto();
-}
-
 function atualizarCusto() {
     const n = selecionados.size;
 
@@ -290,7 +365,7 @@ function atualizarCusto() {
         el.textContent = brl(n * (custos[tier] || 0));
     });
 
-    const total = n * (custos[tierSelecionado] || 0);
+    const total = n * (custos[tierAtual()] || 0);
     const saldoApos = saldoAtual - total;
     const insuficiente = saldoApos < 0;
 
@@ -315,8 +390,7 @@ function atualizarCusto() {
             btnValidar.textContent = 'Saldo insuficiente';
             btnValidar.disabled = true;
         } else {
-            const label = TIER_LABEL[tierSelecionado] || tierSelecionado;
-            btnValidar.textContent = `Validar ${n} nota(s) com Clearance ${label} · ${brl(total)}`;
+            btnValidar.textContent = `Validar ${n} nota(s) · ${brl(total)}`;
             btnValidar.disabled = false;
         }
     }
@@ -407,7 +481,7 @@ async function executarClearance() {
         fecharModal(modalConfirm);
         console.warn('[clearance] executarClearance abortado: seleção vazia', {
             sessionStorage: sessionStorage.getItem(SELECTION_STORAGE_KEY),
-            tier: tierSelecionado,
+            tier: tierAtual(),
         });
         showError('Sua seleção foi perdida. Selecione as notas novamente e tente de novo.', 'clearance-selecao-vazia');
         return;
@@ -433,7 +507,7 @@ async function executarClearance() {
             body: JSON.stringify({
                 nota_ids: ids,
                 origens: origensSelecionadas(),
-                tipo: tierSelecionado,
+                tipo: tierAtual(),
                 tab_id: tabId,
             }),
         });
@@ -446,14 +520,9 @@ async function executarClearance() {
             data,
         });
         if (resp.ok) {
+            aplicarNovoSaldoReais(data.novo_saldo_reais);
             fecharModal(modalConfirm);
             if (data.webhook_disparado) {
-                if (data.resultado_url) {
-                    limparSelecaoStorage();
-                    window.location.assign(data.resultado_url);
-                    return;
-                }
-
                 mostrarProgresso(5, 'Clearance despachado, aguardando provedor...');
                 abrirSseProgresso(data.tab_id || tabId);
             } else {
@@ -513,9 +582,8 @@ async function handleSelecionarTodas() {
 function handleValidarClick() {
     const ids = selecionadosArray();
     if (ids.length === 0) return;
-    const total = ids.length * (custos[tierSelecionado] || 0);
+    const total = ids.length * (custos[tierAtual()] || 0);
     const saldoApos = saldoAtual - total;
-    const label = TIER_LABEL[tierSelecionado] || tierSelecionado;
 
     const modalConfirmQtd = $('modal-confirm-qtd');
     const modalConfirmCusto = $('modal-confirm-custo');
@@ -523,14 +591,22 @@ function handleValidarClick() {
     const modalConfirmTierChip = $('modal-confirm-tier-chip');
     const modalConfirmSaldoApos = $('modal-confirm-saldo-apos');
 
+    const full = tierAtual() === TIER_FULL;
+    const label = full ? 'Clearance completo' : 'Clearance';
+
     if (modalConfirmQtd) modalConfirmQtd.textContent = String(ids.length);
     if (modalConfirmCusto) modalConfirmCusto.textContent = brl(total);
-    if (modalConfirmTierLabel) modalConfirmTierLabel.textContent = `Clearance ${label}`;
+    if (modalConfirmTierLabel) modalConfirmTierLabel.textContent = label;
     if (modalConfirmTierChip) modalConfirmTierChip.textContent = label;
     if (modalConfirmSaldoApos) {
         modalConfirmSaldoApos.textContent = brl(saldoApos);
         modalConfirmSaldoApos.style.color = saldoApos < 0 ? '#b91c1c' : '#111827';
     }
+
+    // O custo acima é só o dos documentos: a regularidade das contrapartes é cobrada à parte
+    // (por contraparte nova, valor conhecido só após a consulta). Avisa em vez de esconder.
+    const avisoRegularidade = $('modal-confirm-regularidade');
+    if (avisoRegularidade) avisoRegularidade.classList.toggle('hidden', !full);
 
     abrirModal($('modal-confirmar-validacao'));
 }
@@ -554,6 +630,13 @@ function handleChkMaster() {
 function onDocumentChange(e) {
     const target = e.target;
     if (!target || !target.matches) return;
+
+    // Troca de tier (Clearance ↔ Clearance completo): repinta o card e recalcula o total.
+    if (target.name === 'clearance_tier') {
+        realcarCardTier();
+        atualizarCusto();
+        return;
+    }
 
     if (target.matches('.chk-nota')) {
         const id = parseInt(target.value, 10);
@@ -603,7 +686,7 @@ function onDocumentClick(e) {
         console.debug('[clearance] modal-confirm-ok clicado', {
             selecionadosSize: selecionados.size,
             validarUrl,
-            tier: tierSelecionado,
+            tier: tierAtual(),
         });
         executarClearance();
         return;
@@ -617,7 +700,12 @@ function onDocumentClick(e) {
     if (target.closest('#modal-sucesso-ok')) {
         fecharModal($('modal-sucesso-validacao'));
         limparSelecaoStorage();
-        window.location.reload();
+        atualizarListaSemRecarregar().catch(() => {
+            showError(
+                'Não foi possível atualizar a lista automaticamente.',
+                'clearance-atualizar-lista'
+            );
+        });
         return;
     }
 
@@ -626,20 +714,6 @@ function onDocumentClick(e) {
         return;
     }
 
-    const cardBasico = target.closest('#plan-card-basico');
-    if (cardBasico) { selecionarTier('basico'); return; }
-    const cardFull = target.closest('#plan-card-full');
-    if (cardFull) { selecionarTier('full'); return; }
-}
-
-function onDocumentKeydown(e) {
-    if (e.key !== ' ' && e.key !== 'Enter') return;
-    const target = e.target;
-    if (!target || !target.closest) return;
-    const cardBasico = target.closest('#plan-card-basico');
-    if (cardBasico) { e.preventDefault(); selecionarTier('basico'); return; }
-    const cardFull = target.closest('#plan-card-full');
-    if (cardFull) { e.preventDefault(); selecionarTier('full'); return; }
 }
 
 function initClearanceNotas() {
@@ -655,27 +729,21 @@ function initClearanceNotas() {
     saldoAtual = parseInt(root.dataset.saldoAtual || '0', 10);
     saldoUnitPrice = parseFloat(root.dataset.saldoUnitPrice) || 0.20;
     custos = {
-        basico: parseInt(root.dataset.custoBasico || '10', 10),
-        full: parseInt(root.dataset.custoFull || '20', 10),
+        basico: parseInt(root.dataset.custoBasico || '5', 10),
+        full: parseInt(root.dataset.custoFull || '5', 10),
     };
 
     selecionados = new Set();
     origens = new Map();
-    tierSelecionado = tierInicial();
 
     document.removeEventListener('change', onDocumentChange);
     document.removeEventListener('click', onDocumentClick);
-    document.removeEventListener('keydown', onDocumentKeydown);
     document.addEventListener('change', onDocumentChange);
     document.addEventListener('click', onDocumentClick);
-    document.addEventListener('keydown', onDocumentKeydown);
 
-    sortLinks().forEach((link) => {
-        link.removeEventListener('click', storeSortScroll);
-        link.removeEventListener('click', showSortLoading);
-        link.addEventListener('click', storeSortScroll);
-        link.addEventListener('click', showSortLoading);
-    });
+    realcarCardTier(); // estado inicial do card selecionado (SPA re-render inclusive)
+
+    bindSortLinks();
 
     window._cleanupFunctions = window._cleanupFunctions || {};
     window._cleanupFunctions.clearanceNotas = () => {
@@ -691,7 +759,7 @@ function initClearanceNotas() {
     carregarSelecaoDoStorage();
     restoreSortScroll();
     registrarOrigens();
-    selecionarTier(tierSelecionado);
+    atualizarCusto();
     atualizarSelecao();
 }
 

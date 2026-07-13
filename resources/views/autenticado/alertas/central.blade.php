@@ -1,6 +1,6 @@
 {{-- Central de Alertas --}}
 <div class="min-h-screen bg-gray-100" id="alertas-central-container">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+    <div class="alertas-shell max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
 
         <style>
             .alerta-skeleton {
@@ -13,6 +13,256 @@
                 0% { background-position: 200% 0; }
                 100% { background-position: -200% 0; }
             }
+
+            .alertas-filtros-toggle {
+                display: none;
+            }
+
+            .alertas-filtros-conteudo {
+                display: contents;
+            }
+
+            @media (max-width: 639px) {
+                #alertas-central-container {
+                    overflow-x: clip;
+                }
+
+                .alertas-shell {
+                    padding-inline: 0.75rem;
+                }
+
+                .alertas-header-actions {
+                    display: grid !important;
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                    gap: 0.5rem !important;
+                }
+
+                .alertas-header-actions #alerta-ultima-atualizacao:not(.hidden) {
+                    display: block !important;
+                    grid-column: 1 / -1;
+                    margin-bottom: -0.125rem;
+                    line-height: 1.35;
+                }
+
+                .alertas-header-action {
+                    width: 100%;
+                    min-width: 0;
+                    min-height: 44px;
+                    padding: 0.625rem 0.375rem !important;
+                    gap: 0.375rem !important;
+                    font-size: 0.75rem !important;
+                    white-space: nowrap;
+                }
+
+                .alertas-header-action svg {
+                    width: 0.875rem;
+                    height: 0.875rem;
+                }
+
+                .alertas-kpi-card {
+                    min-width: 0;
+                    padding: 0.875rem !important;
+                }
+
+                .alertas-kpi-card > p:last-child {
+                    font-size: 0.625rem;
+                    line-height: 1.45;
+                }
+
+                #alertas-evolucao-chart {
+                    height: 200px !important;
+                }
+
+                .alertas-tabs-shell {
+                    position: relative;
+                }
+
+                .alertas-tabs-shell::after {
+                    content: '';
+                    position: absolute;
+                    z-index: 2;
+                    top: 0;
+                    right: 0;
+                    width: 2.25rem;
+                    height: 46px;
+                    pointer-events: none;
+                    background: linear-gradient(90deg, rgba(243, 244, 246, 0), #f3f4f6 85%);
+                }
+
+                #alertas-tabs-nav {
+                    padding-right: 2rem;
+                    scroll-snap-type: x proximity;
+                    overscroll-behavior-inline: contain;
+                    -webkit-overflow-scrolling: touch;
+                }
+
+                #alertas-tabs-nav .alerta-tab {
+                    min-height: 44px;
+                    scroll-snap-align: start;
+                }
+
+                .alertas-filtros-toggle {
+                    display: flex;
+                    width: 100%;
+                    min-height: 48px;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 0.75rem;
+                    padding: 0.75rem 1rem;
+                    border: 0;
+                    background-color: #f9fafb;
+                    color: #374151;
+                    font-size: 0.875rem;
+                    font-weight: 600;
+                    text-align: left;
+                }
+
+                .alertas-filtros-toggle svg {
+                    width: 1rem;
+                    height: 1rem;
+                    flex: 0 0 auto;
+                    transition: transform 150ms ease;
+                }
+
+                .alertas-filtros-conteudo {
+                    display: none;
+                }
+
+                #alertas-filtros.alertas-filtros-abertos .alertas-filtros-conteudo {
+                    display: block;
+                }
+
+                #alertas-filtros.alertas-filtros-abertos .alertas-filtros-toggle {
+                    border-bottom: 1px solid #e5e7eb;
+                }
+
+                #alertas-filtros.alertas-filtros-abertos .alertas-filtros-toggle svg {
+                    transform: rotate(180deg);
+                }
+
+                .alertas-filtros-cabecalho {
+                    display: none;
+                }
+
+                .alertas-grupo-linha {
+                    align-items: flex-start !important;
+                    gap: 0.5rem;
+                }
+
+                .alertas-grupo-meta {
+                    gap: 0.375rem !important;
+                }
+
+                .alertas-card-actions {
+                    display: grid !important;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    width: 100%;
+                    gap: 0.5rem !important;
+                }
+
+                .alertas-card-actions > * {
+                    width: 100%;
+                    min-width: 0;
+                    min-height: 42px;
+                    justify-content: center;
+                }
+
+                .alertas-card-actions .alerta-cta-principal {
+                    grid-column: 1 / -1;
+                }
+
+                .alertas-card-actions .alerta-action-label {
+                    display: inline !important;
+                }
+
+                .alertas-card-actions .alerta-whatsapp-disabled {
+                    display: none;
+                }
+
+                .alertas-detalhe-cabecalho {
+                    flex-direction: column;
+                    align-items: stretch !important;
+                }
+
+                .alertas-detalhe-cabecalho > a,
+                .alertas-detalhe-cabecalho > div:last-child:not(:first-child) {
+                    align-self: stretch;
+                    justify-content: center;
+                }
+
+                .alertas-exposicao-grid {
+                    grid-template-columns: 1fr !important;
+                }
+
+                .alertas-exposicao-card {
+                    display: grid;
+                    grid-template-columns: minmax(0, 1fr) auto;
+                    align-items: center;
+                    column-gap: 0.75rem;
+                    text-align: left;
+                }
+
+                .alertas-exposicao-card > p:nth-child(2) {
+                    grid-column: 2;
+                    grid-row: 1 / span 2;
+                    text-align: right;
+                }
+
+                .alertas-mini-grid > div {
+                    min-width: 0;
+                }
+
+                #alertas-paginacao {
+                    padding-inline: 0;
+                }
+
+                #alertas-paginacao .alerta-page-btn,
+                #alertas-paginacao button[disabled] {
+                    min-width: 42px;
+                    min-height: 42px;
+                }
+
+                #alertas-bulk-bar {
+                    padding: 0.75rem;
+                    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+                }
+
+                .alertas-bulk-inner {
+                    gap: 0.5rem !important;
+                }
+
+                .alertas-bulk-actions {
+                    display: grid !important;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    width: 100%;
+                    gap: 0.5rem !important;
+                }
+
+                .alertas-bulk-actions > * {
+                    min-width: 0;
+                    min-height: 42px;
+                    justify-content: center;
+                }
+
+                #alertas-central-container.alertas-com-bulk {
+                    padding-bottom: 10rem;
+                }
+            }
+
+            @media (max-width: 359px) {
+                .alertas-header-action {
+                    font-size: 0.6875rem !important;
+                }
+
+                .alertas-grupo-afetados,
+                .alertas-grupo-severidade {
+                    display: none;
+                }
+
+                .alertas-mini-grid {
+                    grid-template-columns: 1fr !important;
+                }
+            }
         </style>
 
         {{-- Page Header --}}
@@ -22,9 +272,9 @@
                     <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Central de Alertas</h1>
                     <p class="mt-1 text-xs text-gray-500">Monitoramento fiscal e cadastral consolidado por cliente e participante.</p>
                 </div>
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+                <div class="alertas-header-actions flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                     <span id="alerta-ultima-atualizacao" class="text-[10px] text-gray-500 uppercase tracking-wide hidden sm:inline"></span>
-                    <a href="/app/alertas/historico" data-link class="auth-control inline-flex items-center justify-center gap-2 bg-white text-gray-800 border border-gray-300 hover:bg-gray-50 rounded transition-colors">
+                    <a href="/app/alertas/historico" data-link class="alertas-header-action auth-control inline-flex items-center justify-center gap-2 bg-white text-gray-800 border border-gray-300 hover:bg-gray-50 rounded transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
@@ -32,7 +282,7 @@
                     </a>
                     {{-- Botão único Exportar → modal de formato → overlay. Respeita o filtro de
                          cliente da página (clienteSelect=alerta-filtro-cliente). --}}
-                    <x-export-menu id="modal-exportar-alertas" titulo="Exportar alertas"
+                    <x-export-menu id="modal-exportar-alertas" titulo="Exportar alertas" class="alertas-header-action"
                                    descricao="O arquivo cobre os alertas ativos do cliente filtrado."
                                    overlay="download-overlay-alertas">
                         <x-export-grupo label="Documento" />
@@ -47,7 +297,7 @@
                                          path="/app/alertas/exportar-csv" cliente-select="alerta-filtro-cliente"
                                          descricao="Um alerta por linha (sem a aba de resumo)." />
                     </x-export-menu>
-                    <button id="btn-recalcular" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium transition-colors">
+                    <button id="btn-recalcular" class="alertas-header-action inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium transition-colors">
                         <svg id="recalcular-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
@@ -55,7 +305,8 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                         </svg>
-                        Recalcular
+                        <span class="hidden sm:inline">Recalcular</span>
+                        <span class="sm:hidden">Atualizar</span>
                     </button>
                 </div>
             </div>
@@ -79,14 +330,14 @@
                 <p class="text-[11px] text-gray-500 ml-auto hidden sm:block max-w-[280px] text-right">Soma da exposição a glosa de crédito (fornecedores irregulares + certidões positivas), na janela de decadência.</p>
             </div>
             <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-200">
-                <div id="kpi-total" class="p-4 sm:p-6 cursor-pointer hover:bg-gray-50/50 transition-colors" data-filtro-severidade="">
+                <div id="kpi-total" class="alertas-kpi-card p-4 sm:p-6 cursor-pointer hover:bg-gray-50/50 transition-colors" data-filtro-severidade="">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Total de Alertas</p>
                     <p class="text-lg sm:text-xl font-bold text-gray-900" id="kpi-total-valor">
                         <span class="alerta-skeleton inline-block w-12 h-7 sm:h-9">&nbsp;</span>
                     </p>
                     <p class="text-[11px] text-gray-500 mt-1">Todos os alertas ativos no monitoramento.</p>
                 </div>
-                <div id="kpi-alta" class="p-4 sm:p-6 cursor-pointer hover:bg-gray-50/50 transition-colors" data-filtro-severidade="alta">
+                <div id="kpi-alta" class="alertas-kpi-card p-4 sm:p-6 cursor-pointer hover:bg-gray-50/50 transition-colors" data-filtro-severidade="alta">
                     <div class="flex items-center gap-2 mb-1 sm:mb-2">
                         <span class="w-2 h-2 rounded-full" style="background-color: #dc2626"></span>
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Alta Severidade</p>
@@ -96,7 +347,7 @@
                     </p>
                     <p class="text-[11px] text-gray-500 mt-1">Pendências com maior risco operacional.</p>
                 </div>
-                <div id="kpi-media" class="p-4 sm:p-6 cursor-pointer hover:bg-gray-50/50 transition-colors" data-filtro-severidade="media">
+                <div id="kpi-media" class="alertas-kpi-card p-4 sm:p-6 cursor-pointer hover:bg-gray-50/50 transition-colors" data-filtro-severidade="media">
                     <div class="flex items-center gap-2 mb-1 sm:mb-2">
                         <span class="w-2 h-2 rounded-full" style="background-color: #b45309"></span>
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Média Severidade</p>
@@ -106,7 +357,7 @@
                     </p>
                     <p class="text-[11px] text-gray-500 mt-1">Exigem revisão e acompanhamento fiscal.</p>
                 </div>
-                <div id="kpi-baixa" class="p-4 sm:p-6 cursor-pointer hover:bg-gray-50/50 transition-colors" data-filtro-severidade="baixa">
+                <div id="kpi-baixa" class="alertas-kpi-card p-4 sm:p-6 cursor-pointer hover:bg-gray-50/50 transition-colors" data-filtro-severidade="baixa">
                     <div class="flex items-center gap-2 mb-1 sm:mb-2">
                         <span class="w-2 h-2 rounded-full" style="background-color: #9ca3af"></span>
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Baixa Severidade</p>
@@ -139,7 +390,7 @@
         </div>
 
         {{-- Category Tabs --}}
-        <div class="mb-4 sm:mb-6">
+        <div class="alertas-tabs-shell mb-4 sm:mb-6">
             <div class="border-b border-gray-200">
                 <nav class="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide" aria-label="Categorias de Alertas" id="alertas-tabs-nav">
                     <button data-alerta-tab="todos" class="alerta-tab active border-gray-800 text-gray-900 whitespace-nowrap py-3 sm:py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2">
@@ -168,11 +419,20 @@
                     </button>
                 </nav>
             </div>
+            <p class="mt-1.5 pr-1 text-right text-[10px] font-medium uppercase tracking-wide text-gray-400 sm:hidden">Deslize para ver mais categorias →</p>
         </div>
 
         {{-- Filters (simplified) --}}
-        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6 sm:mb-8" data-mobile-filters>
-            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+        <div id="alertas-filtros" class="bg-white rounded border border-gray-300 overflow-hidden mb-6 sm:mb-8" data-mobile-filters data-mobile-filters-native>
+            <button type="button" id="alertas-filtros-toggle" class="alertas-filtros-toggle" aria-expanded="false" aria-controls="alertas-filtros-conteudo">
+                <span class="inline-flex items-center gap-2">
+                    Filtros
+                    <span id="alertas-filtros-count" class="hidden min-w-5 h-5 items-center justify-center rounded px-1.5 text-[10px] font-bold text-white" style="background-color:#374151"></span>
+                </span>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div id="alertas-filtros-conteudo" class="alertas-filtros-conteudo">
+            <div class="alertas-filtros-cabecalho bg-gray-50 px-4 py-2 border-b border-gray-200">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
             </div>
             <div class="p-4 sm:p-5">
@@ -238,13 +498,14 @@
                 </div>
             </div>
             </div>
+            </div>
         </div>
 
         {{-- Barra de ações em lote (aparece quando há seleção) --}}
         <div id="alertas-bulk-bar" class="hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-300 shadow-lg px-4 py-3">
-            <div class="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <span class="text-sm text-gray-700"><span id="alertas-bulk-count" class="font-semibold">0</span> selecionado(s)</span>
-                <div class="flex items-center gap-2">
+            <div class="alertas-bulk-inner max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <span class="text-sm text-gray-700"><span id="alertas-bulk-count" class="font-semibold">0</span> <span id="alertas-bulk-label">selecionados</span></span>
+                <div class="alertas-bulk-actions flex items-center gap-2">
                     <button data-bulk="resolvido" class="alerta-bulk-action inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white rounded" style="background-color:#047857" title="Marcar como resolvido. Se o problema ainda aparecer nos próximos dados, o alerta reaparece.">Resolver</button>
                     <button data-bulk="visto" class="alerta-bulk-action inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-gray-800 rounded hover:bg-gray-700" title="Marcar como visto (sem resolver).">Marcar visto</button>
                     <button data-bulk="ignorado" class="alerta-bulk-action inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50" title="Dispensar permanentemente. Não reaparece mesmo que o problema persista.">Ignorar</button>
@@ -689,7 +950,7 @@
 
             html += '<div class="border-b border-gray-100 last:border-b-0">';
             html += '<div class="px-4 py-3 cursor-pointer hover:bg-gray-50/50 transition-colors alerta-grupo-header" data-tipo="' + escapeHtml(tipo) + '">';
-            html += '<div class="flex items-center justify-between">';
+            html += '<div class="alertas-grupo-linha flex items-center justify-between">';
             html += '<div class="flex items-center gap-2 min-w-0">';
             html += severidadeDot(maxSev);
             html += '<h3 class="text-sm font-medium text-gray-900 truncate">' + escapeHtml(formatTipoLabel(tipo)) + '</h3>';
@@ -699,14 +960,14 @@
                 html += '<span class="hidden sm:inline text-xs text-gray-400 truncate">— ' + escapeHtml(clienteGrupo) + '</span>';
             }
             html += '</div>';
-            html += '<div class="flex items-center gap-2 flex-shrink-0">';
+            html += '<div class="alertas-grupo-meta flex items-center gap-2 flex-shrink-0">';
             if (items.length > 1) {
                 html += '<span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">' + items.length + '</span>';
             }
             if (totalAfetados) {
-                html += '<span class="text-xs text-gray-500">' + totalAfetados + ' afetados</span>';
+                html += '<span class="alertas-grupo-afetados text-xs text-gray-500">' + totalAfetados + ' afetados</span>';
             }
-            html += severidadeBadge(maxSev);
+            html += '<span class="alertas-grupo-severidade">' + severidadeBadge(maxSev) + '</span>';
             html += '<svg class="w-4 h-4 text-gray-400 transition-transform alerta-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
             html += '</div>';
             html += '</div>';
@@ -814,7 +1075,7 @@
             if (temAlertas) {
                 // Wrapper COM alertas — expansível
                 html += '<div class="px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors alerta-grupo-header" data-tipo="' + escapeHtml(cat.key) + '">';
-                html += '<div class="flex items-center justify-between">';
+                html += '<div class="alertas-grupo-linha flex items-center justify-between">';
                 html += '<div class="flex items-center gap-2 min-w-0">';
                 html += severidadeDot(maxSev);
                 html += '<span class="text-gray-500">' + cat.icon + '</span>';
@@ -825,9 +1086,9 @@
                     html += '<span class="hidden sm:inline text-xs text-gray-400 truncate">— ' + escapeHtml(clienteCat) + '</span>';
                 }
                 html += '</div>';
-                html += '<div class="flex items-center gap-2 flex-shrink-0">';
-                html += '<span class="text-xs text-gray-500">' + totalAfetados + ' afetados</span>';
-                html += severidadeBadge(maxSev);
+                html += '<div class="alertas-grupo-meta flex items-center gap-2 flex-shrink-0">';
+                html += '<span class="alertas-grupo-afetados text-xs text-gray-500">' + totalAfetados + ' afetados</span>';
+                html += '<span class="alertas-grupo-severidade">' + severidadeBadge(maxSev) + '</span>';
                 html += '<svg class="w-4 h-4 text-gray-400 transition-transform alerta-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
                 html += '</div>';
                 html += '</div>';
@@ -971,9 +1232,10 @@
         var hoje = new Date(); hoje.setHours(0, 0, 0, 0);
         var dias = Math.round((venc - hoje) / 86400000);
         var texto, cor;
-        if (dias < 0) { texto = 'Vencido em ' + venc.toLocaleDateString('pt-BR'); cor = '#b91c1c'; }
+        if (dias < 0) { texto = 'Venceu em ' + venc.toLocaleDateString('pt-BR'); cor = '#b91c1c'; }
         else if (dias === 0) { texto = 'Vence hoje'; cor = '#b91c1c'; }
-        else if (dias <= 7) { texto = 'Vence em ' + dias + ' dia(s)'; cor = '#dc2626'; }
+        else if (dias === 1) { texto = 'Vence em 1 dia'; cor = '#dc2626'; }
+        else if (dias <= 7) { texto = 'Vence em ' + dias + ' dias'; cor = '#dc2626'; }
         else { texto = 'Vence em ' + dias + ' dias'; cor = '#b45309'; }
         var icone = '<svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
         return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide text-white" style="background-color:' + cor + '" title="' + texto + ' (' + venc.toLocaleDateString('pt-BR') + ')">' + icone + texto + '</span>';
@@ -1008,7 +1270,7 @@
         }
 
         html += '</div>';
-        html += '<div class="flex items-center gap-1 flex-shrink-0">';
+        html += '<div class="alertas-card-actions flex items-center gap-1 flex-shrink-0">';
         html += renderActionButtons(alerta);
         html += '</div>';
         html += '</div>';
@@ -1038,7 +1300,7 @@
             // Reabrir: volta o alerta para "ativo" (registra "reaberto" na auditoria).
             out += '<button class="alerta-action-btn inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors" data-alerta-id="' + alerta.id + '" data-action="ativo" title="Reabrir alerta (volta para ativo)">';
             out += '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>';
-            out += '<span class="hidden sm:inline">Reabrir</span>';
+            out += '<span class="alerta-action-label hidden sm:inline">Reabrir</span>';
             out += '</button>';
             return out;
         }
@@ -1046,20 +1308,20 @@
         var html = '';
         // CTA inline (fonte: GuiaAlertaService.resumo, anexado em obterAlertas)
         if (alerta.guia && alerta.guia.cta_url && alerta.guia.cta_text) {
-            html += '<a href="' + alerta.guia.cta_url + '" data-link class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white bg-gray-800 rounded hover:bg-gray-700 transition-colors" title="' + escapeHtml(alerta.guia.cta_text) + '">';
+            html += '<a href="' + alerta.guia.cta_url + '" data-link class="alerta-cta-principal inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white bg-gray-800 rounded hover:bg-gray-700 transition-colors" title="' + escapeHtml(alerta.guia.cta_text) + '">';
             html += '<span>' + escapeHtml(alerta.guia.cta_text) + '</span>';
             html += '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>';
             html += '</a>';
         }
         html += '<a href="/app/alertas/' + alerta.id + '" data-link class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors" title="Ver detalhes e resolver">';
-        html += '<span class="hidden sm:inline">Saiba Mais</span>';
+        html += '<span class="alerta-action-label hidden sm:inline">Saiba mais</span>';
         html += '<svg class="w-3.5 h-3.5 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
         html += '</a>';
         html += '<button class="alerta-action-btn inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors" data-alerta-id="' + alerta.id + '" data-action="ignorado" title="Dispensar permanentemente (não reaparece mesmo que o problema persista)">';
         html += '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
-        html += '<span class="hidden sm:inline">Ignorar</span>';
+        html += '<span class="alerta-action-label hidden sm:inline">Ignorar</span>';
         html += '</button>';
-        html += '<button class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-400 bg-gray-100 rounded cursor-not-allowed opacity-60" disabled title="Em breve — integração WhatsApp">';
+        html += '<button class="alerta-whatsapp-disabled inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-400 bg-gray-100 rounded cursor-not-allowed opacity-60" disabled title="Em breve — integração WhatsApp">';
         html += '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>';
         html += '<svg class="w-3 h-3 -ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>';
         html += '</button>';
@@ -1103,6 +1365,8 @@
             html += renderTabelaCompliance(detalhes);
         } else if (tipo === 'certidao_positiva') {
             html += renderCertidaoPositiva(detalhes);
+        } else if (tipo === 'certidao_vencendo') {
+            html += renderCertidaoVencendo(detalhes, alerta);
         } else if (tipo === 'fornecedor_irregular') {
             html += renderFornecedorIrregular(detalhes);
         } else if (tipo === 'gap_importacao') {
@@ -1212,7 +1476,7 @@
     function renderParticipanteCard(detalhes) {
         var pId = detalhes.participante_id || detalhes.id;
         var html = '<div class="bg-white rounded border border-gray-300 p-4">';
-        html += '<div class="flex items-start justify-between gap-3">';
+        html += '<div class="alertas-detalhe-cabecalho flex items-start justify-between gap-3">';
         html += '<div class="min-w-0">';
         if (detalhes.razao_social) {
             html += '<p class="text-sm font-medium text-gray-900">' + escapeHtml(detalhes.razao_social) + '</p>';
@@ -1262,7 +1526,7 @@
 
     function renderPisCofins(detalhes) {
         var stats = detalhes.stats || detalhes;
-        var html = '<div class="grid grid-cols-3 gap-3">';
+        var html = '<div class="alertas-mini-grid grid grid-cols-3 gap-3">';
 
         var items = [
             { label: 'Total de Notas', value: stats.total_notas || stats.total || 0 },
@@ -1293,7 +1557,7 @@
         var html = '<div class="bg-white rounded border border-gray-300 p-4">';
 
         // Cabeçalho: alvo + link
-        html += '<div class="flex items-start justify-between gap-3 mb-3">';
+        html += '<div class="alertas-detalhe-cabecalho flex items-start justify-between gap-3 mb-3">';
         html += '<div class="min-w-0">';
         if (detalhes.razao_social) {
             html += '<p class="text-sm font-medium text-gray-900">' + escapeHtml(detalhes.razao_social) + '</p>';
@@ -1326,14 +1590,14 @@
         // Exposição de compras (só quando é fornecedor com notas)
         if (Number(detalhes.valor_total) > 0) {
             html += '<p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Exposição de compras</p>';
-            html += '<div class="grid grid-cols-3 gap-3">';
+            html += '<div class="alertas-exposicao-grid grid grid-cols-3 gap-3">';
             var cards = [
                 { label: '12 meses', value: formatarMoeda(detalhes.valor_12m), sub: 'risco corrente', cls: 'text-gray-900' },
                 { label: '5 anos', value: formatarMoeda(detalhes.valor_5anos), sub: 'sujeito a glosa', cls: 'text-amber-700' },
                 { label: 'Total', value: formatarMoeda(detalhes.valor_total), sub: (detalhes.qtd_notas || 0) + ' nota(s)', cls: 'text-gray-900' }
             ];
             cards.forEach(function(c) {
-                html += '<div class="bg-gray-50 rounded border border-gray-200 p-2.5">';
+                html += '<div class="alertas-exposicao-card bg-gray-50 rounded border border-gray-200 p-2.5">';
                 html += '<p class="text-[10px] text-gray-400 uppercase tracking-wide">' + c.label + '</p>';
                 html += '<p class="text-sm font-bold ' + c.cls + '">' + c.value + '</p>';
                 html += '<p class="text-[10px] text-gray-400">' + escapeHtml(c.sub) + '</p>';
@@ -1346,10 +1610,75 @@
         return html;
     }
 
+    function renderCertidaoVencendo(detalhes, alerta) {
+        var certidoes = Array.isArray(detalhes.certidoes) ? detalhes.certidoes : [];
+        if (certidoes.length === 0) {
+            return renderDetalhesGenerico(detalhes);
+        }
+
+        var tipoAlvo = detalhes.tipo_alvo === 'cliente' ? 'cliente' : 'participante';
+        var alvoId = tipoAlvo === 'cliente' ? alerta.cliente_id : alerta.participante_id;
+        var alvoUrl = alvoId ? '/app/' + tipoAlvo + '/' + alvoId : null;
+        var alvoLabel = tipoAlvo === 'cliente' ? 'Ver cliente' : 'Ver participante';
+        var html = '<div class="bg-white rounded border border-gray-300 p-4">';
+
+        html += '<div class="alertas-detalhe-cabecalho flex items-start justify-between gap-3 mb-3">';
+        html += '<div class="min-w-0">';
+        if (detalhes.razao_social) {
+            html += '<p class="text-sm font-medium text-gray-900">' + escapeHtml(detalhes.razao_social) + '</p>';
+        }
+        if (detalhes.documento) {
+            html += '<p class="text-xs text-gray-500 mt-0.5">CNPJ: ' + formatCnpj(detalhes.documento) + '</p>';
+        }
+        html += '</div>';
+        if (alvoUrl) {
+            html += '<a href="' + alvoUrl + '" data-link class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors flex-shrink-0">';
+            html += '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
+            html += alvoLabel + '</a>';
+        }
+        html += '</div>';
+
+        html += '<p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Prazos das certidões</p>';
+        html += '<div class="space-y-1.5">';
+        certidoes.forEach(function(certidao) {
+            var dias = Number(certidao.dias);
+            var diasValidos = Number.isFinite(dias);
+            var vencida = certidao.vencida === true || certidao.vencida === 1 || certidao.vencida === '1';
+            var prazo;
+
+            if (vencida) {
+                var diasVencida = diasValidos ? Math.abs(dias) : null;
+                prazo = diasVencida === 1 ? 'Vencida há 1 dia'
+                    : (diasVencida !== null ? 'Vencida há ' + diasVencida + ' dias' : 'Vencida');
+            } else if (diasValidos && dias === 0) {
+                prazo = 'Vence hoje';
+            } else if (diasValidos && dias === 1) {
+                prazo = 'Vence em 1 dia';
+            } else if (diasValidos) {
+                prazo = 'Vence em ' + dias + ' dias';
+            } else {
+                prazo = 'Próxima do vencimento';
+            }
+
+            var cor = vencida || (diasValidos && dias <= 7) ? '#dc2626' : '#b45309';
+            html += '<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border border-gray-100 rounded px-3 py-2">';
+            html += '<div class="min-w-0">';
+            html += '<p class="text-sm font-medium text-gray-800">' + escapeHtml(certidao.label || 'Certidão') + '</p>';
+            html += '<p class="text-xs text-gray-500">Validade: ' + escapeHtml(certidao.validade || 'não informada') + '</p>';
+            html += '</div>';
+            html += '<span class="self-start sm:self-auto whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:' + cor + '">' + escapeHtml(prazo) + '</span>';
+            html += '</div>';
+        });
+        html += '</div>';
+        html += '</div>';
+
+        return html;
+    }
+
     function renderFornecedorIrregular(detalhes) {
         var pId = detalhes.participante_id;
         var html = '<div class="bg-white rounded border border-gray-300 p-4">';
-        html += '<div class="flex items-start justify-between gap-3 mb-3">';
+        html += '<div class="alertas-detalhe-cabecalho flex items-start justify-between gap-3 mb-3">';
         html += '<div class="min-w-0">';
         if (detalhes.razao_social) {
             html += '<p class="text-sm font-medium text-gray-900">' + escapeHtml(detalhes.razao_social) + '</p>';
@@ -1370,7 +1699,7 @@
         html += '</div>';
         html += '</div>';
 
-        html += '<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">';
+        html += '<div class="alertas-mini-grid grid grid-cols-2 sm:grid-cols-3 gap-3">';
         var sitClass = (detalhes.situacao_cadastral && detalhes.situacao_cadastral !== 'ATIVA') ? 'text-red-600' : 'text-gray-900';
         var items = [
             { label: 'Situação', value: detalhes.situacao_cadastral || '-', cls: sitClass },
@@ -1406,6 +1735,7 @@
             valor_em_risco: 'Valor em Risco',
             total_meses: 'Total de Meses',
             meses_faltantes: 'Meses Faltantes',
+            certidoes: 'Certidões',
             mensagem: 'Observação'
         };
 
@@ -1424,7 +1754,13 @@
             } else if (key === 'valor_em_risco') {
                 displayVal = formatarMoeda(val);
             } else if (Array.isArray(val)) {
-                displayVal = escapeHtml(val.join(', '));
+                var valoresEscalares = val.filter(function(item) {
+                    return item === null || typeof item !== 'object';
+                });
+                if (valoresEscalares.length === 0) return;
+                displayVal = valoresEscalares.map(function(item) {
+                    return escapeHtml(String(item));
+                }).join(', ');
             } else {
                 displayVal = escapeHtml(String(val));
             }
@@ -1605,7 +1941,7 @@
             pis_cofins_incompleto: 'PIS/COFINS Incompleto',
             situacao_irregular: 'Situação Cadastral Irregular',
             certidao_positiva: 'Certidão Positiva',
-            certidao_vencendo: 'Certidão Vencendo',
+            certidao_vencendo: 'Certidão vencendo',
             fornecedor_irregular: 'Fornecedor Irregular',
             ncm_faltando: 'NCM Faltando',
             consulta_vencida: 'Consulta Vencida',
@@ -1726,14 +2062,20 @@
         selectedAlertaIds = {};
         var bar = document.getElementById('alertas-bulk-bar');
         if (bar) bar.classList.add('hidden');
+        var container = document.getElementById('alertas-central-container');
+        if (container) container.classList.remove('alertas-com-bulk');
     }
 
     function atualizarBarraLote() {
         var ids = Object.keys(selectedAlertaIds);
         var countEl = document.getElementById('alertas-bulk-count');
+        var labelEl = document.getElementById('alertas-bulk-label');
         var bar = document.getElementById('alertas-bulk-bar');
+        var container = document.getElementById('alertas-central-container');
         if (countEl) countEl.textContent = ids.length;
+        if (labelEl) labelEl.textContent = ids.length === 1 ? 'selecionado' : 'selecionados';
         if (bar) bar.classList.toggle('hidden', ids.length === 0);
+        if (container) container.classList.toggle('alertas-com-bulk', ids.length > 0);
     }
 
     function setupBulkSelection() {
@@ -1785,6 +2127,47 @@
         }
     }
 
+    function atualizarContadorFiltros() {
+        var ativos = 0;
+        var buscaEl = document.getElementById('alerta-filtro-busca');
+        var ordemEl = document.getElementById('alerta-filtro-ordem');
+        var severidadeEl = document.getElementById('alerta-filtro-severidade');
+        var clienteEl = document.getElementById('alerta-filtro-cliente');
+        var statusEl = document.getElementById('alerta-filtro-status');
+
+        if (buscaEl && buscaEl.value.trim() !== '') ativos++;
+        if (ordemEl && ordemEl.value !== '') ativos++;
+        if (severidadeEl && severidadeEl.value !== '') ativos++;
+        if (clienteEl && clienteEl.value !== '') ativos++;
+        if (statusEl && statusEl.value !== 'ativo') ativos++;
+
+        var countEl = document.getElementById('alertas-filtros-count');
+        if (!countEl) return;
+        countEl.textContent = ativos;
+        countEl.classList.toggle('hidden', ativos === 0);
+        countEl.classList.toggle('inline-flex', ativos > 0);
+    }
+
+    function fecharFiltrosMobile() {
+        if (!window.matchMedia('(max-width: 639px)').matches) return;
+        var container = document.getElementById('alertas-filtros');
+        var toggle = document.getElementById('alertas-filtros-toggle');
+        if (container) container.classList.remove('alertas-filtros-abertos');
+        if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    }
+
+    function setupFiltrosMobile() {
+        var container = document.getElementById('alertas-filtros');
+        var toggle = document.getElementById('alertas-filtros-toggle');
+        if (!container || !toggle) return;
+
+        toggle.addEventListener('click', function() {
+            var aberto = container.classList.toggle('alertas-filtros-abertos');
+            toggle.setAttribute('aria-expanded', aberto ? 'true' : 'false');
+        });
+        atualizarContadorFiltros();
+    }
+
     function setupFiltros() {
         function aplicarFiltros() {
             filtros.severidade = document.getElementById('alerta-filtro-severidade').value;
@@ -1794,6 +2177,8 @@
             var ordemEl = document.getElementById('alerta-filtro-ordem');
             filtros.busca = buscaEl ? buscaEl.value.trim() : '';
             filtros.ordem = ordemEl ? ordemEl.value : '';
+            atualizarContadorFiltros();
+            fecharFiltrosMobile();
             loadAlertas(1);
         }
 
@@ -1847,6 +2232,7 @@
                 filtros.severidade = sev;
                 var selectEl = document.getElementById('alerta-filtro-severidade');
                 if (selectEl) selectEl.value = sev;
+                atualizarContadorFiltros();
 
                 // Visual feedback
                 kpiCards.forEach(function(c) { c.classList.remove('ring-2', 'ring-gray-400'); });
@@ -1884,6 +2270,7 @@
     loadEvolucao();
     loadAlertas();
     setupFiltros();
+    setupFiltrosMobile();
     setupTabs();
     setupKpiClicks();
     setupRecalcular();

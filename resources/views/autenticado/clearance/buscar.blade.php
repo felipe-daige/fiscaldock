@@ -94,9 +94,17 @@
                 <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Buscar Notas</h1>
                 <p class="text-xs text-gray-500 mt-1">Consulta avulsa por chave de acesso. A busca abre uma tela de resultado com andamento e retorno final.</p>
             </div>
-            <a href="/app/clearance/notas" data-link class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-sm font-medium self-start">
-                Verificar notas da base
-            </a>
+            <div class="grid w-full grid-cols-2 gap-2 sm:w-auto sm:flex sm:items-center sm:justify-end">
+                <a href="/app/clearance/notas" data-link class="inline-flex min-w-0 items-center justify-center gap-1.5 px-3 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium sm:gap-2 sm:px-4 sm:text-sm">
+                    <span class="truncate">Verificar notas</span>
+                </a>
+                <a href="{{ route('app.clearance.buscar.historico') }}" data-link class="inline-flex min-w-0 items-center justify-center gap-1.5 px-3 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium sm:gap-2 sm:px-4 sm:text-sm">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="truncate">Histórico</span>
+                </a>
+            </div>
         </div>
 
         <details class="bg-white rounded border border-gray-300 border-l-4 mb-4 group" style="border-left-color: #2563eb;">
@@ -198,7 +206,7 @@
                                 <p class="text-sm font-semibold text-gray-900">Consulta avulsa</p>
                                 <span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #2563eb;">Clearance</span>
                             </div>
-                            <p class="text-lg font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $custoEstimadoCreditos)) <span class="text-xs font-medium text-gray-500">/documento</span></p>
+                            <p class="text-lg font-bold text-gray-900"><span id="busca-custo-tier-explicativo">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $custoEstimadoCreditos))</span> <span class="text-xs font-medium text-gray-500">/documento</span></p>
                             <p class="text-[11px] text-gray-500 mt-1">Cobrança unitária para NF-e, NFC-e e CT-e consultados por chave.</p>
                         </div>
                         <div class="border border-gray-300 rounded p-3">
@@ -318,6 +326,32 @@
                                 Consultar documento
                             </button>
                         </div>
+
+                        {{-- Escolha EXCLUSIVA de tier, igual ao lote. O completo é CUMULATIVO:
+                             faz tudo do Clearance e ainda investiga a contraparte do documento. --}}
+                        @if(config('clearance.full.habilitado'))
+                            @php
+                                $precos = app(\App\Services\PricingCatalogService::class);
+                                $precoBasico = $precos->creditsToCurrency(\App\Services\ValidacaoContabilService::CUSTO_DOCUMENTO);
+                                $precoFull = $precos->creditsToCurrency(\App\Services\ValidacaoContabilService::CUSTO_DOCUMENTO_FULL);
+                            @endphp
+                            <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <label id="busca-card-basico" for="busca-tier-basico" class="busca-plan-card flex items-start gap-2 cursor-pointer rounded border bg-white px-3 py-2.5 transition" data-tier="basico" style="border-color: #1f2937">
+                                    <input type="radio" name="busca_tier" id="busca-tier-basico" value="basico" class="mt-0.5 h-4 w-4" style="accent-color: #1f2937" checked>
+                                    <span class="text-[12px] text-gray-700">
+                                        <strong class="text-gray-900">Clearance</strong> — @brl($precoBasico)/doc<br>
+                                        <span class="text-gray-500">Confere o documento na SEFAZ.</span>
+                                    </span>
+                                </label>
+                                <label id="busca-card-full" for="busca-tier-full" class="busca-plan-card flex items-start gap-2 cursor-pointer rounded border bg-white px-3 py-2.5 transition" data-tier="full" style="border-color: #d1d5db">
+                                    <input type="radio" name="busca_tier" id="busca-tier-full" value="full" class="mt-0.5 h-4 w-4" style="accent-color: #1f2937">
+                                    <span class="text-[12px] text-gray-700">
+                                        <strong class="text-gray-900">Clearance completo</strong> — @brl($precoFull)/doc<br>
+                                        <span class="text-gray-500"><strong>Tudo do Clearance</strong> + regularidade da contraparte (situação cadastral, SINTEGRA e CND Federal).</span>
+                                    </span>
+                                </label>
+                            </div>
+                        @endif
                         <div class="mt-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                             <p id="nfe-chave-feedback" class="text-[11px] text-gray-500">Cole a chave com 44 dígitos (pontos/espaços são removidos automaticamente).</p>
                             <p class="text-[10px] text-gray-400 uppercase tracking-wide"><span id="nfe-chave-count">0</span>/44 dígitos</p>
@@ -421,7 +455,9 @@
                     <div class="grid grid-cols-2 divide-x divide-gray-200">
                         <div class="px-4 py-2.5">
                             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Custo por consulta</p>
-                            <p class="text-lg font-bold text-gray-900 mt-0.5">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $custoEstimadoCreditos))</p>
+                            {{-- Acompanha o tier escolhido (Clearance × Clearance completo) — atualizado
+                                 por clearance-buscar.js. Sem escolha na tela = básico. --}}
+                            <p class="text-lg font-bold text-gray-900 mt-0.5" id="busca-custo-tier" data-custo-basico="{{ \App\Services\ValidacaoContabilService::CUSTO_DOCUMENTO }}" data-custo-full="{{ \App\Services\ValidacaoContabilService::CUSTO_DOCUMENTO_FULL }}">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $custoEstimadoCreditos))</p>
                             <p class="text-[10px] text-gray-500 mt-0.5">por documento</p>
                         </div>
                         <div class="px-4 py-2.5">
@@ -468,16 +504,19 @@
             </aside>
         </div>
 
-        <section class="mt-4 sm:mt-6 bg-white rounded border border-gray-300 overflow-hidden">
-            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Últimas consultas</span>
+        <section class="mt-4 sm:mt-6 bg-white rounded border border-gray-300 overflow-hidden" data-history-flow="clearance-avulsa">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
+                <div>
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Histórico de buscas avulsas</span>
+                    <p class="text-[10px] text-gray-400 mt-0.5">Somente chaves consultadas em Buscar Nota</p>
+                </div>
                 <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ $ultimasConsultasDfe->count() }}</span>
             </div>
 
             @if($ultimasConsultasDfe->isEmpty())
                 <div class="px-4 py-6 text-center">
                     <p class="text-sm font-semibold text-gray-900">Nenhuma consulta ainda</p>
-                    <p class="text-xs text-gray-500 mt-1">As consultas avulsas persistidas nas tabelas canônicas do clearance aparecerão aqui.</p>
+                    <p class="text-xs text-gray-500 mt-1">As chaves consultadas nesta tela aparecerão aqui.</p>
                 </div>
             @else
                 <div class="grid grid-cols-1 xl:grid-cols-2">
@@ -487,11 +526,13 @@
                             $badgeCor = $badgeCoresSituacao[$situacao] ?? '#374151';
                             $tipoDocumento = strtoupper((string) ($consultaHistorico->tipo_documento ?: 'NFE'));
                             $clienteHistorico = $consultaHistorico->cliente_nome ?: 'Sem cliente';
-                            $resultadoHistoricoUrl = route('app.clearance.buscar.resultado', [
-                                'consultaLoteId' => $consultaHistorico->consulta_lote_id,
-                                'tipo_documento' => strtolower((string) ($consultaHistorico->tipo_documento ?: 'NFE')),
-                                'chave_acesso' => $consultaHistorico->chave_acesso,
-                            ]);
+                            $resultadoHistoricoUrl = $consultaHistorico->consulta_lote_id
+                                ? route('app.clearance.buscar.resultado', [
+                                    'consultaLoteId' => $consultaHistorico->consulta_lote_id,
+                                    'tipo_documento' => strtolower((string) ($consultaHistorico->tipo_documento ?: 'NFE')),
+                                    'chave_acesso' => $consultaHistorico->chave_acesso,
+                                ])
+                                : null;
                             $chaveAbrev = $consultaHistorico->chave_acesso
                                 ? substr($consultaHistorico->chave_acesso, 0, 6) . '…' . substr($consultaHistorico->chave_acesso, -4)
                                 : '';
@@ -511,9 +552,13 @@
                                     <p class="text-[10px] text-gray-400 font-mono mt-0.5">{{ $chaveAbrev }}</p>
                                 @endif
                                 <p class="text-[10px] text-gray-400 mt-0.5">{{ $consultaHistorico->momento_consulta ?: '' }}</p>
-                                <a href="{{ $resultadoHistoricoUrl }}" data-link class="mt-2 inline-flex text-xs text-gray-600 hover:text-gray-900 hover:underline">
-                                    Abrir resultado
-                                </a>
+                                @if($resultadoHistoricoUrl)
+                                    <a href="{{ $resultadoHistoricoUrl }}" data-link class="mt-2 inline-flex whitespace-nowrap text-xs text-gray-600 hover:text-gray-900 hover:underline">
+                                        Abrir resultado
+                                    </a>
+                                @else
+                                    <span class="mt-2 inline-flex text-[10px] text-gray-400">Snapshot legado sem lote associado</span>
+                                @endif
                             </div>
                         </div>
                     @endforeach
@@ -580,18 +625,13 @@
             {{-- Última verificação SEFAZ (snapshot) --}}
             <div id="modal-precheck-snapshot" class="hidden text-xs rounded border p-2.5" style="border-color: #bfdbfe; background-color: #eff6ff; color: #1e40af;"></div>
 
-            {{-- Comparativo de preço (só na variante acervo) --}}
-            <div id="modal-precheck-comparativo" class="hidden grid grid-cols-2 gap-2">
-                <div class="border border-gray-200 rounded p-2.5 bg-gray-50/60">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Busca avulsa</p>
-                    <p id="modal-precheck-preco-avulsa" class="text-base font-bold text-gray-400 line-through mt-0.5"></p>
-                    <p class="text-[10px] text-gray-400 mt-0.5">desnecessária — nota já importada</p>
-                </div>
-                <div class="rounded p-2.5 border" style="border-color: #86efac; background-color: #f0fdf4;">
-                    <p class="text-[10px] font-semibold uppercase tracking-wide" style="color: #15803d;">Clearance da nota</p>
-                    <p id="modal-precheck-preco-clearance" class="text-base font-bold mt-0.5" style="color: #166534;"></p>
-                    <p class="text-[10px] mt-0.5" style="color: #15803d;">verificação SEFAZ da nota da base</p>
-                </div>
+            {{-- Nota já no acervo: a avulsa não se aplica (o backend nem cobra — devolve como
+                 "já existente"). O clearance da nota faz a MESMA consulta pelo MESMO preço e ainda
+                 associa o snapshot à nota que você já tem. Não é comparativo de preço. --}}
+            <div id="modal-precheck-caminho" class="hidden rounded p-2.5 border" style="border-color: #86efac; background-color: #f0fdf4;">
+                <p class="text-[10px] font-semibold uppercase tracking-wide" style="color: #15803d;">Clearance da nota</p>
+                <p id="modal-precheck-preco-clearance" class="text-base font-bold mt-0.5" style="color: #166534;"></p>
+                <p class="text-[10px] mt-0.5" style="color: #15803d;">Mesma consulta oficial, mesmo preço da busca avulsa — e o resultado fica ligado à nota do seu acervo.</p>
             </div>
 
             <p id="modal-precheck-mensagem" class="text-xs text-gray-600"></p>

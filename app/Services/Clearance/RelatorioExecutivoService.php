@@ -4,6 +4,8 @@ namespace App\Services\Clearance;
 
 use App\Models\Cliente;
 use App\Models\ConsultaLote;
+use App\Models\Participante;
+use App\Services\Participantes\DossieParticipanteBuilder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -22,6 +24,47 @@ class RelatorioExecutivoService
     public function __construct(private ?ExposicaoFiscalService $exposicao = null)
     {
         $this->exposicao ??= new ExposicaoFiscalService;
+    }
+
+    /** Teto de dossiês anexados ao PDF — protege o relatório de virar um calhamaço. */
+    private const TETO_DOSSIES = 20;
+
+    /**
+     * Dossiês das contrapartes do lote (só no Clearance completo), na MESMA ordem do bloco de
+     * regularidade da tela: irregulares primeiro. Cada item é o payload do dossiê canônico do
+     * participante — renderizado no PDF pelo partial `reports.dossie._bloco`.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function montarDossiesContrapartes(ConsultaLote $lote): array
+    {
+        $resumo = app(RegularidadeContraparteService::class)
+            ->resumoPorLoteClearance($lote->id, (int) $lote->user_id);
+
+        if (! ($resumo['ativo'] ?? false)) {
+            return [];
+        }
+
+        $ids = collect($resumo['contrapartes'])
+            ->pluck('participante_id')
+            ->take(self::TETO_DOSSIES);
+
+        if ($ids->isEmpty()) {
+            return [];
+        }
+
+        $porId = Participante::where('user_id', $lote->user_id)
+            ->whereIn('id', $ids)
+            ->get()
+            ->keyBy('id');
+
+        $builder = app(DossieParticipanteBuilder::class);
+
+        return $ids
+            ->map(fn (int $id) => ($p = $porId->get($id)) ? $builder->montar($p) : null)
+            ->filter()
+            ->values()
+            ->all();
     }
 
     /**
@@ -52,6 +95,11 @@ class RelatorioExecutivoService
             'concentracao' => $this->montarConcentracao($documentos),
             'documentos' => $documentos,
             'sem_divergencia' => collect($divergencia['sem_divergencia'] ?? []),
+            // Clearance completo: o dossiê de cada contraparte entra NO MESMO PDF, depois do
+            // resultado do clearance. Reusa o dossiê canônico do participante
+            // (DossieParticipanteBuilder + partial reports.dossie._bloco) — o mesmo que o botão
+            // "Dossiê dos CNPJs" e a listagem de participantes geram. Vazio no tier básico.
+            'dossies' => $this->montarDossiesContrapartes($lote),
             'metodologia' => [
                 'tolerancia_absoluta' => DivergenciaService::TOLERANCIA_ABSOLUTA_RUIDO,
                 'tolerancia_percentual' => DivergenciaService::TOLERANCIA_PERCENTUAL_RUIDO,

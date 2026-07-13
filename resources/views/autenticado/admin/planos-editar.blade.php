@@ -9,6 +9,9 @@
     $saldoInclusoBrl = \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $plano->creditos_inclusos));
     // Marca d'água = plano sem NENHUM formato de export pago (regra do RequiresEntitlement/composer).
     $temExportPago = ! empty($exportAtual);
+    $armazenamentoAtual = array_key_exists('armazenamento_mb', $caps)
+        ? $caps['armazenamento_mb']
+        : config("arquivos.quota_por_plano_mb.{$plano->codigo}", config('arquivos.quota_padrao_mb', 250));
 @endphp
 <div class="min-h-screen bg-gray-100 pb-24">
     <div class="admin-page max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -127,6 +130,11 @@
                         <label class="{{ $lblInput }}">Limite de CNPJs monitorados</label>
                         <input type="number" min="0" name="limite_cnpjs_monitorados" value="{{ old('limite_cnpjs_monitorados', $plano->limite_cnpjs_monitorados) }}" placeholder="Ilimitado" class="{{ $inputCls }}">
                         <p class="text-[10px] text-gray-400 mt-1">Baixar isto força reconciliação (usuário escolhe quais manter).</p>
+                    </div>
+                    <div>
+                        <label class="{{ $lblInput }}">Armazenamento incluído (MB)</label>
+                        <input type="number" min="1" name="cap_armazenamento_mb" value="{{ old('cap_armazenamento_mb', $armazenamentoAtual) }}" placeholder="Ilimitado" class="{{ $inputCls }}">
+                        <p class="text-[10px] text-gray-400 mt-1">Quota da central Meus Arquivos. 1024 MB = 1 GB.</p>
                     </div>
                     <div>
                         <label class="{{ $lblInput }}">Frequência padrão (dias)</label>

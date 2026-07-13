@@ -110,7 +110,7 @@
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Não verificadas</p>
                     <p class="text-lg font-bold text-gray-900">{{ number_format($kpis['nao_verificadas'], 0, ',', '.') }}</p>
                     @if($kpis['nao_verificadas'] > 0)
-                        <a href="/app/clearance/notas?status_validacao=sem_situacao_receita" data-link class="text-[11px] text-gray-600 hover:text-gray-900 hover:underline mt-1 inline-flex">
+                        <a href="/app/clearance/notas?status_consulta=nao_consultadas" data-link class="text-[11px] text-gray-600 hover:text-gray-900 hover:underline mt-1 inline-flex">
                             Ver notas pendentes →
                         </a>
                     @else

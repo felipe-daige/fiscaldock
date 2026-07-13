@@ -19,6 +19,13 @@
     <div>Hash: {{ $r['hash'] }}</div>
 @endsection
 
+{{-- Estilos do dossiê — só quando o Clearance completo anexa os dossiês das contrapartes. --}}
+@if(!empty($r['dossies']))
+    @push('estilos')
+        @include('reports.dossie._estilos')
+    @endpush
+@endif
+
 @push('estilos')
 <style>
     .grid2 { width:100%; border-collapse:separate; border-spacing:6px 0; table-layout:fixed; }
@@ -186,5 +193,31 @@
             </div>
         </div>
     </div>
+
+    {{-- Clearance completo: DOSSIÊ das contrapartes, anexado DEPOIS do resultado do clearance.
+         Reusa o dossiê canônico do participante (mesmo partial `_bloco` do PDF individual e do
+         dossiê em lote) — o relatório e o botão "Dossiê dos CNPJs" entregam o mesmo conteúdo. --}}
+    @if(!empty($r['dossies']))
+        {{-- Estilo INLINE de propósito: os estilos do dossiê (`reports.dossie._estilos`) redefinem
+             `.secao-head`, então usar a classe aqui deixaria o título sem o carimbo escuro. --}}
+        @foreach($r['dossies'] as $i => $d)
+            <div style="page-break-before: always;">
+                @if($i === 0)
+                    {{-- Intro vai na MESMA página do 1º dossiê — com page-break próprio ela ocupava
+                         uma folha inteira quase em branco. --}}
+                    <div style="margin-bottom:12px;">
+                        <div style="background:#1f2937;color:#ffffff;padding:6px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">
+                            Dossiê das contrapartes ({{ count($r['dossies']) }})
+                        </div>
+                        <div style="font-size:8px;color:#6b7280;padding:6px 2px 0;">
+                            Um dossiê por CNPJ que figura como contraparte nos documentos deste lote — situação cadastral,
+                            certidões, movimentação e score. Mesmo conteúdo do dossiê individual do participante.
+                        </div>
+                    </div>
+                @endif
+                @include('reports.dossie._bloco', $d)
+            </div>
+        @endforeach
+    @endif
 
 @endsection

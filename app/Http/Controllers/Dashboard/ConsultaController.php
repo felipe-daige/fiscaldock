@@ -12,9 +12,9 @@ use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Models\ParticipanteGrupo;
 use App\Services\ConsultaReportService;
-use App\Services\SaldoService;
 use App\Services\ParecerFiscalService;
 use App\Services\PricingCatalogService;
+use App\Services\SaldoService;
 use App\Support\CertidaoBadge;
 use App\Support\CndFederal;
 use App\Support\CsvExport;
@@ -107,11 +107,14 @@ class ConsultaController extends Controller
         // Contagem total de participantes
         $totalParticipantes = Participante::where('user_id', $user->id)->count();
 
-        // Últimos lotes do usuário
-        $ultimosLotes = ConsultaLote::where('user_id', $user->id)
+        // Mesmo recorte do histórico completo: somente Consulta CNPJ, com a retenção do tier.
+        $retencaoMeses = $this->entitlements->retencaoMeses($user);
+        $ultimosLotes = $this->consultaCnpjLotesQuery($user->id, $retencaoMeses)
             ->with('plano')
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
+            ->withCount(['monitoramentoConsulta as eh_monitoramento'])
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->limit(5)
             ->get();
 
         $data = [
@@ -1533,17 +1536,9 @@ class ConsultaController extends Controller
 
         // Lotes de consulta de CNPJ (plano_id != null). Lotes de clearance (plano_id null) têm
         // histórico próprio (/app/clearance) e resultado em nfe_consultas — não entram aqui.
-        $baseQuery = ConsultaLote::where('user_id', $user->id)
-            ->whereNotNull('plano_id')
-            ->whereDoesntHave('cliente', fn ($q) => $q->where('is_empresa_propria', true))
-            ->with('plano');
-
-        // Retenção de histórico do tier (Free = 6 meses): lotes mais antigos saem da
-        // listagem/KPIs até upgrade — o dado nunca é apagado (guardrail 3 da spec CFO).
         $retencaoMeses = $this->entitlements->retencaoMeses($user);
-        if ($retencaoMeses !== null) {
-            $baseQuery->where('consulta_lotes.created_at', '>=', now()->subMonths($retencaoMeses));
-        }
+        $baseQuery = $this->consultaCnpjLotesQuery($user->id, $retencaoMeses)
+            ->with('plano');
 
         if (! empty($validated['busca'])) {
             $busca = trim($validated['busca']);
@@ -1623,6 +1618,21 @@ class ConsultaController extends Controller
         return view(self::AUTH_LAYOUT_VIEW, array_merge([
             'initialView' => $historicoView,
         ], $data));
+    }
+
+    private function consultaCnpjLotesQuery(int $userId, ?int $retencaoMeses = null)
+    {
+        $query = ConsultaLote::query()
+            ->where('user_id', $userId)
+            ->whereNotNull('plano_id')
+            ->whereDoesntHave('cliente', fn ($cliente) => $cliente->where('is_empresa_propria', true));
+
+        // O dado não é apagado; somente deixa de aparecer enquanto estiver fora da retenção do tier.
+        if ($retencaoMeses !== null) {
+            $query->where('consulta_lotes.created_at', '>=', now()->subMonths($retencaoMeses));
+        }
+
+        return $query;
     }
 
     /**

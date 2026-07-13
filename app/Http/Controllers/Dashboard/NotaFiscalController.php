@@ -181,6 +181,8 @@ class NotaFiscalController extends Controller
         if ($nfe) {
             $nfe->tipo_snapshot = 'nfe';
 
+            $this->preferirComprovantesArquivados($nfe, 'nfe');
+
             return $nfe;
         }
 
@@ -188,10 +190,32 @@ class NotaFiscalController extends Controller
         if ($cte) {
             $cte->tipo_snapshot = 'cte';
 
+            $this->preferirComprovantesArquivados($cte, 'cte');
+
             return $cte;
         }
 
         return null;
+    }
+
+    private function preferirComprovantesArquivados(object $snapshot, string $tipo): void
+    {
+        foreach ([
+            'html' => 'url_html',
+            'xml' => 'url_xml',
+            'site_receipt' => 'url_site_receipt',
+        ] as $arquivo => $atributo) {
+            $path = data_get($snapshot->payload, "comprovantes_arquivos.{$arquivo}");
+            if (! is_string($path) || trim($path) === '') {
+                continue;
+            }
+
+            $snapshot->{$atributo} = route('app.clearance.comprovante', [
+                'tipo' => $tipo,
+                'id' => $snapshot->id,
+                'arquivo' => $arquivo,
+            ]);
+        }
     }
 
     /**

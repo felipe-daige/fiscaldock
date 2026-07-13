@@ -3,6 +3,7 @@
 use App\Models\Cliente;
 use App\Models\EfdImportacao;
 use App\Models\EfdNota;
+use App\Models\NfeConsulta;
 use App\Models\Participante;
 use App\Models\User;
 use App\Models\XmlImportacao;
@@ -102,6 +103,17 @@ function clearanceMakeXmlNota(User $u, array $overrides = []): XmlNota
     ], $overrides));
 }
 
+function clearanceMakeNfeSnapshot(User $u, string $chave, string $status = 'AUTORIZADA'): NfeConsulta
+{
+    return NfeConsulta::create([
+        'user_id' => $u->id,
+        'chave_acesso' => $chave,
+        'tipo_documento' => 'NFE',
+        'status' => $status,
+        'consultado_em' => '2026-07-13 12:00:00',
+    ]);
+}
+
 it('retorna grade vazia com mensagem de escopo quando o usuario nao tem notas', function () {
     $u = clearanceMakeUser();
 
@@ -120,6 +132,89 @@ it('lista notas EFD quando o usuario nao possui XML', function () {
         ->assertOk()
         ->assertSee('40404')
         ->assertSee('EFD');
+});
+
+it('ordena por maior valor total ao abrir a listagem', function () {
+    $u = clearanceMakeUser();
+
+    clearanceMakeXmlNota($u, [
+        'chave_acesso' => str_repeat('1', 44),
+        'numero_documento' => 10001,
+        'data_emissao' => '2026-12-31 10:00:00',
+        'valor_total' => 100.00,
+        'emit_razao_social' => 'Menor Volume Fiscal',
+    ]);
+    clearanceMakeXmlNota($u, [
+        'chave_acesso' => str_repeat('2', 44),
+        'numero_documento' => 10002,
+        'data_emissao' => '2026-01-01 10:00:00',
+        'valor_total' => 900.00,
+        'emit_razao_social' => 'Maior Volume Fiscal',
+    ]);
+
+    actingAs($u)
+        ->get('/app/clearance/notas')
+        ->assertOk()
+        ->assertSeeInOrder(['Maior Volume Fiscal', 'Menor Volume Fiscal']);
+});
+
+it('mostra na lista o status persistido pela consulta SEFAZ para XML e EFD', function () {
+    $u = clearanceMakeUser();
+    $chaveXml = str_repeat('3', 44);
+    $chaveEfd = str_repeat('4', 44);
+
+    clearanceMakeXmlNota($u, [
+        'chave_acesso' => $chaveXml,
+        'numero_documento' => 31001,
+        'validacao' => null,
+    ]);
+    clearanceMakeEfdNota($u, [
+        'chave_acesso' => $chaveEfd,
+        'numero' => 41001,
+    ]);
+    clearanceMakeNfeSnapshot($u, $chaveXml, 'AUTORIZADA');
+    clearanceMakeNfeSnapshot($u, $chaveEfd, 'CANCELADA');
+
+    actingAs($u)
+        ->get('/app/clearance/notas')
+        ->assertOk()
+        ->assertSee('>Autorizada</span>', false)
+        ->assertSee('>Cancelada</span>', false);
+});
+
+it('filtra notas consultadas e nao consultadas e preserva o filtro no todosIds', function () {
+    $u = clearanceMakeUser();
+    $chaveConsultada = str_repeat('5', 44);
+    $chaveNaoConsultada = str_repeat('6', 44);
+
+    $consultada = clearanceMakeXmlNota($u, [
+        'chave_acesso' => $chaveConsultada,
+        'numero_documento' => 51001,
+    ]);
+    clearanceMakeXmlNota($u, [
+        'chave_acesso' => $chaveNaoConsultada,
+        'numero_documento' => 61001,
+    ]);
+    clearanceMakeNfeSnapshot($u, $chaveConsultada);
+
+    actingAs($u)
+        ->get('/app/clearance/notas?status_consulta=consultadas')
+        ->assertOk()
+        ->assertSee('51001')
+        ->assertDontSee('61001');
+
+    actingAs($u)
+        ->get('/app/clearance/notas?status_consulta=nao_consultadas')
+        ->assertOk()
+        ->assertSee('61001')
+        ->assertDontSee('51001');
+
+    $ids = actingAs($u)
+        ->getJson('/app/clearance/notas/todos-ids?status_consulta=consultadas')
+        ->assertOk()
+        ->json('ids');
+
+    expect($ids)->toBe([$consultada->id]);
 });
 
 it('deduplica linhas pela chave de acesso preferindo XML sobre EFD', function () {

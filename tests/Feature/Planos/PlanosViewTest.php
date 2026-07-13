@@ -69,3 +69,17 @@ it('expõe os limites de carteira por tier (clientes/CNPJs)', function () {
     expect($html)->toContain('40 CNPJs monitorados');      // profissional
     expect($html)->toContain('Clientes ilimitados');       // enterprise
 });
+
+
+it('expõe o armazenamento incluído em cada tier', function () {
+    $user = User::factory()->create();
+    actingAs($user);
+
+    $html = get('/app/planos')->assertOk()->getContent();
+
+    expect($html)->toContain('250 MB de armazenamento');
+    expect($html)->toContain('2 GB de armazenamento');
+    expect($html)->toContain('10 GB de armazenamento');
+    expect($html)->toContain('50 GB de armazenamento');
+    expect($html)->toContain('200 GB de armazenamento');
+});

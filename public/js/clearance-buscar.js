@@ -1,3 +1,38 @@
+// Escolha EXCLUSIVA de tier na busca avulsa (radio), igual ao lote. Sem os radios na tela
+// (flag off) = 'basico'.
+function tierBuscaAtual() {
+    const marcado = document.querySelector('input[name="busca_tier"]:checked');
+    return marcado && marcado.value === 'full' ? 'full' : 'basico';
+}
+
+// Destaca o card do tier escolhido e atualiza o custo exibido (o KPI não pode ficar mostrando
+// R$ 1,00 quando o usuário escolheu o completo).
+function realcarCardBusca() {
+    const atual = tierBuscaAtual();
+
+    document.querySelectorAll('.busca-plan-card').forEach((card) => {
+        const selecionado = card.dataset.tier === atual;
+        card.style.borderColor = selecionado ? '#1f2937' : '#d1d5db';
+        card.style.backgroundColor = selecionado ? '#f9fafb' : '#ffffff';
+    });
+
+    const alvo = document.getElementById('busca-custo-tier');
+    if (!alvo) return;
+
+    const unidades = parseInt(alvo.dataset[atual === 'full' ? 'custoFull' : 'custoBasico'] || '5', 10);
+    const precoUnit = Number((window.BUSCAR_NFE_CONFIG || {}).saldoUnitPrice || 0.20);
+    const texto = 'R$ ' + (Math.round(unidades * precoUnit * 100) / 100)
+        .toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    alvo.textContent = texto;
+    const explicativo = document.getElementById('busca-custo-tier-explicativo');
+    if (explicativo) explicativo.textContent = texto;
+}
+
+document.addEventListener('change', (e) => {
+    if (e.target && e.target.name === 'busca_tier') realcarCardBusca();
+});
+
 function initClearanceBuscar() {
     const root = document.getElementById('buscar-nfe-container');
     if (!root) return;
@@ -5,7 +40,7 @@ function initClearanceBuscar() {
     root.dataset.clearanceBuscarInitialized = '1';
 
     const config = window.BUSCAR_NFE_CONFIG || {};
-    const CUSTO = Number(config.custo || 14);
+    const CUSTO = Number(config.custo || 5);
     // Conversão monetária definida pelo backend; toda exibição é em R$.
     const SALDO_UNIT_PRICE = Number(config.saldoUnitPrice || 0.20);
     const brl = (unidades) => 'R$ ' + (Math.round((unidades || 0) * SALDO_UNIT_PRICE * 100) / 100)
@@ -59,8 +94,7 @@ function initClearanceBuscar() {
     const modalPrecheckValores = document.getElementById('modal-precheck-valores');
     const modalPrecheckChave = document.getElementById('modal-precheck-chave');
     const modalPrecheckSnapshot = document.getElementById('modal-precheck-snapshot');
-    const modalPrecheckComparativo = document.getElementById('modal-precheck-comparativo');
-    const modalPrecheckPrecoAvulsa = document.getElementById('modal-precheck-preco-avulsa');
+    const modalPrecheckCaminho = document.getElementById('modal-precheck-caminho');
     const modalPrecheckPrecoClearance = document.getElementById('modal-precheck-preco-clearance');
     const modalPrecheckMensagem = document.getElementById('modal-precheck-mensagem');
     const modalPrecheckConfirm = document.getElementById('modal-precheck-confirm');
@@ -421,7 +455,7 @@ function initClearanceBuscar() {
             const data = await response.json().catch(() => ({}));
 
             if (response.status === 402) {
-                mostrarErroModalPrecheck(`Saldo insuficiente. Esta verificação custa ${brl(pre.custo_clearance || 3)}.`);
+                mostrarErroModalPrecheck(`Saldo insuficiente. Esta verificação custa ${brl(pre.custo_clearance || CUSTO)}.`);
             } else if (response.status === 403) {
                 mostrarErroModalPrecheck(data.error || 'Seu plano não inclui a verificação de notas da base.');
             } else if (!response.ok || data.success === false) {
@@ -439,7 +473,7 @@ function initClearanceBuscar() {
         }
 
         modalPrecheckAcao.disabled = false;
-        modalPrecheckAcao.textContent = `Confirmar e pagar — ${brl(pre.custo_clearance || 3)}`;
+        modalPrecheckAcao.textContent = `Confirmar e pagar — ${brl(pre.custo_clearance || CUSTO)}`;
     }
 
     // Etapa de confirmação de pagamento: 1º clique arma, 2º clique executa. Nada é
@@ -447,7 +481,7 @@ function initClearanceBuscar() {
     function armarConfirmacaoPagamento(valorLabel, onConfirm) {
         modalPrecheckErro.classList.add('hidden');
         modalPrecheckMensagem.classList.add('hidden');
-        modalPrecheckComparativo.classList.add('hidden');
+        modalPrecheckCaminho.classList.add('hidden');
         modalPrecheckConfirmTexto.textContent = 'O valor de ' + valorLabel
             + ' será debitado do seu saldo assim que a consulta iniciar.';
         modalPrecheckConfirm.classList.remove('hidden');
@@ -457,7 +491,7 @@ function initClearanceBuscar() {
 
     function abrirModalPrecheck(pre, chave) {
         if (!modalPrecheck) return;
-        [modalPrecheckErro, modalPrecheckSnapshot, modalPrecheckNota, modalPrecheckComparativo,
+        [modalPrecheckErro, modalPrecheckSnapshot, modalPrecheckNota, modalPrecheckCaminho,
             modalPrecheckConfirm].forEach((el) => el.classList.add('hidden'));
         [modalPrecheckDetalhe, modalPrecheckAcao, modalPrecheckAtalhoListagem].forEach((el) => {
             el.classList.add('hidden');
@@ -488,9 +522,8 @@ function initClearanceBuscar() {
             modalPrecheckChave.textContent = chave || '';
             modalPrecheckNota.classList.remove('hidden');
 
-            modalPrecheckPrecoAvulsa.textContent = brl(pre.custo_avulsa || CUSTO);
-            modalPrecheckPrecoClearance.textContent = brl(pre.custo_clearance || 3);
-            modalPrecheckComparativo.classList.remove('hidden');
+            modalPrecheckPrecoClearance.textContent = brl(pre.custo_clearance || CUSTO);
+            modalPrecheckCaminho.classList.remove('hidden');
 
             modalPrecheckMensagem.textContent = 'Deseja verificar a situação desta nota na SEFAZ pelo clearance?';
 
@@ -504,9 +537,9 @@ function initClearanceBuscar() {
                 modalPrecheckDetalhe.classList.remove('hidden');
                 modalPrecheckDetalhe.classList.add('inline-flex');
             }
-            modalPrecheckAcao.textContent = `Sim, verificar na SEFAZ — ${brl(pre.custo_clearance || 3)}`;
+            modalPrecheckAcao.textContent = `Sim, verificar na SEFAZ — ${brl(pre.custo_clearance || CUSTO)}`;
             modalPrecheckAcao.onclick = () => armarConfirmacaoPagamento(
-                brl(pre.custo_clearance || 3),
+                brl(pre.custo_clearance || CUSTO),
                 () => validarNoClearance(pre)
             );
             modalPrecheckAcao.classList.remove('hidden');
@@ -577,6 +610,9 @@ function initClearanceBuscar() {
                     chave_acesso: chave,
                     cliente_id: cliente.id,
                     tab_id: tabId,
+                    // Clearance completo: + regularidade da contraparte (preço fechado maior por
+                    // documento). O backend coage p/ 'basico' se a flag estiver off.
+                    tipo: tierBuscaAtual(),
                     reconsultar: opts.reconsultar === true,
                 }),
             });

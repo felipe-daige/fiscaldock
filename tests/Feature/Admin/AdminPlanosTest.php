@@ -49,6 +49,7 @@ it('admin edita limites e capabilities e persiste no catálogo', function () {
         'cap_score_historico' => '1',
         'cap_retencao_meses' => '',
         'cap_frequencia_minima_dias' => 15,
+        'cap_armazenamento_mb' => 4096,
         'mp_preapproval_plan_id_mensal' => 'PLAN-X',
     ])->assertRedirect(route('app.admin.planos.index'));
 
@@ -66,6 +67,7 @@ it('admin edita limites e capabilities e persiste no catálogo', function () {
     expect($ess->capability('export'))->toBe(['csv', 'excel']);
     expect($ess->capability('retencao_meses'))->toBeNull();
     expect($ess->capability('frequencia_minima_dias'))->toBe(15);
+    expect($ess->capability('armazenamento_mb'))->toBe(4096);
 
     $this->assertDatabaseHas('admin_action_logs', ['acao' => 'plano_editar']);
 });

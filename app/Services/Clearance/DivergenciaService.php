@@ -21,8 +21,12 @@ class DivergenciaService
      *                                 ClearanceController::listarConsultasDfePorLote (inclui
      *                                 chave_acesso, status_label, valor_total, emit/dest, etc.)
      */
-    public function analisar(Collection $snapshots, int $userId, int $creditosCobrados): array
-    {
+    public function analisar(
+        Collection $snapshots,
+        int $userId,
+        int $creditosCobrados,
+        ?array $declaradoMap = null
+    ): array {
         if ($snapshots->isEmpty()) {
             return [
                 'veredito' => $this->verediticoVazio(),
@@ -35,7 +39,7 @@ class DivergenciaService
         }
 
         $chaves = $snapshots->pluck('chave_acesso')->filter()->unique()->values()->all();
-        $declaradoMap = $this->buscarDeclaradoPorChave($userId, $chaves);
+        $declaradoMap ??= $this->buscarDeclaradoPorChave($userId, $chaves);
 
         $divergencias = new Collection;
         $semDivergencia = new Collection;
@@ -511,9 +515,9 @@ class DivergenciaService
         }
         if (in_array('canceladas_declaradas', $tipos, true)) {
             $rotulo = match ($statusSefaz) {
-                'CANCELADA' => 'cancelada',
-                'DENEGADA' => 'denegada',
-                'INUTILIZADA' => 'inutilizada',
+                'CANCELADA' => 'cancelado',
+                'DENEGADA' => 'denegado',
+                'INUTILIZADA' => 'inutilizado',
                 default => 'sem validade',
             };
             $motivos[] = "Documento {$rotulo} na SEFAZ, mas escriturado nos livros.";
@@ -711,11 +715,14 @@ class DivergenciaService
 
         EfdNota::query()
             ->leftJoin('participantes', 'participantes.id', '=', 'efd_notas.participante_id')
+            ->leftJoin('clientes', 'clientes.id', '=', 'efd_notas.cliente_id')
             ->where('efd_notas.user_id', $userId)
             ->whereIn('efd_notas.chave_acesso', $chaves)
             ->get([
                 'efd_notas.id', 'efd_notas.chave_acesso', 'efd_notas.valor_total',
                 'efd_notas.data_emissao', 'efd_notas.numero', 'efd_notas.serie', 'efd_notas.modelo',
+                'efd_notas.cliente_id', 'clientes.documento as cliente_documento',
+                'clientes.razao_social as cliente_nome',
                 'efd_notas.participante_id as contraparte_participante_id',
                 'participantes.documento as contraparte_cnpj',
                 'participantes.razao_social as contraparte_razao', 'participantes.nome_fantasia as contraparte_fantasia',
@@ -729,6 +736,9 @@ class DivergenciaService
                     'contraparte_uf' => $nota->contraparte_uf ?: null,
                     'contraparte_ie' => $nota->contraparte_ie ?: null,
                     'contraparte_participante_id' => $nota->contraparte_participante_id ?: null,
+                    'cliente_id' => $nota->cliente_id ?: null,
+                    'cliente_documento' => $nota->cliente_documento ?: null,
+                    'cliente_nome' => $nota->cliente_nome ?: null,
                     'data_emissao' => $nota->data_emissao ? substr((string) $nota->data_emissao, 0, 10) : null,
                     'numero' => $nota->numero !== null ? (string) $nota->numero : null,
                     'serie' => $nota->serie !== null && $nota->serie !== '' ? (string) $nota->serie : null,
@@ -741,11 +751,12 @@ class DivergenciaService
         XmlNota::query()
             ->where('user_id', $userId)
             ->whereIn('chave_acesso', $chaves)
-            ->get(['id', 'chave_acesso', 'valor_total', 'data_emissao', 'emit_documento', 'dest_documento', 'emit_cliente_id', 'dest_cliente_id', 'emit_razao_social', 'dest_razao_social', 'emit_uf', 'dest_uf', 'emit_ie', 'dest_ie', 'emit_participante_id', 'dest_participante_id', 'numero_documento', 'serie', 'modelo'])
+            ->get(['id', 'cliente_id', 'chave_acesso', 'valor_total', 'data_emissao', 'emit_documento', 'dest_documento', 'emit_cliente_id', 'dest_cliente_id', 'emit_razao_social', 'dest_razao_social', 'emit_uf', 'dest_uf', 'emit_ie', 'dest_ie', 'emit_participante_id', 'dest_participante_id', 'numero_documento', 'serie', 'modelo'])
             ->each(function ($nota) use (&$map) {
                 // contraparte = lado SEM cliente_id (o outro lado é a empresa do usuário).
                 $ladoDest = (bool) $nota->emit_cliente_id;
                 $contraparte = $ladoDest ? $nota->dest_documento : $nota->emit_documento;
+                $clienteId = ($ladoDest ? $nota->emit_cliente_id : $nota->dest_cliente_id) ?: $nota->cliente_id;
                 $map[$nota->chave_acesso] = [
                     'valor_total' => (float) $nota->valor_total,
                     'contraparte_cnpj' => $contraparte ? preg_replace('/\D/', '', $contraparte) : null,
@@ -753,6 +764,9 @@ class DivergenciaService
                     'contraparte_uf' => ($ladoDest ? $nota->dest_uf : $nota->emit_uf) ?: null,
                     'contraparte_ie' => ($ladoDest ? $nota->dest_ie : $nota->emit_ie) ?: null,
                     'contraparte_participante_id' => ($ladoDest ? $nota->dest_participante_id : $nota->emit_participante_id) ?: null,
+                    'cliente_id' => $clienteId ?: null,
+                    'cliente_documento' => ($ladoDest ? $nota->emit_documento : $nota->dest_documento) ?: null,
+                    'cliente_nome' => ($ladoDest ? $nota->emit_razao_social : $nota->dest_razao_social) ?: null,
                     'data_emissao' => $nota->data_emissao ? substr((string) $nota->data_emissao, 0, 10) : null,
                     'numero' => $nota->numero_documento !== null ? (string) $nota->numero_documento : null,
                     'serie' => $nota->serie !== null && $nota->serie !== '' ? (string) $nota->serie : null,

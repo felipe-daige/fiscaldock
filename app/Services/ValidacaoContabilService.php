@@ -13,6 +13,35 @@ use Illuminate\Support\Facades\Log;
 
 class ValidacaoContabilService
 {
+    /**
+     * Custo do clearance SEFAZ por documento, em unidades do ledger (1 un = R$ 0,20) → R$ 1,00.
+     *
+     * PRECO UNICO. Lote e busca avulsa fazem a MESMA chamada (`receita-federal/nfe` | `/cte`,
+     * custo InfoSimples R$ 0,26) e gravam o MESMO snapshot (`nfe_consultas`/`cte_consultas`).
+     * Cobrar diferente pelos dois era arbitragem de acervo, nao de custo — a avulsa chegou a
+     * custar 4,6x o lote pelo mesmo trabalho externo. Fonte unica: a constante da busca avulsa
+     * (`ClearanceController::CLEARANCE_NFE_AVULSA_CUSTO`) aponta pra ca para nao divergirem de novo.
+     *
+     * O tier `full` deixou de existir como preco: o certificado A1/A3 enriquece ESTA consulta
+     * (tributos, itens, XML, contraparte sem mascara) sem custo externo extra — vira capability
+     * de plano, nao tier por documento. Decisao de 2026-07-13, ver docs/comercial/README.md.
+     */
+    public const CUSTO_DOCUMENTO = 5;
+
+    /**
+     * Clearance COMPLETO: R$ 2,00 por documento (10 un × R$ 0,20).
+     *
+     * Inclui tudo do básico (status SEFAZ) MAIS a regularidade da CONTRAPARTE da nota —
+     * situação cadastral (grátis) + SINTEGRA + CND Federal, via o motor da Consulta CNPJ.
+     * Preço FECHADO por nota: o custo externo real varia (contraparte repetida no lote ou já
+     * consultada nos últimos N dias não gera chamada nova), e essa economia é margem, não
+     * desconto — o cliente paga por nota conferida, simples de vender e de prever.
+     *
+     * Custo pior caso por nota: SEFAZ 0,26 + SINTEGRA 0,26 + CND Federal 0,26 = R$ 0,78
+     * (cadastral é grátis, via minhareceita). Decisão de 2026-07-13 (Felipe).
+     */
+    public const CUSTO_DOCUMENTO_FULL = 10;
+
     // Pesos para cada categoria de validacao (soma = 1.0)
     private array $pesos = [
         'cadastral' => 0.20,
@@ -134,15 +163,13 @@ class ValidacaoContabilService
 
     /**
      * Custo unitario por nota conforme tier de clearance.
+     *
+     * basico = R$ 1,00 (status SEFAZ) | full = R$ 2,00 (+ regularidade da contraparte).
+     * Preco identico em lote e busca avulsa — o que muda o preco e o TIER, nunca a origem.
      */
     public static function custoUnitarioPorTier(string $tipo): int
     {
-        // Clearance SEFAZ por documento. Custo InfoSimples expresso no ledger interno,
-        // +CND Federal +CNDT). Preço >2x: básico 3 (2,3x), full 8 (~2,05x). Calibrado em 2026-06-07.
-        return match ($tipo) {
-            'full' => 8,
-            default => 3,
-        };
+        return $tipo === 'full' ? self::CUSTO_DOCUMENTO_FULL : self::CUSTO_DOCUMENTO;
     }
 
     /**

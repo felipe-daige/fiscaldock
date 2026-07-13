@@ -100,17 +100,34 @@ class NotaFiscalService
      * `(user_id, chave_acesso)`). Expõe colunas estáveis usadas pelos filtros
      * do histórico, do detalhe de lote e do alimentador de status: chave_acesso,
      * numero, serie, modelo, tipo_documento, status, valor_total, data_emissao,
-     * emit_*, dest_*, tomador_*, cliente_nome, consulta_lote_id, fluxo_origem,
-     * consultado_em, created_at, id.
+     * emit_*, dest_*, tomador_*, natureza_operacao, situacao_ambiente, eventos,
+     * cliente_nome, consulta_lote_id, fluxo_origem, consultado_em, created_at, id.
      */
     public function consultaDfeHistoricoQuery(int $userId): \Illuminate\Database\Query\Builder
     {
         $nfe = DB::table('nfe_consultas as consulta')
             ->leftJoin('clientes as cliente', 'cliente.id', '=', 'consulta.cliente_id')
+            ->leftJoin('consulta_lotes as lote', 'lote.id', '=', 'consulta.consulta_lote_id')
             ->selectRaw("
                 consulta.id,
                 consulta.consulta_lote_id,
-                CASE WHEN consulta.consulta_lote_id IS NULL THEN 'avulsa' ELSE 'lote' END as fluxo_origem,
+                consulta.cliente_id,
+                CASE
+                    WHEN consulta.consulta_lote_id IS NULL THEN 'avulsa'
+                    WHEN lote.resultado_resumo->>'fluxo_origem' = 'avulsa' THEN 'avulsa'
+                    WHEN lote.resultado_resumo->>'fluxo_origem' = 'lote' THEN 'lote'
+                    WHEN EXISTS (
+                        SELECT 1
+                        FROM credit_transactions transacao
+                        WHERE transacao.user_id = lote.user_id
+                          AND transacao.type = 'clearance_lote'
+                          AND transacao.amount = -lote.creditos_cobrados
+                          AND transacao.description ILIKE '%avulsa%'
+                          AND transacao.created_at BETWEEN lote.created_at - INTERVAL '5 seconds'
+                              AND lote.created_at + INTERVAL '5 seconds'
+                    ) THEN 'avulsa'
+                    ELSE 'lote'
+                END as fluxo_origem,
                 consulta.chave_acesso,
                 UPPER(COALESCE(consulta.tipo_documento, 'NFE')) as tipo_documento,
                 COALESCE(consulta.modelo, '55') as modelo,
@@ -121,10 +138,16 @@ class NotaFiscalService
                 consulta.data_emissao,
                 consulta.emit_nome,
                 consulta.emit_cnpj,
+                consulta.emit_uf,
+                consulta.emit_ie,
                 consulta.dest_nome,
-                consulta.dest_cnpj,
+                COALESCE(consulta.dest_cnpj, consulta.dest_cpf) as dest_cnpj,
+                consulta.dest_uf,
                 NULL::varchar as tomador_nome,
                 NULL::varchar as tomador_cnpj,
+                consulta.natureza_operacao,
+                consulta.payload->'nfe_clearance'->>'situacao_ambiente' as situacao_ambiente,
+                consulta.eventos,
                 cliente.razao_social as cliente_nome,
                 consulta.consultado_em,
                 consulta.created_at
@@ -133,10 +156,27 @@ class NotaFiscalService
 
         $cte = DB::table('cte_consultas as consulta')
             ->leftJoin('clientes as cliente', 'cliente.id', '=', 'consulta.cliente_id')
+            ->leftJoin('consulta_lotes as lote', 'lote.id', '=', 'consulta.consulta_lote_id')
             ->selectRaw("
                 consulta.id,
                 consulta.consulta_lote_id,
-                CASE WHEN consulta.consulta_lote_id IS NULL THEN 'avulsa' ELSE 'lote' END as fluxo_origem,
+                consulta.cliente_id,
+                CASE
+                    WHEN consulta.consulta_lote_id IS NULL THEN 'avulsa'
+                    WHEN lote.resultado_resumo->>'fluxo_origem' = 'avulsa' THEN 'avulsa'
+                    WHEN lote.resultado_resumo->>'fluxo_origem' = 'lote' THEN 'lote'
+                    WHEN EXISTS (
+                        SELECT 1
+                        FROM credit_transactions transacao
+                        WHERE transacao.user_id = lote.user_id
+                          AND transacao.type = 'clearance_lote'
+                          AND transacao.amount = -lote.creditos_cobrados
+                          AND transacao.description ILIKE '%avulsa%'
+                          AND transacao.created_at BETWEEN lote.created_at - INTERVAL '5 seconds'
+                              AND lote.created_at + INTERVAL '5 seconds'
+                    ) THEN 'avulsa'
+                    ELSE 'lote'
+                END as fluxo_origem,
                 consulta.chave_acesso,
                 UPPER(COALESCE(consulta.tipo_documento, 'CTE')) as tipo_documento,
                 COALESCE(consulta.modelo, '57') as modelo,
@@ -147,10 +187,16 @@ class NotaFiscalService
                 consulta.data_emissao,
                 consulta.emit_nome,
                 consulta.emit_cnpj,
+                consulta.emit_uf,
+                consulta.emit_ie,
                 consulta.dest_nome,
-                consulta.dest_cnpj,
+                COALESCE(consulta.dest_cnpj, consulta.dest_cpf) as dest_cnpj,
+                consulta.dest_uf,
                 consulta.tomador_nome,
-                consulta.tomador_cnpj,
+                COALESCE(consulta.tomador_cnpj, consulta.tomador_cpf) as tomador_cnpj,
+                consulta.natureza_operacao,
+                consulta.payload->'cte_clearance'->>'situacao_ambiente' as situacao_ambiente,
+                consulta.eventos,
                 cliente.razao_social as cliente_nome,
                 consulta.consultado_em,
                 consulta.created_at

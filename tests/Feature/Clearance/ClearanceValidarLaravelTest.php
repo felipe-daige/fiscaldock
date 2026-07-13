@@ -78,9 +78,10 @@ it('valida via rota Laravel: cria lote, debita N×tier, despacha batch e NÃO ch
         'tab_id' => 'tab-laravel',
     ])->assertOk()
         ->assertJsonPath('success', true)
-        // contrato consumido pelo front (clearance-notas.js) p/ abrir o progresso/redirect.
+        // contrato consumido pelo front (clearance-notas.js) p/ acompanhar o progresso na lista.
         ->assertJsonPath('webhook_disparado', true)
-        ->assertJsonPath('valor_utilizado_reais', app(\App\Services\PricingCatalogService::class)->creditsToCurrency(2 * $unit))
+        // JSON serializa float redondo (2.0) como int 2 e assertJsonPath compara estrito → cast.
+        ->assertJsonPath('valor_utilizado_reais', fn ($v) => (float) $v === app(\App\Services\PricingCatalogService::class)->creditsToCurrency(2 * $unit))
         ->assertJsonStructure(['consulta_lote_id', 'tab_id', 'novo_saldo_reais', 'valor_cobrado_reais', 'resultado_url']);
 
     $lote = ConsultaLote::latest('id')->first();

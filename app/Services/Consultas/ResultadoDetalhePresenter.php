@@ -3,6 +3,7 @@
 namespace App\Services\Consultas;
 
 use App\Models\ConsultaResultado;
+use App\Models\Participante;
 use App\Support\CertidaoBadge;
 use App\Support\Cnpj;
 use App\Support\MensagemPublica;
@@ -84,6 +85,81 @@ class ResultadoDetalhePresenter
     }
 
     /**
+     * Detalhe COMPLETO da última consulta bem-sucedida de um participante, no contrato do partial
+     * `autenticado.consulta.partials.detalhe-blocos` — o mesmo conteúdo do "Ver detalhes" da
+     * Consulta CNPJ e do Score Fiscal.
+     *
+     * FONTE ÚNICA: quem precisa mostrar o resultado de um CNPJ (Consulta CNPJ, Score Fiscal,
+     * Clearance completo) monta por aqui e renderiza o MESMO partial — as telas não podem divergir
+     * na leitura de `consulta_resultados` (ver memory feedback_fonte_unica_entre_features).
+     *
+     * Null = participante nunca consultado com sucesso.
+     *
+     * @param  bool  $somenteConsultadas  true = mostra APENAS as fontes que trouxeram dado.
+     *                                    Por padrão (false) as fontes que o PLANO pedia mas que não
+     *                                    voltaram viram placeholder de falha — é o que o Score Fiscal
+     *                                    quer (distinguir "pediu e falhou" de "não pediu").
+     * @param  array<int,string>|null  $somenteFontes  Restringe a estas chaves de fonte (o `cadastro`
+     *                                                 entra sempre — é a identidade do CNPJ). Serve pra um produto
+     *                                                 não exibir fonte que ELE não cobre: a última consulta do
+     *                                                 participante pode ser de uma Consulta CNPJ de plano maior,
+     *                                                 e o Clearance completo (3 fontes) mostraria EST/MUN/FGTS/CNDT
+     *                                                 que ele nunca consultou.
+     * @return array{blocos: array, resumo: ?string, certidoes: array, cabecalho: array}|null
+     */
+    public function detalheDoParticipante(Participante $participante, bool $somenteConsultadas = false, ?array $somenteFontes = null): ?array
+    {
+        $ultima = ConsultaResultado::where('participante_id', $participante->id)
+            ->where('status', ConsultaResultado::STATUS_SUCESSO)
+            ->with('lote.plano')
+            ->orderByDesc('consultado_em')
+            ->first();
+
+        if (! $ultima) {
+            return null;
+        }
+
+        // esperadas vazio = fonte sem dado simplesmente não aparece (nem card, nem chip).
+        $esperadas = $somenteConsultadas ? [] : $this->esperadasDoResultado($ultima);
+
+        return [
+            'blocos' => $this->filtrarPorFonte($this->blocos($ultima, $esperadas), $somenteFontes),
+            'resumo' => $this->resumoTextual($ultima),
+            'certidoes' => $this->filtrarPorFonte($this->certidoes($ultima, $esperadas), $somenteFontes),
+            'cabecalho' => [
+                'razao' => $participante->razao_social,
+                'documento' => $participante->cnpj_formatado ?? $participante->documento,
+                'uf' => $participante->uf,
+                'situacao' => $participante->situacao_cadastral
+                    ?? ($ultima->resultado_dados['situacao_cadastral'] ?? null),
+            ],
+            'consultado_em' => $ultima->consultado_em,
+        ];
+    }
+
+    /**
+     * Mantém só os itens (blocos ou certidões) cujas chaves de fonte o produto cobre.
+     * `cadastro` nunca é filtrado: é a identidade do CNPJ, não uma certidão.
+     *
+     * @param  array<int, array<string, mixed>>  $itens
+     * @param  array<int, string>|null  $fontes  null = não filtra
+     * @return array<int, array<string, mixed>>
+     */
+    private function filtrarPorFonte(array $itens, ?array $fontes): array
+    {
+        if ($fontes === null) {
+            return $itens;
+        }
+
+        $permitidas = array_merge(['cadastro'], $fontes);
+
+        return array_values(array_filter(
+            $itens,
+            fn (array $item) => in_array($item['chave'] ?? null, $permitidas, true),
+        ));
+    }
+
+    /**
      * @param  array<int, string>  $esperadas  chaves de fonte que o plano do lote inclui.
      *                                         Quando informado, certidões pedidas mas ausentes
      *                                         no resultado viram placeholder de erro (em vez de
@@ -119,8 +195,14 @@ class ResultadoDetalhePresenter
             }
 
             $bloco = match ($chave) {
-                'sintegra' => $this->blocoSintegra($dados[$chave], $ufFallback),
-                default => $this->blocoCertidao($chave, $dados[$chave], $ufFallback, $chave === 'cnd_federal' ? $notaFederal : null),
+                'sintegra' => $this->blocoSintegra($dados[$chave], $ufFallback, $resultado->getKey()),
+                default => $this->blocoCertidao(
+                    $chave,
+                    $dados[$chave],
+                    $ufFallback,
+                    $chave === 'cnd_federal' ? $notaFederal : null,
+                    $resultado->getKey(),
+                ),
             };
 
             if ($bloco) {
@@ -619,8 +701,13 @@ class ResultadoDetalhePresenter
     // Certidões (CND Federal/Estadual/Municipal, FGTS, CNDT)
     // ──────────────────────────────────────────────────────────────────────────
 
-    private function blocoCertidao(string $chave, array $d, ?string $ufFallback = null, ?string $nota = null): array
-    {
+    private function blocoCertidao(
+        string $chave,
+        array $d,
+        ?string $ufFallback = null,
+        ?string $nota = null,
+        int|string|null $resultadoId = null,
+    ): array {
         $badge = CertidaoBadge::classificar($d, true);
 
         // CND Estadual/Municipal: a resposta pode vir sem UF — completa com a UF do alvo.
@@ -659,7 +746,16 @@ class ResultadoDetalhePresenter
             $nota = trim(($nota ? $nota.' ' : '').$notaSemEmissao) ?: null;
         }
 
-        return $this->bloco($chave, $this->tituloCertidao($chave, $uf), $badge, $itens, [], $mensagem, $d['comprovante'] ?? null, $nota);
+        return $this->bloco(
+            $chave,
+            $this->tituloCertidao($chave, $uf),
+            $badge,
+            $itens,
+            [],
+            $mensagem,
+            $this->comprovanteUrl($resultadoId, $chave, $d),
+            $nota,
+        );
     }
 
     /** Linha-resumo do CRF FGTS (a Caixa não devolve frase pronta como as demais certidões). */
@@ -764,8 +860,11 @@ class ResultadoDetalhePresenter
     // SINTEGRA
     // ──────────────────────────────────────────────────────────────────────────
 
-    private function blocoSintegra(array $d, ?string $ufFallback = null): array
-    {
+    private function blocoSintegra(
+        array $d,
+        ?string $ufFallback = null,
+        int|string|null $resultadoId = null,
+    ): array {
         $badge = CertidaoBadge::classificar(['situacao' => $d['situacao'] ?? null]);
 
         $itens = [
@@ -781,7 +880,15 @@ class ResultadoDetalhePresenter
         // SINTEGRA tb não traz frase pronta — compõe a partir de situação/UF/IE.
         $mensagem = $d['mensagem'] ?? $this->resumoSintegra($d, $uf);
 
-        return $this->bloco('sintegra', 'SINTEGRA', $badge, $itens, [], $mensagem, $d['comprovante'] ?? null);
+        return $this->bloco(
+            'sintegra',
+            'SINTEGRA',
+            $badge,
+            $itens,
+            [],
+            $mensagem,
+            $this->comprovanteUrl($resultadoId, 'sintegra', $d),
+        );
     }
 
     /** Linha-resumo do SINTEGRA (o provedor não devolve frase; deriva de situação/UF/IE). */
@@ -892,5 +999,17 @@ class ResultadoDetalhePresenter
         }
 
         return filter_var($url, FILTER_VALIDATE_URL) ? $url : null;
+    }
+
+    private function comprovanteUrl(int|string|null $resultadoId, string $fonte, array $dados): ?string
+    {
+        if ($resultadoId !== null && ! empty($dados['comprovante_arquivo'])) {
+            return route('app.consulta.comprovante', [
+                'resultado' => $resultadoId,
+                'fonte' => $fonte,
+            ]);
+        }
+
+        return $this->urlValida($dados['comprovante'] ?? null);
     }
 }

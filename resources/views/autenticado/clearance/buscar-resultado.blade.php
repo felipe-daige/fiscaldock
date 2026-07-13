@@ -21,6 +21,8 @@
     data-await-result="{{ $aguardaPersistencia ? '1' : '0' }}"
     data-poll-result="1"
     data-progress-snapshot='@json($progressSnapshot ?? null)'
+    {{-- Trilha de etapas (ClearanceEtapas) — mesmo contrato da tela do lote. --}}
+    data-etapas='@json($etapasClearance ?? [])'
     data-iniciado-em="{{ optional($lote->created_at)->timestamp }}"
 >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -422,6 +424,9 @@
                             @endif
                         </div>
                     @endif
+
+                    {{-- Clearance Full — Camada A: regularidade da contraparte da nota consultada. --}}
+                    @include('autenticado.clearance.partials._regularidade-contraparte', ['regularidade' => $regularidade ?? []])
 
                     {{-- Nenhum dos CNPJs é cliente: usuário classifica quem é cliente e quem é participante --}}
                     @if(!empty($classificacaoPartes))
