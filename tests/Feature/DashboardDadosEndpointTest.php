@@ -22,9 +22,10 @@ it('retorna o shape do cockpit', function () {
             'tendencia' => ['meses', 'saida_valor', 'saida_qtd', 'entrada_valor', 'entrada_qtd'],
             'top_fornecedores',
             'risco_distribuicao',
-            'meta',
+            'meta' => ['cliente', 'periodo', 'referencia', 'janela_inicio', 'janela_fim', 'ancorado', 'dados_desatualizados'],
         ])
-        ->assertJsonPath('meta.periodo', 12);
+        ->assertJsonPath('meta.periodo', 12)
+        ->assertJsonPath('meta.dados_desatualizados', false);
 });
 
 it('ignora cliente de outro usuario (vira carteira toda)', function () {

@@ -20,7 +20,9 @@ it('monta o cockpit completo com periodo normalizado', function () {
         ->and($dados['tendencia'])->toHaveKeys(['meses', 'saida_valor', 'saida_qtd', 'entrada_valor', 'entrada_qtd'])
         ->and($dados['triagem'])->toBeArray()
         ->and($dados['top_fornecedores'])->toBeArray()
-        ->and($dados['risco_distribuicao'])->toBeArray();
+        ->and($dados['risco_distribuicao'])->toBeArray()
+        ->and($dados['meta']['dados_desatualizados'])->toBeFalse()
+        ->and($dados['meta']['ancorado'])->toBeFalse();
 });
 
 it('tendencia alinha entrada e saida no mesmo eixo de meses', function () {
@@ -116,6 +118,10 @@ it('ancora o cockpit na ultima competencia com dados quando a janela atual vem v
     $dados = app(DashboardDataService::class)->cockpit($user->id, $user, null, 6);
 
     expect($dados['meta']['referencia'])->toBe('2024-02-10')
+        ->and($dados['meta']['janela_inicio'])->toBe('2023-09-01')
+        ->and($dados['meta']['janela_fim'])->toBe('2024-02-29')
+        ->and($dados['meta']['dados_desatualizados'])->toBeTrue()
+        ->and($dados['meta']['ancorado'])->toBeTrue()
         ->and($dados['tendencia']['saida_valor'])->toContain(1000.0, 500.0)
         ->and(array_sum($dados['tendencia']['saida_valor']))->toBe(1500.0)
         ->and($dados['top_fornecedores'])->not->toBeEmpty()

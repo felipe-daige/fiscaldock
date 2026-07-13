@@ -20,9 +20,23 @@
         const fmtCompact = (v) => {
             v = Number(v || 0);
             if (Math.abs(v) >= 1e6) return 'R$ ' + (v / 1e6).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'M';
-            if (Math.abs(v) >= 1e3) return 'R$ ' + (v / 1e3).toLocaleString('pt-BR', { maximumFractionDigits: 0 }) + 'k';
+            if (Math.abs(v) >= 1e3) return 'R$ ' + (v / 1e3).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'k';
             return fmtR(v);
         };
+        const fmtDocumento = (v) => {
+            const digits = String(v ?? '').replace(/\D/g, '');
+            if (!digits) return 'Documento não informado';
+            if (digits.length <= 11) {
+                return digits.padStart(11, '0').replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+            }
+            return digits.padStart(14, '0').replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+        };
+        const fmtData = (v) => v
+            ? new Date(`${v}T12:00:00`).toLocaleDateString('pt-BR')
+            : '';
+        const fmtMesAno = (v) => v
+            ? new Date(`${v}T12:00:00`).toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' })
+            : '';
         const escapeHtml = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c]));
         const escapeAttr = escapeHtml;
         const parseJson = (id, fallback) => {
@@ -34,7 +48,7 @@
             }
         };
 
-        const charts = { tendencia: null, risco: null, fornecedores: null };
+        const charts = { tendencia: null, risco: null };
         const atalhosCatalogo = parseJson('dashboard-atalhos', {});
         let metrica = $('[data-control="metrica"]')?.value || 'valor';
         let estado = parseJson('cockpit-initial', null);
@@ -83,11 +97,32 @@
             const periodo = $('[data-control="periodo"]');
             const clienteLabel = cliente?.selectedOptions?.[0]?.textContent?.trim() || 'Todos os clientes';
             const periodoValor = periodo?.value || estado?.meta?.periodo || '6';
-            const texto = `${clienteLabel} - ${periodoValor} meses`;
+            const referencia = estado?.meta?.referencia || '';
+            const sufixo = estado?.meta?.ancorado && referencia ? ` até ${fmtMesAno(referencia)}` : '';
+            const texto = `${clienteLabel} — ${periodoValor} meses${sufixo}`;
             const scope = $('[data-dashboard-scope]');
             const meta = $('[data-dashboard-meta]');
             if (scope) scope.textContent = texto;
             if (meta) meta.textContent = `${periodoValor} meses`;
+        }
+
+        function renderDefasagem(meta) {
+            const banner = $('[data-dashboard-stale]');
+            const copy = $('[data-dashboard-stale-copy]');
+            if (!banner) return;
+
+            const desatualizado = Boolean(meta?.dados_desatualizados && meta?.referencia);
+            banner.classList.toggle('hidden', !desatualizado);
+            if (!desatualizado || !copy) return;
+
+            const data = escapeHtml(fmtData(meta.referencia));
+            if (meta.ancorado) {
+                const periodo = escapeHtml(meta.periodo || 6);
+                copy.innerHTML = `A movimentação mais recente é de <strong>${data}</strong>. O recorte de <strong>${periodo} meses</strong> foi ancorado nessa data, não nos meses atuais.`;
+                return;
+            }
+
+            copy.innerHTML = `A movimentação mais recente é de <strong>${data}</strong>. O período selecionado ainda inclui essa base, mas não há movimentação fiscal mais recente.`;
         }
 
         function renderTendencia(t) {
@@ -145,41 +180,38 @@
         function renderFornecedores(rows) {
             const el = $('#chartFornecedores'); const vazio = $('#fornecedores-vazio');
             if (!cardVisivel('fornecedores')) return;
-            if (!el || !apex()) return;
-            const has = rows && rows.length;
+            if (!el) return;
+            const itens = Array.isArray(rows) ? rows.slice(0, 5) : [];
+            const has = itens.length > 0;
             if (vazio) vazio.classList.toggle('hidden', !!has);
             el.classList.toggle('hidden', !has);
-            if (!has) { destruirChart('fornecedores'); return; }
-            const nomes = rows.map((r) => (r.razao_social || r.cnpj || '-').slice(0, 28));
-            const opts = {
-                chart: { ...chartBase, type: 'bar', height: 244 },
-                series: [{ name: 'Volume', data: rows.map((r) => Number(r.total || 0)) }],
-                // Sem escala no eixo X: os valores vão direto na barra (data label), então a régua
-                // numérica embaixo só colidia e poluía o card estreito.
-                xaxis: {
-                    categories: nomes,
-                    labels: { show: false },
-                    axisBorder: { show: false },
-                    axisTicks: { show: false },
-                },
-                grid: { show: false },
-                plotOptions: { bar: { horizontal: true, borderRadius: 3, barHeight: '62%' } },
-                colors: ['#374151'],
-                dataLabels: {
-                    enabled: true,
-                    formatter: (v) => fmtCompact(v),
-                    offsetX: 0,
-                    style: { fontSize: '10px', fontWeight: 700, colors: ['#ffffff'] },
-                },
-                legend: { show: false },
-                tooltip: { y: { formatter: (v) => fmtR(v) } },
-            };
-            if (charts.fornecedores) {
-                charts.fornecedores.updateOptions(opts, false, true);
-            } else {
-                charts.fornecedores = new ApexCharts(el, opts);
-                charts.fornecedores.render();
-            }
+            if (!has) { el.innerHTML = ''; return; }
+
+            const maiorTotal = Math.max(...itens.map((item) => Number(item.total || 0)), 1);
+            el.innerHTML = itens.map((item, index) => {
+                const nome = item.razao_social || fmtDocumento(item.cnpj);
+                const total = Number(item.total || 0);
+                const notas = Number(item.qtd_notas || 0);
+                const participacao = Math.max(4, Math.round((total / maiorTotal) * 100));
+                const notasLabel = notas === 1 ? '1 nota' : `${fmtN(notas)} notas`;
+
+                return `
+                    <div class="py-2 first:pt-0 last:pb-0 border-b border-gray-100 last:border-b-0" data-fornecedor-row>
+                        <div class="flex items-start gap-3">
+                            <span class="flex-shrink-0 inline-flex items-center justify-center w-5 h-5 rounded text-[10px] font-bold text-gray-600" style="background-color: #f3f4f6">${index + 1}</span>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-start justify-between gap-3">
+                                    <p class="min-w-0 text-xs font-semibold text-gray-800 leading-4 truncate" title="${escapeAttr(nome)}">${escapeHtml(nome)}</p>
+                                    <strong class="flex-shrink-0 text-xs font-semibold text-gray-900 leading-4" title="${escapeAttr(fmtR(total))}">${escapeHtml(fmtCompact(total))}</strong>
+                                </div>
+                                <p class="text-[10px] text-gray-400 leading-3 truncate">${escapeHtml(fmtDocumento(item.cnpj))} · ${escapeHtml(notasLabel)}</p>
+                                <div class="mt-1 h-1 rounded-full overflow-hidden" style="background-color: #e5e7eb" role="progressbar" aria-label="Participação relativa de ${escapeAttr(nome)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${participacao}">
+                                    <span class="block h-full rounded-full" style="width: ${participacao}%; background-color: #374151"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
         }
 
         function renderKpis(kpis) {
@@ -279,6 +311,7 @@
 
         function renderCharts() {
             if (!estado) return;
+            renderFornecedores(estado.top_fornecedores);
             if (!apex()) {
                 if (apexTentativas < 20) {
                     clearTimeout(apexTimer);
@@ -290,7 +323,6 @@
             apexTentativas = 0;
             renderTendencia(estado.tendencia);
             renderRisco(estado.risco_distribuicao);
-            renderFornecedores(estado.top_fornecedores);
         }
 
         function render(dados) {
@@ -299,6 +331,7 @@
             renderKpis(dados.kpis);
             renderTriagem(dados.triagem);
             renderEscopo();
+            renderDefasagem(dados.meta);
             requestAnimationFrame(renderCharts);
         }
 
@@ -386,7 +419,7 @@
         window._cleanupFunctions.dashboardCockpit = function () {
             root.removeEventListener('change', onChange);
             root.removeEventListener('click', onClick);
-            ['tendencia', 'risco', 'fornecedores'].forEach(destruirChart);
+            ['tendencia', 'risco'].forEach(destruirChart);
             clearTimeout(prefsTimer);
             clearTimeout(statusTimer);
             clearTimeout(apexTimer);

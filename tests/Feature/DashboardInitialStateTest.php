@@ -13,5 +13,10 @@ it('renderiza o dashboard com o estado inicial do cockpit', function () {
         ->assertOk()
         ->assertViewHas('cockpit')
         ->assertViewHas('dashboardPrefs')
-        ->assertViewHas('clientesOpcoes');
+        ->assertViewHas('clientesOpcoes')
+        ->assertSee('data-fornecedores-ranking', false)
+        ->assertSee('Compras no período')
+        ->assertSee('data-dashboard-stale', false)
+        ->assertSee('Base fiscal desatualizada')
+        ->assertSee('Importar EFD atualizada');
 });

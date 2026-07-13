@@ -238,7 +238,9 @@ class DashboardDataService
     public function cockpit(int $userId, User $user, ?int $clienteId, int $periodo): array
     {
         $periodo = in_array($periodo, [3, 6, 12], true) ? $periodo : 6;
-        [$dataInicio, $dataFim, $referencia] = $this->janelaCockpit($userId, $clienteId, $periodo);
+        [$dataInicio, $dataFim, $referencia, $ancorado] = $this->janelaCockpit($userId, $clienteId, $periodo);
+        $dadosDesatualizados = $referencia !== null
+            && $referencia->copy()->endOfDay()->lt(now()->subMonthsNoOverflow(6)->startOfDay());
 
         $bloco = fn (callable $fn, $fallback) => rescue($fn, $fallback, report: false);
 
@@ -263,6 +265,10 @@ class DashboardDataService
                 'cliente' => $clienteId,
                 'periodo' => $periodo,
                 'referencia' => $referencia?->toDateString(),
+                'janela_inicio' => $dataInicio,
+                'janela_fim' => $dataFim,
+                'ancorado' => $ancorado,
+                'dados_desatualizados' => $dadosDesatualizados,
             ],
         ];
     }
@@ -273,25 +279,8 @@ class DashboardDataService
      */
     private function janelaCockpit(int $userId, ?int $clienteId, int $periodo): array
     {
-        $inicio = now()->subMonths($periodo - 1)->startOfMonth();
+        $inicio = now()->startOfMonth()->subMonths($periodo - 1);
         $fim = now()->endOfMonth();
-        $referencia = $fim->copy();
-
-        $temDados = DB::table('efd_notas')
-            ->where('user_id', $userId)
-            ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
-            ->whereBetween('data_emissao', [$inicio->toDateString(), $fim->toDateString()])
-            ->exists()
-            || DB::table('xml_notas')
-                ->where('user_id', $userId)
-                ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
-                ->whereBetween('data_emissao', [$inicio->toDateString(), $fim->toDateString()])
-                ->exists();
-
-        if ($temDados) {
-            return [$inicio->toDateString(), $fim->toDateString(), $referencia];
-        }
-
         $ultimaEfd = DB::table('efd_notas')
             ->where('user_id', $userId)
             ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
@@ -307,14 +296,29 @@ class DashboardDataService
             ->sortBy(fn (Carbon $data) => $data->getTimestamp())
             ->last();
 
+        $temDados = DB::table('efd_notas')
+            ->where('user_id', $userId)
+            ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
+            ->whereBetween('data_emissao', [$inicio->toDateString(), $fim->toDateString()])
+            ->exists()
+            || DB::table('xml_notas')
+                ->where('user_id', $userId)
+                ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
+                ->whereBetween('data_emissao', [$inicio->toDateString(), $fim->toDateString()])
+                ->exists();
+
+        if ($temDados) {
+            return [$inicio->toDateString(), $fim->toDateString(), $ultimaData, false];
+        }
+
         if (! $ultimaData) {
-            return [$inicio->toDateString(), $fim->toDateString(), $referencia];
+            return [$inicio->toDateString(), $fim->toDateString(), null, false];
         }
 
         $referencia = $ultimaData->copy()->endOfMonth();
-        $inicio = $referencia->copy()->subMonths($periodo - 1)->startOfMonth();
+        $inicio = $referencia->copy()->startOfMonth()->subMonths($periodo - 1);
 
-        return [$inicio->toDateString(), $referencia->toDateString(), $ultimaData];
+        return [$inicio->toDateString(), $referencia->toDateString(), $ultimaData, true];
     }
 
     /**

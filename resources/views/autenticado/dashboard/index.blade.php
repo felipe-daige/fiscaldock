@@ -19,6 +19,13 @@
         }
     }
     $periodoAtual = (int) ($cockpit['meta']['periodo'] ?? 6);
+    $referenciaFiscal = !empty($cockpit['meta']['referencia']) ? \Carbon\Carbon::parse($cockpit['meta']['referencia']) : null;
+    $dadosDesatualizados = (bool) ($cockpit['meta']['dados_desatualizados'] ?? false);
+    $periodoAncorado = (bool) ($cockpit['meta']['ancorado'] ?? false);
+    $escopoInicial = "Todos os clientes — {$periodoAtual} meses";
+    if ($periodoAncorado && $referenciaFiscal) {
+        $escopoInicial .= ' até '.$referenciaFiscal->format('m/Y');
+    }
 @endphp
 
 <div id="dashboard-cockpit" class="min-h-screen bg-gray-100">
@@ -62,9 +69,35 @@
                 <div class="lg:col-span-4">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Escopo</p>
                     <div class="min-h-[38px] px-3 py-2 rounded border border-gray-200 bg-gray-50 text-xs text-gray-600 flex items-center">
-                        <span data-dashboard-scope>Todos os clientes - {{ $periodoAtual }} meses</span>
+                        <span data-dashboard-scope>{{ $escopoInicial }}</span>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div data-dashboard-stale role="status" class="{{ $dadosDesatualizados ? '' : 'hidden' }} mb-4 sm:mb-6 rounded border overflow-hidden" style="border-color:#f59e0b;background-color:#fffbeb;">
+            <div class="px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                <span class="flex-shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-full" style="background-color:#fef3c7;color:#92400e;">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4m0 4h.01M10.3 3.9 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path>
+                    </svg>
+                </span>
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-semibold" style="color:#78350f;">Base fiscal desatualizada</p>
+                    <p class="mt-0.5 text-xs leading-5" style="color:#92400e;" data-dashboard-stale-copy>
+                        @if($referenciaFiscal)
+                            A movimentação mais recente é de <strong data-dashboard-stale-date>{{ $referenciaFiscal->format('d/m/Y') }}</strong>.
+                            @if($periodoAncorado)
+                                O recorte de <span data-dashboard-stale-period>{{ $periodoAtual }} meses</span> foi ancorado nessa data, não nos meses atuais.
+                            @else
+                                O período selecionado ainda inclui essa base, mas não há movimentação fiscal mais recente.
+                            @endif
+                        @endif
+                    </p>
+                </div>
+                <a href="/app/importacao/efd" data-link class="flex-shrink-0 inline-flex items-center justify-center min-h-[40px] px-3 py-2 bg-white border rounded text-xs font-semibold" style="border-color:#f59e0b;color:#78350f;">
+                    Importar EFD atualizada
+                </a>
             </div>
         </div>
 
@@ -222,11 +255,12 @@
             </div>
 
             <div data-card="fornecedores" class="bg-white rounded border border-gray-300 overflow-hidden {{ $cardVisivel('fornecedores') ? '' : 'hidden' }}">
-                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
                     <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Top fornecedores</span>
+                    <span class="text-[10px] text-gray-400">Compras no período</span>
                 </div>
                 <div class="p-4">
-                    <div id="chartFornecedores" class="min-h-[244px]"></div>
+                    <div id="chartFornecedores" data-fornecedores-ranking class="min-h-[244px]"></div>
                     <p id="fornecedores-vazio" class="hidden text-center text-sm text-gray-500 py-12">Sem compras no período.</p>
                 </div>
             </div>
