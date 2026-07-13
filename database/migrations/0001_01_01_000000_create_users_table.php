@@ -53,6 +53,11 @@ return new class extends Migration
             $table->boolean('alertas_operacionais')->default(true);
             $table->boolean('alertas_monitoramento')->default(true);
             $table->boolean('resumo_periodico')->default(true);
+            // Frequência de notificação (gerenciável em /app/configuracoes):
+            // severidade mínima para e-mail imediato ('media' = alta+média, 'alta' = só alta)
+            // e cadência do resumo periódico ('semanal' | 'mensal').
+            $table->string('alertas_severidade_minima')->default('media');
+            $table->string('resumo_frequencia')->default('semanal');
             $table->jsonb('dashboard_prefs')->nullable();
             $table->timestamps();
         });

@@ -18,7 +18,10 @@ class EnviarResumoSemanalCommand extends Command
     public function handle(ResumoSemanalService $service): int
     {
         $fim = now();
-        $inicio = $fim->copy()->subDays(7);
+        $manual = (bool) $this->option('user');
+        // Mensal só sai na 1ª segunda do mês (o comando roda toda segunda). Manual
+        // (--user) ignora essa trava pra permitir teste.
+        $primeiraSegundaDoMes = now()->day <= 7;
 
         $query = User::where('resumo_periodico', true)
             ->whereNull('anonimizado_em')
@@ -27,7 +30,7 @@ class EnviarResumoSemanalCommand extends Command
             // antes de a anonimização rodar.
             ->whereNull('deletion_requested_at');
 
-        if ($this->option('user')) {
+        if ($manual) {
             $query->where('id', (int) $this->option('user'));
         }
 
@@ -35,9 +38,19 @@ class EnviarResumoSemanalCommand extends Command
         $pulados = 0;
 
         foreach ($query->cursor() as $user) {
+            $mensal = ($user->resumo_frequencia ?? 'semanal') === 'mensal';
+
+            // Frequência: mensal pula fora da 1ª segunda; janela de 30 dias (vs 7 no semanal).
+            if ($mensal && ! $primeiraSegundaDoMes && ! $manual) {
+                $pulados++;
+
+                continue;
+            }
+
+            $inicio = $fim->copy()->subDays($mensal ? 30 : 7);
             $resumo = $service->montar($user, $inicio, $fim);
 
-            // Semana sem alerta e sem atividade não vira e-mail (evita ruído).
+            // Período sem alerta e sem atividade não vira e-mail (evita ruído).
             if ($resumo['vazio']) {
                 $pulados++;
 

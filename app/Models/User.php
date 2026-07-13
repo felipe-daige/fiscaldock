@@ -54,6 +54,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'alertas_operacionais',
         'alertas_monitoramento',
         'resumo_periodico',
+        'alertas_severidade_minima',
+        'resumo_frequencia',
         'dashboard_prefs',
     ];
 

@@ -8,9 +8,9 @@ use App\Models\Alerta;
 use App\Models\Cliente;
 use App\Models\ConsultaLote;
 use App\Models\ConsultaResultado;
-use App\Models\SaldoTransacao;
 use App\Models\EfdImportacao;
 use App\Models\Participante;
+use App\Models\SaldoTransacao;
 use App\Services\AlertaCentralService;
 use App\Services\Consultas\Fiscal\TopMovimentacaoQuery;
 use App\Services\Consultas\ResultadoDetalhePresenter;
@@ -1212,6 +1212,8 @@ class DashboardController extends Controller
                 'alertas_operacionais' => (bool) $user->alertas_operacionais,
                 'alertas_monitoramento' => (bool) $user->alertas_monitoramento,
                 'resumo_periodico' => (bool) $user->resumo_periodico,
+                'alertas_severidade_minima' => $user->alertas_severidade_minima ?? 'media',
+                'resumo_frequencia' => $user->resumo_frequencia ?? 'semanal',
                 'canal_principal' => ! empty($user->email) ? 'E-mail' : 'Não configurado',
             ],
             'recursos' => [
@@ -1275,23 +1277,41 @@ class DashboardController extends Controller
 
     public function atualizarNotificacaoConfiguracao(Request $request)
     {
-        $payload = $request->validate([
-            'campo' => ['required', 'string', Rule::in([
-                'alertas_operacionais',
-                'alertas_monitoramento',
-                'resumo_periodico',
-            ])],
-            'valor' => ['required', 'boolean'],
-        ]);
+        // Campos booleanos (on/off) e de frequência (enum) num único endpoint. Cada
+        // enum valida contra seus valores permitidos; o resto é boolean.
+        $enums = [
+            'alertas_severidade_minima' => ['media', 'alta'],
+            'resumo_frequencia' => ['semanal', 'mensal'],
+        ];
+
+        $campo = (string) $request->input('campo');
+
+        if (isset($enums[$campo])) {
+            $payload = $request->validate([
+                'campo' => ['required', Rule::in(array_keys($enums))],
+                'valor' => ['required', 'string', Rule::in($enums[$campo])],
+            ]);
+            $valor = $payload['valor'];
+        } else {
+            $payload = $request->validate([
+                'campo' => ['required', Rule::in([
+                    'alertas_operacionais',
+                    'alertas_monitoramento',
+                    'resumo_periodico',
+                ])],
+                'valor' => ['required', 'boolean'],
+            ]);
+            $valor = (bool) $payload['valor'];
+        }
 
         $user = Auth::user();
-        $user->{$payload['campo']} = $payload['valor'];
+        $user->{$payload['campo']} = $valor;
         $user->save();
 
         return response()->json([
             'success' => true,
             'campo' => $payload['campo'],
-            'valor' => (bool) $user->{$payload['campo']},
+            'valor' => $user->{$payload['campo']},
         ]);
     }
 

@@ -33,12 +33,12 @@ class ResumoSemanalNotification extends Notification implements ShouldQueue
 
         $exposicao = array_sum(array_column($r['destaques'], 'valor_risco'));
 
-        $mail = Blocos::comEtiqueta(new MailMessage, 'Resumo semanal · '.$periodo);
+        $mail = Blocos::comEtiqueta(new MailMessage, 'Resumo do período · '.$periodo);
 
-        $mail->subject('Resumo da semana · '.$periodo)
+        $mail->subject('Seu resumo · '.$periodo)
             ->greeting($totalAlertas > 0
                 ? $totalAlertas.' '.($totalAlertas === 1 ? 'alerta novo' : 'alertas novos').' na sua carteira'
-                : 'Semana limpa na sua carteira');
+                : 'Carteira limpa no período');
 
         // Exposição primeiro: é o número que decide se ele abre o painel hoje ou não.
         if ($exposicao > 0) {
@@ -79,6 +79,6 @@ class ResumoSemanalNotification extends Notification implements ShouldQueue
 
         return $mail
             ->action('Abrir central de alertas', url('/app/alertas'))
-            ->line('Este resumo chega toda segunda. Para desligar, vá em Configurações › Notificações.');
+            ->line('Ajuste a frequência (semanal/mensal) ou desligue em Configurações › Notificações.');
     }
 }

@@ -401,6 +401,12 @@ class AlertaCentralService
             return;
         }
 
+        // Frequência: se o usuário pediu "só alta", um alerta média não gera e-mail
+        // imediato (continua no centro de alertas e no resumo). Default 'media' = alta+média.
+        if (($user->alertas_severidade_minima ?? 'media') === 'alta' && $alerta->severidade !== 'alta') {
+            return;
+        }
+
         // Marca já aqui (guarda anti-reenvio): tanto o imediato quanto o digest usam a
         // mesma guarda; se o flush falhar depois, pior caso é 1 e-mail a menos, nunca 2.
         $alerta->notificado_em = now();
