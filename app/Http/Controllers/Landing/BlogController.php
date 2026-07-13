@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 class BlogController extends Controller
 {
-    private const BASE_URL = 'https://fiscaldock.com';
+    private const BASE_URL = 'https://fiscaldock.com.br';
 
     protected string $themeClass = 'theme-default';
 
@@ -27,9 +27,10 @@ class BlogController extends Controller
         $topics = BlogPostCatalog::topics();
 
         $seo = [
-            'title' => 'Blog - FiscalDock | Conteudo para Contadores',
-            'description' => 'Artigos sobre compliance fiscal, SPED, EFD, clearance de NF-e, consultas de CNPJ e boas praticas para escritorios contabeis.',
-            'canonical' => self::BASE_URL . '/blog',
+            'title' => 'Conteúdos Fiscais e Tributários | FiscalDock',
+            'description' => 'Guias e análises para contadores sobre SPED, EFD, consultas CNPJ, regularidade fiscal, compliance e validação de documentos.',
+            'canonical' => self::BASE_URL . '/conteudos',
+            'og_title' => 'Central de Conteúdo Fiscal — FiscalDock',
         ];
 
         if ($request->ajax()) {
@@ -73,12 +74,13 @@ class BlogController extends Controller
         $posts = BlogPostCatalog::postsByTopic($tema);
         $featuredPost = collect($posts)->firstWhere('featured', true) ?? ($posts[0] ?? null);
 
-        $canonical = self::BASE_URL . ($tema === 'efd' ? '/blog/efd' : '/blog/tema/' . $tema);
+        $canonical = self::BASE_URL . '/conteudos/' . $tema;
 
         $seo = [
-            'title' => $topic['title'] . ' - Blog FiscalDock',
+            'title' => $topic['title'] . ' | Central de Conteúdo Fiscal',
             'description' => $topic['description'],
             'canonical' => $canonical,
+            'og_title' => $topic['title'] . ' — FiscalDock',
         ];
 
         $viewData = [
@@ -137,9 +139,9 @@ class BlogController extends Controller
         }
 
         $seo = [
-            'title' => $post['title'] . ' - Blog FiscalDock',
+            'title' => $post['title'] . ' | FiscalDock',
             'description' => $post['meta_description'],
-            'canonical' => self::BASE_URL . '/blog/' . $post['slug'],
+            'canonical' => self::BASE_URL . '/conteudos/' . $post['slug'],
             'og_type' => 'article',
         ];
 

@@ -382,7 +382,7 @@ class BlogPostCatalog
                 'title' => 'EFD para Contadores',
                 'short_title' => 'EFD',
                 'description' => 'Guias, checklists e artigos práticos para revisar EFD com menos retrabalho e mais segurança.',
-                'hero_eyebrow' => 'Hub temática',
+                'hero_eyebrow' => 'Área temática',
                 'hero_description' => 'Cluster completo para escritórios contábeis: EFD ICMS/IPI, Contribuições, revisão mensal e cruzamento com XML.',
                 'hero_checklist' => [
                     'Diferenças entre EFD ICMS/IPI e Contribuições',
@@ -390,7 +390,7 @@ class BlogPostCatalog
                     'Cruzamento EFD × XML × classificação',
                     'Rotinas anti-retrabalho',
                 ],
-                'url' => '/blog/tema/efd',
+                'url' => '/conteudos/efd',
                 'legacy_url' => '/blog/efd',
                 'faqs' => [
                     ['q' => 'Qual é a diferença entre EFD ICMS/IPI e EFD Contribuições?', 'a' => 'A EFD ICMS/IPI concentra operações com mercadorias e apuração de ICMS e IPI. A EFD Contribuições foca em PIS, COFINS, receitas e créditos.'],
@@ -402,7 +402,7 @@ class BlogPostCatalog
                 'title' => 'Clearance de NF-e e XML',
                 'short_title' => 'Clearance',
                 'description' => 'Validação de documentos fiscais, detecção de notas frias, canceladas e confronto com o escriturado.',
-                'hero_eyebrow' => 'Hub temática',
+                'hero_eyebrow' => 'Área temática',
                 'hero_description' => 'Como o escritório pode deixar de revisar NF-e de forma manual e passar a confiar em verificação automatizada contra a SEFAZ.',
                 'hero_checklist' => [
                     'O que é clearance de NF-e',
@@ -410,7 +410,7 @@ class BlogPostCatalog
                     'Confronto XML × EFD em lote',
                     'NFS-e nacional e impacto na revisão',
                 ],
-                'url' => '/blog/tema/clearance',
+                'url' => '/conteudos/clearance',
                 'faqs' => [
                     ['q' => 'O que é clearance de NF-e?', 'a' => 'É a validação do documento fiscal diretamente na SEFAZ, conferindo autorização, cancelamento e consistência com o que foi escriturado.'],
                     ['q' => 'Por que escriturar uma nota cancelada é problema?', 'a' => 'Porque gera crédito indevido, autuação e retrabalho de retificação. O cruzamento em lote detecta antes da transmissão.'],
@@ -421,7 +421,7 @@ class BlogPostCatalog
                 'title' => 'Consultas de CNPJ e Due Diligence',
                 'short_title' => 'Consultas',
                 'description' => 'Validação cadastral, score de risco, certidões negativas e monitoramento contínuo de participantes.',
-                'hero_eyebrow' => 'Hub temática',
+                'hero_eyebrow' => 'Área temática',
                 'hero_description' => 'Como estruturar due diligence de CNPJs na carteira sem depender de verificação manual em cada portal.',
                 'hero_checklist' => [
                     'Validação de fornecedor antes de escriturar',
@@ -429,7 +429,7 @@ class BlogPostCatalog
                     'CND Federal, Estadual e Municipal',
                     'Monitoramento contínuo da base',
                 ],
-                'url' => '/blog/tema/consultas',
+                'url' => '/conteudos/consultas',
                 'faqs' => [
                     ['q' => 'Vale consultar fornecedor antes de escriturar?', 'a' => 'Sim. Validar situação cadastral, IE e as certidões negativas (CND/CNDT/FGTS) antes reduz glosa de crédito e retrabalho de retificação.'],
                     ['q' => 'O que o score de risco de CNPJ agrega?', 'a' => 'Situação cadastral, regime tributário, certidões de regularidade (CND/CNDT/FGTS) e histórico. Serve como filtro, não como decisão final.'],
@@ -440,7 +440,7 @@ class BlogPostCatalog
                 'title' => 'Compliance Fiscal',
                 'short_title' => 'Compliance',
                 'description' => 'Riscos cadastrais, auditoria fiscal digital, LGPD e monitoramento contínuo para escritórios.',
-                'hero_eyebrow' => 'Hub temática',
+                'hero_eyebrow' => 'Área temática',
                 'hero_description' => 'O que o fisco cruza, quais riscos precisam ser monitorados e como o escritório se antecipa à autuação.',
                 'hero_checklist' => [
                     'Principais riscos fiscais para monitorar',
@@ -448,7 +448,7 @@ class BlogPostCatalog
                     'Auditoria fiscal digital',
                     'LGPD aplicada ao escritório contábil',
                 ],
-                'url' => '/blog/tema/compliance',
+                'url' => '/conteudos/compliance',
                 'faqs' => [
                     ['q' => 'O que a auditoria fiscal digital já cruza?', 'a' => 'EFD, NF-e, DCTFWeb, cadastro e certidões. O cruzamento é automático e em segundos.'],
                     ['q' => 'O escritório precisa se preocupar com LGPD?', 'a' => 'Sim. Trata dados sensíveis de pessoas físicas e jurídicas e é controlador ou operador, dependendo da operação.'],
@@ -459,14 +459,14 @@ class BlogPostCatalog
                 'title' => 'SPED e Importação',
                 'short_title' => 'SPED',
                 'description' => 'Conteúdos sobre importação, leitura e organização operacional de arquivos fiscais.',
-                'hero_eyebrow' => 'Hub temática',
+                'hero_eyebrow' => 'Área temática',
                 'hero_description' => 'Como o escritório pode sair da leitura manual de TXT para uma base organizada, com extração automática de participantes e notas.',
                 'hero_checklist' => [
                     'Importação automatizada de SPED',
                     'Extração de participantes e notas',
                     'Organização por cliente e período',
                 ],
-                'url' => '/blog/tema/sped',
+                'url' => '/conteudos/sped',
                 'faqs' => [
                     ['q' => 'Vale automatizar a importação de SPED?', 'a' => 'Sim. Reduz horas operacionais e padroniza a base para revisão e cruzamento.'],
                 ],

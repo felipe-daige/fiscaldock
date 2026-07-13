@@ -1,4 +1,4 @@
-@php($canonical = 'https://fiscaldock.com' . ($topic['slug'] === 'efd' ? '/blog/efd' : '/blog/tema/' . $topic['slug']))
+@php($canonical = 'https://fiscaldock.com.br/conteudos/' . $topic['slug'])
 @push('structured-data')
 <script type="application/ld+json">
 {!! json_encode([
@@ -14,8 +14,8 @@
     '@context' => 'https://schema.org',
     '@type' => 'BreadcrumbList',
     'itemListElement' => [
-        ['@type' => 'ListItem', 'position' => 1, 'name' => 'Início', 'item' => 'https://fiscaldock.com/'],
-        ['@type' => 'ListItem', 'position' => 2, 'name' => 'Blog', 'item' => 'https://fiscaldock.com/blog'],
+        ['@type' => 'ListItem', 'position' => 1, 'name' => 'Início', 'item' => 'https://fiscaldock.com.br/'],
+        ['@type' => 'ListItem', 'position' => 2, 'name' => 'Central de Conteúdo Fiscal', 'item' => 'https://fiscaldock.com.br/conteudos'],
         ['@type' => 'ListItem', 'position' => 3, 'name' => $topic['title'], 'item' => $canonical],
     ],
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
@@ -23,20 +23,39 @@
 @include('landing_page.blog.partials.topic-faq-schema')
 @endpush
 
-<section class="py-12 sm:py-14 bg-white">
+<style>
+    .content-topic-page { overflow: clip; }
+    .content-topic-page *, .content-topic-page *::before, .content-topic-page *::after { box-sizing: border-box; }
+    .content-topic-page h1, .content-topic-page h2, .content-topic-page h3, .content-topic-page p, .content-topic-page a { overflow-wrap: anywhere; }
+    .content-topic-page article, .content-topic-page aside, .content-topic-page .grid > * { min-width: 0; }
+    .content-topic-page .topic-checklist li { position: relative; padding-left: 1rem; }
+    .content-topic-page .topic-checklist li::before { content: ''; position: absolute; left: 0; top: .62em; width: .35rem; height: .35rem; border-radius: 50%; background: #fde68a; }
+    .content-topic-page .topic-primary-cta, .content-topic-page .topic-secondary-cta { min-height: 44px; }
+    @media (max-width: 680px) {
+        .content-topic-page { padding-block: 2.5rem; }
+        .content-topic-page .topic-hero { margin-bottom: 2rem; border-radius: 1rem; }
+        .content-topic-page .topic-hero-panel { padding: 1.25rem; }
+        .content-topic-page .topic-hero h1 { font-family: 'Fraunces',Georgia,serif; font-size: 2rem; line-height: 1.08; }
+        .content-topic-page .topic-article-card { padding: 1rem; border-radius: .75rem; }
+        .content-topic-page .topic-article-card h3 { font-size: 1.05rem; line-height: 1.25; }
+        .content-topic-page .topic-secondary-cta { width: 100%; }
+    }
+</style>
+
+<section class="content-topic-page py-12 sm:py-14 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="rounded-3xl border border-gray-200 overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 mb-10">
+        <div class="topic-hero rounded-3xl border border-gray-200 overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 mb-10">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-0">
-                <div class="lg:col-span-7 p-6 sm:p-8 text-white">
+                <div class="topic-hero-panel lg:col-span-7 p-6 sm:p-8 text-white">
                     <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-[0.2em] bg-white/10 mb-4">
-                        {{ $topic['hero_eyebrow'] ?? 'Hub temática' }}
+                        {{ $topic['hero_eyebrow'] ?? 'Área temática' }}
                     </div>
                     <h1 class="text-2xl sm:text-3xl font-bold leading-tight mb-3">{{ $topic['title'] }}</h1>
                     <p class="text-white/75 text-sm sm:text-base max-w-2xl mb-5">
                         {{ $topic['hero_description'] ?? $topic['description'] }}
                     </p>
                     @if(!empty($featuredPost))
-                    <a href="/blog/{{ $featuredPost['slug'] }}" class="inline-flex items-center gap-2 rounded-full bg-white text-slate-900 px-4 py-2.5 text-sm font-semibold hover:bg-slate-100 transition-colors">
+                    <a href="/conteudos/{{ $featuredPost['slug'] }}" class="topic-primary-cta inline-flex items-center gap-2 rounded-full bg-white text-slate-900 px-4 py-2.5 text-sm font-semibold hover:bg-slate-100 transition-colors">
                         Ler artigo pilar
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
@@ -44,9 +63,9 @@
                     </a>
                     @endif
                 </div>
-                <div class="lg:col-span-5 bg-white/5 backdrop-blur-sm p-6 sm:p-8 border-t lg:border-t-0 lg:border-l border-white/10">
+                <div class="topic-hero-panel lg:col-span-5 bg-white/5 backdrop-blur-sm p-6 sm:p-8 border-t lg:border-t-0 lg:border-l border-white/10">
                     <div class="text-white/70 text-xs font-semibold uppercase tracking-[0.2em] mb-3">O que você encontra aqui</div>
-                    <ul class="space-y-2 text-sm text-white/80 leading-relaxed">
+                    <ul class="topic-checklist space-y-2 text-sm text-white/80 leading-relaxed">
                         @foreach(($topic['hero_checklist'] ?? []) as $item)
                         <li>{{ $item }}</li>
                         @endforeach
@@ -71,7 +90,7 @@
                 @else
                 <div class="space-y-5">
                     @foreach($posts as $index => $post)
-                    <a href="/blog/{{ $post['slug'] }}" class="block rounded-2xl border border-gray-200 bg-white p-6 hover:border-blue-300 hover:shadow-sm transition-all">
+                    <a href="/conteudos/{{ $post['slug'] }}" class="topic-article-card block rounded-2xl border border-gray-200 bg-white p-6 hover:border-blue-300 hover:shadow-sm transition-all">
                         <div class="flex flex-wrap items-center gap-3 mb-3">
                             <span class="inline-flex items-center justify-center rounded-full bg-gray-900 text-white text-xs font-bold w-7 h-7">{{ $index + 1 }}</span>
                             <span class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{{ $post['categoria'] }}</span>
@@ -86,7 +105,7 @@
             </div>
 
             <aside class="lg:col-span-4">
-                <div class="sticky top-24 space-y-6">
+                <div class="lg:sticky lg:top-24 space-y-6">
                     @if(!empty($topic['faqs']))
                     <div class="rounded-2xl border border-gray-200 bg-gray-50 p-6">
                         <h3 class="text-lg font-bold text-gray-900 mb-4">Perguntas frequentes</h3>
@@ -104,7 +123,7 @@
                     <div class="rounded-2xl border border-gray-200 bg-white p-6">
                         <h3 class="text-lg font-bold text-gray-900 mb-3">Próximo passo</h3>
                         <p class="text-sm text-gray-600 mb-4">Veja o FiscalDock aplicar isso em escala na sua carteira de clientes.</p>
-                        <a href="/agendar" class="inline-flex items-center justify-center rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <a href="/agendar" class="topic-secondary-cta inline-flex items-center justify-center rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
                             Falar com um especialista
                         </a>
                     </div>

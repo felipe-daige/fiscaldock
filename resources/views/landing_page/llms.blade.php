@@ -19,15 +19,15 @@ Contadores, escritórios contábeis, departamentos fiscais, compradores e empres
 
 ## Páginas principais
 
-- [Soluções](https://fiscaldock.com/solucoes): visão geral dos produtos
-- [Preços](https://fiscaldock.com/precos): preços por consulta em reais
-- [Dúvidas](https://fiscaldock.com/duvidas): perguntas frequentes sobre EFD, SPED e uso da plataforma
-- [Blog](https://fiscaldock.com/blog): artigos sobre EFD, revisão fiscal e compliance
-- [Hub EFD](https://fiscaldock.com/blog/efd): cluster editorial sobre EFD para contadores
-- [Criar conta grátis](https://fiscaldock.com/criar-conta)
-- [Contato comercial](https://fiscaldock.com/agendar)
-- [Termos de uso](https://fiscaldock.com/termos)
-- [Política de privacidade](https://fiscaldock.com/privacidade)
+- [Soluções](https://fiscaldock.com.br/solucoes): visão geral dos produtos
+- [Preços](https://fiscaldock.com.br/precos): preços por consulta em reais
+- [Dúvidas](https://fiscaldock.com.br/duvidas): perguntas frequentes sobre EFD, SPED e uso da plataforma
+- [Central de Conteúdo Fiscal](https://fiscaldock.com.br/conteudos): guias e análises sobre EFD, revisão fiscal, consultas CNPJ e compliance
+- [Conteúdos sobre EFD](https://fiscaldock.com.br/conteudos/efd): trilha editorial de EFD para contadores
+- [Criar conta grátis](https://fiscaldock.com.br/criar-conta)
+- [Contato comercial](https://fiscaldock.com.br/agendar)
+- [Termos de uso](https://fiscaldock.com.br/termos)
+- [Política de privacidade](https://fiscaldock.com.br/privacidade)
 
 ## Contato
 

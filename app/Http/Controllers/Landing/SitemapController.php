@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\Cache;
 
 class SitemapController extends Controller
 {
-    private const BASE_URL = 'https://fiscaldock.com';
+    private const BASE_URL = 'https://fiscaldock.com.br';
     private const CACHE_TTL = 3600;
 
     public function __invoke()
     {
-        $xml = Cache::remember('sitemap_xml', self::CACHE_TTL, fn () => $this->buildXml());
+        $xml = Cache::remember('sitemap_xml_conteudos_v3', self::CACHE_TTL, fn () => $this->buildXml());
 
         return response($xml, 200, ['Content-Type' => 'application/xml']);
     }
@@ -46,20 +46,16 @@ class SitemapController extends Controller
             ['loc' => '/', 'priority' => '1.0', 'changefreq' => 'weekly', 'lastmod' => $this->lastmodFor('views/landing_page/paginas/inicio.blade.php')],
             ['loc' => '/solucoes', 'priority' => '0.8', 'changefreq' => 'monthly', 'lastmod' => $this->lastmodFor('views/landing_page/solucoes/index.blade.php')],
             ['loc' => '/precos', 'priority' => '0.8', 'changefreq' => 'monthly', 'lastmod' => $this->lastmodFor('views/landing_page/paginas/precos.blade.php')],
+            ['loc' => '/conteudos', 'priority' => '0.8', 'changefreq' => 'weekly', 'lastmod' => $blogIndexLastmod],
             ['loc' => '/duvidas', 'priority' => '0.7', 'changefreq' => 'monthly', 'lastmod' => $this->lastmodFor('views/landing_page/paginas/duvidas.blade.php')],
             ['loc' => '/criar-conta', 'priority' => '0.7', 'changefreq' => 'monthly', 'lastmod' => $this->lastmodFor('views/landing_page/auth/criar-conta.blade.php')],
             ['loc' => '/termos', 'priority' => '0.3', 'changefreq' => 'yearly', 'lastmod' => $this->lastmodFor('views/landing_page/paginas/termos.blade.php')],
             ['loc' => '/privacidade', 'priority' => '0.3', 'changefreq' => 'yearly', 'lastmod' => $this->lastmodFor('views/landing_page/paginas/privacidade.blade.php')],
-            ['loc' => '/blog', 'priority' => '0.8', 'changefreq' => 'weekly', 'lastmod' => $blogIndexLastmod],
-            ['loc' => '/blog/efd', 'priority' => '0.8', 'changefreq' => 'weekly', 'lastmod' => $blogIndexLastmod],
         ];
 
         foreach (BlogPostCatalog::topics() as $topic) {
-            if ($topic['slug'] === 'efd') {
-                continue;
-            }
             $urls[] = [
-                'loc' => '/blog/tema/' . $topic['slug'],
+                'loc' => '/conteudos/' . $topic['slug'],
                 'priority' => '0.8',
                 'changefreq' => 'weekly',
                 'lastmod' => $blogIndexLastmod,
@@ -68,7 +64,7 @@ class SitemapController extends Controller
 
         foreach ($posts as $post) {
             $urls[] = [
-                'loc' => '/blog/' . $post['slug'],
+                'loc' => '/conteudos/' . $post['slug'],
                 'priority' => '0.7',
                 'changefreq' => 'monthly',
                 'lastmod' => $post['data'],

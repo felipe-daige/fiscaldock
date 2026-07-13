@@ -60,6 +60,7 @@
     <script src="{{ asset('js/inicio.js') }}?v={{ filemtime(public_path('js/inicio.js')) }}"></script>
     <script src="{{ asset('js/solucoes.js') }}?v={{ filemtime(public_path('js/solucoes.js')) }}"></script>
     <script src="{{ asset('js/precos.js') }}?v={{ filemtime(public_path('js/precos.js')) }}"></script>
+    <script src="{{ asset('js/conteudos.js') }}?v={{ file_exists(public_path('js/conteudos.js')) ? filemtime(public_path('js/conteudos.js')) : '1' }}"></script>
     <script src="{{ asset('js/login.js') }}?v={{ filemtime(public_path('js/login.js')) }}"></script>
     <script src="{{ asset('js/criar-conta.js') }}?v={{ filemtime(public_path('js/criar-conta.js')) }}"></script>
     <script src="{{ asset('js/agendar.js') }}?v={{ filemtime(public_path('js/agendar.js')) }}"></script>
@@ -214,10 +215,10 @@
                         <h3 class="lp-footer-h">Navegação</h3>
                         <div class="grid grid-cols-2 gap-x-8 gap-y-3">
                             <a href="/inicio" class="lp-footer-link">Home</a>
-                            <a href="/duvidas" class="lp-footer-link">Dúvidas</a>
                             <a href="/solucoes" class="lp-footer-link">Soluções</a>
-                            <a href="/blog" class="lp-footer-link">Blog</a>
                             <a href="/precos" class="lp-footer-link">Preços</a>
+                            <a href="/conteudos" class="lp-footer-link">Conteúdos</a>
+                            <a href="/duvidas" class="lp-footer-link">Dúvidas</a>
                             <a href="/agendar" class="lp-footer-link">Contato</a>
                             <a href="/criar-conta" class="lp-footer-link">Criar conta</a>
                             <a href="/login" class="lp-footer-link">Login</a>

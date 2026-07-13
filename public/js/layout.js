@@ -30,11 +30,15 @@ function initLayout() {
 
         _mobileMenuHandler = function() {
             mobileMenu.classList.toggle('hidden');
-            if (!mobileMenu.classList.contains('hidden')) {
+            const isOpen = !mobileMenu.classList.contains('hidden');
+            if (isOpen) {
                 mobileMenu.classList.add('flex');
             } else {
                 mobileMenu.classList.remove('flex');
             }
+            mobileMenuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            mobileMenuBtn.setAttribute('aria-label', isOpen ? 'Fechar menu' : 'Abrir menu');
+            document.body.classList.toggle('overflow-hidden', isOpen);
         };
 
         mobileMenuBtn.addEventListener('click', _mobileMenuHandler);
@@ -47,10 +51,15 @@ function initLayout() {
             _mobileMenuLinkHandler = null;
         }
         _mobileMenuLinkHandler = function(e) {
-            const link = e.target.closest('[data-link]');
+            const link = e.target.closest('a');
             if (link) {
                 mobileMenu.classList.add('hidden');
                 mobileMenu.classList.remove('flex');
+                if (mobileMenuBtn) {
+                    mobileMenuBtn.setAttribute('aria-expanded', 'false');
+                    mobileMenuBtn.setAttribute('aria-label', 'Abrir menu');
+                }
+                document.body.classList.remove('overflow-hidden');
             }
         };
         mobileMenu.addEventListener('click', _mobileMenuLinkHandler);
@@ -297,6 +306,11 @@ function resetLayout() {
     if (mobileMenu) {
         mobileMenu.classList.add('hidden');
         mobileMenu.classList.remove('flex');
+    }
+    const publicMenuBtn = document.getElementById('mobile-menu-btn');
+    if (publicMenuBtn) {
+        publicMenuBtn.setAttribute('aria-expanded', 'false');
+        publicMenuBtn.setAttribute('aria-label', 'Abrir menu');
     }
 
     // Close sidebar drawer on mobile (safety net)

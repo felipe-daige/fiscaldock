@@ -1,7 +1,7 @@
 {{-- Banner de consentimento de cookies (LGPD). Decisão guardada em localStorage;
      não renderiza novamente após aceitar/rejeitar. Sem cookies de análise até o aceite. --}}
 <div id="cookie-consent-banner"
-     class="hidden fixed bottom-0 inset-x-0 z-50 px-4 pb-4 sm:px-6 sm:pb-6"
+     class="cookie-consent-mobile hidden fixed bottom-0 inset-x-0 z-50 px-4 pb-4 sm:px-6 sm:pb-6"
      role="dialog" aria-live="polite" aria-label="Aviso de cookies">
     <div class="max-w-5xl mx-auto rounded-lg shadow-2xl border border-gray-200 p-3 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5"
          style="background-color: #0b1f3a;">
@@ -10,7 +10,7 @@
             melhorar sua experiência. Saiba mais na nossa
             <a href="{{ route('privacidade') }}" class="font-semibold underline" style="color: #facc15;">Política de Privacidade</a>.
         </p>
-        <div class="flex items-center gap-2 shrink-0">
+        <div class="cookie-consent-actions flex items-center gap-2 shrink-0">
             <button type="button" id="cookie-consent-reject"
                     class="px-3 py-1.5 sm:px-4 rounded text-sm font-semibold text-gray-200 border border-gray-500 hover:bg-white/10 transition">
                 Rejeitar
@@ -23,6 +23,17 @@
         </div>
     </div>
 </div>
+
+<style>
+    .cookie-consent-mobile { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+    .cookie-consent-mobile button { min-height: 44px; }
+    @media (max-width: 380px) {
+        .cookie-consent-mobile { padding-inline: .5rem; }
+        .cookie-consent-mobile > div { padding: .75rem; }
+        .cookie-consent-actions { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+        .cookie-consent-mobile button { width: 100%; }
+    }
+</style>
 
 <script>
 (function () {

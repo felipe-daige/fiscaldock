@@ -32,10 +32,19 @@ Route::get('/inicio', [LandingPageController::class, 'inicio'])->name('inicio');
 Route::get('/solucoes', [LandingPageController::class, 'solucoes'])->name('solucoes');
 Route::get('/precos', [LandingPageController::class, 'precos'])->name('precos');
 Route::get('/duvidas', [LandingPageController::class, 'duvidas'])->name('duvidas');
-Route::get('/blog', [BlogController::class, 'index'])->name('blog');
-Route::get('/blog/efd', [BlogController::class, 'topicEfd'])->name('blog.efd');
-Route::get('/blog/tema/{tema}', [BlogController::class, 'topic'])->name('blog.tema');
-Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.post');
+Route::get('/conteudos', [BlogController::class, 'index'])->name('conteudos');
+Route::get('/conteudos/{tema}', [BlogController::class, 'topic'])
+    ->whereIn('tema', ['efd', 'clearance', 'consultas', 'compliance', 'sped'])
+    ->name('conteudos.tema');
+Route::get('/conteudos/{slug}', [BlogController::class, 'show'])->name('conteudos.post');
+
+// Família legada: preserva backlinks e qualquer autoridade adquirida, sem competir no sitemap.
+Route::redirect('/blog', '/conteudos', 301)->name('blog');
+Route::redirect('/blog/efd', '/conteudos/efd', 301)->name('blog.efd');
+Route::get('/blog/tema/{tema}', fn (string $tema) => redirect('/conteudos/'.$tema, 301))
+    ->name('blog.tema');
+Route::get('/blog/{slug}', fn (string $slug) => redirect('/conteudos/'.$slug, 301))
+    ->name('blog.post');
 
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 

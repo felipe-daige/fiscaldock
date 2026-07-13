@@ -68,6 +68,11 @@
         border-color: rgba(255, 255, 255, 0.45);
     }
     .lp-header-burger {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
         color: rgba(255, 255, 255, 0.8);
         transition: color 0.15s ease;
     }
@@ -84,6 +89,31 @@
     @media (prefers-reduced-motion: reduce) {
         .lp-header-link, .lp-header-btn, .lp-header-burger, .lp-header-mobile-link { transition: none; }
     }
+    .lp-header-mobile-spacer { display: none; }
+    @media (max-width: 767px) {
+        :root { --lp-header-mobile-height: 72px; }
+        html { scroll-padding-top: calc(var(--lp-header-mobile-height) + env(safe-area-inset-top)); }
+        .lp-header {
+            position: fixed;
+            inset: 0 0 auto;
+            z-index: 60;
+            width: 100%;
+            padding-top: env(safe-area-inset-top);
+            box-shadow: 0 10px 28px -22px rgba(2, 8, 23, .9);
+            transform: translateZ(0);
+        }
+        .lp-header-mobile-spacer {
+            display: block;
+            height: calc(var(--lp-header-mobile-height) + env(safe-area-inset-top));
+        }
+        #mobile-menu {
+            max-height: calc(100dvh - var(--lp-header-mobile-height) - env(safe-area-inset-top));
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            padding-bottom: max(1rem, env(safe-area-inset-bottom));
+            -webkit-overflow-scrolling: touch;
+        }
+    }
 </style>
 <header class="lp-header">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -98,8 +128,8 @@
             <ul class="hidden lg:flex items-center gap-6">
                 <li class="flex items-center"><a href="/solucoes" class="lp-header-link {{ request()->is('solucoes') ? 'lp-header-link--active' : '' }}">Soluções</a></li>
                 <li class="flex items-center"><a href="/precos" class="lp-header-link {{ request()->is('precos') ? 'lp-header-link--active' : '' }}">Preços</a></li>
+                <li class="flex items-center"><a href="/conteudos" class="lp-header-link {{ request()->is('conteudos*') ? 'lp-header-link--active' : '' }}">Conteúdos</a></li>
                 <li class="flex items-center"><a href="/duvidas" class="lp-header-link {{ request()->is('duvidas') ? 'lp-header-link--active' : '' }}">Dúvidas</a></li>
-                <li class="flex items-center"><a href="/blog" class="lp-header-link {{ request()->is('blog*') ? 'lp-header-link--active' : '' }}">Blog</a></li>
                 <li class="flex items-center" aria-hidden="true"><span class="select-none" style="color: rgba(255, 255, 255, 0.2);">|</span></li>
                 <li class="flex items-center"><a href="/login" class="lp-header-link {{ request()->is('login') ? 'lp-header-link--active' : '' }}">Login</a></li>
                 <li class="flex items-center">
@@ -114,7 +144,7 @@
                 </li>
             </ul>
 
-            <button id="mobile-menu-btn" class="lg:hidden p-2 lp-header-burger" aria-label="Abrir menu">
+            <button id="mobile-menu-btn" class="lg:hidden p-2 lp-header-burger" aria-label="Abrir menu" aria-controls="mobile-menu" aria-expanded="false">
                 <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
@@ -122,19 +152,20 @@
         </nav>
 
         <div id="mobile-menu" class="hidden lg:hidden flex-col gap-4 py-4" style="border-top: 1px solid rgba(255, 255, 255, 0.12);">
-            <a href="/solucoes" data-link class="lp-header-mobile-link {{ request()->is('solucoes') ? 'lp-header-mobile-link--active' : '' }}">Soluções</a>
-            <a href="/precos" data-link class="lp-header-mobile-link {{ request()->is('precos') ? 'lp-header-mobile-link--active' : '' }}">Preços</a>
-            <a href="/duvidas" data-link class="lp-header-mobile-link {{ request()->is('duvidas') ? 'lp-header-mobile-link--active' : '' }}">Dúvidas</a>
-            <a href="/blog" data-link class="lp-header-mobile-link {{ request()->is('blog*') ? 'lp-header-mobile-link--active' : '' }}">Blog</a>
+            <a href="/solucoes" class="lp-header-mobile-link {{ request()->is('solucoes') ? 'lp-header-mobile-link--active' : '' }}">Soluções</a>
+            <a href="/precos" class="lp-header-mobile-link {{ request()->is('precos') ? 'lp-header-mobile-link--active' : '' }}">Preços</a>
+            <a href="/conteudos" class="lp-header-mobile-link {{ request()->is('conteudos*') ? 'lp-header-mobile-link--active' : '' }}">Conteúdos</a>
+            <a href="/duvidas" class="lp-header-mobile-link {{ request()->is('duvidas') ? 'lp-header-mobile-link--active' : '' }}">Dúvidas</a>
             <div class="pt-4 flex flex-col gap-4" style="border-top: 1px solid rgba(255, 255, 255, 0.12);">
-                <a href="/login" data-link class="lp-header-mobile-link {{ request()->is('login') ? 'lp-header-mobile-link--active' : '' }}">Login</a>
-                <a href="/criar-conta" data-link class="btn-cta btn-cta--block">
+                <a href="/login" class="lp-header-mobile-link {{ request()->is('login') ? 'lp-header-mobile-link--active' : '' }}">Login</a>
+                <a href="/criar-conta" class="btn-cta btn-cta--block">
                     Criar conta grátis
                 </a>
-                <a href="/agendar" data-link class="lp-header-btn w-full">
+                <a href="/agendar" class="lp-header-btn w-full">
                     Falar com especialista
                 </a>
             </div>
         </div>
     </div>
 </header>
+<div class="lp-header-mobile-spacer" aria-hidden="true"></div>
