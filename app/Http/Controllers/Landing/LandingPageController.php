@@ -44,7 +44,7 @@ class LandingPageController extends Controller
         ]);
     }
 
-    public function duvidas(Request $request)
+    public function duvidas(Request $request, PricingCatalogService $pricingCatalogService)
     {
         return $this->renderLanding($request, 'paginas.duvidas', [
             'title' => 'Dúvidas Frequentes — FiscalDock',
@@ -53,6 +53,15 @@ class LandingPageController extends Controller
             'og_type' => 'website',
             'og_title' => 'Perguntas frequentes — FiscalDock',
             'og_image' => self::BASE_URL . '/binary_files/logo/Logo FiscalDock.png',
+        ], [
+            // As respostas citam preço, fontes e disponibilidade de módulo: puxamos do catálogo
+            // para o FAQ não virar uma segunda fonte de verdade que envelhece sozinha.
+            'pricingData' => $pricingCatalogService->getLandingPricingData(),
+            'clearancePricing' => [
+                'batch_basic' => $pricingCatalogService->creditsToCurrency(ValidacaoContabilService::custoUnitarioPorTier('basico')),
+                'search' => $pricingCatalogService->creditsToCurrency(ClearanceController::CLEARANCE_NFE_AVULSA_CUSTO),
+                'search_enabled' => (bool) config('clearance.busca_avulsa.habilitada'),
+            ],
         ]);
     }
 

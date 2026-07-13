@@ -58,7 +58,6 @@
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" defer></script>
     <script src="{{ asset('js/layout.js') }}?v={{ filemtime(public_path('js/layout.js')) }}"></script>
     <script src="{{ asset('js/inicio.js') }}?v={{ filemtime(public_path('js/inicio.js')) }}"></script>
-    <script src="{{ asset('js/duvidas.js') }}?v={{ filemtime(public_path('js/duvidas.js')) }}"></script>
     <script src="{{ asset('js/solucoes.js') }}?v={{ filemtime(public_path('js/solucoes.js')) }}"></script>
     <script src="{{ asset('js/precos.js') }}?v={{ filemtime(public_path('js/precos.js')) }}"></script>
     <script src="{{ asset('js/login.js') }}?v={{ filemtime(public_path('js/login.js')) }}"></script>

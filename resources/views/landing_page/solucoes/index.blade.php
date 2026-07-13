@@ -91,7 +91,7 @@
         position: relative; isolation: isolate;
         /* Altura e respiro do topo são compartilhados com .pricing-hero (/precos) — manter em sincronia. */
         display: flex; align-items: center;
-        min-height: clamp(32rem, 54vw, 48rem);
+        min-height: clamp(32rem, 70vw, 48rem);
         padding: clamp(4.5rem, 9vw, 7.5rem) 0 clamp(4rem, 8vw, 7rem);
         color: #fff;
         background:
@@ -127,21 +127,43 @@
         padding: 1rem; background: rgba(7,17,31,.64); box-shadow: 0 36px 80px -40px rgba(0,0,0,.75);
         backdrop-filter: blur(14px);
     }
-    .sol-radar-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .2rem .25rem 1rem; }
+    .sol-radar::after {
+        content: ''; position: absolute; inset: -18% -12% 40%; z-index: -1; pointer-events: none;
+        border-radius: 50%; opacity: .55;
+        background: radial-gradient(closest-side, rgba(94,152,224,.35), transparent 72%);
+        filter: blur(26px);
+    }
+    .sol-radar-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .2rem .25rem .9rem; }
     .sol-radar-label { font-family: ui-monospace, monospace; font-size: .61rem; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.47); }
-    .sol-radar-live { display: inline-flex; align-items: center; gap: .4rem; font-size: .65rem; font-weight: 700; color: #bbf7d0; }
-    .sol-radar-live::before { content: ''; width: .42rem; height: .42rem; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 4px rgba(52,211,153,.12); }
-    .sol-radar-stage { border: 1px solid rgba(255,255,255,.09); border-radius: .85rem; padding: 1rem; background: rgba(255,255,255,.045); }
-    .sol-radar-stage + .sol-radar-stage { margin-top: .55rem; }
+    .sol-radar-live { display: inline-flex; align-items: center; gap: .4rem; font-family: ui-monospace, monospace; font-size: .6rem; font-weight: 700; letter-spacing: .04em; color: #bbf7d0; }
+    .sol-radar-live::before { content: ''; width: .42rem; height: .42rem; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 4px rgba(52,211,153,.12); animation: sol-radar-pulse 2.6s ease-in-out infinite; }
+    @keyframes sol-radar-pulse { 0%, 100% { box-shadow: 0 0 0 4px rgba(52,211,153,.12); } 50% { box-shadow: 0 0 0 7px rgba(52,211,153,.04); } }
+    .sol-radar-stage { position: relative; border: 1px solid rgba(255,255,255,.09); border-radius: .85rem; padding: .85rem .95rem; background: rgba(255,255,255,.045); }
+    .sol-radar-stage + .sol-radar-stage { margin-top: .5rem; }
     .sol-radar-stage-head { display: flex; align-items: center; justify-content: space-between; gap: .8rem; }
-    .sol-radar-stage-head span:first-child { font-family: ui-monospace, monospace; font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.5); }
-    .sol-radar-stage-head strong { font-size: .72rem; color: #fff; }
-    .sol-radar-track { height: 4px; margin-top: .7rem; border-radius: 999px; background: rgba(255,255,255,.1); overflow: hidden; }
+    .sol-radar-stage-head span:first-child { font-family: ui-monospace, monospace; font-size: .6rem; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.5); }
+    .sol-radar-stage-head strong { font-size: .72rem; white-space: nowrap; color: #fff; }
+    .sol-radar-track { position: relative; height: 4px; margin-top: .65rem; border-radius: 999px; background: rgba(255,255,255,.1); overflow: hidden; }
     .sol-radar-track i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#fde68a,#34d399); }
-    .sol-radar-output { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .55rem; margin-top: .7rem; }
-    .sol-radar-kpi { border-radius: .65rem; padding: .75rem; color: var(--sol-ink); background: linear-gradient(145deg,#fffef8,#f7edcf); }
-    .sol-radar-kpi small { display: block; font-family: ui-monospace, monospace; font-size: .53rem; letter-spacing: .1em; text-transform: uppercase; color: #747b86; }
-    .sol-radar-kpi strong { display: block; margin-top: .35rem; font-family: 'Fraunces',Georgia,serif; font-size: 1.25rem; color: var(--sol-ink); }
+    .sol-radar-stage--live .sol-radar-track::after {
+        content: ''; position: absolute; inset: 0; border-radius: inherit;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+        transform: translateX(-100%); animation: sol-radar-scan 2.4s ease-in-out infinite;
+    }
+    @keyframes sol-radar-scan { 0% { transform: translateX(-100%); } 60%, 100% { transform: translateX(100%); } }
+    .sol-radar-stage-foot { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; margin-top: .55rem; }
+    .sol-radar-stage-foot em { min-width: 0; font-size: .6rem; font-style: normal; line-height: 1.35; color: rgba(255,255,255,.42); }
+    .sol-radar-stage-foot b { flex: 0 0 auto; font-family: ui-monospace, monospace; font-size: .58rem; font-weight: 700; white-space: nowrap; color: rgba(255,255,255,.72); }
+    .sol-radar-stage--done .sol-radar-stage-foot b { color: #a7f3d0; }
+    .sol-radar-output { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .5rem; margin-top: .7rem; }
+    .sol-radar-kpi { min-width: 0; border-radius: .65rem; padding: .7rem .75rem; color: var(--sol-ink); background: linear-gradient(145deg,#fffef8,#f7edcf); }
+    .sol-radar-kpi small { display: block; font-family: ui-monospace, monospace; font-size: .5rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: #8a8271; }
+    .sol-radar-kpi strong { display: block; margin-top: .3rem; font-family: 'Fraunces',Georgia,serif; font-size: 1.15rem; line-height: 1.05; color: var(--sol-ink); }
+    .sol-radar-kpi span { display: block; margin-top: .2rem; font-family: ui-monospace, monospace; font-size: .5rem; letter-spacing: .06em; text-transform: uppercase; color: #9a917d; }
+    .sol-radar-kpi--risk { background: linear-gradient(145deg,#fff8ec,#fbe3c0); }
+    .sol-radar-kpi--risk strong { color: #92400e; }
+    .sol-radar-foot { margin-top: .75rem; padding-top: .7rem; border-top: 1px dashed rgba(255,255,255,.12); font-family: ui-monospace, monospace; font-size: .53rem; line-height: 1.5; letter-spacing: .04em; text-transform: uppercase; color: rgba(255,255,255,.38); }
+    @media (prefers-reduced-motion: reduce) { .sol-radar-live::before, .sol-radar-stage--live .sol-radar-track::after { animation: none; } }
 
     .sol-anchor-nav { position: sticky; top: 0; z-index: 35; border-bottom: 1px solid rgba(207,216,227,.9); background: rgba(255,255,255,.91); backdrop-filter: blur(14px) saturate(150%); }
     .sol-anchor-list { display: flex; gap: .25rem; align-items: center; overflow-x: auto; padding: .65rem 0; scrollbar-width: none; }
@@ -440,6 +462,7 @@
     }
     @media (max-width: 680px) {
         .sol-shell { width: min(100% - 1.25rem,80rem); }
+        .sol-anchor-nav { top: calc(var(--lp-header-mobile-height,72px) + env(safe-area-inset-top)); }
         .sol-hero { padding-top: 3.5rem; }
         .sol-hero h1 { font-size: clamp(2.65rem,13vw,3.7rem); }
         .sol-hero-copy { font-size: .95rem; line-height: 1.65; }
@@ -497,25 +520,37 @@
                 </div>
             </div>
 
-            <aside class="sol-radar" aria-label="Fluxo da plataforma">
-                <div class="sol-radar-top"><span class="sol-radar-label">Radar operacional</span><span class="sol-radar-live">Dados conectados</span></div>
-                <div class="sol-radar-stage">
-                    <div class="sol-radar-stage-head"><span>01 · Entrada</span><strong>EFD + XML</strong></div>
+            <aside class="sol-radar" aria-label="Radar operacional da plataforma">
+                <div class="sol-radar-top">
+                    <span class="sol-radar-label">Radar operacional</span>
+                    <span class="sol-radar-live">Competência jun/2026</span>
+                </div>
+
+                <div class="sol-radar-stage sol-radar-stage--done">
+                    <div class="sol-radar-stage-head"><span>01 · Entrada</span><strong>SPED + XML</strong></div>
                     <div class="sol-radar-track"><i style="width: 100%"></i></div>
+                    <div class="sol-radar-stage-foot"><em>EFD ICMS/IPI · PIS/COFINS · NF-e</em><b>4.918 docs</b></div>
                 </div>
-                <div class="sol-radar-stage">
-                    <div class="sol-radar-stage-head"><span>02 · Contexto</span><strong>Notas · CNPJ · Catálogo</strong></div>
-                    <div class="sol-radar-track"><i style="width: 86%"></i></div>
+
+                <div class="sol-radar-stage sol-radar-stage--live">
+                    <div class="sol-radar-stage-head"><span>02 · Contexto</span><strong>CNPJs · Catálogo 0200</strong></div>
+                    <div class="sol-radar-track"><i style="width: 74%"></i></div>
+                    <div class="sol-radar-stage-foot"><em>Certidões, regime e movimentação</em><b>62 / 84 CNPJs</b></div>
                 </div>
-                <div class="sol-radar-stage">
+
+                <div class="sol-radar-stage sol-radar-stage--done">
                     <div class="sol-radar-stage-head"><span>03 · Inteligência</span><strong>BI · Score · Clearance</strong></div>
-                    <div class="sol-radar-track"><i style="width: 72%"></i></div>
+                    <div class="sol-radar-track"><i style="width: 100%"></i></div>
+                    <div class="sol-radar-stage-foot"><em>Apuração, cruzamentos e crédito IBS/CBS</em><b>pronto</b></div>
                 </div>
+
                 <div class="sol-radar-output">
-                    <div class="sol-radar-kpi"><small>Alertas</small><strong>priorizados</strong></div>
-                    <div class="sol-radar-kpi"><small>Crédito</small><strong>IBS/CBS</strong></div>
-                    <div class="sol-radar-kpi"><small>Saída</small><strong>dossiê</strong></div>
+                    <div class="sol-radar-kpi"><small>A recolher</small><strong>R$ 326,3 mil</strong><span>jun/2026</span></div>
+                    <div class="sol-radar-kpi sol-radar-kpi--risk"><small>Crédito em risco</small><strong>{{ $milhares($dossieRisco) }}</strong><span>IBS/CBS</span></div>
+                    <div class="sol-radar-kpi"><small>Alertas</small><strong>12</strong><span>3 altos</span></div>
                 </div>
+
+                <p class="sol-radar-foot">Última sincronização há 4 min · toda linha abre até o documento de origem</p>
             </aside>
         </div>
     </section>

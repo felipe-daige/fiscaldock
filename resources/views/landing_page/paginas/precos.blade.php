@@ -1,7 +1,7 @@
 @php
     $pricingData = $pricingData ?? [];
     $subscriptionPlans = collect($subscriptionPlans ?? []);
-    $clearancePricing = $clearancePricing ?? ['batch_basic' => 0.60, 'search' => 2.80, 'search_enabled' => false, 'full_enabled' => false];
+    $clearancePricing = $clearancePricing ?? ['batch_basic' => 1.00, 'search' => 1.00, 'search_enabled' => false, 'full_enabled' => false];
     $minimumDeposit = (float) ($pricingData['minimum_deposit'] ?? 100);
     $featuredOffers = $pricingData['featured_offers'] ?? [];
     $products = collect($pricingData['products'] ?? []);
@@ -114,7 +114,7 @@
         /* Altura e respiro do topo são compartilhados com .sol-hero (/solucoes) — manter em sincronia. */
         display: flex;
         align-items: center;
-        min-height: clamp(32rem, 54vw, 48rem);
+        min-height: clamp(32rem, 70vw, 48rem);
         padding: clamp(4.5rem, 9vw, 7.5rem) 0 clamp(4rem, 8vw, 7rem);
         background:
             radial-gradient(circle at 84% 16%, rgba(57, 118, 198, .24), transparent 29rem),
@@ -159,16 +159,54 @@
     .pricing-ledger::after { content: ''; position: absolute; right: -1.5rem; bottom: -1.5rem; width: 6rem; height: 6rem; border: 1px solid rgba(253,230,138,.18); border-radius: 50%; pointer-events: none; }
     .pricing-ledger-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .25rem .25rem 1rem; }
     .pricing-ledger-label { font-family: ui-monospace, monospace; font-size: .62rem; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.48); }
-    .pricing-live { display: inline-flex; align-items: center; gap: .4rem; font-size: .67rem; font-weight: 650; color: #bbf7d0; }
-    .pricing-live::before { content: ''; width: .45rem; height: .45rem; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 4px rgba(52,211,153,.12); }
-    .pricing-balance-card { border-radius: 1rem; padding: 1.45rem; color: var(--pricing-ink); background: linear-gradient(145deg, #fffef8, #f7edcf); }
-    .pricing-balance-card small { display: block; font-size: .68rem; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; color: #6b7280; }
-    .pricing-balance-value { margin-top: .45rem; font-family: 'Fraunces', Georgia, serif; font-size: clamp(2.5rem, 5vw, 3.7rem); font-weight: 650; line-height: 1; letter-spacing: -.04em; }
-    .pricing-balance-note { margin-top: .65rem; font-size: .78rem; color: #5f6570; }
-    .pricing-ledger-rows { display: grid; gap: .55rem; margin-top: .65rem; }
-    .pricing-ledger-row { display: grid; grid-template-columns: 1fr auto; gap: .8rem; align-items: center; border: 1px solid rgba(255,255,255,.09); border-radius: .75rem; padding: .85rem .9rem; background: rgba(255,255,255,.045); }
-    .pricing-ledger-row span { font-size: .75rem; color: rgba(255,255,255,.57); }
-    .pricing-ledger-row strong { font-family: ui-monospace, monospace; font-size: .76rem; font-weight: 650; color: #fff; }
+    .pricing-live { display: inline-flex; align-items: center; gap: .4rem; font-family: ui-monospace, monospace; font-size: .6rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #bbf7d0; }
+    .pricing-live::before { content: ''; width: .45rem; height: .45rem; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 4px rgba(52,211,153,.12); animation: pricing-live-pulse 2.6s ease-in-out infinite; }
+    @keyframes pricing-live-pulse { 0%, 100% { box-shadow: 0 0 0 4px rgba(52,211,153,.12); } 50% { box-shadow: 0 0 0 7px rgba(52,211,153,.04); } }
+    .pricing-balance-card { border-radius: 1rem; padding: 1.15rem 1.25rem; color: var(--pricing-ink); background: linear-gradient(145deg, #fffef8, #f7edcf); }
+    .pricing-balance-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+    .pricing-balance-card small { display: block; font-family: ui-monospace, monospace; font-size: .58rem; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; color: #7b7361; }
+    .pricing-balance-chip { flex: 0 0 auto; border: 1px solid rgba(11,20,36,.16); border-radius: 999px; padding: .22rem .5rem; font-family: ui-monospace, monospace; font-size: .55rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #6b6252; background: rgba(255,255,255,.55); }
+    .pricing-balance-value { margin-top: .5rem; font-family: 'Fraunces', Georgia, serif; font-size: clamp(2.35rem, 4.4vw, 3.25rem); font-weight: 650; line-height: 1; letter-spacing: -.04em; }
+    .pricing-balance-note { margin-top: .55rem; font-size: .72rem; line-height: 1.45; color: #6b6252; }
+
+    .pricing-runs { margin-top: .6rem; border: 1px solid rgba(255,255,255,.09); border-radius: .85rem; padding: .8rem .9rem; background: rgba(255,255,255,.045); }
+    .pricing-runs-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding-bottom: .35rem; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .pricing-runs-head span { font-family: ui-monospace, monospace; font-size: .56rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.5); }
+    .pricing-runs-head em { font-family: ui-monospace, monospace; font-size: .52rem; font-style: normal; letter-spacing: .06em; text-transform: uppercase; color: rgba(255,255,255,.32); }
+    .pricing-run { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: .3rem .7rem; align-items: center; padding: .5rem 0; }
+    .pricing-run + .pricing-run { border-top: 1px solid rgba(255,255,255,.06); }
+    .pricing-run-name { font-size: .72rem; font-weight: 650; color: #fff; transition: color .18s ease; }
+    .pricing-run:hover .pricing-run-name { color: #fde68a; }
+    .pricing-run-price { font-family: ui-monospace, monospace; font-size: .62rem; text-align: right; color: rgba(255,255,255,.45); }
+    .pricing-run-bar { position: relative; grid-column: 1; height: 3px; border-radius: 999px; background: rgba(255,255,255,.09); overflow: hidden; }
+    .pricing-run-bar i {
+        position: relative; display: block; width: var(--fill, 100%); height: 100%; border-radius: inherit; overflow: hidden;
+        background: linear-gradient(90deg,#fde68a,#34d399);
+        transform-origin: left center;
+        animation: pricing-run-fill .95s cubic-bezier(.22,.9,.24,1) both;
+        animation-delay: var(--delay, 0ms);
+    }
+    .pricing-run-bar i::after {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,.75), transparent);
+        transform: translateX(-100%);
+        animation: pricing-run-scan 3.6s ease-in-out infinite;
+        animation-delay: var(--delay, 0ms);
+    }
+    @keyframes pricing-run-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    @keyframes pricing-run-scan { 0%, 35% { transform: translateX(-100%); } 70%, 100% { transform: translateX(100%); } }
+    .pricing-run-count { grid-column: 2; font-family: ui-monospace, monospace; font-size: .64rem; font-weight: 700; white-space: nowrap; text-align: right; color: #a7f3d0; }
+    @media (prefers-reduced-motion: reduce) {
+        .pricing-run-bar i { animation: none; }
+        .pricing-run-bar i::after { animation: none; opacity: 0; }
+    }
+
+    .pricing-ledger-rows { display: grid; gap: .45rem; margin-top: .6rem; }
+    .pricing-ledger-row { display: grid; grid-template-columns: 1fr auto; gap: .8rem; align-items: center; border: 1px solid rgba(255,255,255,.09); border-radius: .75rem; padding: .7rem .9rem; background: rgba(255,255,255,.045); }
+    .pricing-ledger-row span { font-size: .72rem; color: rgba(255,255,255,.55); }
+    .pricing-ledger-row strong { font-family: ui-monospace, monospace; font-size: .74rem; font-weight: 700; color: #fff; }
+    .pricing-ledger-foot { margin-top: .7rem; padding-top: .65rem; border-top: 1px dashed rgba(255,255,255,.12); font-family: ui-monospace, monospace; font-size: .53rem; line-height: 1.5; letter-spacing: .04em; text-transform: uppercase; color: rgba(255,255,255,.38); }
+    @media (prefers-reduced-motion: reduce) { .pricing-live::before { animation: none; } }
 
     .pricing-paths { position: relative; z-index: 2; margin-top: -1.9rem; }
     .pricing-paths-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--pricing-line); border-radius: 1.1rem; background: #fff; box-shadow: 0 22px 60px -38px rgba(15,35,65,.45); overflow: hidden; }
@@ -235,12 +273,28 @@
     .pricing-product li svg { width: .9rem; height: .9rem; margin-top: .05rem; color: #047857; }
     .pricing-product-lock { margin-top: auto; padding-top: 1.1rem; font-size: .64rem; line-height: 1.45; color: #7b8491; }
 
-    .pricing-sources { display: grid; grid-template-columns: minmax(0,.75fr) minmax(0,1.25fr); gap: 2.2rem; align-items: center; margin-top: 1.4rem; border: 1px solid #dce5ef; border-radius: 1rem; padding: clamp(1.4rem, 3vw, 2.1rem); background: #f7faff; }
-    .pricing-sources h3 { font-family: 'Fraunces', Georgia, serif; font-size: 1.5rem; font-weight: 650; color: var(--pricing-ink); }
-    .pricing-sources p { margin-top: .55rem; font-size: .78rem; line-height: 1.6; color: #667085; }
-    .pricing-source-list { display: flex; flex-wrap: wrap; gap: .55rem; }
-    .pricing-source { display: inline-flex; align-items: center; gap: .45rem; border: 1px solid #d6e1ec; border-radius: 999px; padding: .55rem .7rem; background: #fff; font-size: .68rem; font-weight: 650; color: #344054; }
-    .pricing-source::before { content: ''; width: .42rem; height: .42rem; border-radius: 50%; background: #10b981; box-shadow: 0 0 0 3px #d1fae5; }
+    .pricing-sources { display: grid; grid-template-columns: minmax(0,.82fr) minmax(0,1.18fr); gap: clamp(1.6rem,3vw,2.4rem); align-items: center; margin-top: 1.4rem; border: 1px solid #dce5ef; border-radius: 1rem; padding: clamp(1.4rem, 3vw, 2.1rem); background: #f7faff; }
+    .pricing-sources h3 { font-family: 'Fraunces', Georgia, serif; font-size: clamp(1.45rem,2.2vw,1.85rem); font-weight: 650; line-height: 1.12; color: var(--pricing-ink); }
+    .pricing-sources-intro > p { margin-top: .65rem; font-size: .78rem; line-height: 1.65; color: #667085; }
+    .pricing-sources-groups { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: 1rem; }
+    .pricing-sources-groups span { display: inline-flex; align-items: baseline; gap: .35rem; border: 1px solid #dbe4ee; border-radius: 999px; padding: .3rem .6rem; font-family: ui-monospace, monospace; font-size: .55rem; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; color: #5d6875; background: #fff; }
+    .pricing-sources-groups b { font-family: 'Fraunces', Georgia, serif; font-size: .82rem; font-weight: 650; color: var(--pricing-ink); }
+    .pricing-sources-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .6rem; margin-top: 1rem; border-top: 1px dashed #cfdae7; padding-top: .9rem; }
+    .pricing-sources-price small { width: 100%; font-family: ui-monospace, monospace; font-size: .53rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #8a94a3; }
+    .pricing-sources-price strong { font-family: 'Fraunces', Georgia, serif; font-size: 1.75rem; font-weight: 650; line-height: 1; color: var(--pricing-ink); }
+    .pricing-sources-price span { font-size: .68rem; color: #7a8594; }
+
+    .pricing-source-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .5rem; }
+    .pricing-source { position: relative; min-width: 0; border: 1px solid #dbe4ee; border-radius: .75rem; padding: .75rem .85rem; background: #fff; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+    .pricing-source:hover { transform: translateY(-2px); border-color: #b9c9da; box-shadow: 0 16px 34px -28px rgba(15,35,65,.55); }
+    .pricing-source--wide { grid-column: span 2; }
+    .pricing-source-top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+    .pricing-source-cat { font-family: ui-monospace, monospace; font-size: .5rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #94a0ae; }
+    .pricing-source-top i { flex: 0 0 auto; width: .4rem; height: .4rem; border-radius: 50%; background: #10b981; box-shadow: 0 0 0 3px #d1fae5; animation: pricing-source-pulse 2.8s ease-in-out infinite; animation-delay: var(--delay, 0ms); }
+    @keyframes pricing-source-pulse { 0%, 100% { box-shadow: 0 0 0 3px #d1fae5; } 50% { box-shadow: 0 0 0 5px rgba(16,185,129,.14); } }
+    .pricing-source strong { display: block; margin-top: .4rem; font-size: .74rem; font-weight: 750; line-height: 1.3; color: #202938; }
+    .pricing-sources .pricing-source p { margin-top: .3rem; font-size: .64rem; line-height: 1.45; color: #7a8594; }
+    @media (prefers-reduced-motion: reduce) { .pricing-source-top i { animation: none; } }
 
     .pricing-documents { display: grid; grid-template-columns: minmax(0,.8fr) repeat(2,minmax(0,1fr)); gap: 1rem; align-items: stretch; }
     .pricing-documents-intro { display: flex; flex-direction: column; justify-content: space-between; border-radius: 1rem; padding: 1.5rem; color: #fff; background: var(--pricing-ink); }
@@ -341,8 +395,8 @@
         .pricing-product { min-height: auto; padding: 1.25rem; }
         .pricing-product-lock { margin-top: 1rem; }
         .pricing-sources { padding: 1.2rem; }
-        .pricing-source-list { display: grid; grid-template-columns: 1fr; }
-        .pricing-source { border-radius: .65rem; }
+        .pricing-source-list { grid-template-columns: 1fr; }
+        .pricing-source--wide { grid-column: auto; }
         .pricing-documents { grid-template-columns: 1fr; }
         .pricing-documents-intro { grid-column: auto; }
         .pricing-wallet-offers { grid-template-columns: 1fr; }
@@ -379,30 +433,59 @@
                 </div>
             </div>
 
-            <aside class="pricing-ledger" aria-label="Resumo dos preços">
+            @php
+                // O que o saldo de boas-vindas compra, por produto de consulta (preço real do catálogo).
+                $trialRuns = $products
+                    ->where('is_gratuito', false)
+                    ->where('price', '>', 0)
+                    ->sortBy('price')
+                    ->map(fn (array $p) => $p + ['runs' => (int) floor($trialBalance / $p['price'])])
+                    ->values();
+                $bestRun = (int) ($trialRuns->max('runs') ?? 0);
+            @endphp
+
+            <aside class="pricing-ledger" aria-label="Conta de demonstração">
                 <div class="pricing-ledger-top">
                     <span class="pricing-ledger-label">Conta de demonstração</span>
-                    <span class="pricing-live">Pronta para testar</span>
+                    <span class="pricing-live">Sem cartão</span>
                 </div>
+
                 <div class="pricing-balance-card">
-                    <small>Saldo de boas-vindas</small>
+                    <div class="pricing-balance-head">
+                        <small>Saldo de boas-vindas</small>
+                        <span class="pricing-balance-chip">{{ $trialDays }} dias</span>
+                    </div>
                     <div class="pricing-balance-value">@brl($trialBalance)</div>
-                    <p class="pricing-balance-note">Entra automaticamente. Nenhum pagamento é exigido para criar a conta.</p>
+                    <p class="pricing-balance-note">Entra automaticamente no cadastro. Nenhum pagamento é exigido.</p>
                 </div>
+
+                <div class="pricing-runs">
+                    <div class="pricing-runs-head">
+                        <span>O que o saldo executa</span>
+                        <em>preço por CNPJ</em>
+                    </div>
+                    @foreach($trialRuns as $run)
+                        <div class="pricing-run" style="--fill: {{ $bestRun > 0 ? round($run['runs'] / $bestRun * 100) : 0 }}%; --delay: {{ $loop->index * 260 }}ms">
+                            <span class="pricing-run-name">{{ $run['nome'] }}</span>
+                            <span class="pricing-run-price">{{ \App\Support\Dinheiro::brl($run['price']) }}</span>
+                            <span class="pricing-run-bar"><i></i></span>
+                            <strong class="pricing-run-count">{{ $run['runs'] }} CNPJs</strong>
+                        </div>
+                    @endforeach
+                </div>
+
                 <div class="pricing-ledger-rows">
                     <div class="pricing-ledger-row">
                         <span>Primeiro plano pago</span>
                         <strong>{{ $firstPaidPlan ? 'R$ '.number_format($firstPaidPlan->preco_mensal_centavos / 100, 0, ',', '.') . '/mês' : 'consulte' }}</strong>
                     </div>
                     <div class="pricing-ledger-row">
-                        <span>Consulta paga a partir de</span>
-                        <strong>{{ $firstPaidConsultation ? \App\Support\Dinheiro::brl($firstPaidConsultation['price']) : 'consulte' }}</strong>
-                    </div>
-                    <div class="pricing-ledger-row">
-                        <span>Recarga paga opcional</span>
-                        <strong>mín. R$ {{ number_format($minimumDeposit, 0, ',', '.') }}</strong>
+                        <span>Recarga opcional a partir de</span>
+                        <strong>R$ {{ number_format($minimumDeposit, 0, ',', '.') }}</strong>
                     </div>
                 </div>
+
+                <p class="pricing-ledger-foot">O preço aparece antes de cada consulta. Saldo comprado não expira.</p>
             </aside>
         </div>
     </section>
@@ -529,14 +612,42 @@
             </div>
 
             @if($complianceSources->isNotEmpty())
+                @php
+                    $compliancePrice = $products->firstWhere('slug', 'compliance')['price'] ?? null;
+                    $sourceGroups = $complianceSources
+                        ->groupBy(fn (array $s) => str_contains($s['categoria'], 'Cadastral') ? 'Cadastrais' : (str_contains($s['categoria'], 'Fiscal') ? 'Fiscais' : 'Trabalhista e FGTS'))
+                        ->map->count();
+                @endphp
                 <div class="pricing-sources">
-                    <div>
+                    <div class="pricing-sources-intro">
                         <h3>Compliance reúne {{ $complianceSources->count() }} fontes em uma consulta.</h3>
-                        <p>Cadastro federal e certidões fiscais e trabalhistas chegam organizados no mesmo resultado.</p>
+                        <p>Uma chamada, um custo, um resultado. Cadastro federal, certidões fiscais, trabalhista e FGTS chegam normalizados — com data, origem e status por fonte.</p>
+
+                        <div class="pricing-sources-groups">
+                            @foreach($sourceGroups as $grupo => $total)
+                                <span><b>{{ $total }}</b>{{ $grupo }}</span>
+                            @endforeach
+                        </div>
+
+                        @if($compliancePrice)
+                            <div class="pricing-sources-price">
+                                <small>Compliance por CNPJ</small>
+                                <strong>{{ \App\Support\Dinheiro::brl($compliancePrice) }}</strong>
+                                <span>≈ {{ \App\Support\Dinheiro::brl(round($compliancePrice / $complianceSources->count(), 2)) }} por fonte consultada</span>
+                            </div>
+                        @endif
                     </div>
+
                     <div class="pricing-source-list" aria-label="Fontes do Compliance">
                         @foreach($complianceSources as $source)
-                            <span class="pricing-source">{{ $source['nome'] }}</span>
+                            <article class="pricing-source {{ $loop->first ? 'pricing-source--wide' : '' }}" style="--delay: {{ $loop->index * 220 }}ms">
+                                <div class="pricing-source-top">
+                                    <span class="pricing-source-cat">{{ $source['categoria'] }}</span>
+                                    <i aria-hidden="true"></i>
+                                </div>
+                                <strong>{{ $source['nome'] }}</strong>
+                                <p>{{ $source['descricao_curta'] }}</p>
+                            </article>
                         @endforeach
                     </div>
                 </div>
@@ -550,7 +661,7 @@
                 <div>
                     <span class="pricing-kicker">03 — Documentos fiscais</span>
                     <h2 id="clearance-title" class="pricing-heading">Clearance para conferir o documento, não só o CNPJ.</h2>
-                    <p class="pricing-lead">Valide NF-e e CT-e do acervo ou consulte uma chave diretamente na SEFAZ. Os dois fluxos usam o mesmo saldo em reais.</p>
+                    <p class="pricing-lead">Valide NF-e e CT-e do acervo ou consulte uma chave diretamente na SEFAZ. Mesma consulta oficial, mesmo preço por documento — muda só por onde você entra.</p>
                 </div>
             </header>
             <div class="pricing-documents">
@@ -563,7 +674,7 @@
                 </div>
                 <article class="pricing-document-card">
                     <div class="pricing-document-top"><span>Acervo FiscalDock</span><span class="pricing-availability">Operacional</span></div>
-                    <h3>Clearance Básico</h3>
+                    <h3>Clearance do acervo</h3>
                     <p class="pricing-document-price">R$&nbsp;{{ number_format($clearancePricing['batch_basic'], 2, ',', '.') }} <span>/ documento</span></p>
                     <p>Para notas que já chegaram por SPED ou XML e precisam de conferência operacional.</p>
                     <ul><li>Status e snapshot SEFAZ</li><li>Validação contábil local</li><li>Processamento individual ou em lote</li></ul>
