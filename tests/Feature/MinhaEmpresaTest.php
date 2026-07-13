@@ -53,6 +53,28 @@ test('pode acessar tela de configuracao', function () {
     $response->assertSee('Empresa 1 Ltda');
 });
 
+test('clique no card da configuracao define a empresa principal', function () {
+    empresaPropria($this->user);
+
+    $cliente = Cliente::create([
+        'user_id' => $this->user->id,
+        'tipo_pessoa' => 'PJ',
+        'documento' => '12345678000100',
+        'nome' => 'Empresa Clicavel',
+        'razao_social' => 'Empresa Clicavel Ltda',
+        'is_empresa_propria' => false,
+    ]);
+
+    $response = $this->get('/app/minha-empresa/configurar');
+
+    $response->assertOk();
+    $response->assertSee('onclick="definirPrincipal('.$cliente->id.', this)"', false);
+    $response->assertSee('event.target === this', false);
+    $response->assertDontSee('onclick="selecionarEmpresa(', false);
+    $response->assertSee('style="background-color: #166534"', false);
+    expect(substr_count($response->getContent(), 'w-28'))->toBeGreaterThanOrEqual(2);
+});
+
 test('historico sem empresa redireciona para configurar', function () {
     $response = $this->get('/app/minha-empresa/historico');
     $response->assertRedirect(route('app.minha-empresa.configurar'));
