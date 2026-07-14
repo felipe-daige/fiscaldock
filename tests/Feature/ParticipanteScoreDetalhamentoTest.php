@@ -147,3 +147,30 @@ it('perfil consolida certidões anteriores quando a consulta mais recente é ape
         ->assertSee('Ver comprovante')
         ->assertSee('href="https://example.com/sintegra-215.pdf"', false);
 });
+
+it('perfil de CPF mostra origem EFD real e risco de crédito não avaliado', function () {
+    $user = User::factory()->create();
+    $importacao = \App\Models\EfdImportacao::create([
+        'user_id' => $user->id,
+        'tipo_efd' => 'EFD PIS/COFINS',
+        'filename' => 'SPED-CONTRIBUICOES-01-2024.txt',
+    ]);
+    $part = Participante::create([
+        'user_id' => $user->id,
+        'documento' => '12345678901',
+        'razao_social' => 'PESSOA DO SPED',
+        'importacao_efd_id' => $importacao->id,
+        'origem_tipo' => null,
+        'latitude' => -15.0,
+        'longitude' => -47.0,
+    ]);
+
+    $resp = $this->actingAs($user)->get("/app/participante/{$part->id}");
+
+    $resp->assertOk()
+        ->assertSee('EFD PIS/COFINS')
+        ->assertSee('SPED-CONTRIBUICOES-01-2024.txt')
+        ->assertSee('Risco de Crédito')
+        ->assertSee('Risco de crédito não avaliado')
+        ->assertDontSee('Faça uma Consulta de CNPJ deste CNPJ');
+});

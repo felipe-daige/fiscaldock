@@ -10,9 +10,10 @@ use App\Models\MonitoramentoConsulta;
 use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Models\ParticipanteGrupo;
-use App\Services\SaldoService;
 use App\Services\Entitlements\EntitlementService;
 use App\Services\PricingCatalogService;
+use App\Services\SaldoService;
+use App\Support\CertidaoBadge;
 use App\Support\CndFederal;
 use App\Support\Dinheiro;
 use Carbon\Carbon;
@@ -190,7 +191,12 @@ class MonitoramentoController extends Controller
         $planos = MonitoramentoPlano::all()
             ->filter(fn ($p) => (bool) $p->is_active)
             ->sortBy('custo_creditos')->values()
-            ->map(fn ($p) => ['id' => $p->id, 'nome' => $p->nome, 'custo' => (int) $p->custo_creditos])
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'nome' => $p->nome,
+                'custo' => (int) $p->custo_creditos,
+                'gratuito' => (bool) $p->is_gratuito || (int) $p->custo_creditos <= 0,
+            ])
             ->all();
 
         $data = [
@@ -199,10 +205,10 @@ class MonitoramentoController extends Controller
             'gruposMonitorados' => $gruposMonitorados,
             'planos' => $planos,
             'saldoReais' => $this->pricingCatalogService->creditsToCurrency($this->saldoService->getBalance($user)),
-            // Fase 5.1: frequência mínima do tier gateia as opções do modal (backend revalida).
+            // Apenas o produto gratuito restringe a recorrência a 30 dias; produtos pagos
+            // podem usar qualquer frequência disponível enquanto houver saldo.
             'freqMinDias' => $this->entitlements->frequenciaMinimaMonitoramento($user),
-            // null quando dentro do cap; senão { cap, ocupados, excedente } → dispara o modal
-            // de reconciliação (usuário escolhe quais manter ativos) após downgrade.
+            // Compatibilidade com a view antiga. Os planos comerciais não impõem teto de CNPJs.
             'reconciliacaoDowngrade' => $this->entitlements->excedeLimiteMonitoramento($user),
         ];
 
@@ -214,10 +220,9 @@ class MonitoramentoController extends Controller
     }
 
     /**
-     * Reconciliação de downgrade: o usuário escolhe quais CNPJs manter monitorados quando o tier
-     * novo comporta menos que os ativos. Os IDs em `manter` (limitados ao cap) ficam ativos; os
-     * demais viram pausa automática (MOTIVO_DOWNGRADE) — dados preservados, fora do cap, reativáveis
-     * quando houver folga/upgrade. Não apaga nada (guardrail do downgrade).
+     * Endpoint legado de reconciliação. Sem limite comercial de monitorados, ele responde sem
+     * alterar assinaturas; isso também impede que um cliente antigo pause monitoramentos ao
+     * reenviar uma requisição guardada pelo navegador.
      */
     public function reconciliarLimite(Request $request)
     {
@@ -234,7 +239,15 @@ class MonitoramentoController extends Controller
         $limite = $this->entitlements->limiteCnpjsMonitorados($user);
         $manter = array_values(array_unique(array_map('intval', $dados['manter'])));
 
-        if ($limite !== null && count($manter) > $limite) {
+        if ($limite === null) {
+            return response()->json([
+                'success' => true,
+                'mensagem' => 'Seu plano não limita a quantidade de CNPJs monitorados; o saldo é o limite de uso.',
+                'ocupados' => $this->entitlements->cnpjsMonitoradosOcupados($user),
+            ]);
+        }
+
+        if (count($manter) > $limite) {
             return response()->json([
                 'success' => false,
                 'error' => "Seu plano permite manter até {$limite} CNPJ(s) monitorado(s). Selecione no máximo {$limite}.",
@@ -313,6 +326,27 @@ class MonitoramentoController extends Controller
                         'hex' => $analiseCnd['hex'],
                         'motivo' => $analiseCnd['motivo'],
                     ]
+                );
+            }
+        }
+
+        // Badge canônico por fonte (CertidaoBadge é a fonte única de classificação —
+        // "Positiva com efeitos de negativa" é REGULAR; comparação exata no front errava).
+        if (is_array($resultado) && is_array($resultado['detalhes'] ?? null)) {
+            $fontesCertidao = [
+                'cnd_federal', 'cnd_estadual', 'cnd_municipal',
+                'fgts', 'crf_fgts', 'cndt', 'sintegra',
+            ];
+
+            foreach ($fontesCertidao as $fonte) {
+                if (! isset($resultado['detalhes'][$fonte])) {
+                    continue;
+                }
+
+                $valor = $resultado['detalhes'][$fonte];
+                $resultado['detalhes'][$fonte] = array_merge(
+                    is_array($valor) ? $valor : ['status' => $valor],
+                    ['badge' => CertidaoBadge::classificar($valor, $fonte === 'cnd_federal')]
                 );
             }
         }
@@ -521,37 +555,38 @@ class MonitoramentoController extends Controller
             }
         }
 
-        // Gating de tier (Fase 5): nº de CNPJs monitorados ativos não pode passar do teto do plano.
-        // Trial libera (limite null). Nunca bloqueia cadastrar cliente — só o monitorar.
-        $limiteCnpjs = $this->entitlements->limiteCnpjsMonitorados($user);
-        $ativos = $this->entitlements->cnpjsMonitoradosOcupados($user);
+        // Produtos pagos não têm teto comercial: cada ciclo consome saldo. A única proteção de
+        // quantidade/frequência é do produto cadastral gratuito, para evitar automação sem custo
+        // em escala. Grupos não podem usar o produto gratuito (contornariam o teto com N membros).
+        $produtoGratuito = (bool) $plano->is_gratuito || (int) $plano->custo_creditos <= 0;
+        if ($produtoGratuito && $grupo !== null) {
+            return response()->json([
+                'success' => false,
+                'error' => 'O monitoramento cadastral gratuito aceita um CNPJ individual. Para grupos, escolha um produto pago.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $limiteCnpjs = $produtoGratuito ? 1 : null;
+        $ativos = $produtoGratuito
+            ? MonitoramentoAssinatura::where('user_id', $user->id)
+                ->where('plano_id', $plano->id)
+                ->whereIn('status', ['ativo', 'pausado'])
+                ->count()
+            : 0;
 
         if ($limiteCnpjs !== null && $ativos >= $limiteCnpjs) {
             return response()->json([
                 'success' => false,
-                'error' => "Seu plano permite monitorar até {$limiteCnpjs} CNPJ(s) ao mesmo tempo. Pause/cancele um monitoramento ou faça upgrade do plano.",
+                'error' => 'O monitoramento cadastral gratuito cobre 1 CNPJ mensal. Para outros CNPJs, escolha um produto pago com saldo.',
             ], Response::HTTP_FORBIDDEN);
         }
 
-        // Gating de frequência (Fase 5.1): não pode monitorar mais frequente que o tier permite.
+        // Frequências suportadas ficam abertas nos produtos pagos. O cadastral gratuito é mensal.
         $frequenciaDias = $this->frequenciaParaDias($frequencia);
-        if (! $this->entitlements->permiteFrequenciaMonitoramento($user, $frequenciaDias)) {
-            $minLabel = $this->frequenciaLabel($this->entitlements->frequenciaMinimaMonitoramento($user));
-
+        if ($produtoGratuito && $frequenciaDias < 30) {
             return response()->json([
                 'success' => false,
-                'error' => "Seu plano permite monitorar no máximo a cada {$minLabel}. Reduza a frequência ou faça upgrade do plano.",
-            ], Response::HTTP_FORBIDDEN);
-        }
-
-        // Gating de profundidade (Fase 5.1): o plano de monitoramento escolhido não pode ser mais
-        // profundo que o teto do tier (cadastral < validação < licitação < compliance < due diligence).
-        if (! $this->entitlements->permiteProfundidadeMonitoramento($user, (string) $plano->codigo)) {
-            $maxProf = $this->entitlements->profundidadeMaximaMonitoramento($user);
-
-            return response()->json([
-                'success' => false,
-                'error' => "Seu plano permite monitoramento automático até a profundidade \"{$maxProf}\". Escolha um plano de monitoramento compatível ou faça upgrade.",
+                'error' => 'O monitoramento cadastral gratuito tem frequência mensal. Produtos pagos podem usar qualquer frequência disponível.',
             ], Response::HTTP_FORBIDDEN);
         }
 
@@ -698,7 +733,7 @@ class MonitoramentoController extends Controller
             if ($assinaturasCriadas === 0 && $bloqueadosPorLimite > 0) {
                 return response()->json([
                     'success' => false,
-                    'error' => "Seu plano permite monitorar até {$limiteCnpjs} CNPJ(s) ao mesmo tempo. Pause/cancele um monitoramento ou faça upgrade do plano.",
+                    'error' => 'O monitoramento cadastral gratuito cobre 1 CNPJ mensal. Escolha um produto pago para adicionar outros.',
                 ], Response::HTTP_FORBIDDEN);
             }
 
@@ -711,7 +746,7 @@ class MonitoramentoController extends Controller
 
             $msg = $assinaturasCriadas.' assinatura(s) criada(s) com sucesso.';
             if ($bloqueadosPorLimite > 0) {
-                $msg .= " {$bloqueadosPorLimite} não cabe(m) no limite do plano ({$limiteCnpjs} CNPJ(s)).";
+                $msg .= " {$bloqueadosPorLimite} não cabe(m) no limite do monitoramento cadastral gratuito.";
             }
 
             return response()->json([

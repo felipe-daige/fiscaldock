@@ -1,15 +1,12 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\ConsultaLote;
 use App\Models\ConsultaResultado;
-use App\Models\EfdImportacao;
-use App\Models\EfdNota;
 use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Models\User;
 use App\Services\Participantes\DossieParticipanteBuilder;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
@@ -27,6 +24,26 @@ it('monta payload com blocos esperados mesmo sem consulta nem movimentacao', fun
         ->and($d['movimentacao']['kpis']['total_notas'])->toBe(0)
         ->and($d['score'])->toHaveKeys(['score_total', 'classificacao', 'scores'])
         ->and($d)->toHaveKey('gerado_em');
+});
+
+it('CPF sem fonte de crédito fica não avaliado e nunca recebe fallback médio', function () {
+    $cpf = Participante::create([
+        'user_id' => $this->user->id,
+        'documento' => '12345678901',
+        'razao_social' => 'PESSOA FISICA',
+    ]);
+
+    $d = $this->builder->montar($cpf);
+
+    expect($d['score'])
+        ->toMatchArray([
+            'tipo' => 'credito_cpf',
+            'score_total' => null,
+            'classificacao' => 'nao_avaliado',
+            'avaliado' => false,
+        ])
+        ->and($d['consulta']['aplicavel'])->toBeFalse()
+        ->and($d['consulta']['tem'])->toBeFalse();
 });
 
 it('inclui dados da ultima consulta sucesso quando existe', function () {

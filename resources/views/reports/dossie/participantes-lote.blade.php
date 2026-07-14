@@ -40,15 +40,16 @@
                     @foreach ($dossies as $d)
                         @php
                             $p = $d['participante'];
-                            $cls = $d['score']['classificacao'] ?? 'medio';
+                            $cls = $d['score']['classificacao'] ?? 'nao_avaliado';
                             $hex = \App\Support\Reports\ReportTheme::riscoHex($cls);
+                            $clsLabel = app(\App\Services\RiskScoreService::class)->getLabelClassificacao($cls);
                         @endphp
                         <tr>
                             <td class="mono">{{ $loop->iteration }}</td>
                             <td>{{ $p->razao_social ?: ($p->nome_fantasia ?: '—') }}</td>
                             <td class="mono">{{ $p->documento }}</td>
                             <td class="center">{{ $p->uf ?: '—' }}</td>
-                            <td class="center"><span class="badge" style="background-color: {{ $hex }};">{{ ucfirst($cls) }}</span></td>
+                            <td class="center"><span class="badge" style="background-color: {{ $hex }};">{{ $clsLabel }}</span></td>
                         </tr>
                     @endforeach
                 </tbody>

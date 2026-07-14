@@ -20,7 +20,14 @@ it('admin lista os planos', function () {
         ->get('/app/admin/planos')
         ->assertOk()
         ->assertSee('Essencial')
-        ->assertSee('Profissional');
+        ->assertSee('Profissional')
+        ->assertSee('Escritório')
+        ->assertSee('Anual')
+        ->assertSee('Acessos')
+        ->assertSee('Assento extra')
+        ->assertSee("R$\u{A0}249,00")
+        ->assertSee("R$\u{A0}599,00")
+        ->assertSee("R$\u{A0}39,00");
 });
 
 it('admin edita limites e capabilities e persiste no catálogo', function () {
@@ -120,7 +127,7 @@ it('mudar capability reflete no gate de entitlements de um usuário Free', funct
     $user = User::factory()->create(); // Free, sem trial
 
     $ent = app(App\Services\Entitlements\EntitlementService::class);
-    expect($ent->can($user, 'pdf_executivo'))->toBeFalse();
+    expect($ent->can($user, 'clearance_lote'))->toBeFalse();
 
     actingAs($admin)->post(route('app.admin.planos.update', $free->id), [
         'nome' => $free->nome, 'preco_mensal_reais' => 0, 'preco_anual_reais' => 0,
@@ -128,10 +135,11 @@ it('mudar capability reflete no gate de entitlements de um usuário Free', funct
         'limite_cnpjs_monitorados' => 1, 'frequencia_padrao_dias' => 30,
         'profundidade_auto_monitor' => 'cadastral', 'assentos_inclusos' => 1,
         'rollover_cap_multiplicador' => 1, 'ordem' => 1, 'is_active' => '1',
-        'cap_bi' => 'basico', 'cap_pdf_executivo' => '1', 'cap_frequencia_minima_dias' => 30,
+        'cap_bi' => 'basico', 'cap_pdf_executivo' => '1', 'cap_clearance_lote' => '1',
+        'cap_frequencia_minima_dias' => 30,
     ])->assertRedirect();
 
-    expect($ent->can($user->fresh(), 'pdf_executivo'))->toBeTrue();
+    expect($ent->can($user->fresh(), 'clearance_lote'))->toBeTrue();
 });
 
 it('a edição do plano reflete no EntitlementService', function () {

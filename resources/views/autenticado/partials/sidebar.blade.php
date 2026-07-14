@@ -42,8 +42,8 @@
     <x-sidebar.section title="DOCUMENTOS">
         <x-sidebar.group title="Notas Fiscais" :open="request()->is('app/notas*') || request()->is('app/catalogo*')">
             <x-slot:icon>
-                <svg class="sidebar__item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                <svg class="sidebar__item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 3h12v18l-3-2-3 2-3-2-3 2V3zm3 4h6m-6 4h6m-6 4h3"></path>
                 </svg>
             </x-slot:icon>
 
@@ -54,8 +54,8 @@
 
         <x-sidebar.group title="Importação" :open="request()->is('app/importacao/*')">
             <x-slot:icon>
-                <svg class="sidebar__item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                <svg class="sidebar__item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 16V4m0 0L8 8m4-4l4 4M5 14v5h14v-5"></path>
                 </svg>
             </x-slot:icon>
 
@@ -78,8 +78,8 @@
     <x-sidebar.section title="INTELIGÊNCIA">
         <x-sidebar.group title="Clearance NF-e" :open="request()->is('app/clearance*')">
             <x-slot:icon>
-                <svg class="sidebar__item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                <svg class="sidebar__item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 3h7l4 4v14H7V3zm7 0v5h5M9.5 14l2 2 4-4"></path>
                 </svg>
             </x-slot:icon>
 
@@ -155,8 +155,8 @@
 
         <x-sidebar.item href="/app/score-fiscal">
             <x-slot:icon>
-                <svg class="sidebar__item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                <svg class="sidebar__item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16a8 8 0 0116 0M12 16l4-6M7 20h10"></path>
                 </svg>
             </x-slot:icon>
             Score Fiscal
@@ -176,8 +176,8 @@
 
         <x-sidebar.item href="/app/clientes">
             <x-slot:icon>
-                <svg class="sidebar__item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                <svg class="sidebar__item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 5h18v14H3V5zm6.5 5a2 2 0 11-4 0 2 2 0 014 0zM5 16c.4-1.7 1.2-2.5 2.5-2.5S9.6 14.3 10 16m3-7h5m-5 4h5"></path>
                 </svg>
             </x-slot:icon>
 
@@ -197,7 +197,8 @@
 
     <x-slot:footer>
         @php
-            $__u = auth()->user();
+            $__actor = $actorUser ?? auth()->user();
+            $__u = isset($accountContext) ? $accountContext->owner() : auth()->user();
             // Fonte única: User::hasActiveTrial() (inclui trial_credits_remaining > 0, mesma regra dos gates)
             $__trialOn = $__u && $__u->hasActiveTrial();
         @endphp
@@ -240,7 +241,7 @@
                         $__planoNome = $__trialOn ? 'Trial' : ($__planoAtual?->nome ?? 'Free');
                     @endphp
                     <span class="min-w-0 flex-1">
-                        <span class="sidebar__user-name">{{ Auth::user()->name ?? 'Usuário' }}</span>
+                        <span class="sidebar__user-name">{{ $__actor?->name ?? 'Usuário' }}</span>
                         {{-- Plano + saldo no lugar do rótulo estático "Conta" — não ocupa espaço extra --}}
                         <span class="sidebar__user-role" title="Plano atual e saldo disponível">
                             <span>{{ $__planoNome }}</span>
@@ -261,6 +262,20 @@
                         </svg>
                         <span class="sidebar__item-label">Perfil</span>
                     </a>
+                    @if(isset($accountContext) && $accountContext->canManageTeam())
+                        <a href="/app/equipe" data-link data-sidebar-user-link class="sidebar__user-menu-item">
+                            <svg class="sidebar__user-menu-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                            <span class="sidebar__item-label">Equipe e acessos</span>
+                        </a>
+                    @endif
+                    <a href="/app/privacidade" data-link data-sidebar-user-link class="sidebar__user-menu-item">
+                        <svg class="sidebar__user-menu-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 10V8a5 5 0 0110 0v2m-9 0h8a2 2 0 012 2v7H6v-7a2 2 0 012-2zm4 4v2"></path>
+                        </svg>
+                        <span class="sidebar__item-label">Privacidade</span>
+                    </a>
                     <a href="/app/configuracoes" data-link data-sidebar-user-link class="sidebar__user-menu-item">
                         <svg class="sidebar__user-menu-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
@@ -268,29 +283,23 @@
                         </svg>
                         <span class="sidebar__item-label">Configurações</span>
                     </a>
-                    <a href="/app/privacidade" data-link data-sidebar-user-link class="sidebar__user-menu-item">
-                        <svg class="sidebar__user-menu-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                        </svg>
-                        <span class="sidebar__item-label">Privacidade</span>
-                    </a>
 
                     <div class="sidebar__user-menu-heading">Financeiro</div>
                     <a href="/app/planos" data-link data-sidebar-user-link class="sidebar__user-menu-item">
                         <svg class="sidebar__user-menu-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 7l7-4 7 4-7 4-7-4zm0 5l7 4 7-4M5 17l7 4 7-4"></path>
                         </svg>
                         <span class="sidebar__item-label">Planos</span>
                     </a>
                     <a href="/app/saldo" data-link data-sidebar-user-link class="sidebar__user-menu-item">
                         <svg class="sidebar__user-menu-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 7.5A2.5 2.5 0 016.5 5H18a2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V7.5zm0 0A2.5 2.5 0 006.5 10H20m-4 3h4v4h-4a2 2 0 010-4z"></path>
                         </svg>
                         <span class="sidebar__item-label">Saldo</span>
                     </a>
                     <a href="/app/faixa-comercial" data-link data-sidebar-user-link class="sidebar__user-menu-item">
                         <svg class="sidebar__user-menu-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 20V10m5 10V6m5 14v-7m5 7V4M3 20h18"></path>
                         </svg>
                         <span class="sidebar__item-label">Faixa Comercial</span>
                     </a>
@@ -298,7 +307,7 @@
                     <div class="sidebar__user-menu-divider"></div>
                     <a href="/app/suporte" data-link data-sidebar-user-link class="sidebar__user-menu-item">
                         <svg class="sidebar__user-menu-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636A9 9 0 105.636 18.364 9 9 0 0018.364 5.636zM9.879 9.879a3 3 0 014.243 4.243m-4.243-4.243L12 12m2.121 2.121L12 12m0 0l-2.121-2.121M12 12l2.121 2.121"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 13v-2a8 8 0 0116 0v2M4 13h3v6H6a2 2 0 01-2-2v-4zm16 0h-3v6h1a2 2 0 002-2v-4zm-3 6c0 1.1-.9 2-2 2h-3"></path>
                         </svg>
                         <span class="sidebar__item-label">Suporte</span>
                     </a>
@@ -310,24 +319,6 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                             </svg>
                             <span class="sidebar__item-label">Admin — Visão Geral</span>
-                        </a>
-                        <a href="/app/admin/usuarios" data-link data-sidebar-user-link class="sidebar__user-menu-item">
-                            <svg class="sidebar__user-menu-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4z"></path>
-                            </svg>
-                            <span class="sidebar__item-label">Admin — Usuários</span>
-                        </a>
-                        <a href="/app/admin/comercial" data-link data-sidebar-user-link class="sidebar__user-menu-item">
-                            <svg class="sidebar__user-menu-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>
-                            </svg>
-                            <span class="sidebar__item-label">Admin — Comercial</span>
-                        </a>
-                        <a href="/app/admin/planos" data-link data-sidebar-user-link class="sidebar__user-menu-item">
-                            <svg class="sidebar__user-menu-item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10M4 18h10"></path>
-                            </svg>
-                            <span class="sidebar__item-label">Admin — Planos</span>
                         </a>
                     @endif
                 </div>

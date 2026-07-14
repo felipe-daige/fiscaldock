@@ -1,11 +1,4 @@
 @php
-    $profundidadeMap = [
-        'cadastral' => 'Cadastral (grátis)',
-        'licitacao' => 'Licitação',
-        'compliance' => 'Compliance',
-        'due_diligence' => 'Due Diligence',
-    ];
-    $frequenciaMap = [1 => 'diária', 7 => 'semanal', 15 => 'quinzenal', 30 => 'mensal'];
     $exportMap = ['csv' => 'CSV', 'excel' => 'Excel', 'api' => 'API'];
     $biMap = ['basico' => 'BI básico', 'completo' => 'BI completo'];
     $temAssinaturaAtiva = $assinaturaAtual && in_array($assinaturaAtual->status, ['ativa', 'inadimplente']);
@@ -16,7 +9,7 @@
 
         <div>
             <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Planos de assinatura</h1>
-            <p class="text-xs text-gray-500 mt-1">Mensalidade com saldo incluso, limites de uso e features premium. O saldo incluso cobre o monitoramento automático do plano.</p>
+            <p class="text-xs text-gray-500 mt-1">Mensalidade com saldo utilizável, recursos de análise e assentos de equipe. Consultas e monitoramentos pagos não têm teto comercial.</p>
         </div>
 
         {{-- Minha assinatura (quando ativa/inadimplente) --}}
@@ -49,7 +42,7 @@
             </label>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 items-stretch">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-stretch">
             @foreach($planos as $plano)
                 @php
                     $caps = $plano->capabilities ?? [];
@@ -71,21 +64,34 @@
                         : ($armazenamentoMb >= 1024
                             ? number_format($armazenamentoMb / 1024, 0, ',', '.').' GB de armazenamento'
                             : number_format($armazenamentoMb, 0, ',', '.').' MB de armazenamento');
+                    $assentos = $plano->assentos_inclusos >= 9999
+                        ? 'Equipe sob medida'
+                        : ($plano->assentos_inclusos > 1
+                            ? $plano->assentos_inclusos.' acessos individuais incluídos'
+                            : '1 acesso individual incluído');
+                    $precoAssentoExtra = (int) $plano->preco_assento_extra_centavos > 0
+                        ? $plano->preco_assento_extra_centavos / 100
+                        : null;
 
                     $features = [];
                     $features[] = [$plano->creditos_inclusos > 0, \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $plano->creditos_inclusos)).' em saldo/mês', $isEnterprise ? 'Saldo sob medida' : 'Sem saldo incluso'];
-                    $features[] = [true, ($plano->limite_clientes === null ? 'Clientes ilimitados' : $plano->limite_clientes.' clientes monitorados'), null];
-                    $features[] = [true, ($plano->limite_cnpjs_monitorados === null ? 'CNPJs ilimitados' : $plano->limite_cnpjs_monitorados.' CNPJs monitorados'), null];
+                    $features[] = [true, 'Clientes e participantes sem limite de cadastro', null];
+                    $features[] = [true, $isFree ? '1 CNPJ no monitoramento cadastral gratuito' : 'Monitoramentos pagos sem teto comercial', null];
                     $features[] = [true, $armazenamento, null];
-                    $features[] = [true, 'Auto-monitor: '.($profundidadeMap[$plano->profundidade_auto_monitor] ?? $plano->profundidade_auto_monitor).' / '.($frequenciaMap[$plano->frequencia_padrao_dias] ?? $plano->frequencia_padrao_dias.'d'), null];
+                    $features[] = [true, 'Qualquer produto e frequência com saldo', null];
                     $features[] = [true, $biMap[$caps['bi'] ?? 'basico'] ?? 'BI', null];
                     $features[] = [! empty($exportList), 'Export: '.$exportList, 'Sem export'];
-                    $features[] = [(bool) ($caps['pdf_executivo'] ?? false), 'PDF executivo', null];
+                    $features[] = [
+                        (bool) ($caps['pdf_executivo'] ?? false),
+                        $isFree ? 'PDF executivo com marca d’água' : 'PDF executivo sem marca d’água',
+                        null,
+                    ];
                     $features[] = [(bool) ($caps['clearance_lote'] ?? false), 'Clearance em lote', null];
-                    $features[] = [(bool) ($caps['clearance_full'] ?? false), 'Clearance Full (tributos via A1)', null];
-                    $features[] = [(bool) ($caps['score_historico'] ?? false), 'Score Fiscal com histórico', null];
                     $features[] = [true, 'Retenção de histórico: '.$retencao, null];
-                    $features[] = [true, ($plano->assentos_inclusos >= 9999 ? 'Assentos ilimitados' : $plano->assentos_inclusos.' assento'.($plano->assentos_inclusos > 1 ? 's' : '')), null];
+                    $features[] = [true, $assentos, null];
+                    if ($precoAssentoExtra !== null) {
+                        $features[] = [true, 'Assento extra por R$ '.number_format($precoAssentoExtra, 0, ',', '.').'/mês via atendimento', null];
+                    }
                 @endphp
 
                 <div class="bg-white rounded border {{ $isRecomendado ? 'border-gray-900' : 'border-gray-300' }} overflow-hidden flex flex-col {{ $isRecomendado ? 'xl:-mt-2 xl:mb-2' : '' }}">

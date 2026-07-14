@@ -7,6 +7,7 @@ use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Models\User;
 use App\Services\RiskScoreService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -121,6 +122,30 @@ it('data_validade d/m/Y futura não marca CND como vencida (regressão Carbon m/
     expect($linha['alerta_nivel'])->toBe('baixo')
         ->and($linha['alerta_detalhe'])->not->toContain('vencida')
         ->and($linha['cnd_federal_meta'])->toContain('Validade: 05/08/2099');
+});
+
+it('mantém a CND válida durante todo o dia de vencimento', function () {
+    Carbon::setTestNow('2026-07-14 18:30:00');
+
+    try {
+        $user = User::factory()->create();
+        $part = participantePainelAlerta($user);
+        $dados = [
+            'situacao_cadastral' => 'ATIVA',
+            'cnd_federal' => ['status' => 'Negativa', 'certidao_codigo' => 'X1', 'data_validade' => '14/07/2026'],
+            'cnd_estadual' => ['status' => 'Negativa', 'certidao_codigo' => 'X2'],
+            'cndt' => ['status' => 'Negativa', 'certidao_codigo' => 'X3'],
+        ];
+        resultadoPainelAlerta($user, $part, $dados);
+        app(RiskScoreService::class)->atualizarScore($part, $dados);
+
+        $linha = alertaDoPainel($this, $user, $part);
+
+        expect($linha['cnd_federal_meta'])->toBe('Vence hoje')
+            ->and($linha['alerta_detalhe'])->not->toContain('vencida');
+    } finally {
+        Carbon::setTestNow();
+    }
 });
 
 it('CND vencida vira aviso de reconsulta sem mudar a classificação', function () {

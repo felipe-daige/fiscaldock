@@ -429,25 +429,21 @@
                 <div id="mon-plano-freq" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="text-[11px] text-gray-500 block mb-1">Plano</label>
-                        <select id="mon-plano" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded" onchange="monAtualizarCusto()">
+                        <select id="mon-plano" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded" onchange="monPlanoMudou()">
                             @foreach($planos as $pl)
-                                <option value="{{ $pl['id'] }}" data-custo="{{ (int) $pl['custo'] }}">{{ $pl['nome'] }} — {{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $pl['custo'])) }}/CNPJ</option>
+                                <option value="{{ $pl['id'] }}" data-custo="{{ (int) $pl['custo'] }}" data-gratuito="{{ $pl['gratuito'] ? '1' : '0' }}">{{ $pl['nome'] }} — {{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $pl['custo'])) }}/CNPJ</option>
                             @endforeach
                         </select>
                     </div>
                     <div>
                         <label class="text-[11px] text-gray-500 block mb-1">Frequência</label>
-                        {{-- Fase 5.1: opções abaixo da frequência mínima do tier ficam travadas
-                             (mesmo padrão do modal do participante); o backend revalida na criação. --}}
                         <select id="mon-frequencia" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded" onchange="monAtualizarCusto()">
-                            <option value="diario" @disabled($freqMinDias > 1)>Diária @if($freqMinDias > 1)— requer plano superior @endif</option>
-                            <option value="semanal" @disabled($freqMinDias > 7)>Semanal @if($freqMinDias > 7)— requer plano superior @endif</option>
-                            <option value="quinzenal" @disabled($freqMinDias > 15)>Quinzenal @if($freqMinDias > 15)— requer plano superior @endif</option>
+                            <option value="diario">Diária</option>
+                            <option value="semanal">Semanal</option>
+                            <option value="quinzenal">Quinzenal</option>
                             <option value="mensal" selected>Mensal</option>
                         </select>
-                        @if($freqMinDias > 1)
-                            <p class="text-[11px] text-gray-400 mt-1">Seu plano permite monitorar no máximo a cada {{ $freqMinDias }} dias. Faça upgrade para aumentar a frequência.</p>
-                        @endif
+                        <p id="mon-freq-hint" class="text-[11px] text-gray-400 mt-1">O cadastral gratuito é mensal. Produtos pagos liberam todas as frequências, conforme saldo.</p>
                     </div>
                 </div>
                 {{-- Estimador de custo: transparência de preço antes de confirmar. Display-only —
@@ -610,6 +606,16 @@
     // Espelha a matemática do backend: custo_ciclo = N alvos × custo do plano;
     // por período = custo_ciclo × (dias do período / frequencia_dias), como o
     // custo_mes do painel. Débito real e aviso de cap seguem no backend.
+    function monPlanoMudou() {
+        var plano = document.getElementById('mon-plano').selectedOptions[0];
+        var gratuito = plano && plano.dataset.gratuito === '1';
+        var frequencia = document.getElementById('mon-frequencia');
+        Array.from(frequencia.options).forEach(function (option) {
+            option.disabled = gratuito && option.value !== 'mensal';
+        });
+        if (gratuito) frequencia.value = 'mensal';
+        monAtualizarCusto();
+    }
     function monAtualizarCusto() {
         var box = document.getElementById('mon-custo-estimado');
         var gsel = document.getElementById('mon-grupo-opcao');
@@ -639,6 +645,7 @@
             + nAlvos + ' CNPJ' + (nAlvos > 1 ? 's' : '') + ' × ' + brlFmt(custoCreditos) + ' por consulta)';
         box.classList.remove('hidden');
     }
+    monPlanoMudou();
     // ── Lista de alvos (busca e "ver todos") ─────────────────────────────────
     // Compartilhada pelos modais "Novo monitorado" (mon) e do grupo (membros).
     // Participantes vêm do endpoint da consulta, ordenados por volume movimentado

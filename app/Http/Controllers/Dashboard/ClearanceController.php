@@ -2065,6 +2065,97 @@ class ClearanceController extends Controller
             $nota->clearance_resultado = $auditorias->get($nota->chave)
                 ?? $snapshots->get($nota->chave);
         });
+
+        $this->anexarItensListagem($notas, $userId);
+    }
+
+    /**
+     * Itens negociados (produtos/serviços) de cada nota do recorte, carregados em lote
+     * com teto por documento pra página de 50 não explodir. Saída EFD fiscal escriturada
+     * só por C190 (sem C170) cai na gêmea de contribuicoes da mesma chave — onde o item
+     * realmente está detalhado (mesma regra de EfdNota::itensDetalhe()).
+     */
+    private function anexarItensListagem(Collection $notas, int $userId): void
+    {
+        $maxItens = 15;
+
+        $xmlIds = $notas->where('origem', 'xml')->pluck('id')->map(fn ($v) => (int) $v)->values();
+        $efdIds = $notas->where('origem', 'efd')->pluck('id')->map(fn ($v) => (int) $v)->values();
+
+        $carregar = function (string $tabela, string $fk, array $ids) use ($userId, $maxItens): Collection {
+            if ($ids === []) {
+                return collect();
+            }
+
+            $ncm = $tabela === 'xml_notas_itens' ? 'ncm' : 'NULL::text as ncm';
+
+            $sub = DB::table($tabela)
+                ->selectRaw("
+                    {$fk} as nota_id,
+                    numero_item, codigo_item, descricao, cfop, quantidade, unidade_medida,
+                    valor_unitario, valor_total, {$ncm},
+                    ROW_NUMBER() OVER (PARTITION BY {$fk} ORDER BY numero_item, id) as posicao,
+                    COUNT(*) OVER (PARTITION BY {$fk}) as total_itens
+                ")
+                ->where('user_id', $userId)
+                ->whereIn($fk, $ids);
+
+            return DB::query()->fromSub($sub, 'itens')
+                ->where('posicao', '<=', $maxItens)
+                ->orderBy('nota_id')
+                ->orderBy('posicao')
+                ->get()
+                ->groupBy('nota_id');
+        };
+
+        $itensXml = $carregar('xml_notas_itens', 'xml_nota_id', $xmlIds->all());
+        $itensEfd = $carregar('efd_notas_itens', 'efd_nota_id', $efdIds->all());
+
+        $chavesSemItens = $notas
+            ->filter(fn ($n) => $n->origem === 'efd' && ! $itensEfd->has((int) $n->id) && ! empty($n->chave))
+            ->pluck('chave')
+            ->unique()
+            ->values();
+
+        $itensGemeaPorChave = collect();
+        if ($chavesSemItens->isNotEmpty()) {
+            $gemeas = DB::table('efd_notas')
+                ->where('user_id', $userId)
+                ->where('origem_arquivo', 'contribuicoes')
+                ->whereIn('chave_acesso', $chavesSemItens->all())
+                ->whereNotIn('id', $efdIds->all())
+                ->pluck('chave_acesso', 'id');
+
+            if ($gemeas->isNotEmpty()) {
+                $itensGemea = $carregar(
+                    'efd_notas_itens',
+                    'efd_nota_id',
+                    $gemeas->keys()->map(fn ($v) => (int) $v)->all()
+                );
+
+                foreach ($gemeas as $gemeaId => $chave) {
+                    if (! $itensGemeaPorChave->has($chave) && $itensGemea->has((int) $gemeaId)) {
+                        $itensGemeaPorChave->put($chave, $itensGemea->get((int) $gemeaId));
+                    }
+                }
+            }
+        }
+
+        $notas->each(function ($nota) use ($itensXml, $itensEfd, $itensGemeaPorChave) {
+            $grupo = $nota->origem === 'xml'
+                ? $itensXml->get((int) $nota->id)
+                : $itensEfd->get((int) $nota->id);
+
+            $viaGemea = false;
+            if ($grupo === null && $nota->origem === 'efd' && ! empty($nota->chave)) {
+                $grupo = $itensGemeaPorChave->get($nota->chave);
+                $viaGemea = $grupo !== null;
+            }
+
+            $nota->itens_nota = $grupo?->values() ?? collect();
+            $nota->itens_total = (int) ($grupo?->first()->total_itens ?? 0);
+            $nota->itens_via_gemea = $viaGemea;
+        });
     }
 
     /**
@@ -2437,7 +2528,7 @@ class ClearanceController extends Controller
 
         $nota = XmlNota::where('id', $id)
             ->where('user_id', $userId)
-            ->with(['emitente', 'destinatario', 'importacaoXml'])
+            ->with(['emitente', 'destinatario', 'importacaoXml', 'itens' => fn ($q) => $q->orderBy('numero_item')->orderBy('id')])
             ->firstOrFail();
 
         $validacao = $nota->validacao;

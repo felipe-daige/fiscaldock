@@ -13,19 +13,12 @@
     $firstPaidPlan = $subscriptionPlans->first(fn ($plan) => $plan->codigo !== 'free' && $plan->codigo !== 'enterprise');
 
     $planDescriptions = [
-        'free' => 'Para conhecer o radar fiscal com uma empresa e começar a organizar a operação.',
+        'free' => 'Para conhecer o radar fiscal, organizar documentos e usar consultas com saldo.',
         'essencial' => 'Para profissionais e pequenas carteiras que precisam sair do acompanhamento manual.',
-        'profissional' => 'Para equipes que monitoram uma carteira ativa e precisam de análise e relatórios.',
-        'escritorio' => 'Para escritórios estruturados, com mais clientes, usuários e frequência de controle.',
-        'enterprise' => 'Limites, integrações e rotina de monitoramento desenhados para a sua operação.',
+        'profissional' => 'Para equipes de até 3 pessoas que precisam de análise, Excel e relatórios executivos.',
+        'escritorio' => 'Para escritórios estruturados, com até 10 acessos e maior volume mensal de saldo.',
+        'enterprise' => 'Integrações e rotina de monitoramento desenhadas para a sua operação.',
     ];
-    $depthLabels = [
-        'cadastral' => 'Cadastral',
-        'licitacao' => 'Licitação',
-        'compliance' => 'Compliance',
-        'due_diligence' => 'Due Diligence',
-    ];
-    $frequencyLabels = [1 => 'diário', 7 => 'semanal', 15 => 'quinzenal', 30 => 'mensal'];
     $productHighlights = [
         'gratuito' => ['Situação cadastral', 'Endereço e dados básicos', "Até {$freeConsultationLimit} CNPJs antes da 1ª recarga"],
         'validacao' => ['Regime tributário e Simples', 'QSA, CNAEs e capital social', 'Parecer fiscal automático'],
@@ -230,7 +223,7 @@
     .pricing-cycle em { margin-left: .25rem; color: #047857; font-size: .65rem; font-style: normal; }
     .pricing-cycle button[aria-pressed="true"] em { color: #a7f3d0; }
 
-    .pricing-plans { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .8rem; align-items: stretch; }
+    .pricing-plans { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; align-items: stretch; }
     .pricing-plan { position: relative; display: flex; min-width: 0; flex-direction: column; border: 1px solid #dce2ea; border-radius: 1rem; background: #fff; overflow: hidden; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
     .pricing-plan:hover { transform: translateY(-3px); border-color: #b8c6d8; box-shadow: 0 22px 45px -33px rgba(15,35,65,.55); }
     .pricing-plan--featured { border-color: var(--pricing-ink); box-shadow: 0 24px 55px -34px rgba(15,35,65,.52); }
@@ -494,7 +487,7 @@
         <div class="pricing-shell pricing-paths-grid">
             <article class="pricing-path">
                 <span class="pricing-path-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 6h16M4 12h16M4 18h7"/></svg></span>
-                <div><h2>Planos para rotina recorrente</h2><p>Mensalidade com saldo incluso, monitoramento automático, limites e recursos crescentes.</p></div>
+                <div><h2>Planos para rotina recorrente</h2><p>Mensalidade com saldo incluso, monitoramento pago sem teto comercial e acessos individuais para a equipe.</p></div>
             </article>
             <article class="pricing-path">
                 <span class="pricing-path-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8c-2.2 0-4 .9-4 2s1.8 2 4 2 4 .9 4 2-1.8 2-4 2m0-8V6m0 10v2M5 5h14v14H5z"/></svg></span>
@@ -509,7 +502,7 @@
                 <div>
                     <span class="pricing-kicker">01 — Planos de assinatura</span>
                     <h2 id="planos-title" class="pricing-heading">Um plano para cada tamanho de operação.</h2>
-                    <p class="pricing-lead">Os planos combinam acesso à plataforma, capacidade de monitoramento e saldo mensal. Se o saldo acabar, você pode complementar de forma avulsa.</p>
+                    <p class="pricing-lead">Os planos combinam acessos individuais, recursos de análise e saldo mensal. Se o saldo acabar, você pode complementar de forma avulsa.</p>
                 </div>
                 <div class="pricing-cycle" role="group" aria-label="Ciclo de cobrança">
                     <button type="button" data-billing-cycle="monthly" aria-pressed="true">Mensal</button>
@@ -528,9 +521,15 @@
                         $annualPrice = $plan->preco_anual_centavos / 100;
                         $annualMonthlyEquivalent = $annualPrice > 0 ? $annualPrice / 12 : 0;
                         $includedBalance = app(\App\Services\PricingCatalogService::class)->creditsToCurrency($plan->creditos_inclusos);
-                        $frequency = $frequencyLabels[$plan->frequencia_padrao_dias] ?? "a cada {$plan->frequencia_padrao_dias} dias";
-                        $depth = $depthLabels[$plan->profundidade_auto_monitor] ?? $plan->profundidade_auto_monitor;
                         $exports = collect($caps['export'] ?? [])->map(fn ($export) => strtoupper($export === 'excel' ? 'XLSX' : $export))->implode(' + ');
+                        $seatLabel = $plan->assentos_inclusos >= 9999
+                            ? 'Equipe sob medida'
+                            : ($plan->assentos_inclusos > 1
+                                ? $plan->assentos_inclusos.' acessos individuais incluídos'
+                                : '1 acesso individual incluído');
+                        $extraSeatPrice = (int) $plan->preco_assento_extra_centavos > 0
+                            ? $plan->preco_assento_extra_centavos / 100
+                            : null;
                         $storageMb = array_key_exists('armazenamento_mb', $caps)
                             ? $caps['armazenamento_mb']
                             : config("arquivos.quota_por_plano_mb.{$plan->codigo}", config('arquivos.quota_padrao_mb', 250));
@@ -558,15 +557,18 @@
                             <div class="pricing-plan-divider"></div>
                             <ul class="pricing-plan-features">
                                 <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M5 13l4 4L19 7"/></svg><span>{{ $includedBalance > 0 ? \App\Support\Dinheiro::brl($includedBalance).' de saldo por mês' : ($isEnterprise ? 'Saldo dimensionado para a operação' : 'Use o bônus ou saldo avulso') }}</span></li>
-                                <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M5 13l4 4L19 7"/></svg><span>{{ $plan->limite_clientes === null ? 'Clientes monitorados ilimitados' : $plan->limite_clientes.' cliente'.($plan->limite_clientes > 1 ? 's' : '').' monitorado'.($plan->limite_clientes > 1 ? 's' : '') }}</span></li>
-                                <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M5 13l4 4L19 7"/></svg><span>{{ $plan->limite_cnpjs_monitorados === null ? 'CNPJs monitorados ilimitados' : $plan->limite_cnpjs_monitorados.' CNPJ'.($plan->limite_cnpjs_monitorados > 1 ? 's' : '').' no monitoramento' }}</span></li>
+                                <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M5 13l4 4L19 7"/></svg><span>Clientes e participantes sem limite de cadastro</span></li>
+                                <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M5 13l4 4L19 7"/></svg><span>{{ $isFree ? '1 CNPJ no monitoramento cadastral gratuito' : 'Monitoramentos pagos sem teto comercial' }}</span></li>
                                 <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M5 13l4 4L19 7"/></svg><span>{{ $storageLabel }}</span></li>
-                                <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M5 13l4 4L19 7"/></svg><span>Monitoramento {{ $frequency }} · {{ $depth }}</span></li>
+                                <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M5 13l4 4L19 7"/></svg><span>Qualquer produto e frequência com saldo</span></li>
                                 <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M5 13l4 4L19 7"/></svg><span>{{ ($caps['bi'] ?? 'basico') === 'completo' ? 'BI Fiscal completo' : 'BI Fiscal básico' }}{{ $exports ? ' · exportação '.$exports : '' }}</span></li>
-                                @if(($caps['pdf_executivo'] ?? false) || ($caps['score_historico'] ?? false))
-                                    <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M5 13l4 4L19 7"/></svg><span>{{ ($caps['pdf_executivo'] ?? false) ? 'PDF executivo' : '' }}{{ ($caps['pdf_executivo'] ?? false) && ($caps['score_historico'] ?? false) ? ' + ' : '' }}{{ ($caps['score_historico'] ?? false) ? 'Score Fiscal com histórico' : '' }}</span></li>
+                                @if($caps['pdf_executivo'] ?? false)
+                                    <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M5 13l4 4L19 7"/></svg><span>{{ $isFree ? 'PDF executivo com marca d’água' : 'PDF executivo sem marca d’água' }}</span></li>
                                 @endif
-                                <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M5 13l4 4L19 7"/></svg><span>{{ $plan->assentos_inclusos >= 9999 ? 'Assentos ilimitados' : $plan->assentos_inclusos.' assento'.($plan->assentos_inclusos > 1 ? 's' : '') }}</span></li>
+                                <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M5 13l4 4L19 7"/></svg><span>{{ $seatLabel }}</span></li>
+                                @if($extraSeatPrice !== null)
+                                    <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M5 13l4 4L19 7"/></svg><span>Assento extra por R$ {{ number_format($extraSeatPrice, 0, ',', '.') }}/mês via atendimento</span></li>
+                                @endif
                             </ul>
                             <div class="pricing-plan-action">
                                 <a href="{{ $isEnterprise ? route('agendar') : route('signup') }}" class="pricing-plan-btn">{{ $isEnterprise ? 'Falar com especialista' : ($isFree ? 'Começar grátis' : 'Escolher '.$plan->nome) }}</a>
@@ -748,7 +750,7 @@
                 </details>
                 <details class="pricing-faq-item">
                     <summary><span class="pricing-faq-num">02</span><span class="pricing-faq-question">Preciso assinar um plano para fazer consultas?</span><span class="pricing-faq-plus" aria-hidden="true"></span></summary>
-                    <div class="pricing-faq-answer">Não. Você pode permanecer no Free e usar saldo avulso. Os planos pagos fazem mais sentido para quem precisa de monitoramento automático, limites maiores, recursos analíticos e saldo mensal incluído.</div>
+                    <div class="pricing-faq-answer">Não. Você pode permanecer no Free e usar saldo avulso. Os planos pagos fazem mais sentido para quem precisa de monitoramento recorrente, mais acessos individuais, recursos analíticos e saldo mensal incluído.</div>
                 </details>
                 <details class="pricing-faq-item">
                     <summary><span class="pricing-faq-num">03</span><span class="pricing-faq-question">O saldo expira?</span><span class="pricing-faq-plus" aria-hidden="true"></span></summary>
@@ -760,7 +762,7 @@
                 </details>
                 <details class="pricing-faq-item">
                     <summary><span class="pricing-faq-num">05</span><span class="pricing-faq-question">Posso mudar de plano depois?</span><span class="pricing-faq-plus" aria-hidden="true"></span></summary>
-                    <div class="pricing-faq-answer">Sim. A área autenticada permite upgrade, downgrade e cancelamento. Seus dados e histórico permanecem na conta; os limites do novo plano passam a valer na troca.</div>
+                    <div class="pricing-faq-answer">Sim. A área autenticada permite upgrade, downgrade e cancelamento. Seus dados e histórico permanecem na conta; os acessos, recursos e o saldo incluído do novo plano passam a valer na troca.</div>
                 </details>
             </div>
         </div>

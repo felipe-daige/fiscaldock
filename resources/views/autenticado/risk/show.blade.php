@@ -4,6 +4,7 @@
     // o piso por certidão positiva/situação baixada pode elevar a classificação acima do
     // que o score numérico sugere — a view precisa refletir o mesmo veredito da listagem.
     $riskSvc = app(\App\Services\RiskScoreService::class);
+    $isCpf = $isCpf ?? $participante->is_cpf;
     $situacaoUpper = strtoupper((string) ($participante->situacao_cadastral ?? ''));
     $situacaoBadge = match($situacaoUpper) {
         'ATIVA', '02' => ['label' => 'ATIVA', 'hex' => '#047857'],
@@ -21,7 +22,7 @@
         {{-- Breadcrumb --}}
         <nav class="mb-4">
             <ol class="flex items-center gap-2 text-[11px] text-gray-500 uppercase tracking-wide">
-                <li><a href="/app/score-fiscal" data-link class="hover:text-gray-900 hover:underline">Score Fiscal</a></li>
+                <li><a href="/app/score-fiscal" data-link class="hover:text-gray-900 hover:underline">{{ $isCpf ? 'Score de Risco' : 'Score Fiscal' }}</a></li>
                 <li><span>/</span></li>
                 <li class="text-gray-900 font-semibold">{{ $participante->razao_social ?? 'Participante' }}</li>
             </ol>
@@ -38,12 +39,12 @@
                     @if($participante->nome_fantasia)
                         <p class="text-sm text-gray-600">{{ $participante->nome_fantasia }}</p>
                     @endif
-                    <p class="mt-1 text-xs text-gray-500 font-mono">CNPJ: {{ $participante->cnpj_formatado }}</p>
+                    <p class="mt-1 text-xs text-gray-500 font-mono">{{ $isCpf ? 'CPF' : 'CNPJ' }}: {{ $participante->cnpj_formatado }}</p>
                     <div class="mt-1.5 flex items-center gap-2 flex-wrap">
-                        @if($situacaoBadge)
+                        @if(! $isCpf && $situacaoBadge)
                             <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $situacaoBadge['hex'] }}">{{ $situacaoBadge['label'] }}</span>
                         @endif
-                        @if($regimeBadge)
+                        @if(! $isCpf && $regimeBadge)
                             <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $regimeBadge['hex'] }}">{{ $regimeBadge['label'] }}</span>
                         @endif
                         @if(!empty($papel))
@@ -85,17 +86,22 @@
                             <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white mt-1" style="background-color: #9ca3af">
                                 Não Avaliado
                             </span>
+                            @if($isCpf)
+                                <p class="mt-1 text-[10px] text-gray-500 leading-tight max-w-[190px]">Risco de crédito sem fonte de pessoa física integrada.</p>
+                            @endif
                         </div>
                     @endif
                     <div class="flex flex-col gap-2 flex-shrink-0">
                         {{-- ?participantes= pré-seleciona o CNPJ no painel de consulta (consulta-lote.js) --}}
-                        <a href="/app/consulta/painel?participantes={{ $participante->id }}" data-link class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                            </svg>
-                            <span class="hidden sm:inline">Atualizar via Consulta</span>
-                            <span class="sm:hidden">Consultar</span>
-                        </a>
+                        @unless($isCpf)
+                            <a href="/app/consulta/painel?participantes={{ $participante->id }}" data-link class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                                <span class="hidden sm:inline">Atualizar via Consulta</span>
+                                <span class="sm:hidden">Consultar</span>
+                            </a>
+                        @endunless
                         <a href="/app/participante/{{ $participante->id }}" data-link class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-xs font-semibold transition">
                             Ficha completa
                         </a>
@@ -119,6 +125,16 @@
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Informações Cadastrais</span>
                     </div>
                     <dl class="divide-y divide-gray-100">
+                        @if($isCpf)
+                        <div class="px-4 py-3">
+                            <dt class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Tipo de pessoa</dt>
+                            <dd class="text-sm text-gray-700 mt-0.5">Pessoa física</dd>
+                        </div>
+                        <div class="px-4 py-3">
+                            <dt class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Avaliação de crédito</dt>
+                            <dd class="text-sm text-gray-700 mt-0.5">Não avaliada</dd>
+                        </div>
+                        @else
                         <div class="px-4 py-3">
                             <dt class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Situação Cadastral</dt>
                             <dd class="text-sm text-gray-700 mt-0.5">
@@ -135,6 +151,7 @@
                                 <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $regimeBadge['hex'] }}">{{ $regimeBadge['label'] }}</span>
                             </dd>
                         </div>
+                        @endif
                         <div class="px-4 py-3">
                             <dt class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">UF / Município</dt>
                             <dd class="text-sm text-gray-700 mt-0.5">{{ $participante->uf ?? '-' }} / {{ $participante->municipio ?? '-' }}</dd>
@@ -176,6 +193,7 @@
                 </div>
 
                 {{-- Crédito IBS/CBS (Reforma Tributária) --}}
+                @unless($isCpf)
                 @php
                     $cr = $creditoReforma ?? null;
                     $crCor = ([
@@ -238,17 +256,25 @@
                         </p>
                     </div>
                 </div>
+                @endunless
             </div>
 
             {{-- Detalhes do Score --}}
             <div class="lg:col-span-2 space-y-6">
                 <div class="bg-white rounded border border-gray-300 overflow-hidden">
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Detalhamento do Score</span>
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">{{ $isCpf ? 'Risco de Crédito (CPF)' : 'Detalhamento do Score' }}</span>
                     </div>
                     <div class="p-5">
 
-                    @if($score)
+                    @if($isCpf)
+                        <div class="text-center py-8">
+                            <div class="text-3xl font-bold text-gray-400 font-mono">—</div>
+                            <h4 class="mt-3 text-sm font-semibold text-gray-900 uppercase tracking-wide">Risco de crédito não avaliado</h4>
+                            <p class="mt-2 text-xs text-gray-500 max-w-2xl mx-auto">{{ $riscoCpf['mensagem'] ?? \App\Services\Risk\RiscoCreditoCpfService::MENSAGEM_NAO_AVALIADO }}</p>
+                            <p class="mt-3 text-[11px] text-gray-400">A movimentação EFD permanece visível como evidência comercial, sem ser convertida em score.</p>
+                        </div>
+                    @elseif($score)
                         @include('autenticado.partials._score-detalhamento', [
                             'detalhamento' => $detalhamento ?? [],
                             'scoreTotal' => $score->score_total,
@@ -322,10 +348,12 @@
                      da Consulta CNPJ (substitui o dump JSON de dados_consultados). --}}
                 <div class="bg-white rounded border border-gray-300 overflow-hidden">
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Última Consulta — Certidões e Cadastro</span>
+                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">{{ $isCpf ? 'Limites da Avaliação de Crédito' : 'Última Consulta — Certidões e Cadastro' }}</span>
                     </div>
                     <div class="p-5">
-                        @if(!empty($detalheConsultaHtml))
+                        @if($isCpf)
+                            <p class="text-sm text-gray-600 leading-relaxed">O acervo atual não contém histórico de pagamentos, atrasos, inadimplência, renda, capacidade de pagamento ou restrições financeiras deste CPF. Certidões e situação cadastral de CNPJ não se aplicam a pessoa física.</p>
+                        @elseif(!empty($detalheConsultaHtml))
                             {!! $detalheConsultaHtml !!}
                         @else
                             <p class="text-sm text-gray-500">Nenhuma consulta de certidões realizada ainda. <a href="/app/consulta/painel" data-link class="text-gray-700 underline hover:text-gray-900">Consultar agora</a>.</p>

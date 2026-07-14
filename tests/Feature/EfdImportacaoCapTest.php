@@ -63,7 +63,7 @@ it('EFD vincula ao cliente existente do mesmo CNPJ sem criar novo', function () 
     expect(Cliente::where('user_id', $user->id)->where('is_empresa_propria', false)->count())->toBe(1);
 });
 
-it('EFD de CNPJ novo auto-cria cliente quando cabe no cap', function () {
+it('EFD de CNPJ novo auto-cria cliente', function () {
     $user = User::factory()->create();
     efdCapPropria($user); // room = 1
 
@@ -75,15 +75,15 @@ it('EFD de CNPJ novo auto-cria cliente quando cabe no cap', function () {
     expect(EfdImportacao::where('user_id', $user->id)->first()->cliente_id)->toBe($cli->id);
 });
 
-it('EFD de CNPJ novo é bloqueado quando o cap está cheio', function () {
+it('EFD de CNPJ novo não é bloqueado pela quantidade de clientes do Free', function () {
     $user = User::factory()->create();
     efdCapPropria($user);
-    efdCapNormal($user, '22222222000191'); // usa o +1 → cap cheio
+    efdCapNormal($user, '22222222000191');
 
-    uploadEfdCap($this, $user)->assertStatus(403);
+    uploadEfdCap($this, $user)->assertOk();
 
-    expect(Cliente::where('user_id', $user->id)->where('documento', '97551165000193')->exists())->toBeFalse();
-    expect(EfdImportacao::where('user_id', $user->id)->exists())->toBeFalse();
+    $cliente = Cliente::where('user_id', $user->id)->where('documento', '97551165000193')->firstOrFail();
+    expect(EfdImportacao::where('user_id', $user->id)->firstOrFail()->cliente_id)->toBe($cliente->id);
 });
 
 it('trial ativo importa EFD de CNPJ novo sem cap', function () {

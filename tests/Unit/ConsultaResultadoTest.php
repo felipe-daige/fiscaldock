@@ -5,6 +5,17 @@ uses(Tests\TestCase::class);
 use App\Models\ConsultaResultado;
 use App\Models\Participante;
 
+it('não fabrica risco médio quando o resultado não tem dados avaliáveis', function () {
+    $resultado = new ConsultaResultado(['resultado_dados' => []]);
+
+    expect($resultado->calcularScore())
+        ->toMatchArray([
+            'scores' => [],
+            'score_total' => null,
+            'classificacao' => 'nao_avaliado',
+        ]);
+});
+
 it('usa o regime textual do participante antes do fallback generico do crt', function () {
     $resultado = new ConsultaResultado([
         'resultado_dados' => [],

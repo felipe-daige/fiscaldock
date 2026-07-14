@@ -85,15 +85,15 @@ class ConsultaResultado extends Model
     /**
      * Calcula o score de risco on-demand usando RiskScoreService.
      *
-     * @return array{scores: array, score_total: int, classificacao: string}
+     * @return array{scores: array, score_total: ?int, classificacao: string}
      */
     public function calcularScore(): array
     {
         if (empty($this->resultado_dados)) {
             return [
                 'scores' => [],
-                'score_total' => 50,
-                'classificacao' => 'medio',
+                'score_total' => null,
+                'classificacao' => 'nao_avaliado',
             ];
         }
 

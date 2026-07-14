@@ -53,11 +53,9 @@
 <body>
     @include('reports.partials._header')
     @include('reports.partials._footer')
-    {{-- Marca d'água: estampada só quando `$marcaDagua` (plano Free / sem export pago), definido
-         pelo View Composer de `reports.layout` (AppServiceProvider). Pago/trial = PDF limpo.
-         `@section('sem_marca_dagua')` numa view força a remoção pontual. --}}
-    @hasSection('sem_marca_dagua')
-    @elseif(!empty($marcaDagua))
+    {{-- Regra global definida no AppServiceProvider: Free sempre recebe marca d'água;
+         qualquer assinatura paga recebe PDF limpo. --}}
+    @if(!empty($marcaDagua))
         @include('reports.partials._marca-dagua')
     @endif
     <main class="pdf-conteudo">

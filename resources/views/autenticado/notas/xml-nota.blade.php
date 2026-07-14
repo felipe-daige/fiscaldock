@@ -241,6 +241,12 @@
             </div>
         @endif
 
+        @include('autenticado.notas.partials._itens-tabela', [
+            'itens' => $nota->itens,
+            'mostrarTributos' => true,
+            'wrapperClass' => 'mb-4',
+        ])
+
         @if($temTributos)
             <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">

@@ -143,6 +143,26 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(\App\Models\AccountSubscription::class);
     }
 
+    public function accountMembership()
+    {
+        return $this->hasOne(AccountMember::class);
+    }
+
+    public function ownedAccount()
+    {
+        return $this->hasOne(Account::class, 'owner_user_id');
+    }
+
+    /** Identidade individual do login; dados e cobrança podem pertencer ao owner da conta. */
+    public function accountOwner(): self
+    {
+        $membership = $this->relationLoaded('accountMembership')
+            ? $this->accountMembership
+            : $this->accountMembership()->with('account.owner')->first();
+
+        return $membership?->account?->owner ?? $this;
+    }
+
     // Helper - mantém compatibilidade com código antigo
     public function empresas()
     {

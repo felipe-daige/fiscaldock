@@ -35,7 +35,7 @@ it('a troca grava o marker de proration com a fração restante do ciclo', funct
         'status' => AccountSubscription::STATUS_ATIVA,
         'ciclo' => 'mensal',
         'mp_preapproval_id' => 'PRE-OLD',
-        'creditos_inclusos_saldo' => 300,
+        'creditos_inclusos_saldo' => 175,
         // ciclo de 30 dias, 20 restantes → fração ≈ 0,667
         'ultimo_grant_em' => now()->subDays(10),
         'proximo_grant_em' => now()->addDays(20),
@@ -57,16 +57,16 @@ it('a troca grava o marker de proration com a fração restante do ciclo', funct
 });
 
 it('a 1ª concessão pós-troca expira o incluso antigo pro-rata e concede o novo pro-rata', function () {
-    $prof = SubscriptionPlan::where('codigo', 'profissional')->first(); // 1100 inclusos
+    $prof = SubscriptionPlan::where('codigo', 'profissional')->first(); // 400 inclusos
     $user = User::factory()->create();
-    app(SaldoService::class)->add($user, 300, 'subscription_credit');
+    app(SaldoService::class)->add($user, 175, 'subscription_credit');
 
     $sub = AccountSubscription::create([
         'user_id' => $user->id,
         'subscription_plan_id' => $prof->id,
         'status' => AccountSubscription::STATUS_ATIVA,
         'ciclo' => 'mensal',
-        'creditos_inclusos_saldo' => 300,
+        'creditos_inclusos_saldo' => 175,
         'proration_pendente' => ['fracao_restante' => 0.5],
     ]);
 
@@ -75,53 +75,53 @@ it('a 1ª concessão pós-troca expira o incluso antigo pro-rata e concede o nov
     $user->refresh();
     $sub->refresh();
 
-    // expira 150 (300×0,5) e concede 550 (1100×0,5) → 300 − 150 + 550 = 700
-    expect($user->credits)->toBe(700);
-    expect($sub->creditos_inclusos_saldo)->toBe(700);
+    // expira 88 (175×0,5) e concede 200 (400×0,5) → 175 − 88 + 200 = 287
+    expect($user->credits)->toBe(287);
+    expect($sub->creditos_inclusos_saldo)->toBe(287);
     expect($sub->proration_pendente)->toBeNull();
     expect(SaldoTransacao::where('user_id', $user->id)->where('type', 'subscription_proration')->count())->toBe(2);
 });
 
 it('proration de downgrade concede menos (novo tier menor que o antigo)', function () {
-    $ess = SubscriptionPlan::where('codigo', 'essencial')->first(); // destino: 300 inclusos
+    $ess = SubscriptionPlan::where('codigo', 'essencial')->first(); // destino: 175 inclusos
     $user = User::factory()->create();
-    app(SaldoService::class)->add($user, 1100, 'subscription_credit'); // vinha do profissional
+    app(SaldoService::class)->add($user, 400, 'subscription_credit'); // vinha do profissional
 
     $sub = AccountSubscription::create([
         'user_id' => $user->id,
         'subscription_plan_id' => $ess->id,
         'status' => AccountSubscription::STATUS_ATIVA,
         'ciclo' => 'mensal',
-        'creditos_inclusos_saldo' => 1100,
+        'creditos_inclusos_saldo' => 400,
         'proration_pendente' => ['fracao_restante' => 0.5],
     ]);
 
     app(ConcederSaldoService::class)->conceder($sub);
 
     $user->refresh();
-    // expira 550 (1100×0,5) e concede 150 (300×0,5) → 1100 − 550 + 150 = 700
-    expect($user->credits)->toBe(700);
+    // expira 200 (400×0,5) e concede 88 (175×0,5) → 400 − 200 + 88 = 288
+    expect($user->credits)->toBe(288);
     expect($sub->fresh()->proration_pendente)->toBeNull();
 });
 
 it('a expiração pro-rata é limitada ao saldo real (usuário já gastou parte)', function () {
-    $prof = SubscriptionPlan::where('codigo', 'profissional')->first(); // 1100
+    $prof = SubscriptionPlan::where('codigo', 'profissional')->first(); // 400
     $user = User::factory()->create();
-    app(SaldoService::class)->add($user, 100, 'subscription_credit'); // bucket 300 mas só 100 sobrou
+    app(SaldoService::class)->add($user, 50, 'subscription_credit'); // bucket 175 mas só 50 sobrou
 
     $sub = AccountSubscription::create([
         'user_id' => $user->id,
         'subscription_plan_id' => $prof->id,
         'status' => AccountSubscription::STATUS_ATIVA,
         'ciclo' => 'mensal',
-        'creditos_inclusos_saldo' => 300,
+        'creditos_inclusos_saldo' => 175,
         'proration_pendente' => ['fracao_restante' => 0.5],
     ]);
 
     app(ConcederSaldoService::class)->conceder($sub);
 
-    // expira min(150, 100)=100 → 0; concede 550 → 550
-    expect($user->refresh()->credits)->toBe(550);
+    // expira min(88, 50)=50 → 0; concede 200 → 200
+    expect($user->refresh()->credits)->toBe(200);
 });
 
 it('sem ciclo ancorado (nunca concedido) a troca não grava marker', function () {
@@ -133,7 +133,7 @@ it('sem ciclo ancorado (nunca concedido) a troca não grava marker', function ()
     $sub = AccountSubscription::create([
         'user_id' => $user->id, 'subscription_plan_id' => $ess->id,
         'status' => AccountSubscription::STATUS_ATIVA, 'ciclo' => 'mensal',
-        'mp_preapproval_id' => 'PRE-OLD', 'creditos_inclusos_saldo' => 300,
+        'mp_preapproval_id' => 'PRE-OLD', 'creditos_inclusos_saldo' => 175,
         // sem ultimo_grant_em / iniciada_em / proximo_grant_em
     ]);
     actingAs($user);
@@ -156,7 +156,7 @@ it('falha ao criar a nova preapproval restaura o snapshot e não deixa marker', 
     $sub = AccountSubscription::create([
         'user_id' => $user->id, 'subscription_plan_id' => $ess->id,
         'status' => AccountSubscription::STATUS_ATIVA, 'ciclo' => 'mensal',
-        'mp_preapproval_id' => 'PRE-OLD', 'creditos_inclusos_saldo' => 300,
+        'mp_preapproval_id' => 'PRE-OLD', 'creditos_inclusos_saldo' => 175,
         'ultimo_grant_em' => now()->subDays(10), 'proximo_grant_em' => now()->addDays(20),
     ]);
     actingAs($user);
@@ -173,7 +173,7 @@ it('falha ao criar a nova preapproval restaura o snapshot e não deixa marker', 
 });
 
 it('concessão normal sem marker concede o mensal cheio (rollover cap)', function () {
-    $ess = SubscriptionPlan::where('codigo', 'essencial')->first(); // 300 inclusos
+    $ess = SubscriptionPlan::where('codigo', 'essencial')->first(); // 175 inclusos
     $user = User::factory()->create();
 
     $sub = AccountSubscription::create([
@@ -187,7 +187,7 @@ it('concessão normal sem marker concede o mensal cheio (rollover cap)', functio
     app(ConcederSaldoService::class)->conceder($sub, primeiraComoCompra: true);
 
     $user->refresh();
-    expect($user->credits)->toBe(300);
+    expect($user->credits)->toBe(175);
     expect(SaldoTransacao::where('user_id', $user->id)->where('type', 'purchase')->count())->toBe(1);
     expect(SaldoTransacao::where('user_id', $user->id)->where('type', 'subscription_proration')->count())->toBe(0);
 });

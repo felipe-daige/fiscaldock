@@ -1,7 +1,6 @@
 @php
     use App\Services\PricingCatalogService;
     $precos = app(PricingCatalogService::class);
-    $fmtLim = fn ($v) => $v === null ? 'Ilimitado' : number_format((int) $v, 0, ',', '.');
     $fmtStorage = function ($p) {
         $caps = $p->capabilities ?? [];
         $mb = array_key_exists('armazenamento_mb', $caps)
@@ -16,7 +15,7 @@
 
         <div class="mb-4 sm:mb-6">
             <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Admin — Planos</h1>
-            <p class="text-xs text-gray-500 mt-0.5">Edite limites, capabilities e preço direto no catálogo (subscription_plans). Os entitlements de todos os usuários leem daqui.</p>
+            <p class="text-xs text-gray-500 mt-0.5">Edite preços, saldo, assentos e capabilities direto no catálogo. As vitrines pública e autenticada leem estes mesmos dados.</p>
         </div>
 
         @include('autenticado.admin.partials.nav', ['tab' => 'planos'])
@@ -38,11 +37,11 @@
                         <tr>
                             <th class="text-left px-3 py-2">Plano</th>
                             <th class="text-right px-3 py-2">Mensal</th>
+                            <th class="text-right px-3 py-2">Anual</th>
                             <th class="text-right px-3 py-2">Saldo incluso/mês</th>
-                            <th class="text-right px-3 py-2">Clientes</th>
-                            <th class="text-right px-3 py-2">Monitorados</th>
+                            <th class="text-right px-3 py-2">Acessos</th>
+                            <th class="text-right px-3 py-2">Assento extra</th>
                             <th class="text-right px-3 py-2">Arquivos</th>
-                            <th class="text-left px-3 py-2">Profundidade</th>
                             <th class="text-center px-3 py-2">Ativo</th>
                             <th class="px-3 py-2"></th>
                         </tr>
@@ -55,11 +54,11 @@
                                     <span class="block text-[11px] text-gray-400">{{ $p->codigo }}</span>
                                 </td>
                                 <td class="px-3 py-2.5 text-right text-gray-700" data-label="Mensal">{{ $p->preco_mensal_centavos > 0 ? 'R$ '.number_format($p->preco_mensal_centavos / 100, 2, ',', '.') : '—' }}</td>
+                                <td class="px-3 py-2.5 text-right text-gray-700" data-label="Anual">{{ $p->preco_anual_centavos > 0 ? 'R$ '.number_format($p->preco_anual_centavos / 100, 2, ',', '.') : '—' }}</td>
                                 <td class="px-3 py-2.5 text-right text-gray-700" data-label="Saldo incluso/mês">{{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $p->creditos_inclusos)) }}</td>
-                                <td class="px-3 py-2.5 text-right text-gray-700" data-label="Clientes">{{ $fmtLim($p->limite_clientes) }}</td>
-                                <td class="px-3 py-2.5 text-right text-gray-700" data-label="Monitorados">{{ $fmtLim($p->limite_cnpjs_monitorados) }}</td>
+                                <td class="px-3 py-2.5 text-right text-gray-700" data-label="Acessos">{{ $p->assentos_inclusos >= 9999 ? 'Sob medida' : number_format((int) $p->assentos_inclusos, 0, ',', '.') }}</td>
+                                <td class="px-3 py-2.5 text-right text-gray-700" data-label="Assento extra">{{ $p->preco_assento_extra_centavos > 0 ? 'R$ '.number_format($p->preco_assento_extra_centavos / 100, 2, ',', '.') : '—' }}</td>
                                 <td class="px-3 py-2.5 text-right text-gray-700" data-label="Arquivos">{{ $fmtStorage($p) }}</td>
-                                <td class="px-3 py-2.5 text-gray-700" data-label="Profundidade">{{ $p->profundidade_auto_monitor ?? '—' }}</td>
                                 <td class="px-3 py-2.5 text-center" data-label="Ativo">
                                     @if($p->is_active)
                                         <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase text-white" style="background-color: #047857">Ativo</span>

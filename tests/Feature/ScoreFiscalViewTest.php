@@ -124,14 +124,14 @@ it('marca o papel do participante (fornecedor/comprador/ambos) pelas notas EFD',
         ->assertSee('Ambos');
 });
 
-it('mostra clientes consultados no score e exclui CPF da lista', function () {
+it('mostra clientes CNPJ consultados e CPF em seção própria de risco de crédito', function () {
     $user = User::factory()->create();
 
     // cliente CNPJ consultado -> deve aparecer em Consultados
     $cliente = \App\Models\Cliente::create([
         'user_id' => $user->id, 'documento' => '99888777000166', 'razao_social' => 'HIDRATOP LTDA',
     ]);
-    // participante CPF não consultado -> NÃO deve aparecer (só CNPJ)
+    // participante CPF não entra como CNPJ não consultado; aparece em seção própria.
     Participante::create([
         'user_id' => $user->id, 'documento' => '12345678901', 'razao_social' => 'FULANO CPF',
     ]);
@@ -157,7 +157,53 @@ it('mostra clientes consultados no score e exclui CPF da lista', function () {
         ->assertOk()
         ->assertSee('HIDRATOP LTDA')
         ->assertSee('Cliente')
-        ->assertDontSee('FULANO CPF');
+        ->assertSee('Pessoas físicas — risco de crédito')
+        ->assertSee('FULANO CPF')
+        ->assertSee('Não avaliado');
+});
+
+it('detalhe de CPF trata risco de crédito sem oferecer Consulta CNPJ', function () {
+    $user = User::factory()->create();
+    $part = Participante::create([
+        'user_id' => $user->id,
+        'documento' => '12345678901',
+        'razao_social' => 'CPF COM MOVIMENTO',
+    ]);
+
+    $resp = actingAs($user)
+        ->get("/app/score-fiscal/participante/{$part->id}")
+        ->assertOk()
+        ->assertSee('CPF: 123.456.789-01')
+        ->assertSee('Risco de Crédito (CPF)')
+        ->assertSee('Risco de crédito não avaliado')
+        ->assertSee('Certidões e situação cadastral de CNPJ não se aplicam')
+        ->assertDontSee('Atualizar via Consulta');
+
+    expect($resp->getContent())->not->toContain('/app/consulta/painel?participantes='.$part->id);
+});
+
+it('ignora score fiscal legado de CPF e mantém a pessoa física como não avaliada', function () {
+    $user = User::factory()->create();
+    $cpf = Participante::create([
+        'user_id' => $user->id,
+        'documento' => '12345678901',
+        'razao_social' => 'CPF COM SCORE LEGADO',
+    ]);
+    \App\Models\ParticipanteScore::create([
+        'participante_id' => $cpf->id,
+        'user_id' => $user->id,
+        'score_total' => 50,
+        'classificacao' => 'medio',
+        'ultima_consulta_em' => now(),
+    ]);
+
+    $resp = actingAs($user)->get('/app/score-fiscal?cliente_id=todos')->assertOk();
+
+    $resp->assertSee('CPF COM SCORE LEGADO')
+        ->assertSee('Pessoas físicas — risco de crédito');
+
+    $detalhe = actingAs($user)->get("/app/score-fiscal/participante/{$cpf->id}")->assertOk();
+    $detalhe->assertSee('Risco de crédito não avaliado')->assertDontSee('Médio Risco');
 });
 
 it('exclui o participante PROPRIO (empresa propria duplicada) da listagem, mantendo o cliente', function () {
@@ -294,7 +340,7 @@ it('detalhe explica o piso quando a classificação persistida supera a faixa nu
         ->assertSee('Classificação elevada por irregularidade conhecida');
 });
 
-it('origem NULL com notas EFD vinculadas exibe "EFD (SPED importado)" e o card explica o cálculo', function () {
+it('origem NULL com notas EFD vinculadas deriva o tipo da importação e o card explica o cálculo', function () {
     $user = User::factory()->create();
     $cliente = \App\Models\Cliente::create([
         'user_id' => $user->id, 'is_empresa_propria' => true, 'tipo_pessoa' => 'PJ',
@@ -316,14 +362,15 @@ it('origem NULL com notas EFD vinculadas exibe "EFD (SPED importado)" e o card e
         'valor_desconto' => 0, 'origem_arquivo' => 'fiscal', 'metadados' => [],
     ]);
 
+    $creditoEsperado = 'R$ '.number_format(1000 * (float) config('reforma.aliquota_referencia'), 2, ',', '.');
     actingAs($user)
         ->get("/app/score-fiscal/participante/{$part->id}")
         ->assertOk()
-        ->assertSee('EFD (SPED importado)')
+        ->assertSee('EFD ICMS/IPI')
         ->assertSee('Como é calculado')
         ->assertSee('Crédito potencial')
-        // MEI: fator 0 → em risco = 100% do potencial (1000 × 28,5% = 285)
-        ->assertSee('R$ 285,00')
+        // MEI: fator 0 → 100% do potencial, usando a alíquota configurada.
+        ->assertSee($creditoEsperado)
         // Período coberto pelo volume (nota única de 01/2026)
         ->assertSee('Emissões de 01/2026')
         ->assertSee('acumulado do período');

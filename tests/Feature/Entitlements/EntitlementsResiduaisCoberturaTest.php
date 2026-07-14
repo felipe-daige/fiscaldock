@@ -69,7 +69,7 @@ it('formats por plano batem com o seeder (free/essencial/profissional/escritorio
         ->and($svc->exportFormats(coberturaComPlano(User::factory()->create(), 'essencial')))->toBe(['csv'])
         ->and($svc->exportFormats(coberturaComPlano(User::factory()->create(), 'profissional')))->toBe(['csv', 'excel'])
         ->and($svc->exportFormats(coberturaComPlano(User::factory()->create(), 'escritorio')))->toBe(['csv', 'excel'])
-        ->and($svc->exportFormats(coberturaComPlano(User::factory()->create(), 'enterprise')))->toBe(['csv', 'excel', 'api']);
+        ->and($svc->exportFormats(coberturaComPlano(User::factory()->create(), 'enterprise')))->toBe(['csv', 'excel']);
 });
 
 it('formato desconhecido nunca é permitido (nem no Enterprise)', function () {

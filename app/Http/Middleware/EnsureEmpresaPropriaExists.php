@@ -13,39 +13,42 @@ class EnsureEmpresaPropriaExists
 {
     public function handle(Request $request, Closure $next): mixed
     {
-        if (!Auth::check() || $request->is('api/*')) {
+        if (! Auth::check() || $request->is('api/*')) {
             return $next($request);
         }
 
-        $user = Auth::user();
+        $user = app()->bound(\App\Support\AccountContext::class)
+            ? app(\App\Support\AccountContext::class)->owner()
+            : Auth::user()->accountOwner();
 
         $hasEmpresaPropria = $user->clientes()
             ->where('is_empresa_propria', true)
             ->exists();
 
-        if (!$hasEmpresaPropria) {
+        if (! $hasEmpresaPropria) {
             $tipoPessoa = $user->cnpj ? 'PJ' : 'PF';
             $documento = $user->cnpj;
 
-            if (!$documento) {
+            if (! $documento) {
                 Log::warning('Usuário sem documento (CNPJ/CPF) — empresa própria não criada', [
                     'user_id' => $user->id,
                 ]);
+
                 return $next($request);
             }
 
             try {
                 DB::transaction(function () use ($user, $tipoPessoa, $documento) {
                     Cliente::create([
-                        'user_id'            => $user->id,
-                        'tipo_pessoa'        => $tipoPessoa,
-                        'documento'          => $documento,
-                        'nome'               => $user->empresa,
-                        'razao_social'       => $tipoPessoa === 'PJ' ? $user->empresa : null,
-                        'telefone'           => $user->telefone,
-                        'email'              => $user->email,
+                        'user_id' => $user->id,
+                        'tipo_pessoa' => $tipoPessoa,
+                        'documento' => $documento,
+                        'nome' => $user->empresa,
+                        'razao_social' => $tipoPessoa === 'PJ' ? $user->empresa : null,
+                        'telefone' => $user->telefone,
+                        'email' => $user->email,
                         'is_empresa_propria' => true,
-                        'ativo'              => true,
+                        'ativo' => true,
                     ]);
                 });
 
@@ -53,7 +56,7 @@ class EnsureEmpresaPropriaExists
             } catch (\Exception $e) {
                 Log::error('Falha ao recriar empresa própria', [
                     'user_id' => $user->id,
-                    'error'   => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ]);
             }
         }

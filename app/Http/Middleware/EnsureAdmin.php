@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\AccountContext;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,7 +22,11 @@ class EnsureAdmin
             return redirect()->guest(route('login'));
         }
 
-        if (! Auth::user()->is_admin) {
+        $actor = app()->bound(AccountContext::class)
+            ? app(AccountContext::class)->actor()
+            : Auth::user();
+
+        if (! $actor?->is_admin) {
             abort(403, 'Acesso restrito ao operador FiscalDock.');
         }
 

@@ -17,6 +17,7 @@ use App\Services\Consultas\ResultadoDetalhePresenter;
 use App\Services\Dashboard\DashboardDataService;
 use App\Services\NotaFiscalService;
 use App\Services\PricingCatalogService;
+use App\Support\AccountContext;
 use App\Support\ClienteOrigem;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -85,6 +86,9 @@ class DashboardController extends Controller
 
         $user = Auth::user();
         $userId = $user->id;
+        $prefsUser = app()->bound(\App\Support\AccountContext::class)
+            ? app(\App\Support\AccountContext::class)->actor()
+            : $user;
 
         // O cockpit (KPIs/triagem/tendência) vem do assembler único; aqui só sobram
         // os dados auxiliares que a view ainda usa (atividade recente, onboarding, trial).
@@ -93,7 +97,7 @@ class DashboardController extends Controller
             'isUsuarioNovo' => $this->dashboardDataService->isUsuarioNovo($userId),
             'trialResumo' => $this->buildTrialResumo($user),
             'cockpit' => $this->dashboardDataService->cockpit($userId, $user, null, 6),
-            'dashboardPrefs' => $user->dashboardPrefs(),
+            'dashboardPrefs' => $prefsUser->dashboardPrefs(),
             'atalhosCatalogo' => self::ATALHOS_CATALOGO,
             'clientesOpcoes' => Cliente::where('user_id', $userId)
                 ->where(function ($q) {
@@ -167,7 +171,9 @@ class DashboardController extends Controller
             }
         }
 
-        $user = Auth::user();
+        $user = app()->bound(\App\Support\AccountContext::class)
+            ? app(\App\Support\AccountContext::class)->actor()
+            : Auth::user();
         $atual = $user->dashboard_prefs ?? [];
         $user->dashboard_prefs = array_replace_recursive($atual, $validated);
         $user->save();
@@ -742,15 +748,18 @@ class DashboardController extends Controller
         }
 
         $user = Auth::user();
+        $accountOwner = app()->bound(\App\Support\AccountContext::class)
+            ? app(\App\Support\AccountContext::class)->owner()
+            : $user;
 
-        $saldoReais = $this->pricingCatalogService->creditsToCurrency((float) ($user->credits ?? 0));
+        $saldoReais = $this->pricingCatalogService->creditsToCurrency((float) ($accountOwner->credits ?? 0));
 
         $dadosPerfil = [
             'user' => $user,
             'saldoReais' => $saldoReais,
-            'trialAtivo' => $user->hasActiveTrial(),
-            'trialExpiraEm' => $user->trial_expires_at,
-            'trialCreditosRestantes' => $user->trial_credits_remaining,
+            'trialAtivo' => $accountOwner->hasActiveTrial(),
+            'trialExpiraEm' => $accountOwner->trial_expires_at,
+            'trialCreditosRestantes' => $accountOwner->trial_credits_remaining,
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -903,7 +912,8 @@ class DashboardController extends Controller
             $id,
             Auth::id(),
             $request->input('status'),
-            $request->input('notas')
+            $request->input('notas'),
+            app(AccountContext::class)->actor()->id,
         );
 
         return response()->json(['success' => true, 'alerta' => $alerta]);
@@ -926,7 +936,8 @@ class DashboardController extends Controller
             $request->input('ids'),
             Auth::id(),
             $request->input('status'),
-            $request->input('notas')
+            $request->input('notas'),
+            app(AccountContext::class)->actor()->id,
         );
 
         return response()->json([
@@ -1428,8 +1439,8 @@ class DashboardController extends Controller
     }
 
     /**
-     * Planos de assinatura (tiers). Página informativa — lê do `subscription_plans`
-     * seedado (fonte: CFO design). "Assinar" fica em breve até a Fase 4 (preapproval).
+     * Planos de assinatura. A vitrine e o checkout leem preços, saldo,
+     * assentos e capabilities do catálogo `subscription_plans`.
      */
     public function planos(Request $request)
     {

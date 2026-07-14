@@ -19,6 +19,7 @@ use App\Models\XmlNota;
 use App\Services\Consultas\ResultadoDetalhePresenter;
 use App\Services\NotaFiscalService;
 use App\Services\ParecerFiscalService;
+use App\Services\Risk\RiscoCreditoCpfService;
 use App\Services\SaldoService;
 use App\Support\ParticipanteOrigem;
 use Carbon\Carbon;
@@ -583,10 +584,13 @@ class ParticipanteController extends Controller
                 if ($cndValidade) {
                     try {
                         $dataValidade = Carbon::parse($cndValidade);
-                        $diasRestantes = $agora->diffInDays($dataValidade, false);
+                        $diasRestantes = $agora->copy()->startOfDay()
+                            ->diffInDays($dataValidade->copy()->startOfDay(), false);
 
-                        if ($diasRestantes <= 0) {
+                        if ($agora->greaterThan($dataValidade->copy()->endOfDay())) {
                             $cndMeta = 'Vencida em '.$dataValidade->format('d/m/Y');
+                        } elseif ((int) $diasRestantes === 0) {
+                            $cndMeta = 'Vence hoje';
                         } elseif ($diasRestantes <= 7) {
                             $cndMeta = 'Vence em '.(int) $diasRestantes.' dias';
                         } else {
@@ -1012,8 +1016,11 @@ class ParticipanteController extends Controller
         $data['negociantesModo'] = 'participante';
 
         $scoreCalc = $ultimaConsulta?->calcularScore();
-        $data['score'] = $scoreCalc;
+        $data['score'] = $participante->is_cpf
+            ? app(RiscoCreditoCpfService::class)->avaliar($participante, $movimentacao['kpis'])
+            : $scoreCalc;
         $data['score_detalhamento'] = $scoreCalc
+            && ! $participante->is_cpf
             ? app(\App\Services\RiskScoreService::class)->detalhar($scoreCalc['scores'])
             : [];
 

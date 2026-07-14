@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Auth\AccountInvitationController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\Dashboard\AccountTeamController;
 use App\Http\Controllers\Dashboard\ArquivoController;
 use App\Http\Controllers\Dashboard\BiController;
 use App\Http\Controllers\Dashboard\CatalogoController;
@@ -76,6 +78,10 @@ Route::post('/agendar', [AuthController::class, 'agendar'])->name('agendar.post'
 Route::get('/termos', [AuthController::class, 'showTerms'])->name('termos');
 Route::get('/privacidade', [AuthController::class, 'showPrivacy'])->name('privacidade');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/convite/equipe/{token}', [AccountInvitationController::class, 'show'])
+    ->middleware('throttle:30,1')->name('equipe.convite.aceitar');
+Route::post('/convite/equipe/{token}', [AccountInvitationController::class, 'accept'])
+    ->middleware('throttle:10,1')->name('equipe.convite.confirmar');
 Route::get('/esqueci-senha', [PasswordResetController::class, 'mostrarFormularioEsqueciSenha'])->name('password.forgot');
 Route::post('/esqueci-senha', [PasswordResetController::class, 'enviarLinkReset'])->middleware('throttle:5,10')->name('password.forgot.post');
 Route::get('/redefinir-senha/{token}', [PasswordResetController::class, 'mostrarFormularioReset'])->name('password.reset');
@@ -108,7 +114,14 @@ Route::get('/api/csrf-token', function () {
 // RequireCurrentTerms por FQCN (bootstrap/app.php não é montado): força re-aceite (LGPD 2.2)
 // quando a versão dos documentos sobe. Só intercepta GET full-page; o interstitial app.reaceite.*
 // é isento via routeIs (sem loop).
-Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\Http\Middleware\RequireCurrentTerms::class, \App\Http\Middleware\ImpersonacaoReadOnly::class])->group(function () {
+Route::middleware([
+    'auth',
+    \App\Http\Middleware\EnsureNaoBloqueado::class,
+    \App\Http\Middleware\ResolveAccountContext::class,
+    \App\Http\Middleware\EnforceAccountAccess::class,
+    \App\Http\Middleware\RequireCurrentTerms::class,
+    \App\Http\Middleware\ImpersonacaoReadOnly::class,
+])->group(function () {
     Route::get('/app/reaceite', [\App\Http\Controllers\Dashboard\TermosReaceiteController::class, 'show'])->name('app.reaceite.show');
     Route::post('/app/reaceite', [\App\Http\Controllers\Dashboard\TermosReaceiteController::class, 'aceitar'])->name('app.reaceite.aceitar');
 
@@ -160,6 +173,14 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
     Route::get('/app/planos', [DashboardController::class, 'planos'])->name('app.planos');
     Route::get('/app/checkout/{pacote}', [DashboardController::class, 'checkout'])->name('app.checkout');
     Route::get('/app/saldo', [DashboardController::class, 'saldo'])->name('app.saldo');
+
+    Route::prefix('/app/equipe')->name('app.equipe.')->group(function () {
+        Route::get('/', [AccountTeamController::class, 'index'])->name('index');
+        Route::post('/convites', [AccountTeamController::class, 'invite'])->name('convites.criar');
+        Route::delete('/convites/{invitation}', [AccountTeamController::class, 'revokeInvitation'])->name('convites.revogar');
+        Route::patch('/membros/{member}', [AccountTeamController::class, 'update'])->name('membros.atualizar');
+        Route::delete('/membros/{member}', [AccountTeamController::class, 'remove'])->name('membros.remover');
+    });
 
     // Mercado Pago — cria o pagamento do pacote (front Bricks envia o meio de pagamento).
     Route::post('/app/pagamento/mercado-pago', [\App\Http\Controllers\Dashboard\PagamentoMercadoPagoController::class, 'criar'])
@@ -260,8 +281,8 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
         // Freio de consumo do auto-monitor (§6.2) — o contador define o teto de gasto por ciclo
         Route::post('/limite-consumo', [MonitoramentoController::class, 'definirLimiteConsumo'])->name('limite-consumo');
 
-        // Reconciliação de downgrade: usuário escolhe quais CNPJs manter quando o tier novo
-        // comporta menos monitorados que os ativos (excedente vira pausa automática).
+        // Compatibilidade com clientes antigos: hoje não há teto comercial de monitorados,
+        // então o endpoint responde sem alterar assinaturas.
         Route::post('/reconciliar-limite', [MonitoramentoController::class, 'reconciliarLimite'])->name('reconciliar-limite');
 
         // Assinaturas

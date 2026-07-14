@@ -47,7 +47,7 @@ function dossieDadosFixture(): array
 
 function lerWorkbookDossie(string $path): array
 {
-    $reader = new Reader();
+    $reader = new Reader;
     $reader->open($path);
     $sheets = [];
     foreach ($reader->getSheetIterator() as $sheet) {
@@ -92,13 +92,14 @@ it('gera o workbook do dossiê com identificação, certidões e movimentação 
     expect($sheets['Top Produtos'][2])->toEqual(['P-1', 'CIMENTO', 900.0, 30.0]);
 });
 
-it('documento de 11 dígitos vira rótulo CPF e score inconclusivo vira texto', function () {
+it('documento de 11 dígitos vira CPF e nunca recebe score fiscal sintético', function () {
     $dono = (object) [
         'razao_social' => 'FULANO DE TAL', 'documento' => '123.456.789-09',
         'situacao_cadastral' => null, 'uf' => null,
     ];
     $dados = dossieDadosFixture();
-    $dados['score'] = ['score_total' => null, 'classificacao' => 'inconclusivo'];
+    // Mesmo que um payload legado traga faixa fiscal, CPF deve permanecer não avaliado.
+    $dados['score'] = ['score_total' => 50, 'classificacao' => 'medio'];
     $dados['consulta'] = ['tem' => false, 'blocos' => []];
 
     $path = storage_path('framework/testing/dsx_'.uniqid().'.xlsx');
@@ -108,6 +109,7 @@ it('documento de 11 dígitos vira rótulo CPF e score inconclusivo vira texto', 
 
     $resumo = $sheets['Resumo'];
     expect($resumo[4][0])->toBe('CPF');
-    expect($resumo[7])->toEqual(['Score fiscal', 'Não conclusivo']);
-    expect($sheets['Certidões'][2][0])->toBe('Sem consulta de certidões para este participante.');
+    expect($resumo[7])->toEqual(['Risco de crédito (CPF)', 'Não avaliado']);
+    expect($resumo[8])->toEqual(['Classificação de risco', 'não avaliado']);
+    expect($sheets['Certidões'][2][0])->toContain('Certidões de CNPJ não se aplicam a CPF');
 });

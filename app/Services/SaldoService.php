@@ -16,6 +16,8 @@ class SaldoService
      */
     public function getBalance(User $user): int
     {
+        $user = $user->accountOwner();
+
         return (int) $user->credits;
     }
 
@@ -33,6 +35,7 @@ class SaldoService
      */
     public function deduct(User $user, float $amount, string $type = 'consulta_lote', ?string $description = null, ?Model $source = null): bool
     {
+        $user = $user->accountOwner();
         $amount = (int) floor($amount);
 
         if ($amount <= 0) {
@@ -91,6 +94,7 @@ class SaldoService
      */
     public function add(User $user, float $amount, string $type = 'manual_add', ?string $description = null, ?Model $source = null): void
     {
+        $user = $user->accountOwner();
         $amount = (int) floor($amount);
 
         if ($amount <= 0) {

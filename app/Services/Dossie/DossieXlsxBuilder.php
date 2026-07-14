@@ -37,7 +37,8 @@ class DossieXlsxBuilder
         $xlsx = XlsxReport::paraArquivo($path);
 
         $this->sheetResumo($xlsx, $dados, $dono);
-        $this->sheetCertidoes($xlsx, $dados['consulta'] ?? ['tem' => false]);
+        $docNum = preg_replace('/\D/', '', (string) $dono->documento);
+        $this->sheetCertidoes($xlsx, $dados['consulta'] ?? ['tem' => false], strlen($docNum) === 11);
         $this->sheetCompetencia($xlsx, $dados['movimentacao']['por_competencia'] ?? []);
         $this->sheetQtdValor($xlsx, 'CFOP', 'Movimentação por CFOP', 'cfop', $dados['movimentacao']['por_cfop'] ?? []);
         $this->sheetQtdValor($xlsx, 'CST', 'Movimentação por CST (ICMS)', 'cst', $dados['movimentacao']['por_cst'] ?? []);
@@ -54,7 +55,18 @@ class DossieXlsxBuilder
         $score = $dados['score'] ?? [];
         $classificacao = $score['classificacao'] ?? null;
         $inconclusivo = $classificacao === 'inconclusivo';
+        $naoAvaliado = $classificacao === null
+            || $classificacao === 'nao_avaliado'
+            || (($score['score_total'] ?? null) === null && ! $inconclusivo);
         $docNum = preg_replace('/\D/', '', (string) $dono->documento);
+        $isCpf = strlen($docNum) === 11;
+        $scoreRotulo = $isCpf ? 'Risco de crédito (CPF)' : 'Score fiscal';
+        $scoreValor = $isCpf || $naoAvaliado
+            ? 'Não avaliado'
+            : ($inconclusivo ? 'Não conclusivo' : (int) $score['score_total']);
+        $classificacaoValor = $isCpf || $naoAvaliado
+            ? 'não avaliado'
+            : ($inconclusivo ? 'não conclusivo' : (string) $classificacao);
 
         $xlsx->addSheet('Resumo')
             ->larguras(30, 44)
@@ -66,12 +78,12 @@ class DossieXlsxBuilder
             ->linhaKV('Situação cadastral', (string) ($dono->situacao_cadastral ?? '—'))
             ->linhaKV('UF', (string) ($dono->uf ?: '—'))
             ->linhaKV(
-                'Score fiscal',
-                $inconclusivo ? 'Não conclusivo' : (int) ($score['score_total'] ?? 0),
+                $scoreRotulo,
+                $scoreValor,
                 XlsxReport::FMT_INT,
                 ReportTheme::riscoHex($classificacao)
             )
-            ->linhaKV('Classificação de risco', $inconclusivo ? 'não conclusivo' : (string) ($classificacao ?? 'nunca consultado'))
+            ->linhaKV('Classificação de risco', $classificacaoValor)
             ->linhaKV('Total de notas', (int) $k['total_notas'], XlsxReport::FMT_INT)
             ->linhaKV('Valor movimentado', (float) $k['valor_movimentado'], XlsxReport::FMT_BRL)
             ->linhaKV('Entradas — quantidade', (int) $k['entradas_qtd'], XlsxReport::FMT_INT)
@@ -86,7 +98,7 @@ class DossieXlsxBuilder
     }
 
     /** Certidões/fontes da última consulta — mesma tabularização do XLSX da consulta. */
-    private function sheetCertidoes(XlsxReport $xlsx, array $consulta): void
+    private function sheetCertidoes(XlsxReport $xlsx, array $consulta, bool $isCpf = false): void
     {
         $xlsx->addSheet('Certidões')
             ->larguras(24, 16, 70)
@@ -94,7 +106,9 @@ class DossieXlsxBuilder
             ->header(['Fonte', 'Situação', 'Detalhe']);
 
         if (empty($consulta['tem']) || empty($consulta['blocos'])) {
-            $xlsx->vazio('Sem consulta de certidões para este participante.');
+            $xlsx->vazio($isCpf
+                ? 'Certidões de CNPJ não se aplicam a CPF; risco de crédito ainda sem fonte integrada.'
+                : 'Sem consulta de certidões para este participante.');
 
             return;
         }

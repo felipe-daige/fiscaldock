@@ -121,6 +121,11 @@
         </div>
     @endif
 
+    @include('autenticado.notas.partials._itens-tabela', [
+        'itens' => $nota->itens,
+        'mostrarTributos' => true,
+    ])
+
     @if($temTributos)
         <div class="bg-white rounded border border-gray-300 overflow-hidden">
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">

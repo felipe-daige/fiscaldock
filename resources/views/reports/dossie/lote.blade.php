@@ -41,15 +41,16 @@
                     @foreach ($grupos as $g)
                         @php
                             $c = $g['dossie']['cliente'];
-                            $cls = $g['dossie']['score']['classificacao'] ?? 'medio';
+                            $cls = $g['dossie']['score']['classificacao'] ?? 'nao_avaliado';
                             $hex = \App\Support\Reports\ReportTheme::riscoHex($cls);
+                            $clsLabel = app(\App\Services\RiskScoreService::class)->getLabelClassificacao($cls);
                         @endphp
                         <tr>
                             <td class="mono">{{ $loop->iteration }}</td>
                             <td>{{ $c->razao_social ?: ($c->nome_fantasia ?: '—') }}</td>
                             <td class="mono">{{ $c->documento }}</td>
                             <td class="center">{{ $c->uf ?: '—' }}</td>
-                            <td class="center"><span class="badge" style="background-color: {{ $hex }};">{{ ucfirst($cls) }}</span></td>
+                            <td class="center"><span class="badge" style="background-color: {{ $hex }};">{{ $clsLabel }}</span></td>
                             <td class="right">
                                 {{ count($g['participantes']) }}@if ($g['participantes_total'] > count($g['participantes']))<span class="muted"> de {{ $g['participantes_total'] }}</span>@endif
                             </td>

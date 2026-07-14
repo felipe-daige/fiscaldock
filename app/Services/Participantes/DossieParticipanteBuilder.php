@@ -7,6 +7,7 @@ use App\Models\Participante;
 use App\Models\ParticipanteScore;
 use App\Services\Consultas\Fiscal\TopMovimentacaoQuery;
 use App\Services\Consultas\ResultadoDetalhePresenter;
+use App\Services\Risk\RiscoCreditoCpfService;
 use App\Services\RiskScoreService;
 
 /**
@@ -20,6 +21,7 @@ final class DossieParticipanteBuilder
         private ResultadoDetalhePresenter $presenter,
         private TopMovimentacaoQuery $top,
         private RiskScoreService $risk,
+        private RiscoCreditoCpfService $riscoCpf,
     ) {}
 
     public function montar(Participante $p): array
@@ -42,6 +44,7 @@ final class DossieParticipanteBuilder
 
         $consulta = [
             'tem' => (bool) $ultima,
+            'aplicavel' => ! $p->is_cpf,
             'resumo' => $ultima ? $this->presenter->resumoTextual($ultima) : null,
             // Passa as certidões que o PLANO desta consulta realmente incluiu → fonte pedida mas
             // sem retorno vira card de erro; fonte fora do plano não aparece como erro falso.
@@ -49,24 +52,40 @@ final class DossieParticipanteBuilder
             'consultado_em' => $ultima?->consultado_em?->format('d/m/Y H:i'),
         ];
 
-        $score = $ultima
-            ? $ultima->calcularScore()
-            : ['scores' => [], 'score_total' => 0, 'classificacao' => 'medio'];
+        if ($p->is_cpf) {
+            $consulta = [
+                'tem' => false,
+                'aplicavel' => false,
+                'resumo' => null,
+                'blocos' => [],
+                'consultado_em' => null,
+            ];
+        }
 
-        $score['detalhamento'] = $this->risk->detalhar($score['scores'] ?? []);
+        $movimentacao = [
+            'kpis' => $this->movimentacao->kpis($p),
+            'por_competencia' => $this->movimentacao->porCompetencia($p),
+            'por_cfop' => $this->movimentacao->porCfop($p),
+            'por_cst' => $this->movimentacao->porCst($p),
+            'impostos' => $this->movimentacao->impostos($p),
+        ];
+
+        $score = $p->is_cpf
+            ? $this->riscoCpf->avaliar($p, $movimentacao['kpis'])
+            : ($ultima
+                ? $ultima->calcularScore()
+                : ['tipo' => 'fiscal_cnpj', 'scores' => [], 'score_total' => null, 'classificacao' => 'nao_avaliado']);
+
+        if (! $p->is_cpf) {
+            $score['detalhamento'] = $this->risk->detalhar($score['scores'] ?? []);
+        }
 
         return [
             'participante' => $p,
             'gerado_em' => now()->format('d/m/Y H:i'),
             'consulta' => $consulta,
             'score' => $score,
-            'movimentacao' => [
-                'kpis' => $this->movimentacao->kpis($p),
-                'por_competencia' => $this->movimentacao->porCompetencia($p),
-                'por_cfop' => $this->movimentacao->porCfop($p),
-                'por_cst' => $this->movimentacao->porCst($p),
-                'impostos' => $this->movimentacao->impostos($p),
-            ],
+            'movimentacao' => $movimentacao,
             'top_produtos' => $this->top->produtos($p->user_id, 'participante_id', [$p->id], 10)[$p->id] ?? [],
             'top_cfops' => $this->top->cfops($p->user_id, 'participante_id', [$p->id], 10)[$p->id] ?? [],
         ];

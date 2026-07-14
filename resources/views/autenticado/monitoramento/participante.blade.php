@@ -64,14 +64,16 @@
                         >
                             Editar cadastro
                         </a>
-                        <a
-                            href="/app/consulta/nova?participantes={{ $participante->id }}"
-                            data-link
-                            class="px-3 py-2 text-sm font-medium bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded"
-                        >
-                            Nova consulta
-                        </a>
-                        @if(!$assinaturaAtiva)
+                        @unless($participante->is_cpf)
+                            <a
+                                href="/app/consulta/nova?participantes={{ $participante->id }}"
+                                data-link
+                                class="px-3 py-2 text-sm font-medium bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded"
+                            >
+                                Nova consulta
+                            </a>
+                        @endunless
+                        @if(!$assinaturaAtiva && ! $participante->is_cpf)
                             <button
                                 type="button"
                                 id="btn-criar-assinatura"
@@ -100,9 +102,9 @@
                     <p class="text-[11px] text-gray-500 mt-1">{{ $participante->ultima_consulta_em ? $participante->ultima_consulta_em->format('H:i') : 'Sem consulta realizada' }}</p>
                 </div>
                 <div class="p-4 sm:p-6">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Situação</p>
-                    <p class="text-lg font-bold text-gray-900">{{ $situacaoBadge['label'] }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">Base cadastral e fiscal monitorada</p>
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">{{ $participante->is_cpf ? 'Avaliação' : 'Situação' }}</p>
+                    <p class="text-lg font-bold text-gray-900">{{ $participante->is_cpf ? 'Não avaliada' : $situacaoBadge['label'] }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">{{ $participante->is_cpf ? 'Risco de crédito sem fonte integrada' : 'Base cadastral e fiscal monitorada' }}</p>
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Documento</p>
@@ -156,23 +158,23 @@
                     <div class="p-4 sm:p-6">
                         <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-4">
                             <div>
-                                <dt class="text-xs text-gray-500 uppercase tracking-wide">CNPJ</dt>
+                                <dt class="text-xs text-gray-500 uppercase tracking-wide">{{ $participante->is_cpf ? 'CPF' : 'CNPJ' }}</dt>
                                 <dd class="mt-1 text-sm font-mono text-gray-900">{{ $participante->cnpj_formatado }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-gray-500 uppercase tracking-wide">Razão Social</dt>
+                                <dt class="text-xs text-gray-500 uppercase tracking-wide">{{ $participante->is_cpf ? 'Nome' : 'Razão Social' }}</dt>
                                 <dd class="mt-1 text-sm text-gray-900">{{ $participante->razao_social ?? '-' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-gray-500 uppercase tracking-wide">Situação Cadastral</dt>
+                                <dt class="text-xs text-gray-500 uppercase tracking-wide">{{ $participante->is_cpf ? 'Tipo de pessoa' : 'Situação Cadastral' }}</dt>
                                 <dd class="mt-1 text-sm text-gray-900">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $situacaoBadge['hex'] }}">{{ $situacaoBadge['label'] }}</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $participante->is_cpf ? '#374151' : $situacaoBadge['hex'] }}">{{ $participante->is_cpf ? 'Pessoa física' : $situacaoBadge['label'] }}</span>
                                 </dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-gray-500 uppercase tracking-wide">Regime Tributário</dt>
+                                <dt class="text-xs text-gray-500 uppercase tracking-wide">{{ $participante->is_cpf ? 'Avaliação de crédito' : 'Regime Tributário' }}</dt>
                                 <dd class="mt-1 text-sm text-gray-900">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $regimeBadge['hex'] }}">{{ $regimeBadge['label'] }}</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $participante->is_cpf ? '#6b7280' : $regimeBadge['hex'] }}">{{ $participante->is_cpf ? 'Não avaliada' : $regimeBadge['label'] }}</span>
                                 </dd>
                             </div>
                             <div>
@@ -622,8 +624,8 @@
                             <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                             </svg>
-                            <p class="mt-2 text-sm text-gray-500">Nenhuma consulta realizada para este participante</p>
-                            <p class="mt-1 text-xs text-gray-400">Clique em "Consulta Avulsa" para obter dados atualizados</p>
+                            <p class="mt-2 text-sm text-gray-500">{{ $participante->is_cpf ? 'Risco de crédito ainda não avaliado para este CPF' : 'Nenhuma consulta realizada para este participante' }}</p>
+                            <p class="mt-1 text-xs text-gray-400">{{ $participante->is_cpf ? 'Consulta de CNPJ e certidões fiscais não se aplicam a pessoa física' : 'Clique em "Consulta Avulsa" para obter dados atualizados' }}</p>
                         </div>
                     </div>
                 @endif
@@ -641,12 +643,14 @@
 
                 {{-- Detalhamento do Score --}}
                 <div class="bg-white border border-gray-200 rounded-lg p-4 mt-4">
-                    <h3 class="text-[13px] font-bold text-gray-700 uppercase tracking-wide mb-3">Detalhamento do Score</h3>
+                    <h3 class="text-[13px] font-bold text-gray-700 uppercase tracking-wide mb-3">{{ $participante->is_cpf ? 'Risco de Crédito' : 'Detalhamento do Score' }}</h3>
                     @include('autenticado.partials._score-detalhamento', [
                         'detalhamento' => $score_detalhamento ?? [],
                         'scoreTotal' => $score['score_total'] ?? null,
                         'classificacao' => $score['classificacao'] ?? 'nao_avaliado',
                         'comHeadline' => true,
+                        'isCpf' => $participante->is_cpf,
+                        'mensagemCpf' => $score['mensagem'] ?? null,
                     ])
                 </div>
 

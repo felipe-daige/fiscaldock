@@ -100,8 +100,8 @@ it('o motor ADIA a assinatura sem pausar ao estourar o cap de consumo', function
 
 // ---- Gating de CNPJs monitorados ----
 
-it('bloqueia ativar monitoramento acima do limite de CNPJs do plano', function () {
-    $user = User::factory()->create(); // free → limite_cnpjs = 1
+it('não bloqueia produto pago por quantidade de CNPJs do tier', function () {
+    $user = User::factory()->create();
     fase5Assinar($user, 'free');
 
     // já tem 1 ativo (criado direto, fora do gate)
@@ -117,9 +117,27 @@ it('bloqueia ativar monitoramento acima do limite de CNPJs do plano', function (
         'participante_id' => $p2->id,
         'plano_id' => MonitoramentoPlano::porCodigo('licitacao')->id,
         'frequencia' => 'mensal',
-    ])->assertStatus(403);
+    ])->assertOk();
 
-    expect(MonitoramentoAssinatura::where('participante_id', $p2->id)->count())->toBe(0);
+    expect(MonitoramentoAssinatura::where('participante_id', $p2->id)->count())->toBe(1);
+});
+
+it('limita somente o automonitoramento cadastral gratuito a um CNPJ mensal', function () {
+    $user = User::factory()->create();
+    $gratis = MonitoramentoPlano::porCodigo('gratuito');
+    $p1 = fase5Participante($user, '11222333000181');
+    MonitoramentoAssinatura::create([
+        'user_id' => $user->id, 'participante_id' => $p1->id,
+        'plano_id' => $gratis->id,
+        'status' => 'ativo', 'frequencia_dias' => 30, 'proxima_execucao_em' => now()->addDay(),
+    ]);
+
+    $p2 = fase5Participante($user, '11444777000161');
+    actingAs($user)->postJson(route('app.monitoramento.assinatura.criar'), [
+        'participante_id' => $p2->id,
+        'plano_id' => $gratis->id,
+        'frequencia' => 'mensal',
+    ])->assertStatus(403);
 });
 
 it('trial ativo não tem teto de CNPJs monitorados', function () {
@@ -154,7 +172,7 @@ it('o contador define o cap de consumo na assinatura', function () {
 it('o contador limpa o teto personalizado e recebe o cap padrão para atualizar a tela', function () {
     $user = User::factory()->create();
     fase5Assinar($user, 'essencial', ['limite_consumo_automatico' => 42]);
-    $capPadrao = app(EntitlementService::class)->planFor($user)->creditos_inclusos;
+    $capPadrao = 0;
 
     actingAs($user)->postJson(route('app.monitoramento.limite-consumo'), ['limite' => null])
         ->assertOk()
@@ -209,17 +227,17 @@ it('painel mostra versão informativa do freio para usuário sem assinatura', fu
 
 // ---- Fase 5.1: gating de frequência e profundidade ----
 
-it('frequência mínima e profundidade máxima vêm do tier (trial libera)', function () {
+it('frequência e profundidade de produtos pagos não dependem do tier', function () {
     $user = User::factory()->create();
-    fase5Assinar($user, 'essencial'); // freq mínima 30, profundidade licitacao
+    fase5Assinar($user, 'essencial');
     $svc = app(EntitlementService::class);
 
-    expect($svc->frequenciaMinimaMonitoramento($user))->toBe(30);
+    expect($svc->frequenciaMinimaMonitoramento($user))->toBe(1);
     expect($svc->permiteFrequenciaMonitoramento($user, 30))->toBeTrue();
-    expect($svc->permiteFrequenciaMonitoramento($user, 15))->toBeFalse(); // quinzenal só no profissional+
-    expect($svc->profundidadeMaximaMonitoramento($user))->toBe('licitacao');
+    expect($svc->permiteFrequenciaMonitoramento($user, 15))->toBeTrue();
+    expect($svc->profundidadeMaximaMonitoramento($user))->toBe('due_diligence');
     expect($svc->permiteProfundidadeMonitoramento($user, 'licitacao'))->toBeTrue();
-    expect($svc->permiteProfundidadeMonitoramento($user, 'compliance'))->toBeFalse();
+    expect($svc->permiteProfundidadeMonitoramento($user, 'compliance'))->toBeTrue();
 
     $trial = User::factory()->create([
         'trial_used' => true, 'trial_expires_at' => now()->addDays(10), 'trial_credits_remaining' => 50,
@@ -228,30 +246,30 @@ it('frequência mínima e profundidade máxima vêm do tier (trial libera)', fun
     expect($svc->permiteProfundidadeMonitoramento($trial, 'compliance'))->toBeTrue();
 });
 
-it('bloqueia frequência mais frequente que o tier permite', function () {
+it('permite frequência diária em produto pago de qualquer tier', function () {
     $user = User::factory()->create();
-    fase5Assinar($user, 'essencial'); // mínima 30
+    fase5Assinar($user, 'essencial');
     $p = fase5Participante($user);
 
     actingAs($user)->postJson(route('app.monitoramento.assinatura.criar'), [
         'participante_id' => $p->id,
-        'plano_id' => MonitoramentoPlano::porCodigo('licitacao')->id, // profundidade ok
-        'frequencia' => 'diario', // 1 dia < 30 → bloqueia
-    ])->assertStatus(403);
+        'plano_id' => MonitoramentoPlano::porCodigo('licitacao')->id,
+        'frequencia' => 'diario',
+    ])->assertOk();
 
-    expect(MonitoramentoAssinatura::where('participante_id', $p->id)->count())->toBe(0);
+    expect(MonitoramentoAssinatura::where('participante_id', $p->id)->count())->toBe(1);
 });
 
-it('bloqueia profundidade acima do teto do tier', function () {
+it('permite Compliance em qualquer tier quando o produto está ativo', function () {
     $user = User::factory()->create();
-    fase5Assinar($user, 'essencial'); // máx licitacao
+    fase5Assinar($user, 'essencial');
     $p = fase5Participante($user);
 
     actingAs($user)->postJson(route('app.monitoramento.assinatura.criar'), [
         'participante_id' => $p->id,
-        'plano_id' => MonitoramentoPlano::porCodigo('compliance')->id, // mais profundo que licitacao
-        'frequencia' => 'mensal', // frequência ok
-    ])->assertStatus(403);
+        'plano_id' => MonitoramentoPlano::porCodigo('compliance')->id,
+        'frequencia' => 'mensal',
+    ])->assertOk();
 
-    expect(MonitoramentoAssinatura::where('participante_id', $p->id)->count())->toBe(0);
+    expect(MonitoramentoAssinatura::where('participante_id', $p->id)->count())->toBe(1);
 });

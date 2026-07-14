@@ -446,10 +446,13 @@ class ConsultaController extends Controller
                         if ($dataValidade === null) {
                             $cndMeta = 'Validade: '.(string) $cndValidade;
                         } else {
-                            $diasRestantes = $agora->diffInDays($dataValidade, false);
+                            $diasRestantes = $agora->copy()->startOfDay()
+                                ->diffInDays($dataValidade->copy()->startOfDay(), false);
 
-                            if ($diasRestantes <= 0) {
+                            if ($agora->greaterThan($dataValidade->copy()->endOfDay())) {
                                 $cndMeta = 'Vencida em '.$dataValidade->format('d/m/Y');
+                            } elseif ((int) $diasRestantes === 0) {
+                                $cndMeta = 'Vence hoje';
                             } elseif ($diasRestantes <= 7) {
                                 $cndMeta = 'Vence em '.(int) $diasRestantes.' dias';
                             } else {

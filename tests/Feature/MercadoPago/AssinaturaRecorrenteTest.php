@@ -90,7 +90,7 @@ it('sincroniza preapproval_plans dos tiers pagos e grava os ids', function () {
     expect(SubscriptionPlan::where('codigo', 'free')->first()->mp_preapproval_plan_id_mensal)->toBeNull();
     expect(SubscriptionPlan::where('codigo', 'enterprise')->first()->mp_preapproval_plan_id_mensal)->toBeNull();
 
-    // Escritório mensal (R$799) sincroniza; anual (R$7.990 > teto MP) é PULADO → fica nulo (vai pro WhatsApp).
+    // Escritório mensal (R$599) sincroniza; anual (R$5.990 > teto MP) é PULADO → fica nulo (vai pro WhatsApp).
     $esc = SubscriptionPlan::where('codigo', 'escritorio')->first();
     expect($esc->mp_preapproval_plan_id_mensal)->toBe('PLAN-ESC-MES');
     expect($esc->mp_preapproval_plan_id_anual)->toBeNull();
@@ -153,7 +153,7 @@ it('re-assinar após cancelar reusa a linha (user_id é unique, não estoura)', 
 });
 
 it('assinar recusa cobrança acima do teto do MP (R$4k) → checkout assistido', function () {
-    // Escritório com os dois planos sincronizados; anual (R$7.990) > teto 4000, mensal (R$799) ok.
+    // Escritório com os dois planos sincronizados; anual (R$5.990) > teto 4000, mensal (R$599) ok.
     SubscriptionPlan::where('codigo', 'escritorio')->update([
         'mp_preapproval_plan_id_anual' => 'PLAN-ESC-ANO',
         'mp_preapproval_plan_id_mensal' => 'PLAN-ESC-MES',
@@ -169,7 +169,7 @@ it('assinar recusa cobrança acima do teto do MP (R$4k) → checkout assistido',
         ->assertStatus(422)
         ->assertJsonPath('error', 'Valor acima do limite de cobrança automática. Fale com o atendimento para assinar este plano.');
 
-    // Mensal (R$799) está abaixo do teto e segue normal.
+    // Mensal (R$599) está abaixo do teto e segue normal.
     postJson(route('app.assinatura.criar'), ['plano' => 'escritorio', 'ciclo' => 'mensal', 'token' => 't'])->assertOk();
     expect(AccountSubscription::where('user_id', $user->id)->first()->mp_preapproval_id)->toBe('PRE-MES');
 
@@ -217,7 +217,7 @@ it('webhook preapproval authorized ativa a assinatura e concede o 1º mês como 
     $enviar()->assertOk(); // reentrega não concede de novo
 
     $user->refresh();
-    expect($user->credits)->toBe(300);
+    expect($user->credits)->toBe(175);
     expect($sub->fresh()->status)->toBe('ativa');
     expect(SaldoTransacao::where('type', 'purchase')->count())->toBe(1); // destrava 1ª compra
 });
@@ -322,13 +322,13 @@ it('scheduler concede saldo só de assinaturas ativas com proximo_grant vencido 
 
     $this->artisan('assinatura:conceder-saldo')->assertExitCode(0);
 
-    expect($userVencido->fresh()->credits)->toBe(300);     // concedeu
+    expect($userVencido->fresh()->credits)->toBe(175);     // concedeu
     expect($userFuturo->fresh()->credits)->toBe(0);        // ainda não vence
     expect($userInadimplente->fresh()->credits)->toBe(0);  // não ativa
 
     // Re-rodar não concede de novo (proximo_grant avançou pro futuro).
     $this->artisan('assinatura:conceder-saldo')->assertExitCode(0);
-    expect($userVencido->fresh()->credits)->toBe(300);
+    expect($userVencido->fresh()->credits)->toBe(175);
     expect(SaldoTransacao::where('type', 'subscription_credit')->count())->toBe(1);
 });
 

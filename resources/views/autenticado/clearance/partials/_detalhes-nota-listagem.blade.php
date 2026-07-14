@@ -11,6 +11,19 @@
         'ok' => ['label' => 'Sem divergência', 'hex' => '#047857'],
     ];
     $severidade = $severidadeMeta[$resultado->severidade ?? ''] ?? null;
+    $itensNota = $nota->itens_nota ?? collect();
+    $fmtDecimal = function ($valor, int $casas = 4): string {
+        $texto = number_format((float) $valor, $casas, ',', '.');
+
+        return str_contains($texto, ',') ? (rtrim(rtrim($texto, '0'), ',') ?: '0') : $texto;
+    };
+    // Moeda com no mínimo 2 casas; abre pra 4 só quando o unitário tem precisão real
+    $fmtMoedaUnit = fn ($valor): string => number_format(
+        (float) $valor,
+        fmod(round((float) $valor * 10000), 100) == 0 ? 2 : 4,
+        ',',
+        '.'
+    );
 @endphp
 
 <div class="space-y-3">
@@ -124,6 +137,58 @@
             ])
         </div>
     </div>
+
+    @if($itensNota->isNotEmpty())
+        <div class="rounded border border-gray-200 bg-white overflow-hidden">
+            <div class="bg-gray-50 px-3 py-2 border-b border-gray-200 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Itens da nota</p>
+                    <p class="text-[10px] text-gray-400 mt-0.5">Produtos e serviços escriturados no documento</p>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    @if($nota->itens_via_gemea ?? false)
+                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #6b7280" title="A escrituração fiscal desta nota só traz o consolidado C190; os itens vêm da mesma nota na EFD Contribuições.">Itens via EFD Contribuições</span>
+                    @endif
+                    <span class="text-[10px] font-semibold text-gray-500 bg-gray-200 px-2 py-0.5 rounded">{{ $nota->itens_total }} item(ns)</span>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-[11px]">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-3 py-1.5 text-left text-[9px] font-semibold text-gray-400 uppercase tracking-wide">#</th>
+                            <th class="px-3 py-1.5 text-left text-[9px] font-semibold text-gray-400 uppercase tracking-wide">Descrição</th>
+                            <th class="px-3 py-1.5 text-left text-[9px] font-semibold text-gray-400 uppercase tracking-wide">NCM</th>
+                            <th class="px-3 py-1.5 text-left text-[9px] font-semibold text-gray-400 uppercase tracking-wide">CFOP</th>
+                            <th class="px-3 py-1.5 text-right text-[9px] font-semibold text-gray-400 uppercase tracking-wide">Qtd</th>
+                            <th class="px-3 py-1.5 text-left text-[9px] font-semibold text-gray-400 uppercase tracking-wide">Un</th>
+                            <th class="px-3 py-1.5 text-right text-[9px] font-semibold text-gray-400 uppercase tracking-wide">Vlr unit.</th>
+                            <th class="px-3 py-1.5 text-right text-[9px] font-semibold text-gray-400 uppercase tracking-wide">Vlr total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @foreach($itensNota as $item)
+                            <tr>
+                                <td class="px-3 py-1.5 font-mono text-gray-400">{{ $item->numero_item }}</td>
+                                <td class="px-3 py-1.5 text-gray-900">{{ $item->descricao ?: ($item->codigo_item ? 'Item '.$item->codigo_item : '—') }}</td>
+                                <td class="px-3 py-1.5 font-mono text-gray-600">{{ $item->ncm ?: '—' }}</td>
+                                <td class="px-3 py-1.5 font-mono text-gray-600">{{ $item->cfop ?: '—' }}</td>
+                                <td class="px-3 py-1.5 text-right font-mono text-gray-900">{{ $fmtDecimal($item->quantidade) }}</td>
+                                <td class="px-3 py-1.5 text-gray-600">{{ $item->unidade_medida ?: '—' }}</td>
+                                <td class="px-3 py-1.5 text-right font-mono text-gray-900">R$&nbsp;{{ $fmtMoedaUnit($item->valor_unitario) }}</td>
+                                <td class="px-3 py-1.5 text-right font-mono font-semibold text-gray-900">R$&nbsp;{{ number_format((float) $item->valor_total, 2, ',', '.') }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @if(($nota->itens_total ?? 0) > $itensNota->count())
+                <div class="px-3 py-2 border-t border-gray-200 bg-gray-50">
+                    <a href="{{ $detalheUrl }}" data-link class="text-[11px] text-gray-600 hover:text-gray-900 hover:underline">+ {{ $nota->itens_total - $itensNota->count() }} item(ns) — ver nota completa →</a>
+                </div>
+            @endif
+        </div>
+    @endif
 
     <div class="rounded border border-gray-200 bg-white px-3 py-2.5">
         <div class="grid grid-cols-1 md:grid-cols-[1fr,auto] gap-3 items-end">

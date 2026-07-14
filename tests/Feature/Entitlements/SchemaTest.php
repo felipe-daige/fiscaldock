@@ -10,7 +10,7 @@ it('cria a tabela subscription_plans com as colunas comerciais', function () {
     expect(Schema::hasColumns('subscription_plans', [
         'codigo', 'nome', 'preco_mensal_centavos', 'preco_anual_centavos',
         'creditos_inclusos', 'faixa_slug', 'limite_clientes', 'limite_cnpjs_monitorados',
-        'frequencia_padrao_dias', 'profundidade_auto_monitor', 'assentos_inclusos',
+        'frequencia_padrao_dias', 'profundidade_auto_monitor', 'assentos_inclusos', 'preco_assento_extra_centavos',
         'rollover_cap_multiplicador', 'capabilities', 'is_active', 'ordem',
     ]))->toBeTrue();
 });

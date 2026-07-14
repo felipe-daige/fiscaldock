@@ -3,6 +3,7 @@
     $detalhamento = $detalhamento ?? [];
     $scoreTotal = $scoreTotal ?? null;
     $classificacao = $classificacao ?? 'nao_avaliado';
+    $isCpf = $isCpf ?? false;
     $temAvaliada = collect($detalhamento)->contains(fn ($l) => $l['avaliado'] ?? false);
     $headlineHex = \App\Services\RiskScoreService::hexSubscore($scoreTotal);
     $classLabel = app(\App\Services\RiskScoreService::class)->getLabelClassificacao($classificacao);
@@ -10,9 +11,13 @@
 
 @if($scoreTotal === null && ! $temAvaliada)
     <div class="text-center py-8">
-        <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wide">Score não calculado</h4>
-        <p class="mt-2 text-xs text-gray-500">Faça uma Consulta de CNPJ deste CNPJ para calcular o risco fiscal.</p>
-        <a href="/app/consulta/painel" data-link class="mt-4 inline-flex items-center gap-2 px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">Nova consulta</a>
+        <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wide">{{ $isCpf ? 'Risco de crédito não avaliado' : 'Score não calculado' }}</h4>
+        @if($isCpf)
+            <p class="mt-2 text-xs text-gray-500 max-w-2xl mx-auto">{{ $mensagemCpf ?? \App\Services\Risk\RiscoCreditoCpfService::MENSAGEM_NAO_AVALIADO }}</p>
+        @else
+            <p class="mt-2 text-xs text-gray-500">Faça uma Consulta de CNPJ deste CNPJ para calcular o risco fiscal.</p>
+            <a href="/app/consulta/painel" data-link class="mt-4 inline-flex items-center gap-2 px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">Nova consulta</a>
+        @endif
     </div>
 @else
     @if($comHeadline)

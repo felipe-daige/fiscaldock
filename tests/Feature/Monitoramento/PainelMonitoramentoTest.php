@@ -182,23 +182,22 @@ it('modal novo monitorado expõe o estimador de custo mensal/trimestral', functi
         ->assertSee('id="form-monitorar" data-saldo-unit-price="', false);
 });
 
-// ── Fase 5.1: gating de frequência por tier no modal "Novo monitorado" ──────
+// ── Frequência dirigida pelo produto, não pelo tier ─────────────────────────
 
-it('modal novo monitorado trava frequências acima do tier (Free = mensal apenas)', function () {
+it('modal identifica o produto gratuito mensal e mantém frequências dos pagos disponíveis', function () {
     test()->seed(SubscriptionPlanSeeder::class);
     $user = User::factory()->create(); // sem assinatura → Free (mínimo 30 dias)
 
     $resp = actingAs($user)->get(route('app.monitoramento.painel'));
 
     $resp->assertOk()
-        ->assertSee('requer plano superior')
-        ->assertSee('Seu plano permite monitorar no máximo a cada 30 dias', false)
-        ->assertSee('value="diario" disabled', false)
-        ->assertSee('value="semanal" disabled', false)
-        ->assertSee('value="quinzenal" disabled', false);
+        ->assertSee('data-gratuito="1"', false)
+        ->assertSee('Produtos pagos liberam todas as frequências')
+        ->assertSee('value="diario"', false)
+        ->assertDontSee('requer plano superior');
 });
 
-it('modal novo monitorado libera quinzenal no tier profissional (mínimo 15 dias) e trava as menores', function () {
+it('modal não trava frequência por tier profissional', function () {
     test()->seed(SubscriptionPlanSeeder::class);
     $user = User::factory()->create();
     painelAssinar($user, [
@@ -207,13 +206,13 @@ it('modal novo monitorado libera quinzenal no tier profissional (mínimo 15 dias
 
     $html = actingAs($user)->get(route('app.monitoramento.painel'))->assertOk()->getContent();
 
-    expect($html)->toContain('value="diario" disabled')
-        ->toContain('value="semanal" disabled')
-        ->not->toContain('value="quinzenal" disabled')
-        ->toContain('Seu plano permite monitorar no máximo a cada 15 dias');
+    expect($html)->toContain('value="diario"')
+        ->toContain('value="semanal"')
+        ->toContain('value="quinzenal"')
+        ->not->toContain('requer plano superior');
 });
 
-it('modal novo monitorado libera todas as frequências no trial', function () {
+it('modal também libera todas as frequências no trial', function () {
     test()->seed(SubscriptionPlanSeeder::class);
     $user = User::factory()->trialAtivo()->create();
 
@@ -221,5 +220,5 @@ it('modal novo monitorado libera todas as frequências no trial', function () {
 
     expect($html)->not->toContain('requer plano superior')
         ->not->toContain('value="diario" disabled')
-        ->not->toContain('Seu plano permite monitorar no máximo');
+        ->toContain('Produtos pagos liberam todas as frequências');
 });

@@ -24,6 +24,21 @@ class DashboardNotasFiscaisController extends Controller
     use RespondeAjax;
     use SetsDownloadToken;
 
+    private const MESES_PT_BR = [
+        1 => 'Janeiro',
+        2 => 'Fevereiro',
+        3 => 'Março',
+        4 => 'Abril',
+        5 => 'Maio',
+        6 => 'Junho',
+        7 => 'Julho',
+        8 => 'Agosto',
+        9 => 'Setembro',
+        10 => 'Outubro',
+        11 => 'Novembro',
+        12 => 'Dezembro',
+    ];
+
     private const VIEW = 'autenticado.notas.dashboard';
 
     private const LAYOUT = 'autenticado.layouts.app';
@@ -68,6 +83,7 @@ class DashboardNotasFiscaisController extends Controller
             'importacoes' => $importacoes,
             'clientes' => $clientes,
             'participantes' => $participantes,
+            'periodos' => $this->periodosDisponiveis($inicio, $fim),
             'defaultTab' => 'visao-geral',
             'filtros' => [
                 'periodo_inicio' => $inicio,
@@ -84,6 +100,29 @@ class DashboardNotasFiscaisController extends Controller
         }
 
         return view(self::LAYOUT, ['initialView' => self::VIEW, ...$data]);
+    }
+
+    /**
+     * Opções de competência em português, mantendo AAAA-MM como valor do filtro.
+     *
+     * @return array<int, array{valor: string, rotulo: string}>
+     */
+    private function periodosDisponiveis(string $inicio, string $fim): array
+    {
+        $competencia = Carbon::parse($inicio.'-01')->startOfMonth();
+        $ultimaCompetencia = Carbon::parse($fim.'-01')->startOfMonth();
+        $periodos = [];
+
+        while ($competencia->lte($ultimaCompetencia)) {
+            $periodos[] = [
+                'valor' => $competencia->format('Y-m'),
+                'rotulo' => self::MESES_PT_BR[$competencia->month].' de '.$competencia->year,
+            ];
+
+            $competencia->addMonth();
+        }
+
+        return $periodos;
     }
 
     public function visaoGeral(Request $request)

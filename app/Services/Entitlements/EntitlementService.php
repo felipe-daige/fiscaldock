@@ -20,6 +20,8 @@ class EntitlementService
 
     public function planFor(User $user): SubscriptionPlan
     {
+        $user = $user->accountOwner();
+
         $subscription = $user->relationLoaded('subscription')
             ? $user->subscription
             : $user->subscription()
@@ -132,7 +134,8 @@ class EntitlementService
             return (int) $subscription->limite_consumo_automatico;
         }
 
-        return (int) $this->planFor($user)->creditos_inclusos;
+        // Sem valor explícito, não existe teto oculto do tier: o saldo é o limite real.
+        return 0;
     }
 
     // ---- Fase 5: freio de consumo do auto-monitor (§6.2) + gating de CNPJs monitorados ----
@@ -190,11 +193,7 @@ class EntitlementService
     /** Teto de CNPJs monitorados ativos do tier. null = ilimitado (inclui trial ativo). */
     public function limiteCnpjsMonitorados(User $user): ?int
     {
-        if ($user->hasActiveTrial()) {
-            return null;
-        }
-
-        return $this->limit($user, 'limite_cnpjs_monitorados');
+        return null;
     }
 
     /** Pode ativar mais um monitoramento? `$ativos` = nº de assinaturas ativas/pausadas hoje. */
@@ -249,11 +248,7 @@ class EntitlementService
      */
     public function limiteClientes(User $user): ?int
     {
-        if ($user->hasActiveTrial()) {
-            return null;
-        }
-
-        return $this->limit($user, 'limite_clientes');
+        return null;
     }
 
     /** Clientes que contam pro cap (exclui a empresa própria, que é auto-criada). */
@@ -306,14 +301,7 @@ class EntitlementService
      */
     public function frequenciaMinimaMonitoramento(User $user): int
     {
-        if ($user->hasActiveTrial()) {
-            return 1;
-        }
-
-        $plano = $this->planFor($user);
-        $cap = $plano->capability('frequencia_minima_dias', null);
-
-        return $cap !== null ? (int) $cap : (int) ($plano->frequencia_padrao_dias ?? 30);
+        return 1;
     }
 
     public function permiteFrequenciaMonitoramento(User $user, int $dias): bool
@@ -324,23 +312,12 @@ class EntitlementService
     /** Profundidade máxima do auto-monitor do tier (trial = due_diligence, libera tudo). */
     public function profundidadeMaximaMonitoramento(User $user): string
     {
-        if ($user->hasActiveTrial()) {
-            return 'due_diligence';
-        }
-
-        return (string) ($this->planFor($user)->profundidade_auto_monitor ?? 'cadastral');
+        return 'due_diligence';
     }
 
     /** O plano de monitoramento escolhido (`$codigoPlano`) cabe na profundidade do tier? */
     public function permiteProfundidadeMonitoramento(User $user, string $codigoPlano): bool
     {
-        $rankEscolhido = self::RANK_PROFUNDIDADE[$codigoPlano] ?? null;
-        if ($rankEscolhido === null) {
-            return true; // código desconhecido: não bloqueia (best-effort)
-        }
-
-        $rankMax = self::RANK_PROFUNDIDADE[$this->profundidadeMaximaMonitoramento($user)] ?? 4;
-
-        return $rankEscolhido <= $rankMax;
+        return true;
     }
 }

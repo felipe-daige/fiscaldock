@@ -1,6 +1,7 @@
 <?php
 
 use App\Services\PricingCatalogService;
+use Database\Seeders\SubscriptionPlanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use function Pest\Laravel\get;
@@ -35,4 +36,34 @@ it('apresenta planos, consultas CNPJ e clearance com os catálogos atuais', func
 
     expect(collect(app(PricingCatalogService::class)->getComplianceSources())->pluck('status')->unique()->all())
         ->toBe(['ativo']);
+});
+
+it('mantém todos os cards de assinatura na matriz comercial aprovada', function () {
+    $this->seed(SubscriptionPlanSeeder::class);
+
+    $html = get('/precos')->assertOk()->getContent();
+
+    foreach ([
+        'Essencial' => ['99', '990', '35,00', '2 acessos individuais incluídos'],
+        'Profissional' => ['249', '2.490', '80,00', '3 acessos individuais incluídos'],
+        'Escritório' => ['599', '5.990', '200,00', '10 acessos individuais incluídos'],
+    ] as $nome => [$mensal, $anual, $saldo, $acessos]) {
+        expect($html)->toContain($nome)
+            ->toContain('data-monthly="'.$mensal.'.00"')
+            ->toContain('data-annual-note="R$ '.$anual.' cobrados ao ano"')
+            ->toContain("R$\u{A0}{$saldo} de saldo por mês")
+            ->toContain($acessos);
+    }
+
+    expect($html)->toContain('Assento extra por R$ 39/mês via atendimento')
+        ->toContain('1 acesso individual incluído')
+        ->toContain('grid-template-columns: repeat(4, minmax(0, 1fr))')
+        ->not->toContain('Certificado digital A1 disponível')
+        ->not->toContain('R$&nbsp;299')
+        ->not->toContain('R$&nbsp;799')
+        ->not->toContain('Plano Enterprise');
+
+    expect(substr_count($html, 'PDF executivo'))->toBe(4);
+    expect($html)->toContain('PDF executivo com marca d’água');
+    expect(substr_count($html, 'PDF executivo sem marca d’água'))->toBe(3);
 });

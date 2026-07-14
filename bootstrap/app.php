@@ -19,7 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
         // Logar todas as requisições HTTP recebidas
         $middleware->append(\App\Http\Middleware\LogHttpRequests::class);
-        // Garantir que a empresa própria do usuário existe (recria silenciosamente se ausente)
+        // Garantir que a empresa própria do owner existe (recria silenciosamente se ausente)
         $middleware->appendToGroup('web', \App\Http\Middleware\EnsureEmpresaPropriaExists::class);
 
         // Excluir rotas de API do CSRF para permitir chamadas externas (n8n)

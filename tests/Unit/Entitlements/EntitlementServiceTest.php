@@ -12,7 +12,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->seed(SubscriptionPlanSeeder::class);
-    $this->svc = new EntitlementService();
+    $this->svc = new EntitlementService;
 });
 
 function assinar(User $user, string $codigo, array $overrides = []): void
@@ -61,10 +61,10 @@ it('exportFormats e capability cru', function () {
     expect($this->svc->capability($user, 'retencao_meses'))->toBeNull();
 });
 
-it('limit retorna o teto do tier (null = ilimitado)', function () {
+it('limit reflete a ausência de teto comercial nos tiers pagos', function () {
     $user = User::factory()->create();
     assinar($user, 'essencial');
-    expect($this->svc->limit($user, 'limite_cnpjs_monitorados'))->toBe(10);
+    expect($this->svc->limit($user, 'limite_cnpjs_monitorados'))->toBeNull();
 
     $ent = User::factory()->create();
     assinar($ent, 'enterprise');
@@ -77,10 +77,10 @@ it('faixaFor reflete a faixa comprada pelo tier', function () {
     expect($this->svc->faixaFor($user))->toBe('y');
 });
 
-it('consumptionCap = default créditos inclusos quando não setado', function () {
+it('consumptionCap sem valor explícito não cria teto escondido', function () {
     $user = User::factory()->create();
     assinar($user, 'essencial');
-    expect($this->svc->consumptionCap($user))->toBe(300);
+    expect($this->svc->consumptionCap($user))->toBe(0);
 });
 
 it('consumptionCap respeita o limite explícito do cliente', function () {
@@ -146,13 +146,13 @@ function criarCliente(User $user, string $doc, bool $propria = false): Cliente
     ]);
 }
 
-it('limiteClientes: Free puro = 1, tiers do plano, trial libera (null)', function () {
+it('limiteClientes não bloqueia cadastro em nenhum tier', function () {
     $free = User::factory()->create();
-    expect($this->svc->limiteClientes($free))->toBe(1);
+    expect($this->svc->limiteClientes($free))->toBeNull();
 
     $ess = User::factory()->create();
     assinar($ess, 'essencial');
-    expect($this->svc->limiteClientes($ess))->toBe(15);
+    expect($this->svc->limiteClientes($ess))->toBeNull();
 
     $ent = User::factory()->create();
     assinar($ent, 'enterprise');
@@ -170,15 +170,13 @@ it('clientesAtuais ignora a empresa própria', function () {
     expect($this->svc->clientesAtuais($user))->toBe(1);
 });
 
-it('podeAdicionarCliente: Free trava em empresa própria + 1', function () {
-    $user = User::factory()->create(); // Free puro, limite 1
+it('podeAdicionarCliente não trava o cadastro no Free', function () {
+    $user = User::factory()->create();
     criarCliente($user, '11111111000191', propria: true);
-    // própria não conta → ainda pode adicionar o +1
     expect($this->svc->podeAdicionarCliente($user))->toBeTrue();
 
     criarCliente($user, '22222222000191');
-    // já tem o +1 → estourou
-    expect($this->svc->podeAdicionarCliente($user))->toBeFalse();
+    expect($this->svc->podeAdicionarCliente($user))->toBeTrue();
 });
 
 it('podeAdicionarCliente: trial ativo nunca trava', function () {
@@ -190,19 +188,17 @@ it('podeAdicionarCliente: trial ativo nunca trava', function () {
     expect($this->svc->podeAdicionarCliente($user))->toBeTrue();
 });
 
-it('firstOrCreateClienteComCap: vincula existente, cria se cabe, null se estoura', function () {
-    $user = User::factory()->create(); // Free, cap 1
+it('firstOrCreateClienteComCap preserva compatibilidade sem bloquear novos clientes', function () {
+    $user = User::factory()->create();
     criarCliente($user, '11111111000191', propria: true);
 
-    // cria o +1 (cabe)
     $c1 = $this->svc->firstOrCreateClienteComCap($user->id, '22222222000191', ['tipo_pessoa' => 'PJ', 'razao_social' => 'A', 'ativo' => true]);
     expect($c1)->not->toBeNull();
     expect($c1->is_empresa_propria)->toBeFalse();
 
-    // estourou → null, nada criado
     $c2 = $this->svc->firstOrCreateClienteComCap($user->id, '33333333000191', ['tipo_pessoa' => 'PJ']);
-    expect($c2)->toBeNull();
-    expect(Cliente::where('user_id', $user->id)->where('documento', '33333333000191')->exists())->toBeFalse();
+    expect($c2)->not->toBeNull();
+    expect(Cliente::where('user_id', $user->id)->where('documento', '33333333000191')->exists())->toBeTrue();
 
     // vincular um existente sempre funciona (não conta como novo)
     $again = $this->svc->firstOrCreateClienteComCap($user->id, '22222222000191', []);

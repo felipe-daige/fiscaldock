@@ -14,28 +14,38 @@ it('seeda os 5 tiers com preços e créditos do spec', function () {
     $essencial = SubscriptionPlan::where('codigo', 'essencial')->first();
     expect($essencial->preco_mensal_centavos)->toBe(9900);
     expect($essencial->preco_anual_centavos)->toBe(99000);
-    expect($essencial->creditos_inclusos)->toBe(300);
+    expect($essencial->creditos_inclusos)->toBe(175);
     expect($essencial->faixa_slug)->toBe('base');
-    expect($essencial->limite_cnpjs_monitorados)->toBe(10);
+    expect($essencial->limite_cnpjs_monitorados)->toBeNull();
+    expect($essencial->assentos_inclusos)->toBe(2);
 
     $profissional = SubscriptionPlan::where('codigo', 'profissional')->first();
+    expect($profissional->preco_mensal_centavos)->toBe(24900);
     expect($profissional->faixa_slug)->toBe('x');
-    expect($profissional->creditos_inclusos)->toBe(1100);
+    expect($profissional->creditos_inclusos)->toBe(400);
+    expect($profissional->assentos_inclusos)->toBe(3);
 
     $escritorio = SubscriptionPlan::where('codigo', 'escritorio')->first();
-    expect($escritorio->preco_mensal_centavos)->toBe(79900);
+    expect($escritorio->preco_mensal_centavos)->toBe(59900);
     expect($escritorio->faixa_slug)->toBe('y');
-    expect($escritorio->creditos_inclusos)->toBe(3000);
+    expect($escritorio->creditos_inclusos)->toBe(1000);
+    expect($escritorio->assentos_inclusos)->toBe(10);
+
+    expect(SubscriptionPlan::where('codigo', 'enterprise')->first()->is_active)->toBeFalse();
 });
 
 it('expõe capabilities como array tipado', function () {
     $free = SubscriptionPlan::where('codigo', 'free')->first();
     expect($free->capabilities['clearance_lote'])->toBeFalse();
     expect($free->capabilities['retencao_meses'])->toBe(6);
+    expect($free->capabilities['pdf_executivo'])->toBeTrue();
 
-    $prof = SubscriptionPlan::where('codigo', 'profissional')->first();
-    expect($prof->capabilities['export'])->toBe(['csv', 'excel']);
-    expect($prof->capabilities['pdf_executivo'])->toBeTrue();
+    foreach (['essencial', 'profissional', 'escritorio'] as $codigo) {
+        expect(SubscriptionPlan::where('codigo', $codigo)->first()->capabilities['pdf_executivo'])->toBeTrue();
+    }
+
+    expect(SubscriptionPlan::where('codigo', 'profissional')->first()->capabilities['export'])
+        ->toBe(['csv', 'excel']);
 });
 
 it('reseeda de forma idempotente (updateOrCreate)', function () {

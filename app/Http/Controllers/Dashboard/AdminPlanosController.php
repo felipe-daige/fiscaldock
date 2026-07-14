@@ -76,6 +76,7 @@ class AdminPlanosController extends Controller
             'frequencia_padrao_dias' => ['required', 'integer', 'min:1'],
             'profundidade_auto_monitor' => ['required', 'in:'.implode(',', self::PROFUNDIDADES)],
             'assentos_inclusos' => ['required', 'integer', 'min:1'],
+            'preco_assento_extra_reais' => ['nullable', 'numeric', 'min:0'],
             'rollover_cap_multiplicador' => ['required', 'numeric', 'min:0'],
             'ordem' => ['required', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
@@ -97,7 +98,7 @@ class AdminPlanosController extends Controller
         $anterior = $plano->only([
             'nome', 'preco_mensal_centavos', 'preco_anual_centavos', 'creditos_inclusos',
             'faixa_slug', 'limite_clientes', 'limite_cnpjs_monitorados', 'frequencia_padrao_dias',
-            'profundidade_auto_monitor', 'assentos_inclusos', 'rollover_cap_multiplicador',
+            'profundidade_auto_monitor', 'assentos_inclusos', 'preco_assento_extra_centavos', 'rollover_cap_multiplicador',
             'ordem', 'is_active', 'capabilities', 'mp_preapproval_plan_id_mensal', 'mp_preapproval_plan_id_anual',
         ]);
 
@@ -133,6 +134,9 @@ class AdminPlanosController extends Controller
             'frequencia_padrao_dias' => (int) $dados['frequencia_padrao_dias'],
             'profundidade_auto_monitor' => $dados['profundidade_auto_monitor'],
             'assentos_inclusos' => (int) $dados['assentos_inclusos'],
+            'preco_assento_extra_centavos' => array_key_exists('preco_assento_extra_reais', $dados)
+                ? (int) round(((float) ($dados['preco_assento_extra_reais'] ?? 0)) * 100)
+                : (int) $plano->preco_assento_extra_centavos,
             'rollover_cap_multiplicador' => (float) $dados['rollover_cap_multiplicador'],
             'ordem' => (int) $dados['ordem'],
             'is_active' => (bool) ($dados['is_active'] ?? false),

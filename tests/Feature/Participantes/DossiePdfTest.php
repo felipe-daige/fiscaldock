@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Cliente;
 use App\Models\ConsultaLote;
 use App\Models\ConsultaResultado;
 use App\Models\EfdImportacao;
@@ -78,6 +77,25 @@ it('dossiê PDF preenche a barra agregada quando score fiscal é crítico 100', 
 
     expect($html)->toContain('width:100%;height:14px')
         ->and($html)->not->toContain('width:0%;height:14px');
+});
+
+it('dossiê PDF de CPF não inventa score médio e explica o limite do risco de crédito', function () {
+    $cpf = Participante::create([
+        'user_id' => $this->user->id,
+        'documento' => '12345678901',
+        'razao_social' => 'PESSOA FISICA',
+    ]);
+    $dados = app(DossieParticipanteBuilder::class)->montar($cpf);
+
+    $html = view('reports.dossie.participante', $dados)->render();
+
+    expect($html)
+        ->toContain('Risco de Crédito (CPF)')
+        ->toContain('Não avaliado')
+        ->toContain('não é possível atribuir uma faixa de risco real')
+        ->not->toContain('Score Fiscal</div><div class="val"')
+        ->not->toContain('>Medio<')
+        ->not->toContain('>Médio<');
 });
 
 it('dossiê PDF lista principais produtos e CFOP detalhado', function () {

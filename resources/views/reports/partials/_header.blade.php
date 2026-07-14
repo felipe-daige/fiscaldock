@@ -17,7 +17,7 @@
             </td>
         </tr>
     </table>
-    {{-- Régua: dupla e mais grossa no executivo (Profissional+), simples nos demais. --}}
+    {{-- Régua: dupla e mais grossa quando o catálogo habilita o PDF executivo. --}}
     <div style="height:{{ !empty($pdfExecutivo) ? '2.5px' : '1.5px' }}; background:#1f2937; margin-top:5px;"></div>
     @if(!empty($pdfExecutivo))
         <div style="height:1px; background:#1e4679; margin-top:1.5px;"></div>

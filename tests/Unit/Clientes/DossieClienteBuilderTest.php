@@ -41,6 +41,26 @@ it('monta payload sem consulta: cliente, consulta.tem=false, score default, deta
     expect($d['score']['detalhamento'])->toHaveCount(5);
 });
 
+it('cliente CPF também usa risco de crédito não avaliado sem fallback fiscal', function () {
+    $cpf = Cliente::create([
+        'user_id' => $this->user->id,
+        'razao_social' => 'CLIENTE PESSOA FISICA',
+        'documento' => '12345678901',
+        'tipo_pessoa' => 'PF',
+        'is_empresa_propria' => false,
+    ]);
+
+    $d = $this->builder->montar($cpf);
+
+    expect($d['score'])
+        ->toMatchArray([
+            'tipo' => 'credito_cpf',
+            'score_total' => null,
+            'classificacao' => 'nao_avaliado',
+        ])
+        ->and($d['consulta']['aplicavel'])->toBeFalse();
+});
+
 it('com consulta de sucesso inclui blocos e detalhamento avaliado', function () {
     $lote = ConsultaLote::create([
         'user_id' => $this->user->id, 'plano_id' => planoDossieCli()->id,

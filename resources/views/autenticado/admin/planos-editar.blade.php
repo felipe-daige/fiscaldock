@@ -144,6 +144,14 @@
                         <label class="{{ $lblInput }}">Assentos inclusos</label>
                         <input type="number" min="1" name="assentos_inclusos" value="{{ old('assentos_inclusos', $plano->assentos_inclusos) }}" class="{{ $inputCls }}">
                     </div>
+                    <div>
+                        <label class="{{ $lblInput }}">Preço de referência do assento extra / mês</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-gray-400">R$</span>
+                            <input type="number" step="0.01" min="0" name="preco_assento_extra_reais" value="{{ old('preco_assento_extra_reais', $reais($plano->preco_assento_extra_centavos)) }}" class="{{ $inputCls }} pl-9">
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-1">Referência para contratação assistida; não altera a recorrência sozinho.</p>
+                    </div>
                     <div class="sm:col-span-2">
                         <label class="{{ $lblInput }}">Profundidade do auto-monitor</label>
                         <select name="profundidade_auto_monitor" class="{{ $inputCls }}">

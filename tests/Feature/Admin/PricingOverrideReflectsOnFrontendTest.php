@@ -43,6 +43,6 @@ it('a tela /app/planos reflete o preço por crédito do override (via saldo incl
     actingAs(User::factory()->create())
         ->get('/app/planos')
         ->assertOk()
-        ->assertSee("R$\u{A0}75,00 em saldo/mês")      // 300 créditos inclusos × R$0,25 (override)
-        ->assertDontSee("R$\u{A0}60,00 em saldo/mês");  // valor com o peg padrão R$0,20
+        ->assertSee("R$\u{A0}43,75 em saldo/mês")      // 175 unidades inclusas × R$0,25 (override)
+        ->assertDontSee("R$\u{A0}35,00 em saldo/mês");  // valor com o peg padrão R$0,20
 });

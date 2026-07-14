@@ -39,7 +39,7 @@ it('Free cadastra o +1 cliente além da própria', function () {
     expect(Cliente::where('user_id', $user->id)->where('is_empresa_propria', false)->count())->toBe(1);
 });
 
-it('Free é bloqueado ao cadastrar um 2º cliente (cap = própria + 1)', function () {
+it('Free pode cadastrar um 2º cliente sem bloqueio comercial', function () {
     $user = freeUserComPropria();
     Cliente::create([
         'user_id' => $user->id, 'documento' => '22222222000191', 'tipo_pessoa' => 'PJ',
@@ -48,12 +48,12 @@ it('Free é bloqueado ao cadastrar um 2º cliente (cap = própria + 1)', functio
 
     $this->actingAs($user)
         ->postJson('/app/cliente/novo', payloadCliente('33333333000191'))
-        ->assertStatus(403);
+        ->assertStatus(201);
 
-    expect(Cliente::where('user_id', $user->id)->where('documento', '33333333000191')->exists())->toBeFalse();
+    expect(Cliente::where('user_id', $user->id)->where('documento', '33333333000191')->exists())->toBeTrue();
 });
 
-it('não dá pra burlar o cap forjando is_empresa_propria=true', function () {
+it('não cria uma segunda empresa própria ao forjar is_empresa_propria=true', function () {
     $user = freeUserComPropria();
     // usa o +1 (cap cheio: própria + 1)
     Cliente::create([
@@ -64,9 +64,9 @@ it('não dá pra burlar o cap forjando is_empresa_propria=true', function () {
     // tenta um 3º forjando "própria" pra escapar do cap
     $this->actingAs($user)
         ->postJson('/app/cliente/novo', array_merge(payloadCliente('33333333000191'), ['is_empresa_propria' => true]))
-        ->assertStatus(403);
+        ->assertStatus(201);
 
-    expect(Cliente::where('user_id', $user->id)->where('documento', '33333333000191')->exists())->toBeFalse();
+    expect(Cliente::where('user_id', $user->id)->where('documento', '33333333000191')->exists())->toBeTrue();
     expect(Cliente::where('user_id', $user->id)->where('is_empresa_propria', true)->count())->toBe(1);
 });
 

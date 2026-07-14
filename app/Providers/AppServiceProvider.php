@@ -47,16 +47,16 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('autenticado.partials.sidebar', SidebarComposer::class);
 
-        // PDFs de relatório (todos estendem reports.layout): decide marca d'água e header executivo
-        // pelo entitlement do usuário. Free/sem export pago → marca d'água; Profissional+/trial →
-        // header executivo. Controller pode sobrescrever passando as chaves explicitamente.
+        // Todos os PDFs gerados pela FiscalDock estendem reports.layout. A marca d'água depende
+        // exclusivamente do tier: Free puro sempre recebe; trial e assinaturas pagas recebem
+        // o documento limpo. O header executivo segue a capability.
         View::composer('reports.layout', function ($view) {
             $user = auth()->user();
             $ent = app(\App\Services\Entitlements\EntitlementService::class);
+            $plan = $user !== null ? $ent->planFor($user) : null;
 
-            if (! $view->offsetExists('marcaDagua')) {
-                $view->with('marcaDagua', $user !== null && ! $ent->permits($user, 'export'));
-            }
+            // Regra comercial global: um controller/view não pode retirar a marca do Free.
+            $view->with('marcaDagua', $plan?->codigo === 'free' && ! $user?->hasActiveTrial());
             if (! $view->offsetExists('pdfExecutivo')) {
                 $view->with('pdfExecutivo', $user !== null && $ent->permits($user, 'pdf_executivo'));
             }

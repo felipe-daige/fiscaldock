@@ -82,6 +82,7 @@ return new class extends Migration
                 $table->integer('frequencia_padrao_dias')->default(30);
                 $table->string('profundidade_auto_monitor')->nullable();  // cadastral|licitacao|compliance|due_diligence
                 $table->integer('assentos_inclusos')->default(1);
+                $table->integer('preco_assento_extra_centavos')->default(0);
                 $table->decimal('rollover_cap_multiplicador', 4, 2)->default(1); // banca 1x o mensal
                 $table->jsonb('capabilities')->nullable();
                 $table->boolean('is_active')->default(true);

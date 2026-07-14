@@ -13,8 +13,10 @@ use App\Services\Consultas\ResultadoDetalhePresenter;
 use App\Services\Reforma\CreditoRiscoReformaService;
 use App\Services\Risk\Export\RiskScoreReportBuilder;
 use App\Services\Risk\Export\RiskScoreXlsxBuilder;
+use App\Services\Risk\RiscoCreditoCpfService;
 use App\Services\RiskScoreService;
 use App\Support\CsvExport;
+use App\Support\ParticipanteOrigem;
 use App\Support\PdfReport;
 use App\Support\Reports\XlsxReport;
 use Illuminate\Http\Request;
@@ -31,7 +33,8 @@ class RiskScoreController extends Controller
 
     public function __construct(
         protected RiskScoreService $riskScoreService,
-        protected CreditoRiscoReformaService $creditoReforma
+        protected CreditoRiscoReformaService $creditoReforma,
+        protected RiscoCreditoCpfService $riscoCreditoCpf,
     ) {}
 
     /**
@@ -84,7 +87,12 @@ class RiskScoreController extends Controller
         $verTodos = $clienteSelecionadoId === null;
 
         // Escopo de cliente para ParticipanteScore (alvo = cliente OU participante daquele cliente).
-        $escopoClienteScore = function ($query) use ($verTodos, $clienteSelecionadoId) {
+        $escopoClienteScore = function ($query) use ($verTodos, $clienteSelecionadoId, $cnpjRaw) {
+            $query->where(function ($alvo) use ($cnpjRaw) {
+                $alvo->whereHas('participante', fn ($p) => $p->whereRaw($cnpjRaw))
+                    ->orWhereHas('cliente', fn ($c) => $c->whereRaw($cnpjRaw));
+            });
+
             if (! $verTodos && $clienteSelecionadoId) {
                 $query->where(function ($q) use ($clienteSelecionadoId) {
                     $q->where('cliente_id', $clienteSelecionadoId)
@@ -181,6 +189,25 @@ class RiskScoreController extends Controller
             ->paginate(20, ['*'], 'nc')
             ->withQueryString();
 
+        // CPF não entra em Consulta CNPJ nem em participante_scores. Ele aparece numa seção
+        // própria como risco de crédito não avaliado, sem ser misturado aos CNPJs pendentes.
+        // Filtros de score/consulta escondem a seção porque ainda não há fonte de crédito PF.
+        $mostrarCpfs = $filtroStatus === 'todos'
+            && $filtroClassificacao === 'todos'
+            && ! $filtrosSomenteConsultados
+            && $filtroTipo !== 'cliente';
+        $cpfsQuery = Participante::where('user_id', $userId)
+            ->somenteCpf()
+            ->excludingEmpresaPropria()
+            ->when(! $mostrarCpfs, fn ($q) => $q->whereRaw('1 = 0'))
+            ->when($busca !== '', fn ($q) => $q->where(fn ($w) => $w
+                ->where('razao_social', 'ilike', "%{$busca}%")
+                ->orWhere('documento', 'like', "%{$busca}%")))
+            ->when(! $verTodos && $clienteSelecionadoId, fn ($q) => $q->where('cliente_id', $clienteSelecionadoId))
+            ->orderBy('razao_social');
+        $cpfsSemAvaliacao = $cpfsQuery->paginate(20, ['id', 'razao_social', 'nome_fantasia', 'documento', 'uf'], 'cpf')
+            ->withQueryString();
+
         // Papel comercial dos PARTICIPANTES exibidos, pelas notas EFD: entrada = nós compramos
         // dele (Fornecedor); saida = nós vendemos pra ele (Comprador); os dois = Ambos.
         $idsParticipantes = collect();
@@ -193,6 +220,9 @@ class RiskScoreController extends Controller
             if (($item->tipo ?? null) === 'participante') {
                 $idsParticipantes->push($item->id);
             }
+        }
+        foreach ($cpfsSemAvaliacao as $cpf) {
+            $idsParticipantes->push($cpf->id);
         }
 
         $papeisParticipante = [];
@@ -221,6 +251,7 @@ class RiskScoreController extends Controller
             'estatisticas' => $estatisticas,
             'consultados' => $consultados,
             'naoConsultados' => $naoConsultados,
+            'cpfsSemAvaliacao' => $cpfsSemAvaliacao,
             'papeisParticipante' => $papeisParticipante,
             'emRiscoCritico' => $emRiscoCritico,
             'filtroClassificacao' => $filtroClassificacao,
@@ -251,8 +282,9 @@ class RiskScoreController extends Controller
 
         $participante = Participante::where('user_id', $userId)
             ->where('id', $id)
-            ->with('score')
+            ->with(['score', 'importacaoEfd', 'importacaoXml'])
             ->firstOrFail();
+        $isCpf = $participante->is_cpf;
 
         // Volume movimentado no acervo EFD auditado (efd_notas tem só participante_id — sem
         // split emitente/destinatário, que é exclusivo do acervo XML). Base CANÔNICA do BI
@@ -264,7 +296,7 @@ class RiskScoreController extends Controller
             ->where('participante_id', $participante->id)
             ->where('cancelada', false)
             ->whereRaw(\App\Services\BiService::dedupParticipanteSql('efd_notas'))
-            ->selectRaw('COALESCE(SUM(valor_total), 0) as volume, MIN(data_emissao) as primeira, MAX(data_emissao) as ultima')
+            ->selectRaw('COUNT(*) as total_notas, COALESCE(SUM(valor_total), 0) as volume, MIN(data_emissao) as primeira, MAX(data_emissao) as ultima')
             ->first();
 
         $volumeEfd = (float) $volumeAgg->volume;
@@ -277,7 +309,9 @@ class RiskScoreController extends Controller
             ]
             : null;
 
-        $scoreModel = $participante->score;
+        // participante_scores contém exclusivamente o Score Fiscal de CNPJ. Mesmo que exista
+        // linha legada para um CPF, ela não pode ser apresentada como risco de crédito.
+        $scoreModel = $isCpf ? null : $participante->score;
         $detalhamento = $scoreModel
             ? $this->riskScoreService->detalhar([
                 'cadastral' => $scoreModel->score_cadastral,
@@ -290,15 +324,26 @@ class RiskScoreController extends Controller
 
         $data = [
             'participante' => $participante,
+            'isCpf' => $isCpf,
             'score' => $scoreModel,
             'pesos' => $this->riskScoreService->getPesos(),
             'detalhamento' => $detalhamento,
             'volumeEfd' => $volumeEfd,
-            'creditoReforma' => $this->creditoReforma->creditoParticipante($participante, $volumeEfd, $participante->score?->score_credito_reforma),
+            'creditoReforma' => $isCpf
+                ? null
+                : $this->creditoReforma->creditoParticipante($participante, $volumeEfd, $participante->score?->score_credito_reforma),
+            'riscoCpf' => $isCpf
+                ? $this->riscoCreditoCpf->avaliar($participante, [
+                    'total_notas' => (int) ($volumeAgg->total_notas ?? 0),
+                    'valor_movimentado' => $volumeEfd,
+                    'periodo_inicio' => $volumePeriodo['inicio'] ?? null,
+                    'periodo_fim' => $volumePeriodo['fim'] ?? null,
+                ])
+                : null,
             // Certidões/blocos da última consulta renderizados server-side (mesmo partial do
             // "Ver detalhes" da Consulta CNPJ) — substitui o dump JSON de dados_consultados.
             'detalheConsultaHtml' => $this->htmlDetalheUltimaConsulta($participante),
-            'origemLabel' => $this->origemLabel($participante),
+            'origemLabel' => ParticipanteOrigem::dados($participante)['label'],
             'volumePeriodo' => $volumePeriodo,
             'papel' => $this->papelParticipante($participante),
             'metodologia' => $this->riskScoreService->metodologia(),
@@ -327,33 +372,6 @@ class RiskScoreController extends Controller
             $saida => 'Comprador',
             default => null,
         };
-    }
-
-    /**
-     * Rótulo legível da origem do participante. A extração EFD (n8n) não preenche
-     * origem_tipo — NULL com notas/registro EFD vinculado é, por construção, importado
-     * do SPED: deriva "EFD (SPED)" em vez de exibir traço.
-     */
-    private function origemLabel(Participante $participante): string
-    {
-        $tipo = strtoupper((string) $participante->origem_tipo);
-
-        if ($tipo !== '') {
-            return match ($tipo) {
-                'NFE' => 'Clearance (NF-e consultada)',
-                'CTE' => 'Clearance (CT-e consultado)',
-                'XML' => 'Importação XML',
-                'PROPRIO' => 'Empresa própria',
-                'MANUAL' => 'Cadastro manual',
-                default => $participante->origem_tipo,
-            };
-        }
-
-        $temEfd = \App\Models\EfdNota::where('user_id', $participante->user_id)
-            ->where('participante_id', $participante->id)
-            ->exists();
-
-        return $temEfd ? 'EFD (SPED importado)' : '—';
     }
 
     /**

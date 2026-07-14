@@ -8,8 +8,9 @@ use App\Models\ConsentLog;
 use App\Models\LandingLead;
 use App\Models\User;
 use App\Notifications\BoasVindasNotification;
-use App\Services\SaldoService;
+use App\Services\Accounts\AccountService;
 use App\Services\Lgpd\ConsentLogService;
+use App\Services\SaldoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +23,8 @@ use Illuminate\Validation\ValidationException;
 class AuthController extends Controller
 {
     public function __construct(
-        protected SaldoService $saldoService
+        protected SaldoService $saldoService,
+        protected AccountService $accountService,
     ) {}
 
     public function showLogin(Request $request)
@@ -373,6 +375,8 @@ class AuthController extends Controller
                 'marketing_opt_in' => (bool) ($validated['marketing_opt_in'] ?? false),
                 'marketing_opt_in_at' => ! empty($validated['marketing_opt_in']) ? now() : null,
             ]);
+
+            $this->accountService->ensureForOwner($user);
 
             // LGPD fase 2.1 — prova de consentimento do signup (versão vigente + IP/UA).
             $consent = new ConsentLogService;

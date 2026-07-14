@@ -254,6 +254,12 @@
             </div>
         </div>
 
+        @include('autenticado.notas.partials._itens-tabela', [
+            'itens' => $nota->itens,
+            'mostrarTributos' => true,
+            'wrapperClass' => 'mt-6',
+        ])
+
         @if(!($validacao['preview'] ?? false) && !empty($validacao['validado_em']))
             <div class="mt-6 text-center text-[11px] text-gray-500 uppercase tracking-wide">
                 Validado em {{ \Carbon\Carbon::parse($validacao['validado_em'])->format('d/m/Y H:i:s') }}

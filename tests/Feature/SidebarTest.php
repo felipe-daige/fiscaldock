@@ -147,13 +147,38 @@ it('menu do usuário agrupa em blocos Conta/Financeiro e esconde Admin de não-a
         ->not->toContain('>Admin</div>');
 });
 
-it('menu do usuário mostra bloco Admin para admin', function () {
+it('menu da conta posiciona Equipe e Privacidade entre Perfil e Configurações', function () {
+    $user = User::factory()->trialAtivo()->create(['is_admin' => false]);
+
+    $html = actingAs($user)->get('/app/dashboard')->assertOk()->getContent();
+    $perfil = strpos($html, 'href="/app/perfil"');
+    $equipe = strpos($html, 'href="/app/equipe"');
+    $privacidade = strpos($html, 'href="/app/privacidade"');
+    $configuracoes = strpos($html, 'href="/app/configuracoes"');
+
+    expect($perfil)->not->toBeFalse()
+        ->and($equipe)->not->toBeFalse()
+        ->and($privacidade)->not->toBeFalse()
+        ->and($configuracoes)->not->toBeFalse()
+        ->and($perfil)->toBeLessThan($equipe)
+        ->and($equipe)->toBeLessThan($privacidade)
+        ->and($privacidade)->toBeLessThan($configuracoes);
+});
+
+it('menu do usuário mostra somente a visão geral no bloco Admin', function () {
     $user = User::factory()->trialAtivo()->create(['is_admin' => true]);
 
     $html = actingAs($user)->get('/app/dashboard')->assertOk()->getContent();
 
     expect($html)->toContain('>Admin</div>')
-        ->toContain('href="/app/admin"');
+        ->toContain('href="/app/admin"')
+        ->toContain('Admin — Visão Geral')
+        ->not->toContain('href="/app/admin/usuarios"')
+        ->not->toContain('href="/app/admin/comercial"')
+        ->not->toContain('href="/app/admin/planos"')
+        ->not->toContain('Admin — Usuários')
+        ->not->toContain('Admin — Comercial')
+        ->not->toContain('Admin — Planos');
 });
 
 it('layout traz o toggle de colapso e o script anti-flash', function () {

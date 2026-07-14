@@ -585,8 +585,13 @@ class AlertaCentralService
     /**
      * Marca o status de um alerta.
      */
-    public function marcarStatus(int $alertaId, int $userId, string $status, ?string $notas = null): Alerta
-    {
+    public function marcarStatus(
+        int $alertaId,
+        int $userId,
+        string $status,
+        ?string $notas = null,
+        ?int $actorUserId = null,
+    ): Alerta {
         $alerta = Alerta::where('id', $alertaId)
             ->where('user_id', $userId)
             ->firstOrFail();
@@ -610,8 +615,10 @@ class AlertaCentralService
             $alerta->notas = $notas;
         }
 
-        // Auditoria: atribui a transição ao usuário (impersonação bloqueia writes → ator real).
-        AlertaAuditoriaService::comAtor($userId, $this->nomeDoAtor($userId), $notas, function () use ($alerta) {
+        $actorUserId ??= $userId;
+
+        // O escopo do alerta pertence ao owner; a autoria preserva o login que fez a ação.
+        AlertaAuditoriaService::comAtor($actorUserId, $this->nomeDoAtor($actorUserId), $notas, function () use ($alerta) {
             $alerta->save();
         });
 
@@ -624,13 +631,20 @@ class AlertaCentralService
      *
      * @param  array<int, int|string>  $alertaIds
      */
-    public function marcarStatusEmLote(array $alertaIds, int $userId, string $status, ?string $notas = null): int
-    {
+    public function marcarStatusEmLote(
+        array $alertaIds,
+        int $userId,
+        string $status,
+        ?string $notas = null,
+        ?int $actorUserId = null,
+    ): int {
         $alertas = Alerta::whereIn('id', $alertaIds)
             ->where('user_id', $userId)
             ->get();
 
-        AlertaAuditoriaService::comAtor($userId, $this->nomeDoAtor($userId), $notas, function () use ($alertas, $status, $notas) {
+        $actorUserId ??= $userId;
+
+        AlertaAuditoriaService::comAtor($actorUserId, $this->nomeDoAtor($actorUserId), $notas, function () use ($alertas, $status, $notas) {
             foreach ($alertas as $alerta) {
                 $alerta->status = $status;
 

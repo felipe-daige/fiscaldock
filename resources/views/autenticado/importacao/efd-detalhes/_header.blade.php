@@ -32,38 +32,43 @@
         <p class="text-xs text-gray-500 mt-1">Acompanhe o processamento do arquivo SPED e consulte o resultado consolidado da extração fiscal nesta página.</p>
     </div>
 
-    <div class="flex flex-wrap items-center gap-2">
-        @if($mostrarNovaImportacao)
-            <a href="/app/importacao/efd" data-link class="auth-control inline-flex items-center justify-center bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded">Nova importação</a>
+    <div class="flex flex-col gap-2 lg:items-end">
+        @if($mostrarNovaImportacao || ! $emProcessamento)
+            <div class="flex flex-wrap items-center gap-2 lg:justify-end">
+                @if($mostrarNovaImportacao)
+                    <a href="/app/importacao/efd" data-link class="auth-control inline-flex items-center justify-center bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded">Nova importação</a>
+                @endif
+                @if(! $emProcessamento)
+                    <button type="button" data-exportar-planilha
+                        class="auth-control inline-flex items-center gap-1.5 bg-white border border-blue-300 text-blue-700 hover:bg-blue-50 rounded">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                        </svg>
+                        Exportar planilha
+                    </button>
+                    <button type="button"
+                        data-excluir-importacao="{{ $importacao->id }}"
+                        data-filename="{{ $importacao->filename }}"
+                        data-redirect="/app/importacao/historico"
+                        class="auth-control bg-white border border-red-300 text-red-600 hover:bg-red-50 rounded">
+                        Excluir importação
+                    </button>
+                @endif
+            </div>
         @endif
-        @if(! $emProcessamento)
-            <button type="button" data-exportar-planilha
-                class="auth-control inline-flex items-center gap-1.5 bg-white border border-blue-300 text-blue-700 hover:bg-blue-50 rounded">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
-                </svg>
-                Exportar planilha
-            </button>
-        @endif
-        @if(! $emProcessamento)
-            <button type="button"
-                data-excluir-importacao="{{ $importacao->id }}"
-                data-filename="{{ $importacao->filename }}"
-                data-redirect="/app/importacao/historico"
-                class="auth-control bg-white border border-red-300 text-red-600 hover:bg-red-50 rounded">
-                Excluir importação
-            </button>
-        @endif
-        @if($isSped && $spedPeriodo)
-            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
-                {{ $spedPeriodo }}
+
+        <div class="flex flex-wrap items-center gap-2 lg:justify-end">
+            @if($isSped && $spedPeriodo)
+                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">
+                    {{ $spedPeriodo }}
+                </span>
+            @endif
+            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $tipoStyle }}">
+                {{ $tipoLabel }}
             </span>
-        @endif
-        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $tipoStyle }}">
-            {{ $tipoLabel }}
-        </span>
-        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $badgeStyle }}">
-            {{ $badgeLabel }}
-        </span>
+            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="{{ $badgeStyle }}">
+                {{ $badgeLabel }}
+            </span>
+        </div>
     </div>
 </div>

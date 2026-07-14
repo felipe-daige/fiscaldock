@@ -13,7 +13,7 @@ class SubscriptionPlan extends Model
         'codigo', 'nome', 'preco_mensal_centavos', 'preco_anual_centavos',
         'creditos_inclusos', 'faixa_slug', 'limite_clientes', 'limite_cnpjs_monitorados',
         'frequencia_padrao_dias', 'profundidade_auto_monitor', 'assentos_inclusos',
-        'rollover_cap_multiplicador', 'capabilities', 'is_active', 'ordem',
+        'preco_assento_extra_centavos', 'rollover_cap_multiplicador', 'capabilities', 'is_active', 'ordem',
         'mp_preapproval_plan_id_mensal', 'mp_preapproval_plan_id_anual',
     ];
 
@@ -25,6 +25,7 @@ class SubscriptionPlan extends Model
         'limite_cnpjs_monitorados' => 'integer',
         'frequencia_padrao_dias' => 'integer',
         'assentos_inclusos' => 'integer',
+        'preco_assento_extra_centavos' => 'integer',
         'rollover_cap_multiplicador' => 'float',
         'capabilities' => 'array',
         'is_active' => 'boolean',

@@ -7,7 +7,9 @@ use App\Models\ConsultaResultado;
 use App\Models\ParticipanteScore;
 use App\Services\Consultas\Fiscal\TopMovimentacaoQuery;
 use App\Services\Consultas\ResultadoDetalhePresenter;
+use App\Services\Risk\RiscoCreditoCpfService;
 use App\Services\RiskScoreService;
+use App\Support\Documento;
 
 /**
  * Monta o payload único do dossiê do cliente: consulta (certidões) + score + movimentações EFD.
@@ -20,10 +22,12 @@ final class DossieClienteBuilder
         private ResultadoDetalhePresenter $presenter,
         private TopMovimentacaoQuery $top,
         private RiskScoreService $risk,
+        private RiscoCreditoCpfService $riscoCpf,
     ) {}
 
     public function montar(Cliente $c): array
     {
+        $isCpf = Documento::ehCpf($c->documento);
         $ultima = ConsultaResultado::where('cliente_id', $c->id)
             ->where('status', ConsultaResultado::STATUS_SUCESSO)
             ->with('lote.plano')
@@ -42,6 +46,7 @@ final class DossieClienteBuilder
 
         $consulta = [
             'tem' => (bool) $ultima,
+            'aplicavel' => ! $isCpf,
             'resumo' => $ultima ? $this->presenter->resumoTextual($ultima) : null,
             // Passa as certidões que o PLANO desta consulta realmente incluiu → fonte pedida mas
             // sem retorno vira card de erro; fonte fora do plano não aparece como erro falso.
@@ -49,24 +54,40 @@ final class DossieClienteBuilder
             'consultado_em' => $ultima?->consultado_em?->format('d/m/Y H:i'),
         ];
 
-        $score = $ultima
-            ? $ultima->calcularScore()
-            : ['scores' => [], 'score_total' => 0, 'classificacao' => 'medio'];
+        if ($isCpf) {
+            $consulta = [
+                'tem' => false,
+                'aplicavel' => false,
+                'resumo' => null,
+                'blocos' => [],
+                'consultado_em' => null,
+            ];
+        }
 
-        $score['detalhamento'] = $this->risk->detalhar($score['scores'] ?? []);
+        $movimentacao = [
+            'kpis' => $this->movimentacao->kpis($c),
+            'por_competencia' => $this->movimentacao->porCompetencia($c),
+            'por_cfop' => $this->movimentacao->porCfop($c),
+            'por_cst' => $this->movimentacao->porCst($c),
+            'impostos' => $this->movimentacao->impostos($c),
+        ];
+
+        $score = $isCpf
+            ? $this->riscoCpf->avaliar($c, $movimentacao['kpis'])
+            : ($ultima
+                ? $ultima->calcularScore()
+                : ['tipo' => 'fiscal_cnpj', 'scores' => [], 'score_total' => null, 'classificacao' => 'nao_avaliado']);
+
+        if (! $isCpf) {
+            $score['detalhamento'] = $this->risk->detalhar($score['scores'] ?? []);
+        }
 
         return [
             'cliente' => $c,
             'gerado_em' => now()->format('d/m/Y H:i'),
             'consulta' => $consulta,
             'score' => $score,
-            'movimentacao' => [
-                'kpis' => $this->movimentacao->kpis($c),
-                'por_competencia' => $this->movimentacao->porCompetencia($c),
-                'por_cfop' => $this->movimentacao->porCfop($c),
-                'por_cst' => $this->movimentacao->porCst($c),
-                'impostos' => $this->movimentacao->impostos($c),
-            ],
+            'movimentacao' => $movimentacao,
             'top_produtos' => $this->top->produtos($c->user_id, 'cliente_id', [$c->id], 10)[$c->id] ?? [],
             'top_cfops' => $this->top->cfops($c->user_id, 'cliente_id', [$c->id], 10)[$c->id] ?? [],
         ];
