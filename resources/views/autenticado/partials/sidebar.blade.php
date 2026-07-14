@@ -92,9 +92,8 @@
 
         <x-sidebar.item href="/app/bi/dashboard">
             <x-slot:icon>
-                <svg class="sidebar__item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path>
+                <svg class="sidebar__item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 5v14h16M7 15l4-5 3 3 5-7"></path>
                 </svg>
             </x-slot:icon>
             BI Fiscal
