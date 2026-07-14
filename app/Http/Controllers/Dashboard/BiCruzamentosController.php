@@ -75,10 +75,21 @@ class BiCruzamentosController extends Controller
         $estoque = $this->efdInternos->estoqueVsMovimentacao($userId, $filtros);
 
         // Deriva o resumo das coleções já carregadas (mesmo contrato de service->resumo, sem recomputar).
+        // Um KPI por cruzamento: os números da faixa batem com as seções por construção.
+        $naoTribDivergentes = $naoTributadas->whereIn('flag', ['vermelho', 'amarelo']);
         $resumo = [
             'irregulares_qtd' => $irregulares->count(),
             'irregulares_valor' => round((float) $irregulares->sum('valor_comprado'), 2),
             'canceladas_qtd' => $canceladas->count(),
+            'canceladas_valor' => round((float) $canceladas->sum(fn ($n) => (float) ($n['valor'] ?? 0)), 2),
+            'nao_trib_divergentes_qtd' => $naoTribDivergentes->count(),
+            'nao_trib_competencias_qtd' => $naoTributadas->count(),
+            'nao_trib_delta' => round((float) $naoTribDivergentes->sum(fn ($m) => abs((float) $m['delta'])), 2),
+            'retencoes_total' => round((float) $retencoesFonte->sum('valor_total'), 2),
+            'retencoes_fontes_qtd' => $retencoesFonte->count(),
+            'retencoes_nao_consultadas_qtd' => $retencoesFonte->where('consultada', false)->count(),
+            'icms_st_total' => round((float) $icmsSt['fornecedores']->sum('valor_st'), 2),
+            'icms_st_fornecedores_qtd' => $icmsSt['fornecedores']->count(),
         ];
 
         $diagnostico = $this->service->diagnostico($userId);

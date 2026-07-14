@@ -115,59 +115,90 @@
             @endif
         </div>
 
-        {{-- KPIs --}}
-        <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
-            <div class="bg-white rounded border border-gray-300 border-l-4 p-3" style="border-left-color: #dc2626">
-                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Fornecedores irregulares</p>
-                <p class="text-lg font-bold text-gray-900">{{ number_format($resumo['irregulares_qtd'], 0, ',', '.') }}</p>
+        {{-- KPIs: um por cruzamento, derivados das mesmas coleções das seções (números batem por construção) --}}
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-5">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo dos cruzamentos</span>
             </div>
-            <div class="bg-white rounded border border-gray-300 border-l-4 p-3" style="border-left-color: #dc2626">
-                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Compras de irregulares</p>
-                <p class="text-lg font-bold text-gray-900">{{ $fmtMoeda($resumo['irregulares_valor']) }}</p>
-            </div>
-            <div class="bg-white rounded border border-gray-300 border-l-4 p-3" style="border-left-color: #6b7280">
-                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Notas canceladas (SEFAZ)</p>
-                <p class="text-lg font-bold text-gray-900">{{ number_format($resumo['canceladas_qtd'], 0, ',', '.') }}</p>
+            <div class="grid grid-cols-2 lg:grid-cols-6 divide-x divide-gray-200">
+                <div class="px-4 py-4">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Fornecedores irregulares</p>
+                    <p class="text-lg font-bold text-gray-900">{{ number_format($resumo['irregulares_qtd'], 0, ',', '.') }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">{{ $fmtMoeda($resumo['irregulares_valor']) }} em compras</p>
+                </div>
+                <div class="px-4 py-4">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">M400 × CST divergentes</p>
+                    <p class="text-lg font-bold text-gray-900">{{ number_format($resumo['nao_trib_divergentes_qtd'], 0, ',', '.') }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">Δ {{ $fmtMoeda($resumo['nao_trib_delta']) }} em {{ number_format($resumo['nao_trib_competencias_qtd'], 0, ',', '.') }} comp.</p>
+                </div>
+                <div class="px-4 py-4">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Retido na fonte (F600)</p>
+                    <p class="text-lg font-bold text-gray-900">{{ $fmtMoeda($resumo['retencoes_total']) }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">{{ number_format($resumo['retencoes_fontes_qtd'], 0, ',', '.') }} fontes · {{ number_format($resumo['retencoes_nao_consultadas_qtd'], 0, ',', '.') }} não consultadas</p>
+                </div>
+                <div class="px-4 py-4">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">ICMS-ST nas compras</p>
+                    <p class="text-lg font-bold text-gray-900">{{ $fmtMoeda($resumo['icms_st_total']) }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">{{ number_format($resumo['icms_st_fornecedores_qtd'], 0, ',', '.') }} fornecedores</p>
+                </div>
+                <div class="px-4 py-4">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Estoque sem giro 12m</p>
+                    <p class="text-lg font-bold text-gray-900">{{ $fmtMoeda($estoque['parados_valor']) }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">{{ number_format($estoque['parados_qtd'], 0, ',', '.') }} itens parados</p>
+                </div>
+                <div class="px-4 py-4">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Canceladas na SEFAZ</p>
+                    <p class="text-lg font-bold text-gray-900">{{ number_format($resumo['canceladas_qtd'], 0, ',', '.') }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">{{ $fmtMoeda($resumo['canceladas_valor']) }} em notas</p>
+                </div>
             </div>
         </div>
 
         {{-- Filtros (padrão /app/clientes) --}}
-        <form method="GET" class="bg-white rounded border border-gray-300 p-3 mb-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-3" data-mobile-filters>
-            <div class="min-w-0 w-full flex-1 sm:w-auto sm:min-w-[220px] sm:flex-none">
-                <label class="block text-[11px] text-gray-500 mb-1">Cliente</label>
-                <select name="cliente_id" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
-                    <option value="">Todos</option>
-                    @foreach($clientes as $c)
-                        <option value="{{ $c->id }}" @selected(($filtros['cliente_id'] ?? null) == $c->id)>{{ $c->razao_social }}</option>
-                    @endforeach
-                </select>
+        <form method="GET" class="bg-white rounded border border-gray-300 overflow-hidden mb-5" data-mobile-filters>
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Filtros</span>
             </div>
-            <div class="min-w-0 w-full flex-1 sm:w-auto sm:min-w-[150px] sm:flex-none">
-                <label class="block text-[11px] text-gray-500 mb-1">Emissão de</label>
-                <input type="date" name="data_inicio" value="{{ $filtros['data_inicio'] ?? '' }}" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
+            <div class="p-3 flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-3">
+                <div class="min-w-0 w-full flex-1 sm:w-auto sm:min-w-[220px] sm:flex-none">
+                    <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Cliente</label>
+                    <select name="cliente_id" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
+                        <option value="">Todos</option>
+                        @foreach($clientes as $c)
+                            <option value="{{ $c->id }}" @selected(($filtros['cliente_id'] ?? null) == $c->id)>{{ $c->razao_social }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="min-w-0 w-full flex-1 sm:w-auto sm:min-w-[150px] sm:flex-none">
+                    <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Emissão de</label>
+                    <input type="date" name="data_inicio" value="{{ $filtros['data_inicio'] ?? '' }}" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
+                </div>
+                <div class="min-w-0 w-full flex-1 sm:w-auto sm:min-w-[150px] sm:flex-none">
+                    <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Emissão até</label>
+                    <input type="date" name="data_fim" value="{{ $filtros['data_fim'] ?? '' }}" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
+                </div>
+                <button type="submit" class="filtro-acao w-full sm:w-auto px-4 py-2.5 rounded text-[12px] font-bold uppercase tracking-wide text-white hover:opacity-90" style="background-color: #0b1f3a">Aplicar filtro</button>
+                @if(! empty($filtros))
+                    <a href="{{ route('app.bi.cruzamentos') }}" data-link class="text-[12px] text-gray-500 hover:underline self-center">Limpar</a>
+                @endif
             </div>
-            <div class="min-w-0 w-full flex-1 sm:w-auto sm:min-w-[150px] sm:flex-none">
-                <label class="block text-[11px] text-gray-500 mb-1">Emissão até</label>
-                <input type="date" name="data_fim" value="{{ $filtros['data_fim'] ?? '' }}" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
-            </div>
-            <button type="submit" class="filtro-acao w-full sm:w-auto px-4 py-2.5 rounded text-[12px] font-bold uppercase tracking-wide text-white hover:opacity-90" style="background-color: #0b1f3a">Aplicar filtro</button>
-            @if(! empty($filtros))
-                <a href="{{ route('app.bi.cruzamentos') }}" data-link class="text-[12px] text-gray-500 hover:underline self-center">Limpar</a>
-            @endif
         </form>
 
         {{-- 1. Fornecedor irregular × compras --}}
         <div class="bg-white rounded border border-gray-300 mb-5 overflow-hidden">
-            <div class="px-4 py-3 border-b border-gray-200 flex items-center gap-2">
-                <span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: #dc2626"></span>
-                <h2 class="text-sm font-bold text-gray-900">Fornecedor com certidão/situação irregular × compras</h2>
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center gap-2">
+                <span class="inline-block w-2 h-2 rounded-full" style="background-color: #dc2626"></span>
+                <h2 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Fornecedor com certidão/situação irregular × compras</h2>
+                @if($irregulares->isNotEmpty())
+                    <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ $irregulares->count() }}</span>
+                @endif
             </div>
             @if($irregulares->isEmpty())
                 <p class="px-4 py-6 text-sm text-gray-500">Nenhum fornecedor com certidão ou situação irregular entre os que você comprou. Nada a tratar neste cruzamento.</p>
             @else
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm tabela-cards">
-                        <thead class="bg-gray-50 text-[10px] uppercase tracking-wide text-gray-400">
+                        <thead class="bg-gray-50 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
                             <tr>
                                 <th class="text-left px-4 py-2">Fornecedor</th>
                                 <th class="text-left px-4 py-2">Motivo</th>
@@ -178,7 +209,7 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @foreach($irregulares as $f)
-                                <tr>
+                                <tr class="hover:bg-gray-50/50 transition-colors">
                                     <td class="px-4 py-2.5">
                                         <div class="font-medium text-gray-900">{{ $f['razao_social'] }}</div>
                                         <div class="text-[11px] text-gray-400">{{ $f['documento'] }}</div>
@@ -188,7 +219,7 @@
                                             <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white mb-0.5" style="background-color: #dc2626">{{ $m }}</span>
                                         @endforeach
                                     </td>
-                                    <td class="px-4 py-2.5 text-right font-semibold text-gray-900" data-label="Comprado">{{ $fmtMoeda($f['valor_comprado']) }}</td>
+                                    <td class="px-4 py-2.5 text-right font-mono font-semibold text-gray-900" data-label="Comprado">{{ $fmtMoeda($f['valor_comprado']) }}</td>
                                     <td class="px-4 py-2.5 text-right text-gray-600" data-label="Notas">{{ $f['qtd_notas'] }}</td>
                                     <td class="px-4 py-2.5 text-right" data-label="">
                                         <button type="button"
@@ -210,19 +241,22 @@
 
         {{-- 2. Receitas não tributadas (M400) × CST das saídas --}}
         <div class="bg-white rounded border border-gray-300 mb-5 overflow-hidden">
-            <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-2">
                 <div class="flex items-center gap-2">
-                    <span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: #b45309"></span>
-                    <h2 class="text-sm font-bold text-gray-900">Receitas não tributadas declaradas (M400) × CST das saídas</h2>
+                    <span class="inline-block w-2 h-2 rounded-full" style="background-color: #b45309"></span>
+                    <h2 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Receitas não tributadas declaradas (M400) × CST das saídas</h2>
+                    @if($naoTributadas->isNotEmpty())
+                        <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ $naoTributadas->count() }}</span>
+                    @endif
                 </div>
-                <span class="text-[10px] text-gray-400 uppercase tracking-wide">PIS · por competência</span>
+                <span class="text-[10px] text-gray-400 uppercase tracking-wide whitespace-nowrap">PIS · por competência</span>
             </div>
             @if($naoTributadas->isEmpty())
                 <p class="px-4 py-6 text-sm text-gray-500">Nenhuma apuração de PIS/COFINS com M400 no filtro atual. Este cruzamento depende da importação do SPED Contribuições.</p>
             @else
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm tabela-cards">
-                        <thead class="bg-gray-50 text-[10px] uppercase tracking-wide text-gray-400">
+                        <thead class="bg-gray-50 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
                             <tr>
                                 <th class="text-left px-4 py-2">Competência</th>
                                 <th class="text-right px-4 py-2">Declarado (M400)</th>
@@ -234,12 +268,12 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @foreach($naoTributadas as $m)
-                                <tr>
+                                <tr class="hover:bg-gray-50/50 transition-colors">
                                     <td class="px-4 py-2.5 font-medium text-gray-900" data-label="Competência">{{ $fmtCompetencia($m['competencia']) }}</td>
-                                    <td class="px-4 py-2.5 text-right text-gray-900" data-label="Declarado">{{ $fmtMoeda($m['declarado']) }}</td>
-                                    <td class="px-4 py-2.5 text-right text-gray-900" data-label="Itens CST">{{ $fmtMoeda($m['computado']) }}</td>
-                                    <td class="px-4 py-2.5 text-right text-gray-700" data-label="Diferença">{{ $fmtMoeda($m['delta']) }}</td>
-                                    <td class="px-4 py-2.5 text-right text-gray-700" data-label="Δ%">{{ number_format($m['delta_pct'], 2, ',', '.') }}%</td>
+                                    <td class="px-4 py-2.5 text-right font-mono text-gray-900" data-label="Declarado">{{ $fmtMoeda($m['declarado']) }}</td>
+                                    <td class="px-4 py-2.5 text-right font-mono text-gray-900" data-label="Itens CST">{{ $fmtMoeda($m['computado']) }}</td>
+                                    <td class="px-4 py-2.5 text-right font-mono text-gray-700" data-label="Diferença">{{ $fmtMoeda($m['delta']) }}</td>
+                                    <td class="px-4 py-2.5 text-right font-mono text-gray-700" data-label="Δ%">{{ number_format($m['delta_pct'], 2, ',', '.') }}%</td>
                                     <td class="px-4 py-2.5" data-label="Status">
                                         <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background-color: {{ $flagCores[$m['flag']] ?? '#6b7280' }}">{{ $flagLabels[$m['flag']] ?? $m['flag'] }}</span>
                                     </td>
@@ -253,19 +287,22 @@
 
         {{-- 3. Retenções na fonte (F600) × fonte pagadora --}}
         <div class="bg-white rounded border border-gray-300 mb-5 overflow-hidden">
-            <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-2">
                 <div class="flex items-center gap-2">
-                    <span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: #0b1f3a"></span>
-                    <h2 class="text-sm font-bold text-gray-900">Retenções na fonte (F600) × regularidade da fonte pagadora</h2>
+                    <span class="inline-block w-2 h-2 rounded-full" style="background-color: #0b1f3a"></span>
+                    <h2 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Retenções na fonte (F600) × regularidade da fonte pagadora</h2>
+                    @if($retencoesFonte->isNotEmpty())
+                        <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ $retencoesFonte->count() }}</span>
+                    @endif
                 </div>
-                <span class="text-[10px] text-gray-400 uppercase tracking-wide">crédito compensável</span>
+                <span class="text-[10px] text-gray-400 uppercase tracking-wide whitespace-nowrap">crédito compensável</span>
             </div>
             @if($retencoesFonte->isEmpty())
                 <p class="px-4 py-6 text-sm text-gray-500">Nenhuma retenção na fonte (F600) no filtro atual. Este cruzamento depende da importação do SPED Contribuições.</p>
             @else
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm tabela-cards">
-                        <thead class="bg-gray-50 text-[10px] uppercase tracking-wide text-gray-400">
+                        <thead class="bg-gray-50 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
                             <tr>
                                 <th class="text-left px-4 py-2">Fonte pagadora</th>
                                 <th class="text-right px-4 py-2">Retenções</th>
@@ -277,7 +314,7 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @foreach($retencoesFonte as $f)
-                                <tr>
+                                <tr class="hover:bg-gray-50/50 transition-colors">
                                     <td class="px-4 py-2.5">
                                         @if($f['participante_id'])
                                             <a href="{{ route('app.participante', $f['participante_id']) }}" data-link class="font-medium text-blue-600 hover:underline">{{ $f['razao_social'] }}</a>
@@ -287,9 +324,9 @@
                                         <div class="text-[11px] text-gray-400">{{ $f['cnpj'] }}</div>
                                     </td>
                                     <td class="px-4 py-2.5 text-right text-gray-600" data-label="Retenções">{{ $f['qtd'] }}</td>
-                                    <td class="px-4 py-2.5 text-right text-gray-900" data-label="PIS">{{ $fmtMoeda($f['valor_pis']) }}</td>
-                                    <td class="px-4 py-2.5 text-right text-gray-900" data-label="COFINS">{{ $fmtMoeda($f['valor_cofins']) }}</td>
-                                    <td class="px-4 py-2.5 text-right font-semibold text-gray-900" data-label="Total">{{ $fmtMoeda($f['valor_total']) }}</td>
+                                    <td class="px-4 py-2.5 text-right font-mono text-gray-900" data-label="PIS">{{ $fmtMoeda($f['valor_pis']) }}</td>
+                                    <td class="px-4 py-2.5 text-right font-mono text-gray-900" data-label="COFINS">{{ $fmtMoeda($f['valor_cofins']) }}</td>
+                                    <td class="px-4 py-2.5 text-right font-mono font-semibold text-gray-900" data-label="Total">{{ $fmtMoeda($f['valor_total']) }}</td>
                                     <td class="px-4 py-2.5" data-label="Regularidade">
                                         @if(! $f['consultada'])
                                             <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background-color: #9ca3af">Não consultada</span>
@@ -311,12 +348,15 @@
 
         {{-- 4. ICMS-ST nas compras × regime do fornecedor --}}
         <div class="bg-white rounded border border-gray-300 mb-5 overflow-hidden">
-            <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-2">
                 <div class="flex items-center gap-2">
-                    <span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: #7c3aed"></span>
-                    <h2 class="text-sm font-bold text-gray-900">ICMS-ST nas compras × regime do fornecedor</h2>
+                    <span class="inline-block w-2 h-2 rounded-full" style="background-color: #7c3aed"></span>
+                    <h2 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">ICMS-ST nas compras × regime do fornecedor</h2>
+                    @if($icmsSt['fornecedores']->isNotEmpty())
+                        <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ $icmsSt['fornecedores']->count() }}</span>
+                    @endif
                 </div>
-                <span class="text-[10px] text-gray-400 uppercase tracking-wide">
+                <span class="text-[10px] text-gray-400 uppercase tracking-wide whitespace-nowrap">
                     ST a recolher (E210): <strong class="text-gray-600">{{ $fmtMoeda($icmsSt['e210_st_recolher']) }}</strong>
                 </span>
             </div>
@@ -328,7 +368,7 @@
             @else
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm tabela-cards">
-                        <thead class="bg-gray-50 text-[10px] uppercase tracking-wide text-gray-400">
+                        <thead class="bg-gray-50 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
                             <tr>
                                 <th class="text-left px-4 py-2">Fornecedor</th>
                                 <th class="text-left px-4 py-2">Regime tributário</th>
@@ -339,7 +379,7 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @foreach($icmsSt['fornecedores'] as $f)
-                                <tr>
+                                <tr class="hover:bg-gray-50/50 transition-colors">
                                     <td class="px-4 py-2.5">
                                         @if($f['participante_id'])
                                             <a href="{{ route('app.participante', $f['participante_id']) }}" data-link class="font-medium text-blue-600 hover:underline">{{ $f['razao_social'] }}</a>
@@ -358,8 +398,8 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-2.5 text-right text-gray-600" data-label="Notas">{{ $f['qtd_notas'] }}</td>
-                                    <td class="px-4 py-2.5 text-right text-gray-900" data-label="Base ST">{{ $fmtMoeda($f['bc_st']) }}</td>
-                                    <td class="px-4 py-2.5 text-right font-semibold text-gray-900" data-label="ICMS-ST">{{ $fmtMoeda($f['valor_st']) }}</td>
+                                    <td class="px-4 py-2.5 text-right font-mono text-gray-900" data-label="Base ST">{{ $fmtMoeda($f['bc_st']) }}</td>
+                                    <td class="px-4 py-2.5 text-right font-mono font-semibold text-gray-900" data-label="ICMS-ST">{{ $fmtMoeda($f['valor_st']) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -370,13 +410,16 @@
 
         {{-- 5. Estoque declarado (H010) × movimentação --}}
         <div class="bg-white rounded border border-gray-300 mb-5 overflow-hidden">
-            <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-2">
                 <div class="flex items-center gap-2">
-                    <span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: #0891b2"></span>
-                    <h2 class="text-sm font-bold text-gray-900">Estoque declarado (H010) × movimentação do item</h2>
+                    <span class="inline-block w-2 h-2 rounded-full" style="background-color: #0891b2"></span>
+                    <h2 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Estoque declarado (H010) × movimentação do item</h2>
+                    @if($estoque['itens_total'] > 0)
+                        <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ number_format($estoque['itens_total'], 0, ',', '.') }}</span>
+                    @endif
                 </div>
                 @if($estoque['itens_total'] > 0)
-                    <span class="text-[10px] text-gray-400 uppercase tracking-wide">
+                    <span class="text-[10px] text-gray-400 uppercase tracking-wide whitespace-nowrap">
                         {{ number_format($estoque['parados_qtd'], 0, ',', '.') }} sem giro · <strong class="text-gray-600">{{ $fmtMoeda($estoque['parados_valor']) }}</strong> parados
                     </span>
                 @endif
@@ -397,7 +440,7 @@
                 @endif
                 <div class="overflow-x-auto mt-2">
                     <table class="w-full text-sm tabela-cards">
-                        <thead class="bg-gray-50 text-[10px] uppercase tracking-wide text-gray-400">
+                        <thead class="bg-gray-50 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
                             <tr>
                                 <th class="text-left px-4 py-2">Item</th>
                                 <th class="text-right px-4 py-2">Qtd em estoque</th>
@@ -409,15 +452,15 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @foreach($estoque['itens'] as $item)
-                                <tr>
+                                <tr class="hover:bg-gray-50/50 transition-colors">
                                     <td class="px-4 py-2.5">
                                         <div class="font-medium text-gray-900">{{ $item['descricao'] ?? $item['cod_item'] }}</div>
                                         <div class="text-[11px] text-gray-400">{{ $item['cod_item'] }}</div>
                                     </td>
                                     <td class="px-4 py-2.5 text-right text-gray-600" data-label="Qtd">{{ number_format($item['qtd'], 3, ',', '.') }} {{ $item['unid'] }}</td>
-                                    <td class="px-4 py-2.5 text-right font-semibold text-gray-900" data-label="Valor">{{ $fmtMoeda($item['vl_item']) }}</td>
-                                    <td class="px-4 py-2.5 text-right text-gray-900" data-label="Entradas">{{ $fmtMoeda($item['mov_entradas']) }}</td>
-                                    <td class="px-4 py-2.5 text-right text-gray-900" data-label="Saídas">{{ $fmtMoeda($item['mov_saidas']) }}</td>
+                                    <td class="px-4 py-2.5 text-right font-mono font-semibold text-gray-900" data-label="Valor">{{ $fmtMoeda($item['vl_item']) }}</td>
+                                    <td class="px-4 py-2.5 text-right font-mono text-gray-900" data-label="Entradas">{{ $fmtMoeda($item['mov_entradas']) }}</td>
+                                    <td class="px-4 py-2.5 text-right font-mono text-gray-900" data-label="Saídas">{{ $fmtMoeda($item['mov_saidas']) }}</td>
                                     <td class="px-4 py-2.5" data-label="Giro">
                                         @if($item['sem_movimentacao'])
                                             <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background-color: #b45309">Sem giro 12m</span>
@@ -435,16 +478,19 @@
 
         {{-- 6. Nota cancelada SEFAZ × emitente --}}
         <div class="bg-white rounded border border-gray-300 mb-5 overflow-hidden">
-            <div class="px-4 py-3 border-b border-gray-200 flex items-center gap-2">
-                <span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: #6b7280"></span>
-                <h2 class="text-sm font-bold text-gray-900">Nota cancelada na SEFAZ × situação do emitente</h2>
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center gap-2">
+                <span class="inline-block w-2 h-2 rounded-full" style="background-color: #6b7280"></span>
+                <h2 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Nota cancelada na SEFAZ × situação do emitente</h2>
+                @if($canceladas->isNotEmpty())
+                    <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ $canceladas->count() }}</span>
+                @endif
             </div>
             @if($canceladas->isEmpty())
                 <p class="px-4 py-6 text-sm text-gray-500">Nenhuma nota cancelada na SEFAZ no acervo verificado. Este cruzamento depende do clearance de notas (verificação SEFAZ).</p>
             @else
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm tabela-cards">
-                        <thead class="bg-gray-50 text-[10px] uppercase tracking-wide text-gray-400">
+                        <thead class="bg-gray-50 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
                             <tr>
                                 <th class="text-left px-4 py-2">Documento</th>
                                 <th class="text-left px-4 py-2">Emitente</th>
@@ -454,14 +500,14 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @foreach($canceladas as $n)
-                                <tr>
+                                <tr class="hover:bg-gray-50/50 transition-colors">
                                     <td class="px-4 py-2.5 text-[11px] text-gray-600" data-label="Documento">{{ $n['numero'] }}<br><span class="text-gray-400">{{ $n['chave_acesso'] }}</span></td>
                                     <td class="px-4 py-2.5">
                                         <div class="font-medium text-gray-900">{{ $n['emit_nome'] }}</div>
                                         <div class="text-[11px] text-gray-400">{{ $n['emit_cnpj'] }}</div>
                                     </td>
                                     <td class="px-4 py-2.5 text-gray-700" data-label="Situação">{{ $n['situacao_emitente'] ?? 'Não consultado' }}</td>
-                                    <td class="px-4 py-2.5 text-right text-gray-900" data-label="Valor">{{ $n['valor'] !== null ? $fmtMoeda($n['valor']) : '—' }}</td>
+                                    <td class="px-4 py-2.5 text-right font-mono text-gray-900" data-label="Valor">{{ $n['valor'] !== null ? $fmtMoeda($n['valor']) : '—' }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
