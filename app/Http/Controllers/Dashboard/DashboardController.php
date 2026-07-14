@@ -17,6 +17,7 @@ use App\Services\Consultas\ResultadoDetalhePresenter;
 use App\Services\Dashboard\DashboardDataService;
 use App\Services\NotaFiscalService;
 use App\Services\PricingCatalogService;
+use App\Support\ClienteOrigem;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -579,6 +580,7 @@ class DashboardController extends Controller
 
         $viewData = [
             'cliente' => $cliente,
+            'origemCliente' => ClienteOrigem::dados($cliente),
             'totalParticipantes' => $totalParticipantes,
             'totalNotas' => $totalNotas,
             'notasFiscais' => $notasFiscais,

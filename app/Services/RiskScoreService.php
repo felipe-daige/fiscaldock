@@ -379,7 +379,14 @@ class RiskScoreService
         // segue datada: emissão/validade vivem dentro do próprio bloco).
         $existente = ParticipanteScore::where($chaveAlvo)->first();
         if ($existente !== null && is_array($existente->dados_consultados)) {
+            $consultasRealizadas = array_values(array_unique(array_merge(
+                (array) ($existente->dados_consultados['consultas_realizadas'] ?? []),
+                (array) ($dados['consultas_realizadas'] ?? []),
+            )));
             $dados = array_merge($existente->dados_consultados, $dados);
+            if ($consultasRealizadas !== []) {
+                $dados['consultas_realizadas'] = $consultasRealizadas;
+            }
         }
 
         $scores = $this->calcularScores($dados);

@@ -337,8 +337,6 @@ class DivergenciaService
             'sefaz' => $emitIe !== '' ? $emitIe : '—',
             'status' => $ieStatus,
             'nota' => $ieNota,
-            // Alvo do botão SINTEGRA (só faz sentido quando falta IE e há participante real).
-            'participante_id' => $ieStatus === 'sem_dado' ? ($declarado['contraparte_participante_id'] ?? null) : null,
         ];
         if ($ieStatus === 'difere') {
             $tipos[] = 'operacionais';

@@ -85,20 +85,14 @@
             </div>
             <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-200">
                 <div class="p-4 sm:p-6">
-                    @php
-                        $origemLabel = match($participante->origem_tipo) {
-                            'SPED_EFD_FISCAL' => 'EFD ICMS/IPI',
-                            'SPED_EFD_CONTRIB' => 'EFD PIS/COFINS',
-                            'NFE' => 'NF-e',
-                            'NFSE' => 'NFS-e',
-                            'MANUAL' => 'Manual',
-                            default => $participante->origem_tipo ?? 'Manual',
-                        };
-                        $arquivoOrigem = $participante->origem_ref['arquivo'] ?? null;
-                    @endphp
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Origem</p>
-                    <p class="text-lg font-bold text-gray-900">{{ $origemLabel }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">{{ $arquivoOrigem ?: 'Sem arquivo vinculado' }}</p>
+                    <p class="text-lg font-bold text-gray-900">{{ $origemParticipante['label'] }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">{{ $origemParticipante['arquivo'] ?: 'Sem arquivo vinculado' }}</p>
+                    @if(!empty($origemParticipante['url']))
+                        <a href="{{ $origemParticipante['url'] }}" data-link class="mt-1 inline-flex text-[11px] font-semibold text-blue-700 hover:underline">
+                            Ver resultado da importação →
+                        </a>
+                    @endif
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Última Consulta</p>
@@ -116,16 +110,42 @@
                     <p class="text-[11px] text-gray-500 mt-1">{{ $participante->municipio ?: 'Município não informado' }}{{ $participante->uf ? ' / '.$participante->uf : '' }}</p>
                 </div>
             </div>
+            @php
+                $resumoOperacional = [
+                    ['label' => 'Consultas', 'valor' => number_format($estatisticas['total_consultas'] ?? 0, 0, ',', '.'), 'sub' => 'Total registrado', 'hex' => '#374151'],
+                    ['label' => 'Com sucesso', 'valor' => number_format($estatisticas['consultas_sucesso'] ?? 0, 0, ',', '.'), 'sub' => 'Processadas sem erro', 'hex' => '#047857'],
+                    ['label' => 'Com erro', 'valor' => number_format($estatisticas['consultas_erro'] ?? 0, 0, ',', '.'), 'sub' => 'Exigem nova tentativa', 'hex' => '#dc2626'],
+                    ['label' => 'Valor utilizado', 'valor' => \App\Support\Dinheiro::brl($estatisticas['valor_utilizado_reais'] ?? 0), 'sub' => 'Neste participante', 'hex' => '#4338ca'],
+                    ['label' => 'Notas fiscais', 'valor' => number_format($totalNotasFiscais ?? 0, 0, ',', '.'), 'sub' => 'Documentos vinculados', 'hex' => '#0f766e'],
+                ];
+            @endphp
+            <div class="border-t border-gray-200">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo Operacional</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-y lg:divide-y-0 divide-gray-200">
+                    @foreach($resumoOperacional as $item)
+                        <div class="px-4 py-3">
+                            <div class="flex items-center gap-1.5">
+                                <span class="h-1.5 w-1.5 shrink-0 rounded-full" style="background-color: {{ $item['hex'] }}"></span>
+                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{{ $item['label'] }}</p>
+                            </div>
+                            <p class="mt-1 text-base font-bold text-gray-900">{{ $item['valor'] }}</p>
+                            <p class="text-[11px] text-gray-500">{{ $item['sub'] }}</p>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
         </div>
 
-        {{-- Coluna lateral estreita e fixa (19rem) — mesmo grid do perfil do cliente --}}
+        {{-- A coluna lateral só existe quando há controles de uma assinatura ativa. --}}
         <style>
             .perfil-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
             @media (min-width: 1024px) {
-                .perfil-grid { grid-template-columns: minmax(0, 1fr) 19rem; }
+                .perfil-grid--com-sidebar { grid-template-columns: minmax(0, 1fr) 19rem; }
             }
         </style>
-        <div class="perfil-grid">
+        <div class="perfil-grid{{ $assinaturaAtiva ? ' perfil-grid--com-sidebar' : '' }}" data-sidebar-assinatura="{{ $assinaturaAtiva ? 'true' : 'false' }}">
             {{-- Coluna Principal --}}
             <div class="space-y-4 sm:space-y-6 min-w-0">
                 {{-- Dados Cadastrais --}}
@@ -175,7 +195,7 @@
                     </div>
                 </div>
 
-                {{-- Dados da Última Consulta --}}
+                {{-- Snapshot consolidado: dado mais recente disponível por fonte. --}}
                 @if($ultimaConsulta && $ultimaConsulta->resultado_dados)
                     @php
                         $dados = $ultimaConsulta->resultado_dados;
@@ -186,15 +206,15 @@
                         <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Dados da Última Consulta</span>
+                                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Dados Consolidados das Consultas</span>
                                     <p class="text-xs text-gray-500 mt-1">
-                                        Consultado em {{ $ultimaConsulta->consultado_em?->format('d/m/Y H:i') }}
+                                        Fontes mais recentes disponíveis · última consulta em {{ $ultimaConsulta->consultado_em?->format('d/m/Y H:i') }}
                                         @if($ultimaConsulta->lote)
                                         <span class="mx-1">|</span>
                                         <a href="/app/consulta/historico?lote={{ $ultimaConsulta->lote->id }}"
                                            class="text-gray-600 hover:text-gray-900 hover:underline"
                                            data-link>
-                                            Lote #{{ $ultimaConsulta->lote->id }}
+                                            Último lote #{{ $ultimaConsulta->lote->id }}
                                         </a>
                                         @endif
                                     </p>
@@ -390,190 +410,25 @@
                             </div>
                             @endif
 
-                            {{-- Certidões Negativas — cell grid DANFE / NF-e --}}
-                            @php
-                                $certidoesConfig = [
-                                    ['key' => 'cnd_federal',  'titulo' => 'CND Federal',        'subtitulo' => 'Receita Federal / PGFN'],
-                                    ['key' => 'cnd_estadual', 'titulo' => 'CND Estadual',       'subtitulo' => 'Fazenda Estadual'],
-                                    ['key' => 'crf_fgts',     'titulo' => 'CRF (FGTS)',         'subtitulo' => 'Caixa Econômica Federal'],
-                                    ['key' => 'cndt',         'titulo' => 'CNDT (Trabalhista)', 'subtitulo' => 'Tribunal Superior do Trabalho'],
-                                ];
-
-                                $certidoes = [];
-                                foreach ($certidoesConfig as $cfg) {
-                                    $d = $dados[$cfg['key']] ?? null;
-                                    if (! is_array($d) || empty($d)) continue;
-
-                                    $status = strtoupper(trim((string) ($d['status'] ?? $d['situacao'] ?? '')));
-                                    $situacaoCnd = strtoupper(trim((string) ($d['situacao'] ?? '')));
-                                    $conseguiuEmitir = $d['conseguiu_emitir'] ?? null;
-
-                                    if ($status === 'INDETERMINADO' || $conseguiuEmitir === false) {
-                                        $statusLabel = 'Indeterminada'; $statusHex = '#6b7280';
-                                    } elseif ($status === '') {
-                                        $statusLabel = 'Não consultada'; $statusHex = '#9ca3af';
-                                    } elseif (str_contains($status, 'POSITIVA COM EFEITO') || str_contains($status, 'EFEITO DE NEGATIVA') || $situacaoCnd === 'REGULAR_COM_RESSALVAS') {
-                                        $statusLabel = 'Regular c/ ressalvas'; $statusHex = '#b45309';
-                                    } elseif (in_array($status, ['POSITIVA', 'IRREGULAR', 'IRREGULARIDADE'], true)) {
-                                        $statusLabel = 'Irregular'; $statusHex = '#dc2626';
-                                    } elseif (in_array($status, ['NEGATIVA', 'REGULAR', 'REGULARIDADE'], true)) {
-                                        $statusLabel = 'Regular'; $statusHex = '#047857';
-                                    } else {
-                                        $statusLabel = ucfirst(mb_strtolower($status)); $statusHex = '#374151';
-                                    }
-
-                                    $dv = $d['data_validade'] ?? $d['validade'] ?? null;
-                                    $validadeFmt = null; $validadeTexto = null; $validadeHex = '#6b7280';
-                                    if ($dv) {
-                                        try {
-                                            $dataVal = \Carbon\Carbon::parse($dv);
-                                            $validadeFmt = $dataVal->format('d/m/Y');
-                                            $dias = (int) floor(now()->startOfDay()->diffInDays($dataVal->startOfDay(), false));
-                                            if ($dias < 0) { $validadeTexto = 'Vencida há '.abs($dias).' dia'.(abs($dias) === 1 ? '' : 's'); $validadeHex = '#dc2626'; }
-                                            elseif ($dias === 0) { $validadeTexto = 'Vence hoje'; $validadeHex = '#b45309'; }
-                                            elseif ($dias <= 30) { $validadeTexto = 'Vence em '.$dias.' dia'.($dias === 1 ? '' : 's'); $validadeHex = '#b45309'; }
-                                            else { $validadeTexto = 'Vence em '.$dias.' dias'; $validadeHex = '#6b7280'; }
-                                        } catch (\Exception $e) { $validadeFmt = (string) $dv; }
-                                    }
-
-                                    $emissaoFmt = null;
-                                    $emissaoRaw = $d['emissao_data'] ?? $d['data_emissao'] ?? null;
-                                    if ($emissaoRaw) {
-                                        try { $emissaoFmt = \Carbon\Carbon::parse($emissaoRaw)->format('d/m/Y'); }
-                                        catch (\Exception $e) { $emissaoFmt = (string) $emissaoRaw; }
-                                    }
-
-                                    $mensagemCnd = $d['mensagem'] ?? null;
-                                    if (! $mensagemCnd && ! empty($d['errors']) && is_array($d['errors'])) $mensagemCnd = $d['errors'][0] ?? null;
-                                    if ($cfg['key'] === 'cnd_federal') {
-                                        $mensagemCnd = \App\Support\CndFederal::analisar($d)['motivo'] ?? $mensagemCnd;
-                                    }
-
-                                    $certidoes[] = [
-                                        'titulo'        => $cfg['titulo'],
-                                        'subtitulo'     => $cfg['subtitulo'],
-                                        'statusLabel'   => $statusLabel,
-                                        'statusHex'     => $statusHex,
-                                        'validadeFmt'   => $validadeFmt,
-                                        'validadeTexto' => $validadeTexto,
-                                        'validadeHex'   => $validadeHex,
-                                        'emissaoFmt'    => $emissaoFmt,
-                                        'codigo'        => $d['certidao_codigo'] ?? null,
-                                        'certidaoTxt'   => $d['certidao'] ?? null,
-                                        'debitosRfb'    => array_key_exists('debitos_rfb', $d)  ? (bool) $d['debitos_rfb']  : null,
-                                        'debitosPgfn'   => array_key_exists('debitos_pgfn', $d) ? (bool) $d['debitos_pgfn'] : null,
-                                        'prorrogada'    => ! empty($d['validade_prorrogada']),
-                                        'mensagem'      => $mensagemCnd,
-                                        'indeterminada' => ($statusLabel === 'Indeterminada'),
-                                    ];
-                                }
-                            @endphp
-
-                            @if(count($certidoes) > 0)
-                            <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                                <div class="bg-gray-50 px-4 py-2 border-b border-gray-300 flex items-center justify-between">
-                                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Certidões e Consultas</span>
-                                    <span class="text-[10px] font-semibold text-gray-400">{{ count($certidoes) }} {{ count($certidoes) === 1 ? 'registro' : 'registros' }}</span>
-                                </div>
-                                <div class="divide-y divide-gray-300">
-                                    @foreach($certidoes as $cert)
-                                    <div>
-                                        <div class="bg-gray-50/60 px-3 py-1.5 border-b border-gray-200 flex items-center justify-between">
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-[11px] font-semibold text-gray-900 uppercase tracking-wide">{{ $cert['titulo'] }}</span>
-                                                @if($cert['prorrogada'])
-                                                <span class="text-[9px] font-bold uppercase tracking-wider" style="color:#4338ca">· Prorrogada</span>
-                                                @endif
-                                            </div>
-                                            <span class="text-[10px] text-gray-500">{{ $cert['subtitulo'] }}</span>
+                            {{-- Fontes fiscais: certidões + cadastro estadual no presenter canônico. --}}
+                            @if(!empty($fontesConsulta ?? []))
+                                <div class="bg-white rounded border border-gray-300 overflow-hidden" data-fontes-fiscais>
+                                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-300 flex items-center justify-between gap-3">
+                                        <div>
+                                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Certidões e Cadastros Fiscais</span>
+                                            <p class="mt-0.5 text-[11px] text-gray-500">Regularidade fiscal e situação estadual consolidadas por fonte.</p>
                                         </div>
-
-                                        @if($cert['indeterminada'])
-                                        <div class="px-3 py-3 border-l-[3px]" style="border-left-color: {{ $cert['statusHex'] }}">
-                                            <p class="text-[9px] font-semibold text-gray-400 uppercase tracking-wider leading-none">Situação</p>
-                                            <p class="mt-1.5 text-sm text-gray-900 font-semibold leading-tight">{{ $cert['statusLabel'] }}</p>
-                                            <p class="mt-2 text-[12px] text-gray-700 leading-snug">{{ $cert['mensagem'] ?? 'Não foi possível emitir a certidão pela internet.' }}</p>
-                                            <p class="mt-1 text-[10px] text-gray-500 leading-snug">Tente novamente mais tarde ou emita manualmente no portal oficial.</p>
-                                        </div>
-                                        @else
-                                        <div class="grid grid-cols-2 sm:grid-cols-4 divide-x divide-gray-200">
-                                            <div class="px-3 py-2.5">
-                                                <p class="flex items-center gap-1.5 text-[9px] font-semibold text-gray-400 uppercase tracking-wider leading-none">
-                                                    <span class="inline-block w-2 h-2" style="background-color: {{ $cert['statusHex'] }}"></span>
-                                                    Situação
-                                                </p>
-                                                <p class="mt-1.5 text-sm text-gray-900 font-semibold leading-tight inline-block border-b-2 pb-0.5" style="border-bottom-color: {{ $cert['statusHex'] }}">{{ $cert['statusLabel'] }}</p>
-                                            </div>
-                                            <div class="px-3 py-2.5">
-                                                <p class="flex items-center gap-1.5 text-[9px] font-semibold text-gray-400 uppercase tracking-wider leading-none">
-                                                    <span class="inline-block w-2 h-2" style="background-color: {{ $cert['validadeHex'] }}"></span>
-                                                    Validade
-                                                </p>
-                                                <p class="mt-1.5 text-sm text-gray-900 font-mono leading-tight inline-block border-b-2 pb-0.5" style="border-bottom-color: {{ $cert['validadeHex'] }}">{{ $cert['validadeFmt'] ?? '—' }}</p>
-                                                @if($cert['validadeTexto'])
-                                                <p class="text-[11px] leading-tight mt-0.5" style="color: {{ $cert['validadeHex'] }}">{{ $cert['validadeTexto'] }}</p>
-                                                @endif
-                                            </div>
-                                            <div class="px-3 py-2.5">
-                                                <p class="text-[9px] font-semibold text-gray-400 uppercase tracking-wider leading-none">Emissão</p>
-                                                <p class="mt-1.5 text-sm text-gray-700 font-mono leading-tight">{{ $cert['emissaoFmt'] ?? '—' }}</p>
-                                            </div>
-                                            <div class="px-3 py-2.5">
-                                                <p class="text-[9px] font-semibold text-gray-400 uppercase tracking-wider leading-none">Código</p>
-                                                <p class="mt-1.5 text-xs text-gray-700 font-mono break-all leading-tight">{{ $cert['codigo'] ?? '—' }}</p>
-                                            </div>
-                                        </div>
-
-                                        @if($cert['debitosRfb'] !== null || $cert['debitosPgfn'] !== null)
-                                        <div class="grid grid-cols-1 sm:grid-cols-2 divide-x divide-gray-200 border-t border-gray-200">
-                                            @if($cert['debitosRfb'] !== null)
-                                            @php
-                                                $rfbAlerta = $cert['debitosRfb'] === true;
-                                                $rfbLabel  = $rfbAlerta ? 'Com débitos' : 'Sem débitos';
-                                                $rfbHex    = '#b45309';
-                                            @endphp
-                                            <div class="px-3 py-2.5">
-                                                <p class="flex items-center gap-1.5 text-[9px] font-semibold text-gray-400 uppercase tracking-wider leading-none">
-                                                    @if($rfbAlerta)<span class="inline-block w-2 h-2" style="background-color: {{ $rfbHex }}"></span>@endif
-                                                    Receita Federal
-                                                </p>
-                                                <p class="mt-1.5 text-sm {{ $rfbAlerta ? 'text-gray-900 font-semibold inline-block border-b-2 pb-0.5' : 'text-gray-700' }} leading-tight" @if($rfbAlerta) style="border-bottom-color: {{ $rfbHex }}" @endif>{{ $rfbLabel }}</p>
-                                                <p class="text-[11px] text-gray-500 leading-tight mt-0.5">Tributos administrados (DARF, parcelamentos)</p>
-                                            </div>
-                                            @endif
-                                            @if($cert['debitosPgfn'] !== null)
-                                            @php
-                                                $pgfnAlerta = $cert['debitosPgfn'] === true;
-                                                $pgfnLabel  = $pgfnAlerta ? 'Inscrito em dívida ativa' : 'Sem inscrição';
-                                                $pgfnHex    = '#dc2626';
-                                            @endphp
-                                            <div class="px-3 py-2.5">
-                                                <p class="flex items-center gap-1.5 text-[9px] font-semibold text-gray-400 uppercase tracking-wider leading-none">
-                                                    @if($pgfnAlerta)<span class="inline-block w-2 h-2" style="background-color: {{ $pgfnHex }}"></span>@endif
-                                                    PGFN — Dívida Ativa
-                                                </p>
-                                                <p class="mt-1.5 text-sm {{ $pgfnAlerta ? 'text-gray-900 font-semibold inline-block border-b-2 pb-0.5' : 'text-gray-700' }} leading-tight" @if($pgfnAlerta) style="border-bottom-color: {{ $pgfnHex }}" @endif>{{ $pgfnLabel }}</p>
-                                                <p class="text-[11px] text-gray-500 leading-tight mt-0.5">Procuradoria-Geral da Fazenda — DAU</p>
-                                            </div>
-                                            @endif
-                                        </div>
-                                        @endif
-
-                                        @if($cert['certidaoTxt'] || ($cert['debitosRfb'] !== null || $cert['debitosPgfn'] !== null))
-                                        <div class="px-3 py-2 border-t border-gray-200 bg-gray-50/40">
-                                            @if($cert['debitosRfb'] !== null || $cert['debitosPgfn'] !== null)
-                                            <p class="text-[10px] text-gray-500 italic leading-snug">Valores não divulgados pela CND. Para detalhamento, consultar Situação Fiscal no e-CAC com certificado digital.</p>
-                                            @endif
-                                            @if($cert['certidaoTxt'])
-                                            <p class="text-[11px] text-gray-600 leading-relaxed {{ ($cert['debitosRfb'] !== null || $cert['debitosPgfn'] !== null) ? 'mt-1.5' : '' }}">{{ $cert['certidaoTxt'] }}</p>
-                                            @endif
-                                        </div>
-                                        @endif
-                                        @endif
+                                        <span class="text-[10px] font-semibold text-gray-400 whitespace-nowrap">{{ count($fontesConsulta) }} fontes</span>
                                     </div>
-                                    @endforeach
+                                    <div class="p-3 sm:p-4" style="background-color: #f9fafb">
+                                        @include('autenticado.consulta.partials.detalhe-blocos', [
+                                            'blocos' => $fontesConsulta,
+                                            'certidoes' => $certidoesConsulta ?? [],
+                                            'resumo' => null,
+                                            'cabecalho' => [],
+                                        ])
+                                    </div>
                                 </div>
-                            </div>
                             @endif
 
                             {{-- Dados Cadastrais Completos --}}
@@ -726,28 +581,6 @@
                             </div>
                             @endif
 
-                            {{-- SINTEGRA --}}
-                            @if(in_array('sintegra', $consultasRealizadas) && isset($dados['sintegra']))
-                            <div class="border-t border-gray-200 pt-4">
-                                <h3 class="text-sm font-semibold text-gray-700 mb-3">SINTEGRA</h3>
-                                <dl class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
-                                        <dt class="text-xs text-gray-500">Inscrição Estadual</dt>
-                                        <dd class="mt-1 text-sm font-mono text-gray-900">{{ $dados['sintegra']['ie'] ?? '-' }}</dd>
-                                    </div>
-                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
-                                        <dt class="text-xs text-gray-500">Situação IE</dt>
-                                        <dd class="mt-1 text-sm font-semibold {{ ($dados['sintegra']['situacao'] ?? '') === 'HABILITADO' ? 'text-green-600' : 'text-red-600' }}">
-                                            {{ $dados['sintegra']['situacao'] ?? '-' }}
-                                        </dd>
-                                    </div>
-                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
-                                        <dt class="text-xs text-gray-500">Regime Apuração</dt>
-                                        <dd class="mt-1 text-sm text-gray-900">{{ $dados['sintegra']['regime_apuracao'] ?? '-' }}</dd>
-                                    </div>
-                                </dl>
-                            </div>
-                            @endif
 
 
                             {{-- QSA (Socios) --}}
@@ -959,10 +792,9 @@
                 @endif
             </div>
 
-            {{-- Coluna Lateral --}}
-            <div class="space-y-4 sm:space-y-6 min-w-0">
-                {{-- Assinatura Ativa --}}
-                @if($assinaturaAtiva)
+            @if($assinaturaAtiva)
+                {{-- Coluna lateral reservada aos controles da assinatura ativa. --}}
+                <div class="space-y-4 sm:space-y-6 min-w-0">
                     <div class="bg-white rounded border border-gray-300 overflow-hidden">
                         <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                             <div class="flex items-center justify-between">
@@ -1045,64 +877,8 @@
                             </div>
                         </div>
                     </div>
-                @endif
-
-                {{-- Estatisticas --}}
-                <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Estatísticas</span>
-                    </div>
-                    <div class="p-4 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">Total de consultas</span>
-                            <span class="text-sm font-semibold text-gray-900">{{ $estatisticas['total_consultas'] ?? 0 }}</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">Consultas com sucesso</span>
-                            <span class="text-sm font-semibold text-green-600">{{ $estatisticas['consultas_sucesso'] ?? 0 }}</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">Consultas com erro</span>
-                            <span class="text-sm font-semibold text-red-600">{{ $estatisticas['consultas_erro'] ?? 0 }}</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">Valor gasto</span>
-                            <span class="text-sm font-semibold text-gray-900">@brl($estatisticas['valor_utilizado_reais'] ?? 0)</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-600">Notas fiscais</span>
-                            <span class="text-sm font-semibold text-gray-900">{{ $totalNotasFiscais ?? 0 }}</span>
-                        </div>
-                    </div>
                 </div>
-
-                {{-- Saldo --}}
-                <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Saldo</span>
-                    </div>
-                    <div class="p-4">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 rounded border border-gray-300 bg-gray-50 flex items-center justify-center">
-                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500">Saldo disponível</p>
-                            <p class="text-xl font-bold text-gray-900">@brl($saldoReais ?? 0)</p>
-                        </div>
-                    </div>
-                    <a
-                        href="/app/saldo"
-                        class="block w-full text-center px-4 py-2 rounded bg-gray-800 text-white text-sm font-semibold transition hover:bg-gray-700"
-                        data-link
-                    >
-                        Adicionar Saldo
-                    </a>
-                    </div>
-                </div>
-            </div>
+            @endif
         </div>
     </div>
 </div>

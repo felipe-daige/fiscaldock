@@ -18,7 +18,12 @@
         ['label' => 'Participantes Vinculados', 'valor' => number_format($totalParticipantes, 0, ',', '.'), 'sub' => 'Base vinculada ao cadastro'],
         ['label' => 'Notas Fiscais', 'valor' => number_format($totalNotas, 0, ',', '.'), 'sub' => 'Notas unificadas EFD e XML'],
         ['label' => 'Localização', 'valor' => implode(' / ', array_filter([$cliente->municipio, $cliente->uf])) ?: 'Não informado', 'sub' => 'Município e UF'],
-        ['label' => 'Cadastro', 'valor' => $cliente->created_at?->format('d/m/Y') ?? '-', 'sub' => 'Data de inclusão'],
+        [
+            'label' => 'Origem',
+            'valor' => $origemCliente['label'],
+            'sub' => $origemCliente['arquivo'] ?: 'Sem importação vinculada',
+            'url' => $origemCliente['url'],
+        ],
     ];
     $dadosCadastrais = [
         ['label' => $cliente->tipo_pessoa === 'PJ' ? 'Razão Social' : 'Nome', 'valor' => $cliente->razao_social ?? $cliente->nome ?? '-', 'mono' => false],
@@ -105,6 +110,11 @@
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">{{ $item['label'] }}</p>
                         <p class="text-lg font-bold text-gray-900">{{ $item['valor'] }}</p>
                         <p class="text-[11px] text-gray-500 mt-1">{{ $item['sub'] }}</p>
+                        @if(!empty($item['url']))
+                            <a href="{{ $item['url'] }}" data-link class="mt-1 inline-flex text-[11px] font-semibold text-blue-700 hover:underline">
+                                Ver resultado da importação →
+                            </a>
+                        @endif
                     </div>
                 @endforeach
             </div>

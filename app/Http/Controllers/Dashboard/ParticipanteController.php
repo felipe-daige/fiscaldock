@@ -14,11 +14,13 @@ use App\Models\MonitoramentoAssinatura;
 use App\Models\MonitoramentoConsulta;
 use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
+use App\Models\ParticipanteScore;
 use App\Models\XmlNota;
 use App\Services\Consultas\ResultadoDetalhePresenter;
-use App\Services\SaldoService;
 use App\Services\NotaFiscalService;
 use App\Services\ParecerFiscalService;
+use App\Services\SaldoService;
+use App\Support\ParticipanteOrigem;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -797,6 +799,7 @@ class ParticipanteController extends Controller
 
         $participante = Participante::where('id', $id)
             ->where('user_id', $userId)
+            ->with(['importacaoEfd', 'importacaoXml'])
             ->firstOrFail();
 
         // Carregar consultas do participante
@@ -870,6 +873,46 @@ class ParticipanteController extends Controller
             ->orderBy('consultado_em', 'desc')
             ->first();
 
+        // A consulta mais recente pode ser de um plano parcial (ex.: Gratuito, só cadastro).
+        // A ficha deve mostrar o snapshot mais recente POR FONTE, já consolidado na projeção
+        // canônica do score, sem esconder certidões trazidas por um lote anterior mais amplo.
+        // A mutação é apenas em memória; o resultado bruto e seu vínculo com o lote permanecem
+        // intactos no histórico.
+        $dadosConsolidados = ParticipanteScore::where('user_id', $userId)
+            ->where('participante_id', $participante->id)
+            ->first(['dados_consultados'])
+            ?->dados_consultados;
+
+        if ($ultimaConsulta && is_array($dadosConsolidados) && $dadosConsolidados !== []) {
+            $dadosAtuais = (array) $ultimaConsulta->resultado_dados;
+            $consultasRealizadas = array_values(array_unique(array_merge(
+                (array) ($dadosConsolidados['consultas_realizadas'] ?? []),
+                (array) ($dadosAtuais['consultas_realizadas'] ?? []),
+                array_values(array_intersect(
+                    ['cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts', 'cndt', 'sintegra', 'qsa'],
+                    array_keys($dadosConsolidados)
+                )),
+            )));
+
+            $dadosMesclados = array_merge($dadosConsolidados, $dadosAtuais);
+            if ($consultasRealizadas !== []) {
+                $dadosMesclados['consultas_realizadas'] = $consultasRealizadas;
+            }
+            $ultimaConsulta->resultado_dados = $dadosMesclados;
+        }
+
+        // Reusa o presenter canônico das Consultas para exibir todas as seis fontes no mesmo
+        // padrão visual: cinco certidões + SINTEGRA, incluindo mensagem e comprovante.
+        $fontesConsulta = $ultimaConsulta
+            ? array_values(array_filter(
+                $this->detalhePresenter->blocos($ultimaConsulta),
+                fn (array $bloco) => ($bloco['chave'] ?? null) !== 'cadastro'
+            ))
+            : [];
+        $certidoesConsulta = $ultimaConsulta
+            ? $this->detalhePresenter->certidoes($ultimaConsulta)
+            : [];
+
         // Buscar lotes que incluem este participante (para histórico de consultas em lote)
         $lotesDoParticipante = ConsultaLote::whereHas('participantes', function ($q) use ($participante) {
             $q->where('participantes.id', $participante->id);
@@ -932,8 +975,6 @@ class ParticipanteController extends Controller
             }
         }
 
-        $saldoReais = app(\App\Services\PricingCatalogService::class)
-            ->creditsToCurrency($this->saldoService->getBalance($user));
         $returnToUrl = $this->resolveReturnToUrl($request, (string) $request->query('return_to', ''));
 
         $data = [
@@ -942,7 +983,6 @@ class ParticipanteController extends Controller
             'assinaturaAtiva' => $assinaturaAtiva,
             'planos' => $planos,
             'estatisticas' => $estatisticas,
-            'saldoReais' => $saldoReais,
             'notasFiscais' => $notasFiscais,
             'totalNotasFiscais' => $totalNotasFiscais,
             'notasAjaxUrl' => "/app/participante/{$id}/notas",
@@ -950,10 +990,13 @@ class ParticipanteController extends Controller
             'notasEntityId' => $participante->id,
             'returnToUrl' => $returnToUrl,
             'ultimaConsulta' => $ultimaConsulta,
+            'fontesConsulta' => $fontesConsulta,
+            'certidoesConsulta' => $certidoesConsulta,
             'lotesDoParticipante' => $lotesDoParticipante,
             'parecerFiscal' => $ultimaConsulta
                 ? app(ParecerFiscalService::class)->gerar($ultimaConsulta->getParecerFiscalPayload())
                 : [],
+            'origemParticipante' => ParticipanteOrigem::dados($participante),
         ];
 
         $movimentacao = app(\App\Services\Participantes\ParticipanteMovimentacaoService::class)->kpisEResumoParaPreview($participante);
@@ -1404,24 +1447,7 @@ class ParticipanteController extends Controller
      */
     private function origemBadge(Participante $participante): array
     {
-        $tipo = strtoupper(trim((string) $participante->origem_tipo));
-
-        if ($participante->importacao_efd_id || str_starts_with($tipo, 'SPED')) {
-            $tipoEfd = $participante->importacaoEfd?->tipo_efd;
-
-            return match (true) {
-                $tipoEfd === 'EFD PIS/COFINS', $tipo === 'SPED_EFD_CONTRIB' => ['label' => 'EFD PIS/COFINS', 'hex' => '#7c3aed'],
-                $tipoEfd === 'EFD ICMS/IPI', $tipo === 'SPED_EFD_FISCAL' => ['label' => 'EFD ICMS/IPI', 'hex' => '#4338ca'],
-                default => ['label' => 'EFD', 'hex' => '#4338ca'],
-            };
-        }
-
-        return match ($tipo) {
-            'XML', 'NFE' => ['label' => 'XML NF-e', 'hex' => '#0f766e'],
-            'NFSE' => ['label' => 'XML NFS-e', 'hex' => '#0891b2'],
-            'MANUAL' => ['label' => 'Manual', 'hex' => '#6b7280'],
-            default => ['label' => 'Não informada', 'hex' => '#9ca3af'],
-        };
+        return ParticipanteOrigem::dados($participante);
     }
 
     /**

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Concerns\RespondeAjax;
 use App\Http\Controllers\Concerns\SetsDownloadToken;
 use App\Http\Controllers\Controller;
-use App\Jobs\ProcessarConsultaJob;
 use App\Models\Cliente;
 use App\Models\ConsultaLote;
 use App\Models\EfdNota;
@@ -19,9 +18,7 @@ use App\Services\Clearance\ClearanceLoteService;
 use App\Services\Clearance\DivergenciaService;
 use App\Services\Clearance\RegularidadeContraparteService;
 use App\Services\Clearance\RelatorioExecutivoService;
-use App\Services\Consultas\FecharLoteService;
 use App\Services\NotaFiscalService;
-use App\Services\PricingCatalogService;
 use App\Services\SaldoService;
 use App\Services\ValidacaoContabilService;
 use App\Support\PdfReport;
@@ -30,7 +27,6 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -55,8 +51,7 @@ class ClearanceController extends Controller
         protected ValidacaoContabilService $validacaoService,
         protected SaldoService $saldoService,
         protected NotaFiscalService $notaFiscalService,
-        protected ReconciliacaoXmlEfdService $reconciliacaoService,
-        protected PricingCatalogService $pricingCatalogService
+        protected ReconciliacaoXmlEfdService $reconciliacaoService
     ) {}
 
     /**
@@ -1696,222 +1691,6 @@ class ClearanceController extends Controller
         $relatorio = $builder->montar(Auth::id());
 
         return $this->comTokenDownload($zip->download($relatorio, 'panorama-clearance-csv.zip'), $request);
-    }
-
-    /** Custo interno de uma consulta SINTEGRA (fonte paga). */
-    private function custoSintegraUnitario(): int
-    {
-        return (int) config('consultas.fontes.sintegra', 5);
-    }
-
-    /**
-     * Resolve os participantes SEM Inscrição Estadual alvos do enriquecimento SINTEGRA.
-     * Aceita ids explícitos (botão por documento) e/ou um lote inteiro (botão do topo —
-     * varre as contrapartes das notas do lote). Filtra por dono, CNPJ e IE ausente.
-     */
-    private function resolverParticipantesSemIe(int $userId, array $ids, ?int $loteId): Collection
-    {
-        $idsAlvo = $ids;
-
-        if ($loteId !== null) {
-            $lote = ConsultaLote::where('id', $loteId)->where('user_id', $userId)->first();
-            if ($lote) {
-                $resultados = $this->listarConsultasDfePorLote($userId, $lote->id);
-                $chaves = $resultados->pluck('chave_acesso')->filter()->unique()->values()->all();
-                $declarado = app(DivergenciaService::class)->buscarDeclaradoPorChave($userId, $chaves);
-                foreach ($declarado as $d) {
-                    if (empty($d['contraparte_ie']) && ! empty($d['contraparte_participante_id'])) {
-                        $idsAlvo[] = $d['contraparte_participante_id'];
-                    }
-                }
-            }
-        }
-
-        $idsAlvo = array_values(array_unique(array_filter(array_map('intval', $idsAlvo))));
-        if ($idsAlvo === []) {
-            return collect();
-        }
-
-        return Participante::where('user_id', $userId)
-            ->somenteCnpj()
-            ->whereIn('id', $idsAlvo)
-            ->where(fn ($q) => $q->whereNull('inscricao_estadual')->orWhere('inscricao_estadual', ''))
-            ->get(['id', 'documento', 'razao_social', 'uf', 'crt']);
-    }
-
-    /**
-     * Preview do custo do enriquecimento SINTEGRA (para o modal de confirmação).
-     * Não cobra nada — só resolve os alvos e devolve custo × saldo.
-     */
-    public function sintegraPreview(Request $request)
-    {
-        if (! Auth::check()) {
-            return response()->json(['success' => false, 'error' => 'Não autenticado.'], Response::HTTP_UNAUTHORIZED);
-        }
-
-        $validated = $request->validate([
-            'participante_ids' => 'nullable|array|max:1000',
-            'participante_ids.*' => 'integer',
-            'lote_id' => 'nullable|integer',
-        ]);
-
-        $userId = (int) Auth::id();
-        $participantes = $this->resolverParticipantesSemIe(
-            $userId,
-            $validated['participante_ids'] ?? [],
-            $validated['lote_id'] ?? null
-        );
-
-        $total = $participantes->count();
-        $custo = $total * $this->custoSintegraUnitario();
-        $saldo = $this->saldoService->getBalance(Auth::user());
-
-        return response()->json([
-            'success' => true,
-            'total' => $total,
-            'participante_ids' => $participantes->pluck('id')->values()->all(),
-            'valor_reais' => $this->pricingCatalogService->creditsToCurrency($custo),
-            'saldo_reais' => $this->pricingCatalogService->creditsToCurrency($saldo),
-            'suficiente' => $saldo >= $custo,
-        ]);
-    }
-
-    /**
-     * Executa o enriquecimento SINTEGRA: debita, cria lote sintegra-only (plano_id null) e
-     * dispara ProcessarConsultaJob com somenteFontes=['sintegra']. O estorno em falha fatal é
-     * automático (FecharLoteService, por fonte). Persiste em participantes.inscricao_estadual.
-     */
-    public function sintegraExecutar(Request $request)
-    {
-        if (! Auth::check()) {
-            return response()->json(['success' => false, 'error' => 'Não autenticado.'], Response::HTTP_UNAUTHORIZED);
-        }
-
-        $validated = $request->validate([
-            'participante_ids' => 'nullable|array|max:1000',
-            'participante_ids.*' => 'integer',
-            'lote_id' => 'nullable|integer',
-            'tab_id' => 'nullable|string|max:36',
-        ]);
-
-        $user = Auth::user();
-        $userId = (int) $user->id;
-
-        if (! (bool) config('consultas.infosimples_ativo', false)) {
-            return response()->json(['success' => false, 'error' => 'Consulta SINTEGRA indisponível no momento.'], Response::HTTP_SERVICE_UNAVAILABLE);
-        }
-
-        $participantes = $this->resolverParticipantesSemIe(
-            $userId,
-            $validated['participante_ids'] ?? [],
-            $validated['lote_id'] ?? null
-        );
-
-        if ($participantes->isEmpty()) {
-            return response()->json(['success' => false, 'error' => 'Nenhum participante elegível (sem IE) para consultar.'], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        $total = $participantes->count();
-        $custoTotal = $total * $this->custoSintegraUnitario();
-
-        if (! $this->saldoService->hasEnough($user, $custoTotal)) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Saldo insuficiente.',
-                'creditos_necessarios' => $custoTotal,
-                'creditos_disponiveis' => $this->saldoService->getBalance($user),
-            ], Response::HTTP_PAYMENT_REQUIRED);
-        }
-
-        $tabId = $validated['tab_id'] ?: (string) Str::uuid();
-
-        try {
-            if (! $this->saldoService->deduct($user, $custoTotal, 'consulta_lote', "SINTEGRA IE — {$total} participante(s)")) {
-                return response()->json(['success' => false, 'error' => 'Falha ao debitar o saldo.'], Response::HTTP_INTERNAL_SERVER_ERROR);
-            }
-
-            $lote = ConsultaLote::create([
-                'user_id' => $userId,
-                'plano_id' => null,
-                'status' => ConsultaLote::STATUS_PROCESSANDO,
-                'total_participantes' => $total,
-                'creditos_cobrados' => $custoTotal,
-                'tab_id' => $tabId,
-            ]);
-            $lote->participantes()->attach($participantes->pluck('id')->all());
-
-            $jobs = $participantes->values()->map(fn ($p, $i) => new ProcessarConsultaJob(
-                loteId: $lote->id,
-                alvoTipo: 'participante',
-                alvoId: (int) $p->id,
-                userId: $userId,
-                tabId: $tabId,
-                consultasIncluidas: ['sintegra'],
-                alvo: [
-                    'cnpj' => preg_replace('/\D/', '', (string) $p->documento),
-                    'uf' => $p->uf,
-                    'crt' => $p->crt,
-                ],
-                etapas: [],
-                alvoIndice: $i + 1,
-                totalAlvos: $total,
-                somenteFontes: ['sintegra'],
-            ))->all();
-
-            Bus::batch($jobs)
-                ->name("sintegra-ie-{$lote->id}")
-                ->then(fn () => app(FecharLoteService::class)->fechar($lote->id, resumo: ['engine' => 'laravel', 'origem' => 'clearance_ie']))
-                ->dispatch();
-
-            return response()->json([
-                'success' => true,
-                'lote_id' => $lote->id,
-                'total' => $total,
-                'participante_ids' => $participantes->pluck('id')->values()->all(),
-                'valor_reais' => $this->pricingCatalogService->creditsToCurrency($custoTotal),
-                'novo_saldo_reais' => $this->pricingCatalogService->creditsToCurrency($this->saldoService->getBalance($user)),
-            ]);
-        } catch (\Throwable $e) {
-            if (isset($lote)) {
-                $lote->update(['status' => ConsultaLote::STATUS_ERRO, 'error_code' => 'INTERNAL_ERROR', 'error_message' => $e->getMessage()]);
-                $this->saldoService->add($user, $custoTotal, 'consulta_refund', "Estorno SINTEGRA IE lote #{$lote->id}");
-            }
-            Log::error('Clearance SINTEGRA IE: exceção', ['user_id' => $userId, 'error' => $e->getMessage()]);
-
-            return response()->json(['success' => false, 'error' => 'Erro interno ao iniciar consulta.'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    /**
-     * Poll do enriquecimento: quantos dos participantes pedidos já têm IE preenchida.
-     * O frontend recarrega a página quando pendentes chega a 0.
-     */
-    public function sintegraStatus(Request $request)
-    {
-        if (! Auth::check()) {
-            return response()->json(['success' => false, 'error' => 'Não autenticado.'], Response::HTTP_UNAUTHORIZED);
-        }
-
-        $validated = $request->validate([
-            'participante_ids' => 'required|array|max:1000',
-            'participante_ids.*' => 'integer',
-        ]);
-
-        $userId = (int) Auth::id();
-        $ids = array_values(array_unique(array_map('intval', $validated['participante_ids'])));
-
-        $prontos = Participante::where('user_id', $userId)
-            ->whereIn('id', $ids)
-            ->whereNotNull('inscricao_estadual')
-            ->where('inscricao_estadual', '!=', '')
-            ->count();
-
-        return response()->json([
-            'success' => true,
-            'total' => count($ids),
-            'prontos' => $prontos,
-            'pendentes' => max(0, count($ids) - $prontos),
-        ]);
     }
 
     /**

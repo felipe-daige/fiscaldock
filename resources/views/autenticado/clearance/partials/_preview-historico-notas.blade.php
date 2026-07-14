@@ -155,7 +155,6 @@
                                 <div class="px-3 py-2.5 border-t border-gray-200">
                                     @include('autenticado.clearance.partials._conferencias', [
                                         'conferencias' => $documento->conferencias,
-                                        'permitirConsultaSintegra' => false,
                                     ])
                                 </div>
                             @endif

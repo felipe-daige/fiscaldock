@@ -90,7 +90,6 @@
                         <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">Conferência Declarado × SEFAZ</p>
                         @include('autenticado.clearance.partials._conferencias', [
                             'conferencias' => $resultado->conferencias,
-                            'permitirConsultaSintegra' => false,
                         ])
                     </div>
                 @endif

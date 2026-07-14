@@ -420,9 +420,6 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNaoBloqueado::class, \App\
             ->middleware(RequiresEntitlement::class.':export')->name('notas.resultado-pdf');
         Route::get('/notas/resultado/{consultaLoteId}/xlsx', [ClearanceController::class, 'resultadoXlsx'])
             ->middleware(RequiresEntitlement::class.':export,excel')->name('notas.resultado-xlsx');
-        Route::post('/sintegra/preview', [ClearanceController::class, 'sintegraPreview'])->name('sintegra.preview');
-        Route::post('/sintegra/executar', [ClearanceController::class, 'sintegraExecutar'])->name('sintegra.executar');
-        Route::post('/sintegra/status', [ClearanceController::class, 'sintegraStatus'])->name('sintegra.status');
         Route::get('/buscar', [ClearanceController::class, 'buscarNfe'])->name('buscar');
         Route::get('/buscar/historico', [ClearanceController::class, 'historicoBusca'])->name('buscar.historico');
         Route::post('/buscar/precheck', [ClearanceController::class, 'buscarPrecheck'])->name('buscar.precheck');
