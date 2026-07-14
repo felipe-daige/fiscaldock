@@ -60,18 +60,30 @@
         {{-- Filtros Globais --}}
         <div class="bg-white rounded border border-gray-300 p-4 sm:p-5 mb-4 sm:mb-6" data-mobile-filters>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-end">
-                {{-- Periodo Inicio --}}
+                {{-- Competência inicial --}}
                 <div>
-                    <label for="dnf-periodo-inicio" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Período Início</label>
-                    <input type="month" id="dnf-periodo-inicio" value="{{ $filtros['periodo_inicio'] }}"
-                           class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                    <label for="dnf-periodo-inicio" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Competência inicial</label>
+                    <select id="dnf-periodo-inicio" lang="pt-BR"
+                            class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                        @foreach($periodos as $periodo)
+                            <option value="{{ $periodo['valor'] }}" {{ $filtros['periodo_inicio'] === $periodo['valor'] ? 'selected' : '' }}>
+                                {{ $periodo['rotulo'] }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
 
-                {{-- Periodo Fim --}}
+                {{-- Competência final --}}
                 <div>
-                    <label for="dnf-periodo-fim" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Período Fim</label>
-                    <input type="month" id="dnf-periodo-fim" value="{{ $filtros['periodo_fim'] }}"
-                           class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                    <label for="dnf-periodo-fim" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Competência final</label>
+                    <select id="dnf-periodo-fim" lang="pt-BR"
+                            class="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                        @foreach($periodos as $periodo)
+                            <option value="{{ $periodo['valor'] }}" {{ $filtros['periodo_fim'] === $periodo['valor'] ? 'selected' : '' }}>
+                                {{ $periodo['rotulo'] }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
 
                 {{-- Cliente --}}
@@ -140,7 +152,7 @@
 
             <div class="mt-4 pt-4 border-t border-gray-200">
                 <button id="dnf-btn-filtrar"
-                        class="w-full sm:w-auto min-h-11 px-5 py-2 bg-gray-800 text-white text-sm font-medium rounded hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-400 transition-colors">
+                        class="filtro-acao w-full sm:w-auto min-h-11 px-5 py-2 bg-gray-800 text-white text-sm font-medium rounded hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-400 transition-colors">
                     Filtrar
                 </button>
             </div>

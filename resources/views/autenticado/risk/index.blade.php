@@ -9,7 +9,9 @@
     ];
     $fmtCnpj = function($doc) {
         $d = preg_replace('/\D/', '', (string) $doc);
-        return strlen($d) === 14 ? preg_replace('/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/', '$1.$2.$3/$4-$5', $d) : $d;
+        if (strlen($d) === 14) return preg_replace('/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/', '$1.$2.$3/$4-$5', $d);
+        if (strlen($d) === 11) return preg_replace('/^(\d{3})(\d{3})(\d{3})(\d{2})$/', '$1.$2.$3-$4', $d);
+        return $d;
     };
     $tipoBadge = function($tipo) {
         return $tipo === 'cliente'
@@ -41,8 +43,8 @@
         {{-- Header --}}
         <div class="mb-4 flex items-start justify-between gap-3">
             <div>
-                <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Score Fiscal</h1>
-                <p class="text-xs text-gray-500 mt-1">Avalie o risco fiscal e de compliance dos CNPJs consultados.</p>
+                <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Score de Risco</h1>
+                <p class="text-xs text-gray-500 mt-1">Regularidade fiscal para CNPJs e contexto separado de risco de crédito para CPFs.</p>
             </div>
             <x-export-menu id="modal-exportar-score" titulo="Exportar Score Fiscal"
                            descricao="O arquivo inclui todo o recorte filtrado, sem a paginação da tela."
@@ -147,6 +149,11 @@
 
             </div>
         </details>
+
+        <div class="bg-white rounded border border-gray-300 border-l-4 p-4 mb-6" style="border-left-color: #6b7280;">
+            <p class="text-[11px] font-semibold text-gray-700 uppercase tracking-wide">Pessoa física (CPF)</p>
+            <p class="mt-1 text-xs text-gray-600 leading-relaxed">Notas fiscais comprovam relacionamento e volume comercial, mas não revelam pagamento, atraso, renda ou restrições. Por isso CPF aparece como <strong>risco de crédito não avaliado</strong> até existir uma fonte própria — nunca como risco médio por padrão.</p>
+        </div>
 
         {{-- Como funciona: Crédito IBS/CBS na Reforma Tributária --}}
         <details class="bg-white rounded border border-gray-300 border-l-4 mb-6 group" style="border-left-color: #047857;">
@@ -315,12 +322,12 @@
                         <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Buscar</label>
                         <div class="relative mt-1">
                             <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                            <input type="text" id="busca-participante" placeholder="CNPJ ou razão social..." value="{{ $filtroBusca ?? '' }}" class="h-11 md:h-[42px] w-full border border-gray-300 rounded pl-9 pr-2 py-1.5 text-base md:text-[13px] focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <input type="text" id="busca-participante" placeholder="CNPJ ou razão social..." value="{{ $filtroBusca ?? '' }}" class="w-full border border-gray-300 rounded pl-9 pr-2 py-1.5 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         </div>
                     </div>
                     <div>
                         <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Cliente</label>
-                        <select id="filtro-cliente" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px] focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                        <select id="filtro-cliente" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                             @foreach(($clientes ?? collect()) as $cli)
                                 <option value="{{ $cli->id }}" {{ (! ($verTodosCnpjs ?? false) && (int)($clienteSelecionadoId ?? 0) === (int)$cli->id) ? 'selected' : '' }}>
                                     {{ $cli->is_empresa_propria ? '★ '.$cli->nome.' (Minha Empresa)' : $cli->nome }}
@@ -341,7 +348,7 @@
                     <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         <div>
                             <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Lista</label>
-                            <select id="filtro-status-score" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px] focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <select id="filtro-status-score" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                                 <option value="todos" {{ ($filtroStatus ?? 'todos') === 'todos' ? 'selected' : '' }}>Todos</option>
                                 <option value="consultados" {{ ($filtroStatus ?? '') === 'consultados' ? 'selected' : '' }}>Consultados</option>
                                 <option value="nao_consultados" {{ ($filtroStatus ?? '') === 'nao_consultados' ? 'selected' : '' }}>Não consultados</option>
@@ -349,7 +356,7 @@
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Tipo</label>
-                            <select id="filtro-tipo-score" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px] focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <select id="filtro-tipo-score" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                                 <option value="todos" {{ ($filtroTipo ?? 'todos') === 'todos' ? 'selected' : '' }}>Todos</option>
                                 <option value="cliente" {{ ($filtroTipo ?? '') === 'cliente' ? 'selected' : '' }}>Clientes</option>
                                 <option value="participante" {{ ($filtroTipo ?? '') === 'participante' ? 'selected' : '' }}>Participantes</option>
@@ -357,7 +364,7 @@
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Classificação</label>
-                            <select id="filtro-classificacao" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px] focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <select id="filtro-classificacao" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                                 <option value="todos" {{ ($filtroClassificacao ?? 'todos') === 'todos' ? 'selected' : '' }}>Todas</option>
                                 <option value="baixo" {{ ($filtroClassificacao ?? '') === 'baixo' ? 'selected' : '' }}>Baixo</option>
                                 <option value="medio" {{ ($filtroClassificacao ?? '') === 'medio' ? 'selected' : '' }}>Médio</option>
@@ -368,7 +375,7 @@
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Crédito IBS/CBS</label>
-                            <select id="filtro-credito-score" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px] focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <select id="filtro-credito-score" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                                 <option value="todos" {{ ($filtroCredito ?? 'todos') === 'todos' ? 'selected' : '' }}>Todos</option>
                                 <option value="gera" {{ ($filtroCredito ?? '') === 'gera' ? 'selected' : '' }}>Gera</option>
                                 <option value="parcial" {{ ($filtroCredito ?? '') === 'parcial' ? 'selected' : '' }}>Parcial</option>
@@ -378,19 +385,19 @@
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Score mín.</label>
-                            <input type="number" id="score-min" min="0" max="100" inputmode="numeric" placeholder="0" value="{{ $filtroScoreMin ?? '' }}" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px] focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <input type="number" id="score-min" min="0" max="100" inputmode="numeric" placeholder="0" value="{{ $filtroScoreMin ?? '' }}" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Score máx.</label>
-                            <input type="number" id="score-max" min="0" max="100" inputmode="numeric" placeholder="100" value="{{ $filtroScoreMax ?? '' }}" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px] focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                            <input type="number" id="score-max" min="0" max="100" inputmode="numeric" placeholder="100" value="{{ $filtroScoreMax ?? '' }}" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                         </div>
                     </div>
                     <p class="mt-2 text-[11px] text-gray-500">Score e crédito filtram apenas CNPJs já consultados.</p>
                 </details>
             </div>
             <div class="mobile-filter-actions bg-gray-50 px-3 sm:px-4 py-2 border-t border-gray-200 grid grid-cols-2 md:flex gap-2">
-                <button type="button" id="btn-filtrar-score" class="h-11 md:h-[42px] px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Filtrar</button>
-                <button type="button" id="btn-limpar-filtros-score" class="h-11 md:h-[42px] px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide border border-gray-300 bg-white text-gray-700">Limpar</button>
+                <button type="button" id="btn-filtrar-score" class="px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Filtrar</button>
+                <button type="button" id="btn-limpar-filtros-score" class="px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide border border-gray-300 bg-white text-gray-700">Limpar</button>
             </div>
         </div>
         {{-- CONSULTADOS — participantes que já têm score (ordenados por risco) --}}
@@ -640,6 +647,60 @@
                 <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide">Nenhum CNPJ pendente</h3>
                 <p class="mt-2 text-xs text-gray-500">Todos os CNPJs cadastrados já foram consultados.</p>
             </div>
+            @endif
+        </div>
+
+        {{-- CPF — seção própria: não é CNPJ pendente de consulta nem recebe score fiscal. --}}
+        <div class="bg-white rounded border border-gray-300 overflow-hidden mt-6">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Pessoas físicas — risco de crédito</span>
+                <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ $cpfsSemAvaliacao->total() ?? 0 }}</span>
+            </div>
+
+            @if(($cpfsSemAvaliacao ?? collect())->count() > 0)
+                <div class="hidden md:block overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="border-b border-gray-300">
+                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">CPF / Nome</th>
+                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Papel</th>
+                                <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Risco de crédito</th>
+                                <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @foreach($cpfsSemAvaliacao as $cpf)
+                                @php $pb = $papelBadge($papeisParticipante[$cpf->id] ?? null); @endphp
+                                <tr class="hover:bg-gray-50/50 transition-colors">
+                                    <td class="px-3 py-3 max-w-0 w-full">
+                                        <div class="text-sm text-gray-900 font-medium truncate">{{ $cpf->razao_social ?: ($cpf->nome_fantasia ?: 'N/A') }}</div>
+                                        <div class="text-[11px] text-gray-500 font-mono">{{ $fmtCnpj($cpf->documento) }}</div>
+                                    </td>
+                                    <td class="px-3 py-3">@if($pb)<span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $pb['hex'] }}">{{ $pb['label'] }}</span>@else<span class="text-xs text-gray-400">—</span>@endif</td>
+                                    <td class="px-3 py-3 text-center"><span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #6b7280">Não avaliado</span></td>
+                                    <td class="px-3 py-3 text-right"><a href="/app/score-fiscal/participante/{{ $cpf->id }}" data-link class="text-xs text-gray-700 font-medium hover:underline">Ver contexto</a></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="divide-y divide-gray-100 md:hidden">
+                    @foreach($cpfsSemAvaliacao as $cpf)
+                        @php $pb = $papelBadge($papeisParticipante[$cpf->id] ?? null); @endphp
+                        <div class="px-4 py-3 border-l-4" style="border-left-color: #6b7280">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="min-w-0"><p class="text-sm text-gray-900 font-medium">{{ $cpf->razao_social ?: ($cpf->nome_fantasia ?: 'N/A') }}</p><p class="text-[11px] text-gray-500 font-mono">{{ $fmtCnpj($cpf->documento) }}</p></div>
+                                <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #6b7280">Não avaliado</span>
+                            </div>
+                            <div class="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between">@if($pb)<span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $pb['hex'] }}">{{ $pb['label'] }}</span>@else<span></span>@endif<a href="/app/score-fiscal/participante/{{ $cpf->id }}" data-link class="text-xs text-gray-700 font-medium hover:underline">Ver contexto</a></div>
+                        </div>
+                    @endforeach
+                </div>
+                @if($cpfsSemAvaliacao->hasPages())
+                    <div class="border-t border-gray-300 px-4 py-3">{{ $cpfsSemAvaliacao->links() }}</div>
+                @endif
+            @else
+                <div class="px-6 py-8 text-center"><p class="text-xs text-gray-500">Nenhum CPF encontrado neste recorte.</p></div>
             @endif
         </div>
 

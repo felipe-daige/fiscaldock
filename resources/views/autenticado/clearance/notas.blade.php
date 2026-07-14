@@ -302,12 +302,12 @@
                         <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Buscar (nº ou chave)</label>
                         <div class="relative mt-1">
                             <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                            <input type="text" name="busca" value="{{ $filtros['busca'] ?? '' }}" placeholder="Número do documento ou chave de acesso" class="h-11 md:h-[42px] w-full border border-gray-300 rounded pl-9 pr-2 py-1.5 text-base md:text-[13px]">
+                            <input type="text" name="busca" value="{{ $filtros['busca'] ?? '' }}" placeholder="Número do documento ou chave de acesso" class="w-full border border-gray-300 rounded pl-9 pr-2 py-1.5 text-sm">
                         </div>
                     </div>
                     <div>
                         <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Cliente</label>
-                        <select name="cliente_id" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px]">
+                        <select name="cliente_id" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
                             <option value="">Todos</option>
                             @foreach($clientes as $c)
                                 <option value="{{ $c->id }}" {{ ($filtros['cliente_id'] ?? '') == $c->id ? 'selected' : '' }}>{{ $c->razao_social }}</option>
@@ -316,7 +316,7 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Consulta</label>
-                        <select name="status_consulta" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px]">
+                        <select name="status_consulta" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
                             @foreach($statusConsultaOptions as $value => $label)
                                 <option value="{{ $value }}" {{ ($filtros['status_consulta'] ?? 'todos') === $value ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
@@ -324,7 +324,7 @@
                     </div>
                     <div class="sm:col-span-2 md:col-span-1">
                         <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Situação na Receita</label>
-                        <select name="situacao_receita" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px]">
+                        <select name="situacao_receita" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
                             <option value="">Todas</option>
                             @foreach($situacaoReceitaLabels as $sv => $sl)
                                 <option value="{{ $sv }}" {{ ($filtros['situacao_receita'] ?? '') === $sv ? 'selected' : '' }}>{{ $sl }}</option>
@@ -344,19 +344,19 @@
                     <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                         <div>
                             <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Emissão — De</label>
-                            <input type="date" name="periodo_de" value="{{ $filtros['periodo_de'] ?? '' }}" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px]">
+                            <input type="date" name="periodo_de" value="{{ $filtros['periodo_de'] ?? '' }}" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Emissão — Até</label>
-                            <input type="date" name="periodo_ate" value="{{ $filtros['periodo_ate'] ?? '' }}" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px]">
+                            <input type="date" name="periodo_ate" value="{{ $filtros['periodo_ate'] ?? '' }}" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">CNPJ Participante</label>
-                            <input type="text" name="participante_cnpj" value="{{ $filtros['participante_cnpj'] ?? '' }}" placeholder="00.000.000/0000-00" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px]">
+                            <input type="text" name="participante_cnpj" value="{{ $filtros['participante_cnpj'] ?? '' }}" placeholder="00.000.000/0000-00" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Tipo</label>
-                            <select name="tipo_nota" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px]">
+                            <select name="tipo_nota" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
                                 <option value="">Todos</option>
                                 <option value="entrada" {{ ($filtros['tipo_nota'] ?? '') === 'entrada' ? 'selected' : '' }}>Entrada</option>
                                 <option value="saida" {{ ($filtros['tipo_nota'] ?? '') === 'saida' ? 'selected' : '' }}>Saída</option>
@@ -364,7 +364,7 @@
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-4">Modelo</label>
-                            <select name="modelo" class="mt-1 h-11 md:h-[42px] w-full border border-gray-300 rounded px-2 py-1.5 text-base md:text-[13px]">
+                            <select name="modelo" class="mt-1 w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
                                 <option value="">Todos</option>
                                 @foreach($modeloLabels as $mv => $ml)
                                     <option value="{{ $mv }}" {{ ($filtros['modelo'] ?? '') === $mv ? 'selected' : '' }}>{{ $ml }}</option>
@@ -375,8 +375,8 @@
                 </details>
             </div>
             <div class="mobile-filter-actions bg-gray-50 px-3 sm:px-4 py-2 border-t border-gray-200 grid grid-cols-2 md:flex gap-2">
-                <button type="submit" class="h-11 md:h-[42px] px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Aplicar</button>
-                <a href="/app/clearance/notas" data-link class="h-11 md:h-[42px] inline-flex items-center justify-center px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide border border-gray-300 text-gray-700">Limpar</a>
+                <button type="submit" class="px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">Aplicar</button>
+                <a href="/app/clearance/notas" data-link class="inline-flex items-center justify-center px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wide border border-gray-300 text-gray-700">Limpar</a>
             </div>
         </form>
 

@@ -492,7 +492,7 @@
 
                 {{-- Botao Filtrar --}}
                 <div class="flex-shrink-0">
-                    <button id="btn-filtrar-alertas" class="w-full sm:w-auto px-5 py-2 bg-gray-800 text-white text-sm font-medium rounded hover:bg-gray-700 transition-colors">
+                    <button id="btn-filtrar-alertas" class="filtro-acao w-full sm:w-auto px-5 py-2 bg-gray-800 text-white text-sm font-medium rounded hover:bg-gray-700 transition-colors">
                         Filtrar
                     </button>
                 </div>

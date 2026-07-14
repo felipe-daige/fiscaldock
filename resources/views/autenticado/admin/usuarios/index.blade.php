@@ -56,9 +56,9 @@
                     @endforeach
                 </select>
             </div>
-            <button type="submit" class="w-full sm:w-auto text-[12px] font-bold uppercase tracking-wide py-2.5 px-5 rounded text-white hover:opacity-90" style="background-color:#1d4ed8">Filtrar</button>
+            <button type="submit" class="filtro-acao w-full sm:w-auto text-[12px] font-bold uppercase tracking-wide py-2.5 px-5 rounded text-white hover:opacity-90" style="background-color:#1d4ed8">Filtrar</button>
             @if($q !== '')
-                <a href="{{ route('app.admin.usuarios.index') }}" data-link class="admin-action w-full sm:w-auto inline-flex items-center justify-center text-[12px] font-semibold text-gray-500 hover:text-gray-800 py-2.5 px-2">Limpar</a>
+                <a href="{{ route('app.admin.usuarios.index') }}" data-link class="filtro-acao admin-action w-full sm:w-auto inline-flex items-center justify-center text-[12px] font-semibold text-gray-500 hover:text-gray-800 py-2.5 px-2">Limpar</a>
             @endif
         </form>
 

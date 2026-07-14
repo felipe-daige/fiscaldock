@@ -89,7 +89,7 @@
                     @endforelse
                 </select>
             </div>
-            <button id="rf-btn-filtrar" class="w-full sm:w-auto px-4 py-2.5 bg-gray-800 text-white rounded text-[13px] font-medium hover:bg-gray-700 transition-colors">
+            <button id="rf-btn-filtrar" class="filtro-acao w-full sm:w-auto px-4 py-2.5 bg-gray-800 text-white rounded text-[13px] font-medium hover:bg-gray-700 transition-colors">
                 Carregar
             </button>
         </div>

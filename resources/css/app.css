@@ -882,7 +882,12 @@
         flex: 0 0 auto;
         min-height: 40px;
     }
+
+    .filtro-acao {
+        min-height: 44px;
+    }
 }
+
 
 /* ===========================================================================
    Tabela responsiva (mobile) — colapsa as linhas em "cards" abaixo de 768px.
@@ -986,17 +991,34 @@
    utilities (py-1, py-2, py-2.5) sem exigir uma reescrita frágil de cada view.
    `auth-control` cobre ações regulares; selects simples herdam o contrato pelo
    escopo `.auth-ui`. Controles densos de tabela/paginação continuam explícitos.
+
+   O MESMO tamanho vale para os filtros de todas as telas (`data-mobile-filters`):
+   campo (input/select/pop-toggle) e botão de ação (`.filtro-acao`) ficam com a
+   altura idêntica — 2.5rem no desktop, 2.75rem no toque. Sem isso cada view
+   caía num tamanho diferente (py-1.5/py-2/py-2.5 davam 36px, 38px e 42px) e o
+   campo de busca não batia com o botão ao lado.
+
+   `.filtro-acao` é explícito de propósito: no CSS não dá pra distinguir um botão
+   de ação de um toggle textual ("Limpar tudo", "Filtros avançados"), que deve
+   continuar sem caixa.
    =========================================================================== */
+/* Campos: altura + tipografia (o texto do campo é o mesmo em toda tela). */
 .auth-ui .auth-control,
-.auth-ui select:not([multiple]):not([size]) {
+.auth-ui select:not([multiple]):not([size]),
+.auth-ui [data-mobile-filters] input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]),
+.auth-ui [data-mobile-filters] [data-pop-toggle] {
     box-sizing: border-box;
     min-height: 2.5rem;
     height: 2.5rem;
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
     font-size: 0.875rem;
-    font-weight: 500;
     line-height: 1.25rem;
+}
+
+.auth-ui .auth-control,
+.auth-ui select:not([multiple]):not([size]) {
+    font-weight: 500;
 }
 
 .auth-ui .auth-control {
@@ -1004,11 +1026,36 @@
     padding-right: 1rem;
 }
 
+/* Botões de ação do filtro: SÓ a altura. Tipografia é do botão (o DANFE tem
+   botão uppercase de 11px e botão de 14px — os dois valem, desde que a caixa
+   tenha a mesma altura do campo ao lado). O padding vertical das utilities fica,
+   e o inline-flex centraliza o rótulo dentro da caixa. */
+.auth-ui .filtro-acao,
+.auth-ui [data-mobile-filters] .mobile-filter-actions > * {
+    box-sizing: border-box;
+    display: inline-flex;
+    min-height: 2.5rem;
+    height: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
 @media (max-width: 767px) {
     .auth-ui .auth-control,
-    .auth-ui select:not([multiple]):not([size]) {
+    .auth-ui select:not([multiple]):not([size]),
+    .auth-ui [data-mobile-filters] input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]),
+    .auth-ui [data-mobile-filters] [data-pop-toggle] {
         min-height: 2.75rem;
         height: 2.75rem;
         font-size: 1rem;
+    }
+
+    /* Botão sobe pra 44px (toque) sem mexer no tamanho da fonte — 16px só importa
+       em campo focável, que é o que dispara o zoom do iOS. */
+    .auth-ui .filtro-acao,
+    .auth-ui [data-mobile-filters] .mobile-filter-actions > * {
+        min-height: 2.75rem;
+        height: 2.75rem;
     }
 }

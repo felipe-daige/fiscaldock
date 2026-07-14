@@ -150,7 +150,7 @@
                 <label class="block text-[11px] text-gray-500 mb-1">Emissão até</label>
                 <input type="date" name="data_fim" value="{{ $filtros['data_fim'] ?? '' }}" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
             </div>
-            <button type="submit" class="w-full sm:w-auto px-4 py-2.5 rounded text-[12px] font-bold uppercase tracking-wide text-white hover:opacity-90" style="background-color: #0b1f3a">Aplicar filtro</button>
+            <button type="submit" class="filtro-acao w-full sm:w-auto px-4 py-2.5 rounded text-[12px] font-bold uppercase tracking-wide text-white hover:opacity-90" style="background-color: #0b1f3a">Aplicar filtro</button>
             @if(! empty($filtros))
                 <a href="{{ route('app.bi.cruzamentos') }}" data-link class="text-[12px] text-gray-500 hover:underline self-center">Limpar</a>
             @endif

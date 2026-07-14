@@ -362,9 +362,9 @@
 
                 {{-- ações --}}
                 <div class="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200">
-                    <button type="submit" class="bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium px-4 py-2">Filtrar</button>
+                    <button type="submit" class="filtro-acao bg-gray-800 text-white hover:bg-gray-700 rounded text-sm font-medium px-4 py-2">Filtrar</button>
                     @if(array_filter($filtros))
-                        <a href="/app/bi/catalogo-itens" data-link class="bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded text-sm font-medium px-4 py-2">Limpar</a>
+                        <a href="/app/bi/catalogo-itens" data-link class="filtro-acao bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded text-sm font-medium px-4 py-2">Limpar</a>
                     @endif
                 </div>
             </div>
