@@ -473,49 +473,24 @@
             @if($ultimaConsultaMensagem)
                 <div class="px-5 py-2 border-b border-gray-100 text-[11px] text-gray-500">{{ $ultimaConsultaMensagem }}</div>
             @endif
-            <div class="overflow-x-auto">
-                <table class="min-w-full tabela-cards">
-                    <thead>
-                        <tr class="border-b border-gray-200">
-                            <th class="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Indicador</th>
-                            <th class="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Status</th>
-                            <th class="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Última Emissão</th>
-                            <th class="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Validade</th>
-                            <th class="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Comprovante</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @foreach($certidaoLinhas as $linha)
-                            <tr class="hover:bg-gray-50/50 transition-colors">
-                                <td class="px-4 py-3 text-sm text-gray-700">{{ $linha['nome'] }}</td>
-                                <td class="px-4 py-3" data-label="Status">
-                                    <span class="inline-block whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $linha['badge']['hex'] }}" @if(!empty($linha['motivo'])) title="{{ $linha['motivo'] }}" @endif>{{ $linha['badge']['label'] }}</span>
-                                </td>
-                                <td class="px-4 py-3 text-sm text-gray-700" data-label="Última Emissão">
-                                    @if(!empty($linha['emissao']))
-                                        {{ $linha['emissao'] }}
-                                    @else
-                                        <span class="text-gray-400">—</span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3 text-sm text-gray-700" data-label="Validade">
-                                    {{ $linha['validade'] }}
-                                    @if(!empty($linha['motivo']))
-                                        <span class="block text-[11px] text-gray-400 mt-0.5" title="{{ $linha['motivo'] }}">{{ \Illuminate\Support\Str::limit($linha['motivo'], 120) }}</span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3 text-sm" data-label="Comprovante">
-                                    @if($linha['comprovante'])
-                                        <a href="{{ $linha['comprovante'] }}" target="_blank" rel="noopener" class="text-[12px] text-blue-700 hover:underline">Abrir</a>
-                                    @else
-                                        <span class="text-[12px] text-gray-400">—</span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+            {{-- Fontes no padrão retrátil canônico (mesmo partial do participante/lote):
+                 badge de status à vista no header, corpo (validade, mensagem oficial,
+                 comprovante) abre sob demanda. --}}
+            @if(!empty($fontesConsulta))
+                <div class="p-3 sm:p-4" style="background-color: #f9fafb">
+                    @include('autenticado.consulta.partials.detalhe-blocos', [
+                        'blocos' => $fontesConsulta,
+                        'certidoes' => $certidoesConsulta ?? [],
+                        'resumo' => null,
+                        'cabecalho' => [],
+                    ])
+                </div>
+            @else
+                <div class="px-5 py-4 text-sm text-gray-500">
+                    Nenhuma consulta de certidões realizada ainda.
+                    <a href="/app/consulta/painel" data-link class="text-gray-700 underline hover:text-gray-900">Consultar agora</a>.
+                </div>
+            @endif
         </div>
 
         {{-- Gestão reunida em um único painel; não cria duas caixas com alturas desconectadas.

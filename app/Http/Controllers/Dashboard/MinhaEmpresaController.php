@@ -8,6 +8,7 @@ use App\Models\Cliente;
 use App\Models\ConsultaResultado;
 use App\Models\Participante;
 use App\Services\Clearance\CertificadoDigitalService;
+use App\Services\Consultas\ResultadoDetalhePresenter;
 use App\Services\RiskScoreService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,7 +25,8 @@ class MinhaEmpresaController extends Controller
     private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
 
     public function __construct(
-        protected RiskScoreService $riskScoreService
+        protected RiskScoreService $riskScoreService,
+        protected ResultadoDetalhePresenter $detalhePresenter
     ) {}
 
     /**
@@ -131,10 +133,18 @@ class MinhaEmpresaController extends Controller
             'ultimaConsulta' => $ultimaConsulta,
             'dadosConsulta' => $dadosConsulta,
             'certidoes' => $certidoes,
-            // Classifica pelo bloco bruto (não só a string de status) com aplicarIndeterminado=true —
-            // MESMA regra canônica do detalhe do lote (ResultadoDetalhePresenter), pra não divergir:
-            // certidão que não emitiu (conseguiu_emitir=false) é INDETERMINADA, nunca Irregular.
-            'certidaoLinhas' => $this->montarCertidaoLinhas($certidoes, $dadosConsulta),
+            // Certidões no padrão retrátil canônico (mesmo partial do participante/lote):
+            // presenter monta os blocos por fonte; o card de cadastro fica de fora porque a
+            // página já tem seção própria de dados cadastrais.
+            'fontesConsulta' => $ultimaConsulta
+                ? array_values(array_filter(
+                    $this->detalhePresenter->blocos($ultimaConsulta),
+                    fn (array $bloco) => ($bloco['chave'] ?? null) !== 'cadastro'
+                ))
+                : [],
+            'certidoesConsulta' => $ultimaConsulta
+                ? $this->detalhePresenter->certidoes($ultimaConsulta)
+                : [],
             'alertas' => $alertas,
             'totalParticipantes' => $totalParticipantes,
             'totalNotas' => $totalNotas,
@@ -305,75 +315,6 @@ class MinhaEmpresaController extends Controller
         $url = $bloco['comprovante'] ?? null;
 
         return is_string($url) && trim($url) !== '' ? $url : null;
-    }
-
-    /**
-     * Monta as linhas da tabela de certidões já classificadas pelo badge canônico
-     * (`CertidaoBadge`), evitando a classificação manual que antes vivia na view e divergia.
-     *
-     * @return list<array{nome: string, badge: array{label: string, hex: string}, validade: string, comprovante: ?string}>
-     */
-    private function montarCertidaoLinhas(array $certidoes, array $dadosConsulta = []): array
-    {
-        // `raw` = chave do bloco bruto em resultado_dados (fgts vive como `crf_fgts`).
-        $itens = [
-            ['key' => 'cnd_federal', 'raw' => 'cnd_federal', 'nome' => 'CND FEDERAL'],
-            ['key' => 'cnd_estadual', 'raw' => 'cnd_estadual', 'nome' => 'CND ESTADUAL'],
-            ['key' => 'fgts', 'raw' => 'crf_fgts', 'nome' => 'CRF FGTS'],
-            ['key' => 'cndt', 'raw' => 'cndt', 'nome' => 'CNDT'],
-        ];
-
-        $linhas = [];
-        foreach ($itens as $item) {
-            $dado = $certidoes[$item['key']] ?? [];
-            $consultado = $dado['consultado'] ?? false;
-
-            $bruto = $dadosConsulta[$item['raw']] ?? [];
-
-            if (! $consultado) {
-                $badge = ['label' => 'NÃO CONSULTADO', 'hex' => '#9ca3af', 'motivo' => null];
-            } else {
-                // Classifica o bloco BRUTO (não a string) com aplicarIndeterminado=true — idêntico
-                // ao ResultadoDetalhePresenter::certidoes(), fonte única pra tabela e detalhe do lote.
-                $badge = \App\Support\CertidaoBadge::classificar($bruto ?: ($dado['status'] ?? ''), true);
-            }
-
-            $linhas[] = [
-                'nome' => $item['nome'],
-                'badge' => ['label' => $badge['label'], 'hex' => $badge['hex']],
-                'motivo' => $badge['motivo'] ?? null,
-                // Data em que a certidão foi efetivamente emitida/consultada (BR d/m/Y), quando a fonte informa.
-                'emissao' => is_array($bruto) ? ($bruto['emissao_data'] ?? null) : null,
-                'validade' => $this->validadeTexto($dado['validade'] ?? null, (bool) $consultado),
-                'comprovante' => $dado['comprovante'] ?? null,
-            ];
-        }
-
-        return $linhas;
-    }
-
-    /** Texto amigável da validade (ISO → BR, com aviso de vencimento próximo). */
-    private function validadeTexto(?string $validadeIso, bool $consultado): string
-    {
-        if (! $validadeIso) {
-            return $consultado ? 'Não informado' : 'Não consultado';
-        }
-
-        try {
-            $data = \Carbon\Carbon::parse($validadeIso);
-            $dias = (int) now()->diffInDays($data, false);
-
-            if ($dias <= 0) {
-                return 'Vencida em '.$data->format('d/m/Y');
-            }
-            if ($dias <= 7) {
-                return 'Vence em '.$dias.' dias';
-            }
-
-            return $data->format('d/m/Y');
-        } catch (\Throwable) {
-            return $validadeIso;
-        }
     }
 
     /**

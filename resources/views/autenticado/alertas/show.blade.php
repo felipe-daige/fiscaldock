@@ -244,15 +244,22 @@
                 <h3 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Certidões positivas encontradas</h3>
             </div>
             <div class="p-4 space-y-2">
+                {{-- Card retrátil DS (mesmo padrão do participante/lote): status à vista no
+                     header, detalhe abre sob demanda. --}}
                 @foreach(($detCert['certidoes'] ?? []) as $cert)
                     @php $hex = $sevHex[$cert['severidade'] ?? ''] ?? '#9ca3af'; @endphp
-                    <div class="flex items-center justify-between gap-3 border border-gray-100 rounded px-3 py-2">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: {{ $hex }}"></span>
-                            <span class="text-sm font-medium text-gray-900">{{ $cert['label'] ?? '—' }}</span>
-                        </div>
-                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $hex }}">{{ $cert['status'] ?? 'Positiva' }}</span>
-                    </div>
+                    <x-card-retratil :titulo="$cert['label'] ?? '—'" :acento="$hex">
+                        <x-slot:badges>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white shrink-0" style="background-color: {{ $hex }}">{{ $cert['status'] ?? 'Positiva' }}</span>
+                        </x-slot:badges>
+                        <p class="text-[12px] text-gray-700">Status informado pela fonte: <span class="font-medium">{{ $cert['status'] ?? 'Positiva' }}</span></p>
+                        @if(!empty($cert['severidade']))
+                            <p class="text-[11px] text-gray-500">Severidade do apontamento: {{ ucfirst($cert['severidade']) }}.</p>
+                        @endif
+                        @if($alerta->participante_id)
+                            <a href="/app/participante/{{ $alerta->participante_id }}" data-link class="inline-flex items-center gap-1 text-[11px] font-medium text-gray-700 hover:text-gray-900 hover:underline">Ver certidão completa no perfil</a>
+                        @endif
+                    </x-card-retratil>
                 @endforeach
             </div>
 
@@ -279,6 +286,52 @@
             </div>
             @endif
         </div>
+        @endif
+
+        {{-- Certidão vencendo: prazos no card retrátil DS (mesmo padrão do modal da central). --}}
+        @if($alerta->tipo === 'certidao_vencendo')
+        @php
+            $detVenc = is_string($alerta->detalhes) ? json_decode($alerta->detalhes, true) : ($alerta->detalhes ?? []);
+            $detVenc = is_array($detVenc) ? $detVenc : [];
+        @endphp
+        @if(!empty($detVenc['certidoes']))
+        <div class="mt-6 sm:mt-8 bg-white rounded border border-gray-300 overflow-hidden">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <h3 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Prazos das certidões</h3>
+            </div>
+            <div class="p-4 space-y-2">
+                @foreach($detVenc['certidoes'] as $cert)
+                    @php
+                        $dias = isset($cert['dias']) && is_numeric($cert['dias']) ? (int) $cert['dias'] : null;
+                        $vencida = ! empty($cert['vencida']);
+                        if ($vencida) {
+                            $diasAbs = $dias !== null ? abs($dias) : null;
+                            $prazo = $diasAbs === 1 ? 'Vencida há 1 dia' : ($diasAbs !== null ? 'Vencida há '.$diasAbs.' dias' : 'Vencida');
+                        } elseif ($dias === 0) {
+                            $prazo = 'Vence hoje';
+                        } elseif ($dias === 1) {
+                            $prazo = 'Vence em 1 dia';
+                        } elseif ($dias !== null) {
+                            $prazo = 'Vence em '.$dias.' dias';
+                        } else {
+                            $prazo = 'Próxima do vencimento';
+                        }
+                        $hexVenc = $vencida || ($dias !== null && $dias <= 7) ? '#dc2626' : '#b45309';
+                    @endphp
+                    <x-card-retratil :titulo="$cert['label'] ?? 'Certidão'" :acento="$hexVenc">
+                        <x-slot:badges>
+                            <span class="whitespace-nowrap px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white shrink-0" style="background-color: {{ $hexVenc }}">{{ $prazo }}</span>
+                        </x-slot:badges>
+                        <p class="text-[12px] text-gray-700">Validade: <span class="font-medium">{{ $cert['validade'] ?? 'não informada' }}</span></p>
+                        <p class="text-[11px] text-gray-500">{{ $prazo }}.</p>
+                        @if($alerta->participante_id)
+                            <a href="/app/participante/{{ $alerta->participante_id }}" data-link class="inline-flex items-center gap-1 text-[11px] font-medium text-gray-700 hover:text-gray-900 hover:underline">Renovar/ver certidão no perfil</a>
+                        @endif
+                    </x-card-retratil>
+                @endforeach
+            </div>
+        </div>
+        @endif
         @endif
 
         {{-- Registros Afetados (Interface Melhorada) — genérico, exceto tipos com apresentação dedicada --}}
@@ -476,7 +529,7 @@
             }
         @endphp
 
-        @if(!empty($dados) && $alerta->tipo !== 'certidao_positiva')
+        @if(!empty($dados) && ! in_array($alerta->tipo, ['certidao_positiva', 'certidao_vencendo'], true))
         <div class="mt-6 sm:mt-8 bg-white rounded border border-gray-300 overflow-hidden">
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="flex items-center gap-3">

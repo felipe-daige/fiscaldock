@@ -87,15 +87,12 @@
                 ? trim('Regime tributário: '.$regimeLabel.(!empty($regimeItem['tooltip']) ? "\n".$regimeItem['tooltip'] : ''))
                 : 'Regime tributário não consultado neste plano ou ausente no resultado.';
         @endphp
-        <div class="mb-3 rounded border border-gray-300 bg-white overflow-hidden" style="border-top: 2px solid #1e4679">
-            {{-- Toggle por onclick inline (padrão DS cache-robusto): o parcial roda em páginas sem
-                 o handler delegado do lote (participante, clearance) — inline funciona em todas. --}}
-            <button type="button" aria-expanded="false" aria-controls="{{ $cadId }}"
-                    onclick="(function(b){var t=document.getElementById('{{ $cadId }}');if(!t)return;var h=t.classList.toggle('hidden');b.setAttribute('aria-expanded',h?'false':'true');var c=b.querySelector('.detalhe-chevron');if(c)c.style.transform=h?'':'rotate(90deg)';var l=b.querySelector('[data-toggle-ver]');if(l)l.textContent=h?'Ver tudo':'Ocultar'})(this)"
-                    class="w-full flex items-start justify-between gap-3 px-3 py-2.5 bg-gray-50 hover:bg-gray-100 border-b border-gray-200 text-left transition-colors">
-                <span class="min-w-0 flex-1">
-                    <span class="flex items-center flex-wrap gap-2">
-                        <span class="text-[11px] font-semibold text-gray-600 uppercase tracking-widest">{{ $cadastro['titulo'] }}</span>
+        {{-- Componente DS do card retrátil (toggle onclick inline, cache-robusto): o parcial
+             roda em páginas sem o handler delegado do lote (participante, clearance). --}}
+        <x-card-retratil :titulo="$cadastro['titulo']" :id="$cadId" class="mb-3" style="border-top: 2px solid #1e4679">
+            <x-slot:subheader>
+                {{-- Regime tributário sempre presente (cai em "Não consultado") — wrapper incondicional. --}}
+                <span class="flex items-center flex-wrap gap-2 mt-1">
                         @if($situacaoCadastro !== '')
                             <span class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white"
                                   style="background-color: {{ $situacaoHex }}"
@@ -109,28 +106,22 @@
                             Regime tributário: {{ $regimeLabel }}
                         </span>
                     </span>
-                    @if(!empty($cabecalho['razao']) || !empty($cabecalho['documento']))
-                        <span class="block text-[12px] text-gray-800 font-medium truncate mt-0.5">
-                            @if(!empty($cabecalho['razao'])){{ $cabecalho['razao'] }}@endif
-                            @if(!empty($cabecalho['documento'])) <span class="text-gray-300 font-normal">·</span> <span class="font-mono text-[11px] text-gray-500">{{ $cabecalho['documento'] }}</span>@endif
-                        </span>
-                    @endif
-                    @if($previewItens->isNotEmpty())
-                        <span class="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
-                            @foreach($previewItens as $p)
-                                <span class="text-[10px] text-gray-500"><span class="text-gray-400">{{ $p['label'] }}:</span> {{ $p['valor'] }}</span>
-                            @endforeach
-                        </span>
-                    @endif
-                </span>
-                <span class="flex items-center gap-1 shrink-0 text-gray-400 pt-0.5">
-                    <span data-toggle-ver class="text-[10px] uppercase tracking-wide hidden sm:inline">Ver tudo</span>
-                    <svg class="detalhe-chevron w-3.5 h-3.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                </span>
-            </button>
-            <div id="{{ $cadId }}" class="hidden px-3 py-3 space-y-3">
+                @if(!empty($cabecalho['razao']) || !empty($cabecalho['documento']))
+                    <span class="block text-[12px] text-gray-800 font-medium truncate mt-0.5">
+                        @if(!empty($cabecalho['razao'])){{ $cabecalho['razao'] }}@endif
+                        @if(!empty($cabecalho['documento'])) <span class="text-gray-300 font-normal">·</span> <span class="font-mono text-[11px] text-gray-500">{{ $cabecalho['documento'] }}</span>@endif
+                    </span>
+                @endif
+                @if($previewItens->isNotEmpty())
+                    <span class="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
+                        @foreach($previewItens as $p)
+                            <span class="text-[10px] text-gray-500"><span class="text-gray-400">{{ $p['label'] }}:</span> {{ $p['valor'] }}</span>
+                        @endforeach
+                    </span>
+                @endif
+            </x-slot:subheader>
+
+            <div class="space-y-3">
                 @if(!empty($cadastro['itens']))
                     <dl class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-2">
                         @foreach($cadastro['itens'] as $item)
@@ -162,7 +153,7 @@
                     </div>
                 @endforeach
             </div>
-        </div>
+        </x-card-retratil>
     @endif
 
     {{-- ── Fontes / certidões: masonry (columns) p/ alturas desiguais ──────── --}}
@@ -171,37 +162,23 @@
             @foreach($fontes as $bloco)
                 @php
                     $acento = $bloco['badge']['hex'] ?? '#9ca3af';
-                    $fonteId = 'fonte-'.bin2hex(random_bytes(6));
                 @endphp
-                <div class="min-w-0 rounded border border-gray-300 bg-white overflow-hidden" style="border-left: 3px solid {{ $acento }}">
-                    {{-- Card retrátil: o badge no header preserva o status à vista; o corpo (mensagem
-                         oficial longa, itens, comprovante) só abre sob demanda. Onclick inline —
-                         mesmo padrão do cadastro acima. --}}
-                    <button type="button" aria-expanded="false" aria-controls="{{ $fonteId }}"
-                            onclick="(function(b){var t=document.getElementById('{{ $fonteId }}');if(!t)return;var h=t.classList.toggle('hidden');b.setAttribute('aria-expanded',h?'false':'true');var c=b.querySelector('.detalhe-chevron');if(c)c.style.transform=h?'':'rotate(90deg)';var l=b.querySelector('[data-toggle-ver]');if(l)l.textContent=h?'Ver tudo':'Ocultar'})(this)"
-                            class="w-full flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 text-left transition-colors">
-                        <span class="text-[11px] font-semibold text-gray-600 uppercase tracking-wide truncate">{{ $bloco['titulo'] }}</span>
-                        <span class="flex items-center gap-2 shrink-0">
-                            @if(!empty($bloco['badge']))
-                                @php
-                                    $badgeTooltip = trim(($bloco['titulo'] ?? '').' · '.($bloco['badge']['label'] ?? '').(!empty($bloco['mensagem']) ? "\n".$bloco['mensagem'] : ''));
-                                @endphp
-                                <span class="whitespace-nowrap px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white shrink-0 cursor-help"
-                                      style="background-color: {{ $bloco['badge']['hex'] }}"
-                                      title="{{ $badgeTooltip }}"
-                                      aria-label="{{ $badgeTooltip }}">
-                                    {{ $badgeCurto($bloco['badge']['label'] ?? '') }}
-                                </span>
-                            @endif
-                            <span class="flex items-center gap-1 text-gray-400">
-                                <span data-toggle-ver class="text-[10px] uppercase tracking-wide hidden sm:inline">Ver tudo</span>
-                                <svg class="detalhe-chevron w-3.5 h-3.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
+                {{-- Card retrátil (componente DS): o badge no header preserva o status à vista; o
+                     corpo (mensagem oficial longa, itens, comprovante) só abre sob demanda. --}}
+                <x-card-retratil :titulo="$bloco['titulo']" :acento="$acento">
+                    <x-slot:badges>
+                        @if(!empty($bloco['badge']))
+                            @php
+                                $badgeTooltip = trim(($bloco['titulo'] ?? '').' · '.($bloco['badge']['label'] ?? '').(!empty($bloco['mensagem']) ? "\n".$bloco['mensagem'] : ''));
+                            @endphp
+                            <span class="whitespace-nowrap px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white shrink-0 cursor-help"
+                                  style="background-color: {{ $bloco['badge']['hex'] }}"
+                                  title="{{ $badgeTooltip }}"
+                                  aria-label="{{ $badgeTooltip }}">
+                                {{ $badgeCurto($bloco['badge']['label'] ?? '') }}
                             </span>
-                        </span>
-                    </button>
-                    <div id="{{ $fonteId }}" class="hidden px-3 py-2.5 space-y-2.5 border-t border-gray-200">
+                        @endif
+                    </x-slot:badges>
                         @if(!empty($bloco['itens']))
                             <dl class="grid grid-cols-2 gap-x-4 gap-y-2">
                                 @foreach($bloco['itens'] as $item)
@@ -277,8 +254,7 @@
                                 </a>
                             @endif
                         @endif
-                    </div>
-                </div>
+                </x-card-retratil>
             @endforeach
         </div>
     @endif

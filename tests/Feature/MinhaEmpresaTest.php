@@ -592,3 +592,42 @@ test('certidao positiva pura vira Irregular via CertidaoBadge e expoe comprovant
     // Link do comprovante presente.
     $response->assertSee('https://exemplo/pdf', false);
 });
+
+test('certidoes usam o card retratil canonico do participante, sem tabela', function () {
+    $cliente = empresaPropria($this->user);
+    $plano = MonitoramentoPlano::porCodigo('gratuito') ?? MonitoramentoPlano::firstOrFail();
+    $lote = ConsultaLote::create([
+        'user_id' => $this->user->id,
+        'plano_id' => $plano->id,
+        'status' => ConsultaLote::STATUS_FINALIZADO,
+        'total_participantes' => 1,
+        'creditos_cobrados' => 0,
+        'tab_id' => 'tab-card-retratil',
+        'processado_em' => now(),
+    ]);
+    ConsultaResultado::create([
+        'consulta_lote_id' => $lote->id,
+        'cliente_id' => $cliente->id,
+        'status' => ConsultaResultado::STATUS_SUCESSO,
+        'resultado_dados' => [
+            'situacao_cadastral' => 'ATIVA',
+            'cndt' => ['status' => 'NEGATIVA', 'data_validade' => '24/08/2099'],
+            'crf_fgts' => ['status' => 'REGULAR', 'data_validade' => now()->addMonths(2)->format('d/m/Y')],
+            'consultas_realizadas' => ['cadastro', 'cndt', 'crf_fgts'],
+        ],
+        'consultado_em' => now(),
+    ]);
+
+    $response = $this->get('/app/minha-empresa');
+
+    $response->assertOk();
+    // Cards retráteis do partial canônico (detalhe-blocos): chevron + toggle colapsado.
+    $response->assertSee('detalhe-chevron', false);
+    $response->assertSee('aria-expanded="false"', false);
+    $response->assertSee('Ver tudo');
+    // Fontes renderizadas pelo presenter canônico.
+    $response->assertSee('CNDT');
+    $response->assertSee('24/08/2099');
+    // Tabela antiga de certidões morreu.
+    $response->assertDontSee('Última Emissão');
+});

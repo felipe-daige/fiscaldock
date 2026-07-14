@@ -1548,6 +1548,25 @@
         return html;
     }
 
+    // Card retrátil DS — MESMO markup do componente Blade `x-card-retratil` (padrão canônico
+    // de exibição de certidão): status à vista no header, corpo colapsado, toggle onclick inline.
+    var cardRetratilSeq = 0;
+    function cardRetratilHtml(tituloHtml, badgeHtml, bodyHtml, cor) {
+        var id = 'alerta-cert-' + (++cardRetratilSeq) + '-' + Math.random().toString(16).slice(2, 8);
+        var html = '<div class="min-w-0 rounded border border-gray-300 bg-white overflow-hidden" style="border-left: 3px solid ' + cor + '">';
+        html += '<button type="button" aria-expanded="false" aria-controls="' + id + '"';
+        html += ' onclick="(function(b){var t=document.getElementById(\'' + id + '\');if(!t)return;var h=t.classList.toggle(\'hidden\');b.setAttribute(\'aria-expanded\',h?\'false\':\'true\');var c=b.querySelector(\'.detalhe-chevron\');if(c)c.style.transform=h?\'\':\'rotate(90deg)\';var l=b.querySelector(\'[data-toggle-ver]\');if(l)l.textContent=h?\'Ver tudo\':\'Ocultar\'})(this)"';
+        html += ' class="w-full flex items-start justify-between gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 text-left transition-colors">';
+        html += '<span class="min-w-0 flex-1"><span class="text-[11px] font-semibold text-gray-600 uppercase tracking-wide">' + tituloHtml + '</span></span>';
+        html += '<span class="flex items-center gap-2 shrink-0 pt-0.5">' + (badgeHtml || '');
+        html += '<span class="flex items-center gap-1 text-gray-400"><span data-toggle-ver class="text-[10px] uppercase tracking-wide hidden sm:inline">Ver tudo</span>';
+        html += '<svg class="detalhe-chevron w-3.5 h-3.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></span></span>';
+        html += '</button>';
+        html += '<div id="' + id + '" class="hidden px-3 py-2.5 space-y-2.5 border-t border-gray-200">' + bodyHtml + '</div>';
+        html += '</div>';
+        return html;
+    }
+
     function renderCertidaoPositiva(detalhes) {
         var sevCor = { alta: '#dc2626', media: '#b45309', baixa: '#9ca3af' };
         var alvoId = detalhes.participante_id || detalhes.cliente_id;
@@ -1579,11 +1598,12 @@
         html += '<div class="space-y-1.5 mb-3">';
         certidoes.forEach(function(c) {
             var cor = sevCor[c.severidade] || '#9ca3af';
-            html += '<div class="flex items-center justify-between gap-3 border border-gray-100 rounded px-3 py-1.5">';
-            html += '<div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full" style="background-color:' + cor + '"></span>';
-            html += '<span class="text-sm text-gray-800">' + escapeHtml(c.label || '—') + '</span></div>';
-            html += '<span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:' + cor + '">' + escapeHtml(c.status || 'Positiva') + '</span>';
-            html += '</div>';
+            var badge = '<span class="whitespace-nowrap px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white shrink-0" style="background-color:' + cor + '">' + escapeHtml(c.status || 'Positiva') + '</span>';
+            var body = '<p class="text-[12px] text-gray-700">Status informado pela fonte: <span class="font-medium">' + escapeHtml(c.status || 'Positiva') + '</span></p>';
+            if (c.severidade) {
+                body += '<p class="text-[11px] text-gray-500">Severidade do apontamento: ' + escapeHtml(c.severidade) + '</p>';
+            }
+            html += cardRetratilHtml(escapeHtml(c.label || '—'), badge, body, cor);
         });
         html += '</div>';
 
@@ -1661,13 +1681,10 @@
             }
 
             var cor = vencida || (diasValidos && dias <= 7) ? '#dc2626' : '#b45309';
-            html += '<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border border-gray-100 rounded px-3 py-2">';
-            html += '<div class="min-w-0">';
-            html += '<p class="text-sm font-medium text-gray-800">' + escapeHtml(certidao.label || 'Certidão') + '</p>';
-            html += '<p class="text-xs text-gray-500">Validade: ' + escapeHtml(certidao.validade || 'não informada') + '</p>';
-            html += '</div>';
-            html += '<span class="self-start sm:self-auto whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:' + cor + '">' + escapeHtml(prazo) + '</span>';
-            html += '</div>';
+            var badge = '<span class="whitespace-nowrap px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white shrink-0" style="background-color:' + cor + '">' + escapeHtml(prazo) + '</span>';
+            var body = '<p class="text-[12px] text-gray-700">Validade: <span class="font-medium">' + escapeHtml(certidao.validade || 'não informada') + '</span></p>';
+            body += '<p class="text-[11px] text-gray-500">' + escapeHtml(prazo) + '</p>';
+            html += cardRetratilHtml(escapeHtml(certidao.label || 'Certidão'), badge, body, cor);
         });
         html += '</div>';
         html += '</div>';

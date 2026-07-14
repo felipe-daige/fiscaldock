@@ -351,49 +351,53 @@
             html += '<div><p class="text-xs text-gray-500">Regime Tributario</p><p class="text-sm font-semibold text-gray-900">' + (r.regime_tributario || '-') + '</p></div>';
             html += '</div>';
 
-            // Detalhes adicionais (se houver)
+            // Detalhes adicionais (se houver) — certidões no card retrátil DS (mesmo markup do
+            // componente Blade x-card-retratil): status à vista no header, corpo sob demanda.
             if (r.detalhes && Object.keys(r.detalhes).length > 0) {
+                let certSeq = 0;
+                const cardRetratil = function (titulo, badgeLabel, cor, bodyHtml) {
+                    const id = 'hist-cert-' + (++certSeq) + '-' + Math.random().toString(16).slice(2, 8);
+                    let c = '<div class="min-w-0 rounded border border-gray-300 bg-white overflow-hidden" style="border-left: 3px solid ' + cor + '">';
+                    c += '<button type="button" aria-expanded="false" aria-controls="' + id + '"';
+                    c += ' onclick="(function(b){var t=document.getElementById(\'' + id + '\');if(!t)return;var h=t.classList.toggle(\'hidden\');b.setAttribute(\'aria-expanded\',h?\'false\':\'true\');var c=b.querySelector(\'.detalhe-chevron\');if(c)c.style.transform=h?\'\':\'rotate(90deg)\';var l=b.querySelector(\'[data-toggle-ver]\');if(l)l.textContent=h?\'Ver tudo\':\'Ocultar\'})(this)"';
+                    c += ' class="w-full flex items-start justify-between gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 text-left transition-colors">';
+                    c += '<span class="min-w-0 flex-1"><span class="text-[11px] font-semibold text-gray-600 uppercase tracking-wide">' + titulo + '</span></span>';
+                    c += '<span class="flex items-center gap-2 shrink-0 pt-0.5">';
+                    c += '<span class="whitespace-nowrap px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white shrink-0" style="background-color:' + cor + '">' + badgeLabel + '</span>';
+                    c += '<span class="flex items-center gap-1 text-gray-400"><span data-toggle-ver class="text-[10px] uppercase tracking-wide hidden sm:inline">Ver tudo</span>';
+                    c += '<svg class="detalhe-chevron w-3.5 h-3.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></span></span>';
+                    c += '</button>';
+                    c += '<div id="' + id + '" class="hidden px-3 py-2.5 space-y-2.5 border-t border-gray-200">' + bodyHtml + '</div>';
+                    c += '</div>';
+                    return c;
+                };
+
                 html += '<div class="border-t border-gray-200 pt-4">';
                 html += '<h5 class="text-sm font-semibold text-gray-900 mb-3">Detalhes da Consulta</h5>';
-                html += '<div class="grid grid-cols-2 gap-4">';
+                html += '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">';
 
-                if (r.detalhes.cnd_federal) {
-                    const cnd = r.detalhes.cnd_federal;
-                    html += '<div class="bg-gray-50 rounded border border-gray-200 p-3">';
-                    html += '<p class="text-xs text-gray-500">CND Federal</p>';
-                    if (cnd.indeterminado) {
-                        html += '<p class="text-sm font-semibold" style="color: #b45309">Indeterminada</p>';
-                        if (cnd.motivo) {
-                            html += '<p class="text-xs text-gray-600 mt-1 leading-snug">' + cnd.motivo + '</p>';
-                        }
-                    } else {
-                        const cndClass = cnd.status === 'NEGATIVA' ? 'text-green-600' : 'text-red-600';
-                        html += '<p class="text-sm font-semibold ' + cndClass + '">' + cnd.status + '</p>';
-                        if (cnd.validade) {
-                            html += '<p class="text-xs text-gray-500 mt-1">Validade: ' + cnd.validade + '</p>';
-                        }
+                // Classificação vem PRONTA do backend (CertidaoBadge, fonte única — semântica
+                // de certidão: Negativa/Positiva c/ efeitos de negativa = regular). O front só
+                // renderiza; sem badge (payload antigo), degrada pra neutro em vez de chutar.
+                const cardCertidao = function (titulo, fonte) {
+                    if (!fonte) return '';
+                    const badge = fonte.badge || { label: (fonte.status || '—'), hex: '#9ca3af' };
+                    let body = '<p class="text-[12px] text-gray-700">Status: <span class="font-medium">' + (fonte.status || badge.label) + '</span></p>';
+                    if (badge.motivo || fonte.motivo) {
+                        body += '<p class="text-[11px] text-gray-500 leading-snug">' + (badge.motivo || fonte.motivo) + '</p>';
                     }
-                    html += '</div>';
-                }
-
-                if (r.detalhes.fgts) {
-                    const fgtsClass = r.detalhes.fgts.status === 'REGULAR' ? 'text-green-600' : 'text-red-600';
-                    html += '<div class="bg-gray-50 rounded border border-gray-200 p-3">';
-                    html += '<p class="text-xs text-gray-500">FGTS</p>';
-                    html += '<p class="text-sm font-semibold ' + fgtsClass + '">' + r.detalhes.fgts.status + '</p>';
-                    if (r.detalhes.fgts.validade) {
-                        html += '<p class="text-xs text-gray-500 mt-1">Validade: ' + r.detalhes.fgts.validade + '</p>';
+                    if (fonte.validade) {
+                        body += '<p class="text-[11px] text-gray-500">Validade: ' + fonte.validade + '</p>';
                     }
-                    html += '</div>';
-                }
+                    return cardRetratil(titulo, badge.label, badge.hex, body);
+                };
 
-                if (r.detalhes.cndt) {
-                    const cndtClass = r.detalhes.cndt.status === 'NEGATIVA' ? 'text-green-600' : 'text-red-600';
-                    html += '<div class="bg-gray-50 rounded border border-gray-200 p-3">';
-                    html += '<p class="text-xs text-gray-500">CNDT (Trabalhista)</p>';
-                    html += '<p class="text-sm font-semibold ' + cndtClass + '">' + r.detalhes.cndt.status + '</p>';
-                    html += '</div>';
-                }
+                html += cardCertidao('CND Federal', r.detalhes.cnd_federal);
+                html += cardCertidao('CND Estadual', r.detalhes.cnd_estadual);
+                html += cardCertidao('CND Municipal', r.detalhes.cnd_municipal);
+                html += cardCertidao('CRF FGTS', r.detalhes.fgts || r.detalhes.crf_fgts);
+                html += cardCertidao('CNDT (Trabalhista)', r.detalhes.cndt);
+                html += cardCertidao('SINTEGRA', r.detalhes.sintegra);
 
                 html += '</div>';
                 html += '</div>';
