@@ -214,6 +214,62 @@ class RiskScoreService
     }
 
     /**
+     * Motivos legíveis das irregularidades que puxam a classificação (chip/tooltip da lista).
+     * Deriva dos subscores (fonte única: mesmos valores que classificam) + situação real dos dados.
+     * Ordem: cadastral primeiro, depois certidões na ordem de $pesos. Vazio = nada irregular.
+     *
+     * @param  array<string, int|null>  $scores  saída de calcularScores()
+     * @param  array  $dados  dados consultados (merge de participante_scores.dados_consultados)
+     * @return array<int, string>
+     */
+    public function motivosIrregularidade(array $scores, array $dados): array
+    {
+        $motivos = [];
+
+        $cad = $scores['cadastral'] ?? null;
+        if ($cad !== null && $cad > 0) {
+            $situacao = mb_strtoupper(trim((string) ($dados['situacao_cadastral'] ?? '')));
+            $motivos[] = 'Situação cadastral '.($situacao !== '' ? $situacao : 'irregular');
+        }
+
+        $labels = self::categoriaLabels();
+        foreach (self::GRAVIDADE_CERTIDAO as $categoria => $gravidade) {
+            $valor = $scores[$categoria] ?? null;
+            if ($valor !== null && $valor > 0) {
+                $motivos[] = ($labels[$categoria] ?? $categoria).' positiva';
+            }
+        }
+
+        return $motivos;
+    }
+
+    /**
+     * Descreve o que falta para a cobertura mínima (score conclusivo) — texto do estado
+     * 'inconclusivo'. Espelha coberturaSuficiente(): CND Federal + ao menos 2 certidões.
+     *
+     * @param  array<string, int|null>  $scores  saída de calcularScores()
+     */
+    public function resumoCobertura(array $scores): string
+    {
+        $avaliadas = array_filter(
+            self::CERTIDOES_SCORE,
+            fn (string $c) => ($scores[$c] ?? null) !== null
+        );
+
+        if ($avaliadas === []) {
+            return ($scores['cadastral'] ?? null) !== null
+                ? 'Apenas a situação cadastral foi consultada'
+                : 'Nenhuma certidão de regularidade consultada';
+        }
+
+        if (($scores['cnd_federal'] ?? null) === null) {
+            return 'CND Federal ainda não consultada';
+        }
+
+        return 'Apenas '.count($avaliadas).' de 2 certidões de regularidade consultadas';
+    }
+
+    /**
      * Eixo CRÉDITO IBS/CBS (Reforma Tributária) — ortogonal ao score de conformidade.
      * Fração do imposto que o regime do fornecedor permite virar crédito para o comprador:
      * 1.0 = crédito integral (Regime Normal) | reduzido = Simples sem opção (config) |

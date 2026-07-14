@@ -71,11 +71,7 @@ class EstimarRegimeIndefinido extends Command
     private function dataExclusaoDaNota(string $nota): ?string
     {
         if (preg_match('/at[ée] (\d{2}\/\d{2}\/\d{4})/u', $nota, $m)) {
-            try {
-                return \Carbon\Carbon::createFromFormat('d/m/Y', $m[1])->toDateString();
-            } catch (\Throwable) {
-                return null;
-            }
+            return \App\Support\DataBr::parse($m[1])?->toDateString();
         }
 
         return null;

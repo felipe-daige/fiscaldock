@@ -1087,10 +1087,9 @@ class AlertaCentralService
             if (! is_string($raw) || trim($raw) === '') {
                 continue;
             }
-            try {
-                return Carbon::createFromFormat('d/m/Y', trim($raw))->startOfDay();
-            } catch (\Throwable) {
-                continue;
+            $data = \App\Support\DataBr::parse($raw);
+            if ($data !== null) {
+                return $data->startOfDay();
             }
         }
 

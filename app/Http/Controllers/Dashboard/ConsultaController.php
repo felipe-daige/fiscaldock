@@ -11,13 +11,16 @@ use App\Models\MonitoramentoAssinatura;
 use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Models\ParticipanteGrupo;
+use App\Models\ParticipanteScore;
 use App\Services\ConsultaReportService;
 use App\Services\ParecerFiscalService;
 use App\Services\PricingCatalogService;
+use App\Services\RiskScoreService;
 use App\Services\SaldoService;
 use App\Support\CertidaoBadge;
 use App\Support\CndFederal;
 use App\Support\CsvExport;
+use App\Support\DataBr;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,7 +41,8 @@ class ConsultaController extends Controller
         protected SaldoService $saldoService,
         protected ConsultaReportService $reportService,
         protected PricingCatalogService $pricingCatalogService,
-        protected \App\Services\Entitlements\EntitlementService $entitlements
+        protected \App\Services\Entitlements\EntitlementService $entitlements,
+        protected RiskScoreService $riskScore
     ) {}
 
     private function getViewPrefix(): string
@@ -371,12 +375,21 @@ class ConsultaController extends Controller
         $fiscalResumos = app(\App\Services\Consultas\ParticipanteFiscalResumoService::class)
             ->paraParticipantes($user->id, $participanteIds);
 
+        // Score canônico (participante_scores) — mesma fonte do filtro "regularidade",
+        // da ficha e dos alertas. dados_consultados é o MERGE das consultas (parcial
+        // não apaga certidão anterior), diferente do último ConsultaResultado.
+        $scoresPorParticipante = ParticipanteScore::query()
+            ->whereIn('participante_id', $participanteIds)
+            ->get()
+            ->keyBy('participante_id');
+
         return response()->json([
             'success' => true,
-            'data' => $participantes->getCollection()->map(function ($participante) use ($ultimosResultados, $agora, $fiscalResumos) {
+            'data' => $participantes->getCollection()->map(function ($participante) use ($ultimosResultados, $agora, $fiscalResumos, $scoresPorParticipante) {
                 $ultimoResultado = $ultimosResultados->get($participante->id);
-                $cndFederal = $ultimoResultado?->getCndFederal() ?? [];
-                $alerta = $this->buildParticipanteAlertData($ultimoResultado, $agora);
+                $score = $scoresPorParticipante->get($participante->id);
+                $alerta = $this->buildParticipanteAlertData($score, $ultimoResultado, $agora);
+                $cndFederal = $alerta['dados']['cnd_federal'] ?? [];
                 $assinatura = $participante->assinaturas->first();
                 $ultimaConsultaEm = $participante->ultima_consulta_em;
 
@@ -428,8 +441,11 @@ class ConsultaController extends Controller
                     $cndMeta = 'Validade não informada';
 
                     if ($cndValidade) {
-                        try {
-                            $dataValidade = Carbon::parse($cndValidade);
+                        $dataValidade = DataBr::parse((string) $cndValidade);
+
+                        if ($dataValidade === null) {
+                            $cndMeta = 'Validade: '.(string) $cndValidade;
+                        } else {
                             $diasRestantes = $agora->diffInDays($dataValidade, false);
 
                             if ($diasRestantes <= 0) {
@@ -439,8 +455,6 @@ class ConsultaController extends Controller
                             } else {
                                 $cndMeta = 'Validade: '.$dataValidade->format('d/m/Y');
                             }
-                        } catch (\Exception $e) {
-                            $cndMeta = 'Validade: '.(string) $cndValidade;
                         }
                     }
                 }
@@ -476,6 +490,8 @@ class ConsultaController extends Controller
                     'alerta_hex' => $alerta['hex'],
                     'alerta_icone' => $alerta['icone'],
                     'alerta_detalhe' => $alerta['detalhe'],
+                    'alerta_motivo_curto' => $alerta['motivo_curto'],
+                    'alerta_score_total' => $alerta['score_total'],
                     'assinatura_label' => $assinaturaLabel,
                     'assinatura_hex' => $assinaturaHex,
                     'origem_tipo' => $participante->origem_tipo,
@@ -503,7 +519,14 @@ class ConsultaController extends Controller
     }
 
     /**
-     * Deriva o alerta operacional exibido na lista de participantes.
+     * Deriva o alerta de risco exibido na lista — lê o SCORE CANÔNICO (participante_scores),
+     * mesma fonte da ficha do participante, do filtro "regularidade" desta tela e dos alertas.
+     *
+     * `dados_consultados` é o merge das consultas (parcial não apaga certidão anterior); a
+     * classificação é recomputada na leitura para valer sempre a regra atual do RiskScoreService
+     * (ex.: piso por certidão positiva). Sem linha de score (legado pré-cutover), computa
+     * on-the-fly do último resultado. `nivel` = classificação canônica: critico | alto | medio |
+     * baixo | inconclusivo | nao_avaliado | nunca_consultado.
      *
      * @return array{
      *     nivel: string,
@@ -511,113 +534,100 @@ class ConsultaController extends Controller
      *     detalhe: string,
      *     hex: string,
      *     icone: string,
-     *     consultas_realizadas: array<int, string>
+     *     motivo_curto: ?string,
+     *     score_total: ?int,
+     *     consultas_realizadas: array<int, string>,
+     *     dados: array
      * }
      */
-    private function buildParticipanteAlertData(?ConsultaResultado $resultado, Carbon $agora): array
+    private function buildParticipanteAlertData(?ParticipanteScore $score, ?ConsultaResultado $resultado, Carbon $agora): array
     {
-        $consultasRealizadas = $this->normalizeConsultasRealizadas($resultado);
-
-        if (! $resultado) {
+        if ($score === null && $resultado === null) {
             return [
-                'nivel' => 'grave',
+                'nivel' => 'nunca_consultado',
                 'label' => 'Nunca consultado',
                 'detalhe' => 'Participante sem histórico de consulta.',
                 'hex' => '#ea580c',
-                'icone' => 'alert-triangle',
+                'icone' => 'help-circle',
+                'motivo_curto' => null,
+                'score_total' => null,
                 'consultas_realizadas' => [],
+                'dados' => [],
             ];
         }
 
-        $dados = $resultado->resultado_dados ?? [];
-        $situacao = strtoupper((string) ($dados['situacao_cadastral'] ?? ''));
-
-        if (in_array($situacao, ['BAIXADA', 'INAPTA', 'SUSPENSA', 'NULA'], true)) {
-            return [
-                'nivel' => 'super_grave',
-                'label' => 'Risco crítico',
-                'detalhe' => 'Situação cadastral '.$situacao.'.',
-                'hex' => '#dc2626',
-                'icone' => 'x-circle',
-                'consultas_realizadas' => $consultasRealizadas,
-            ];
+        $dados = $score?->dados_consultados;
+        if (! is_array($dados) || $dados === []) {
+            $dados = $resultado?->resultado_dados ?? [];
         }
 
-        $cndFederal = $resultado->getCndFederal() ?? [];
-        $cndStatus = strtoupper(trim((string) ($cndFederal['status'] ?? '')));
-        $cndValidade = $cndFederal['data_validade'] ?? $cndFederal['validade'] ?? null;
+        $scores = $this->riskScore->calcularScores($dados);
+        $classificacao = $this->riskScore->classificarComCobertura($scores);
+        $total = $this->riskScore->calcularScoreTotal($scores);
+        $motivos = $this->riskScore->motivosIrregularidade($scores, $dados);
+        $motivosTexto = $motivos !== [] ? implode(' · ', $motivos).'.' : '';
 
-        if ($cndStatus !== '') {
-            if (
-                in_array($cndStatus, ['POSITIVA', 'IRREGULAR', 'IRREGULARIDADE'], true) ||
-                str_contains($cndStatus, 'SUSPENS')
-            ) {
-                return [
-                    'nivel' => 'super_grave',
-                    'label' => 'Risco crítico',
-                    'detalhe' => 'CND Federal com pendência: '.$cndStatus.'.',
-                    'hex' => '#dc2626',
-                    'icone' => 'x-circle',
-                    'consultas_realizadas' => $consultasRealizadas,
-                ];
-            }
+        $detalhe = match ($classificacao) {
+            'critico', 'alto', 'medio' => trim($motivosTexto.($total !== null ? ' Score '.$total.'/100.' : '')),
+            'baixo' => 'Score '.$total.'/100 — fontes avaliadas regulares.',
+            'inconclusivo' => $this->riskScore->resumoCobertura($scores)
+                .'. Consulte as certidões (CND Federal + 2 fontes) para um score de risco real.',
+            default => 'Consulta sem dados avaliáveis para o score de risco.',
+        };
 
-            if ($cndValidade) {
-                try {
-                    $dataValidade = Carbon::parse($cndValidade);
-
-                    if ($agora->greaterThanOrEqualTo($dataValidade)) {
-                        return [
-                            'nivel' => 'super_grave',
-                            'label' => 'Risco crítico',
-                            'detalhe' => 'CND Federal vencida em '.$dataValidade->format('d/m/Y').'.',
-                            'hex' => '#dc2626',
-                            'icone' => 'x-circle',
-                            'consultas_realizadas' => $consultasRealizadas,
-                        ];
-                    }
-                } catch (\Exception $e) {
-                    // Mantém o fluxo sem promover alerta em caso de formato inesperado.
-                }
-            }
-        }
-
-        $somenteSituacaoCadastral = in_array('situacao_cadastral', $consultasRealizadas, true) &&
-            count(array_diff($consultasRealizadas, ['situacao_cadastral'])) === 0;
-
-        if ($somenteSituacaoCadastral) {
-            return [
-                'nivel' => 'medio',
-                'label' => 'Consulta inicial apenas',
-                'detalhe' => 'Apenas a situação cadastral foi consultada.',
-                'hex' => '#6b7280',
-                'icone' => 'info-circle',
-                'consultas_realizadas' => $consultasRealizadas,
-            ];
+        if (($aviso = $this->avisoCndFederalVencida($dados, $agora)) !== null) {
+            $detalhe .= ' '.$aviso;
         }
 
         return [
-            'nivel' => 'ok',
-            'label' => 'Consultado sem alertas críticos',
-            'detalhe' => 'Última consulta sem alertas críticos.',
-            'hex' => '#047857',
-            'icone' => 'check-circle',
-            'consultas_realizadas' => $consultasRealizadas,
+            'nivel' => $classificacao,
+            'label' => $this->riskScore->getLabelClassificacao($classificacao),
+            'detalhe' => $detalhe,
+            'hex' => $this->riskScore->getCorClassificacao($classificacao),
+            'icone' => match ($classificacao) {
+                'critico' => 'x-circle',
+                'alto', 'medio' => 'alert-triangle',
+                'baixo' => 'check-circle',
+                default => 'info-circle',
+            },
+            'motivo_curto' => $motivos !== [] ? implode(' · ', array_slice($motivos, 0, 2)) : null,
+            'score_total' => $total,
+            'consultas_realizadas' => $this->normalizeConsultasRealizadas($dados, $resultado),
+            'dados' => $dados,
         ];
     }
 
     /**
-     * Normaliza consultas realizadas e aplica fallback com base nos dados retornados.
+     * Aviso de frescor: CND Federal com validade vencida (não muda a classificação — o score
+     * avalia o status da certidão; validade vencida significa snapshot velho, não débito novo).
+     */
+    private function avisoCndFederalVencida(array $dados, Carbon $agora): ?string
+    {
+        $cnd = $dados['cnd_federal'] ?? null;
+        $raw = is_array($cnd) ? ($cnd['data_validade'] ?? $cnd['validade'] ?? null) : null;
+        $validade = is_string($raw) ? DataBr::parse($raw) : null;
+
+        if ($validade !== null && $agora->greaterThan($validade->endOfDay())) {
+            return 'CND Federal vencida em '.$validade->format('d/m/Y').' — reconsulte.';
+        }
+
+        return null;
+    }
+
+    /**
+     * Normaliza consultas realizadas (merge do score primeiro, último resultado como fallback)
+     * e aplica fallback final com base nas chaves presentes nos dados retornados.
      *
      * @return array<int, string>
      */
-    private function normalizeConsultasRealizadas(?ConsultaResultado $resultado): array
+    private function normalizeConsultasRealizadas(array $dados, ?ConsultaResultado $resultado): array
     {
-        if (! $resultado) {
-            return [];
+        $brutas = (array) ($dados['consultas_realizadas'] ?? []);
+        if ($brutas === [] && $resultado !== null) {
+            $brutas = $resultado->getConsultasRealizadas();
         }
 
-        $consultas = collect($resultado->getConsultasRealizadas())
+        $consultas = collect($brutas)
             ->map(function ($item) {
                 if (! is_string($item)) {
                     return null;
@@ -633,7 +643,6 @@ class ConsultaController extends Controller
             return array_values(array_unique($consultas));
         }
 
-        $dados = $resultado->resultado_dados ?? [];
         $mapaFallback = [
             'situacao_cadastral',
             'dados_cadastrais',
@@ -1426,14 +1435,32 @@ class ConsultaController extends Controller
             ->unique('participante_id')
             ->keyBy('participante_id');
 
+        // Score canônico: consulta feita pela aba Clientes persiste com cliente_id;
+        // feita como contraparte, com participante_id (mesmo documento). O mais recente vence.
+        $scoresAlvo = ParticipanteScore::query()
+            ->where(function ($q) use ($clientes, $participanteIds) {
+                $q->whereIn('cliente_id', $clientes->pluck('id')->all())
+                    ->orWhereIn('participante_id', $participanteIds);
+            })
+            ->get();
+        $scorePorClienteId = $scoresAlvo->whereNotNull('cliente_id')->keyBy('cliente_id');
+        $scorePorParticipanteId = $scoresAlvo->whereNotNull('participante_id')->keyBy('participante_id');
+
         return response()->json([
             'success' => true,
-            'data' => $clientes->map(function ($c) use ($participantesEquivalentes, $ultimosResultados, $agora) {
+            'data' => $clientes->map(function ($c) use ($participantesEquivalentes, $ultimosResultados, $agora, $scorePorClienteId, $scorePorParticipanteId) {
                 $participanteEquivalente = $participantesEquivalentes->get($c->documento);
                 $ultimoResultado = $participanteEquivalente
                     ? $ultimosResultados->get($participanteEquivalente->id)
                     : null;
-                $alerta = $this->buildParticipanteAlertData($ultimoResultado, $agora);
+                $score = collect([
+                    $scorePorClienteId->get($c->id),
+                    $participanteEquivalente ? $scorePorParticipanteId->get($participanteEquivalente->id) : null,
+                ])
+                    ->filter()
+                    ->sortByDesc(fn (ParticipanteScore $s) => $s->ultima_consulta_em?->getTimestamp() ?? 0)
+                    ->first();
+                $alerta = $this->buildParticipanteAlertData($score, $ultimoResultado, $agora);
 
                 return [
                     'id' => $c->id,
@@ -1450,6 +1477,8 @@ class ConsultaController extends Controller
                     'alerta_hex' => $alerta['hex'],
                     'alerta_icone' => $alerta['icone'],
                     'alerta_detalhe' => $alerta['detalhe'],
+                    'alerta_motivo_curto' => $alerta['motivo_curto'],
+                    'alerta_score_total' => $alerta['score_total'],
                 ];
             }),
         ]);

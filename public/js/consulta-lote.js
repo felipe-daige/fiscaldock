@@ -547,6 +547,7 @@
                                 ${alertaIconHtml}
                                 ${canSelect ? '' : '<span class="inline-flex shrink-0 items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #9ca3af">CPF</span>'}
                             </div>
+                        ${getRiscoInlineHtml(p)}
                         ${getRelacaoFiscalHtml(p)}
                         </div>
                         ${detailsButtonHtml}
@@ -2126,24 +2127,29 @@
     }
 
     function getAlertaIconHtml(participante, contextKey) {
-        var nivel = participante.alerta_nivel || 'grave';
+        // nivel = classificação canônica do Score Fiscal (participante_scores):
+        // critico | alto | medio | baixo | inconclusivo | nao_avaliado | nunca_consultado
+        var nivel = participante.alerta_nivel || 'nunca_consultado';
         var label = participante.alerta_label || 'Nunca consultado';
         var detalhe = participante.alerta_detalhe || '';
         var hex = participante.alerta_hex || '#ea580c';
         var tooltipId = 'alerta-tooltip-' + (contextKey || 'participante') + '-' + participante.id;
         var path = '';
 
-        if (nivel === 'super_grave') {
+        if (nivel === 'critico' || nivel === 'super_grave') {
             // X no círculo (vermelho)
             path = '<circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.8" fill="none"/><line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>';
-        } else if (nivel === 'medio') {
-            // i no círculo (cinza)
-            path = '<circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.8" fill="none"/><line x1="12" y1="12" x2="12" y2="15.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="9.5" r="1" fill="currentColor"/>';
-        } else if (nivel === 'ok') {
+        } else if (nivel === 'baixo' || nivel === 'ok') {
             // Check no círculo (verde)
             path = '<circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.8" fill="none"/><polyline points="8.5,12.5 10.7,14.7 15.5,9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>';
+        } else if (nivel === 'inconclusivo' || nivel === 'nao_avaliado') {
+            // i no círculo (cinza) — score existe mas sem cobertura mínima
+            path = '<circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.8" fill="none"/><line x1="12" y1="12" x2="12" y2="15.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="9.5" r="1" fill="currentColor"/>';
+        } else if (nivel === 'nunca_consultado') {
+            // ? no círculo (laranja) — sem histórico de consulta
+            path = '<circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M10 9.6a2 2 0 1 1 2.9 2c-.6.35-.9.75-.9 1.4v.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/><circle cx="12" cy="15.8" r="1" fill="currentColor"/>';
         } else {
-            // ! no círculo (laranja)
+            // alto / medio → ! no círculo (laranja/âmbar, cor vem do backend)
             path = '<circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.8" fill="none"/><line x1="12" y1="8.5" x2="12" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="15.5" r="1" fill="currentColor"/>';
         }
 
@@ -2159,6 +2165,32 @@
             + ' style="color: ' + hex + ';">'
             + '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">' + path + '</svg>'
             + '</button>';
+    }
+
+    /**
+     * Linha VISÍVEL (fora do tooltip) com a classificação de risco e o motivo.
+     * critico/alto/medio: badge colorido + motivo curto (qual certidão/situação puxou).
+     * inconclusivo: aviso discreto de que faltam consultas para um score real.
+     * baixo/nunca_consultado: nada — não polui a linha.
+     */
+    function getRiscoInlineHtml(p) {
+        var nivel = p.alerta_nivel || '';
+
+        if (nivel === 'critico' || nivel === 'alto' || nivel === 'medio') {
+            var hex = p.alerta_hex || '#dc2626';
+            var label = escapeHtml(p.alerta_label || 'Risco');
+            var motivo = escapeHtml(p.alerta_motivo_curto || '').replace(/"/g, '&quot;');
+            return '<div class="mt-1 flex flex-wrap items-center gap-1.5 min-w-0 max-w-full overflow-hidden">'
+                + '<span class="inline-flex shrink-0 items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: ' + hex + '">' + label + '</span>'
+                + (motivo ? '<span class="text-[11px] font-medium truncate" style="color: ' + hex + '" title="' + motivo + '">' + motivo + '</span>' : '')
+                + '</div>';
+        }
+
+        if (nivel === 'inconclusivo') {
+            return '<div class="mt-1 text-[11px] text-gray-500">Score não conclusivo — consulte certidões para um score real</div>';
+        }
+
+        return '';
     }
 
     function getRelacaoFiscalHtml(p) {
@@ -2199,7 +2231,7 @@
         var itemClass = 'rounded border border-gray-200 bg-white px-3 py-2.5';
 
         return '<div class="' + wrapperClass + '">'
-            + '<div class="md:col-span-2 rounded border border-gray-200 bg-white px-3 py-2.5"><div class="flex items-start gap-2"><span class="mt-0.5">' + alertaIcon + '</span><div><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Alerta</p><p class="text-sm font-semibold text-gray-800">' + escapeHtml(participante.alerta_label || 'Nunca consultado') + '</p><p class="text-[11px] text-gray-500 mt-0.5 leading-tight">' + escapeHtml(participante.alerta_detalhe || 'Participante sem histórico de consulta.') + '</p></div></div></div>'
+            + '<div class="md:col-span-2 rounded border border-gray-200 bg-white px-3 py-2.5"><div class="flex items-start gap-2"><span class="mt-0.5">' + alertaIcon + '</span><div><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Risco (Score Fiscal)</p><p class="text-sm font-semibold text-gray-800">' + escapeHtml(participante.alerta_label || 'Nunca consultado') + (participante.alerta_score_total !== null && participante.alerta_score_total !== undefined ? ' <span class="font-normal text-gray-500">· score ' + participante.alerta_score_total + '/100</span>' : '') + '</p><p class="text-[11px] text-gray-500 mt-0.5 leading-tight">' + escapeHtml(participante.alerta_detalhe || 'Participante sem histórico de consulta.') + '</p></div></div></div>'
             + '<div class="' + itemClass + '"><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Documento</p><p class="text-sm font-mono text-gray-700">' + escapeHtml(documentoFormatado) + '</p></div>'
             + '<div class="' + itemClass + '"><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">CND</p>' + cndBadge + '<p class="text-[11px] text-gray-500 mt-1 leading-tight">' + escapeHtml(participante.cnd_federal_meta || 'CND: não consultada') + '</p></div>'
             + '<div class="' + itemClass + '"><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Situação cadastral</p>' + situacaoBadge + '<p class="text-[11px] text-gray-500 mt-1 leading-tight">' + escapeHtml(participante.ultima_consulta_em ? 'Dados da última consulta' : 'Situação cadastral: não consultada') + '</p></div>'
@@ -2220,7 +2252,7 @@
         var itemClass = 'rounded border border-gray-200 bg-white px-3 py-2.5';
 
         return '<div class="grid grid-cols-1 md:grid-cols-2 gap-2">'
-            + '<div class="md:col-span-2 rounded border border-gray-200 bg-white px-3 py-2.5"><div class="flex items-start gap-2"><span class="mt-0.5">' + alertaIcon + '</span><div><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Alerta</p><p class="text-sm font-semibold text-gray-800">' + escapeHtml(cliente.alerta_label || 'Nunca consultado') + '</p><p class="text-[11px] text-gray-500 mt-0.5 leading-tight">' + escapeHtml(cliente.alerta_detalhe || 'Cliente sem histórico consultável.') + '</p></div></div></div>'
+            + '<div class="md:col-span-2 rounded border border-gray-200 bg-white px-3 py-2.5"><div class="flex items-start gap-2"><span class="mt-0.5">' + alertaIcon + '</span><div><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Risco (Score Fiscal)</p><p class="text-sm font-semibold text-gray-800">' + escapeHtml(cliente.alerta_label || 'Nunca consultado') + (cliente.alerta_score_total !== null && cliente.alerta_score_total !== undefined ? ' <span class="font-normal text-gray-500">· score ' + cliente.alerta_score_total + '/100</span>' : '') + '</p><p class="text-[11px] text-gray-500 mt-0.5 leading-tight">' + escapeHtml(cliente.alerta_detalhe || 'Cliente sem histórico consultável.') + '</p></div></div></div>'
             + '<div class="' + itemClass + '"><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Documento</p><p class="text-sm font-mono text-gray-700">' + escapeHtml(documentoFormatado) + '</p></div>'
             + '<div class="' + itemClass + '"><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Tipo</p><p class="text-sm text-gray-700">' + escapeHtml(tipoPessoa) + '</p></div>'
             + '<div class="' + itemClass + '"><p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Situação cadastral</p><p class="text-sm text-gray-700">' + escapeHtml(situacao) + '</p></div>'
@@ -3190,6 +3222,7 @@
                 + '<span class="truncate">' + totalParticipantesLabel + '</span>'
                 + '</div>'
                 + (c.nome ? '<div class="mt-0.5 text-xs text-gray-500 truncate">' + c.nome + '</div>' : '')
+                + getRiscoInlineHtml(c)
                 + '</div>'
                 + '<div class="hidden md:flex flex-col items-end gap-1 shrink-0">'
                 + '<button type="button" class="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-900 transition cliente-details-toggle" data-cliente-id="' + c.id + '" title="' + (isDetailsExpanded ? 'Ocultar detalhes' : 'Ver detalhes') + '">'
