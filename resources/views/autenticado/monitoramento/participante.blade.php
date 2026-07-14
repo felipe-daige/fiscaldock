@@ -153,45 +153,49 @@
                 {{-- Dados Cadastrais --}}
                 <div class="bg-white rounded border border-gray-300 overflow-hidden">
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Dados Cadastrais</span>
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Dados Cadastrais</span>
+                                <p class="mt-1 text-[11px] text-gray-500">Identificação, localização e enquadramento do participante.</p>
+                            </div>
+                            <span class="w-fit whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $participante->is_cpf ? '#374151' : $situacaoBadge['hex'] }}">
+                                {{ $participante->is_cpf ? 'Pessoa física' : $situacaoBadge['label'] }}
+                            </span>
+                        </div>
                     </div>
-                    <div class="p-4 sm:p-6">
-                        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-4">
-                            <div>
-                                <dt class="text-xs text-gray-500 uppercase tracking-wide">{{ $participante->is_cpf ? 'CPF' : 'CNPJ' }}</dt>
-                                <dd class="mt-1 text-sm font-mono text-gray-900">{{ $participante->cnpj_formatado }}</dd>
+                    <div class="p-4 sm:p-5">
+                        <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            <div class="rounded border border-gray-200 bg-gray-50 px-3 py-3">
+                                <dt class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">{{ $participante->is_cpf ? 'CPF' : 'CNPJ' }}</dt>
+                                <dd class="mt-1 text-sm font-mono font-medium text-gray-900">{{ $participante->cnpj_formatado }}</dd>
                             </div>
-                            <div>
-                                <dt class="text-xs text-gray-500 uppercase tracking-wide">{{ $participante->is_cpf ? 'Nome' : 'Razão Social' }}</dt>
-                                <dd class="mt-1 text-sm text-gray-900">{{ $participante->razao_social ?? '-' }}</dd>
+                            <div class="rounded border border-gray-200 bg-gray-50 px-3 py-3 sm:col-span-1 lg:col-span-2">
+                                <dt class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">{{ $participante->is_cpf ? 'Nome' : 'Razão Social' }}</dt>
+                                <dd class="mt-1 break-words text-sm font-semibold text-gray-900">{{ $participante->razao_social ?? '-' }}</dd>
                             </div>
-                            <div>
-                                <dt class="text-xs text-gray-500 uppercase tracking-wide">{{ $participante->is_cpf ? 'Tipo de pessoa' : 'Situação Cadastral' }}</dt>
+                            <div class="rounded border border-gray-200 bg-gray-50 px-3 py-3">
+                                <dt class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">{{ $participante->is_cpf ? 'Tipo de pessoa' : 'Situação Cadastral' }}</dt>
                                 <dd class="mt-1 text-sm text-gray-900">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $participante->is_cpf ? '#374151' : $situacaoBadge['hex'] }}">{{ $participante->is_cpf ? 'Pessoa física' : $situacaoBadge['label'] }}</span>
                                 </dd>
                             </div>
-                            <div>
-                                <dt class="text-xs text-gray-500 uppercase tracking-wide">{{ $participante->is_cpf ? 'Avaliação de crédito' : 'Regime Tributário' }}</dt>
+                            <div class="rounded border border-gray-200 bg-gray-50 px-3 py-3">
+                                <dt class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">{{ $participante->is_cpf ? 'Avaliação de crédito' : 'Regime Tributário' }}</dt>
                                 <dd class="mt-1 text-sm text-gray-900">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $participante->is_cpf ? '#6b7280' : $regimeBadge['hex'] }}">{{ $participante->is_cpf ? 'Não avaliada' : $regimeBadge['label'] }}</span>
                                 </dd>
                             </div>
-                            <div>
-                                <dt class="text-xs text-gray-500 uppercase tracking-wide">UF</dt>
-                                <dd class="mt-1 text-sm text-gray-900">{{ $participante->uf ?? '-' }}</dd>
+                            <div class="rounded border border-gray-200 bg-gray-50 px-3 py-3">
+                                <dt class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Município / UF</dt>
+                                <dd class="mt-1 text-sm text-gray-700">{{ implode(' / ', array_filter([$participante->municipio, $participante->uf])) ?: '-' }}</dd>
                             </div>
-                            <div>
-                                <dt class="text-xs text-gray-500 uppercase tracking-wide">Município</dt>
-                                <dd class="mt-1 text-sm text-gray-900">{{ $participante->municipio ?? '-' }}</dd>
+                            <div class="rounded border border-gray-200 bg-gray-50 px-3 py-3">
+                                <dt class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Porte</dt>
+                                <dd class="mt-1 text-sm text-gray-700">{{ $participante->porte ?? '-' }}</dd>
                             </div>
-                            <div>
-                                <dt class="text-xs text-gray-500 uppercase tracking-wide">Porte</dt>
-                                <dd class="mt-1 text-sm text-gray-900">{{ $participante->porte ?? '-' }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-xs text-gray-500 uppercase tracking-wide">Cadastrado em</dt>
-                                <dd class="mt-1 text-sm text-gray-900">{{ $participante->created_at?->format('d/m/Y H:i') ?? '-' }}</dd>
+                            <div class="rounded border border-gray-200 bg-gray-50 px-3 py-3">
+                                <dt class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Cadastrado em</dt>
+                                <dd class="mt-1 text-sm text-gray-700">{{ $participante->created_at?->format('d/m/Y H:i') ?? '-' }}</dd>
                             </div>
                         </dl>
                     </div>
@@ -675,144 +679,6 @@
                     @include('autenticado.monitoramento._movimentacao-listas', ['top_produtos' => $top_produtos ?? [], 'top_cfops' => $top_cfops ?? []])
                 </div>
 
-                {{-- Histórico de Consultas --}}
-                @if(isset($lotesDoParticipante))
-                <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Histórico de Consultas</span>
-                            <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ $lotesDoParticipante->count() }}</span>
-                        </div>
-                    </div>
-                    @if($lotesDoParticipante->isEmpty())
-                    <div class="px-6 py-10 text-center text-gray-400">
-                        <svg class="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        <p class="text-sm">Nenhuma consulta realizada para este participante.</p>
-                    </div>
-                    @else
-                    <div class="divide-y divide-gray-200">
-                        @php
-                            $lotePlanoBadgeColors = [
-                                'gratuito' => '#6b7280',
-                                'validacao' => '#4338ca',
-                                'licitacao' => '#7c3aed',
-                                'compliance' => '#b45309',
-                                'due_diligence' => '#be123c',
-                                'enterprise' => '#1f2937',
-                            ];
-                        @endphp
-                        @foreach($lotesDoParticipante as $lote)
-                        @php
-                            $resultado = $lote->resultados->first();
-                            $statusResultado = $resultado?->status ?? ($lote->isFinalizado() ? 'pendente' : \App\Models\ConsultaLote::normalizeStatus($lote->status));
-                            $situacao = $resultado?->getDado('situacao_cadastral');
-                            $simples = $resultado?->getDado('simples_nacional');
-                            $cndFederal = $resultado?->getDado('cnd_federal');
-                            $cndt = $resultado?->getDado('cndt');
-                            $dataConsulta = $resultado?->consultado_em ?? $lote->created_at;
-                            $mensagemResultado = $resultado?->getMensagemExibivel();
-                            $resultadoStatusColors = [
-                                'sucesso'     => '#047857',
-                                'erro'        => '#dc2626',
-                                'timeout'     => '#dc2626',
-                                'pendente'    => $lote->status === 'processando' ? '#4338ca' : '#6b7280',
-                                'processando' => '#4338ca',
-                                'finalizado'  => '#047857',
-                                'concluido'   => '#047857',
-                            ];
-                            $resultadoStatusLabel = [
-                                'sucesso'     => 'Sucesso',
-                                'erro'        => 'Erro',
-                                'timeout'     => 'Timeout',
-                                'pendente'    => $lote->status === 'processando' ? 'Em andamento' : 'Pendente',
-                                'processando' => 'Em andamento',
-                                'finalizado'  => 'Finalizado',
-                                'concluido'   => 'Finalizado',
-                            ];
-                        @endphp
-                        <div class="px-6 py-4 hover:bg-gray-50 transition-colors">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-4">
-                                    <div class="flex-shrink-0">
-                                        <div class="w-10 h-10 rounded border border-gray-300 bg-gray-50 flex items-center justify-center">
-                                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm font-semibold text-gray-900">
-                                            <a href="/app/consulta/lote/{{ $lote->id }}" data-link class="hover:underline hover:text-gray-600">Lote #{{ $lote->id }}</a>
-                                        </p>
-                                        <p class="text-xs text-gray-500">{{ $dataConsulta?->format('d/m/Y H:i') ?? '-' }}</p>
-                                        @if($statusResultado === 'sucesso' && ($situacao || $simples !== null))
-                                        <p class="text-xs text-gray-500 mt-0.5">
-                                            @if($situacao)
-                                                <span>{{ $situacao }}</span>
-                                            @endif
-                                            @if($simples !== null)
-                                                <span class="mx-1">·</span>
-                                                <span>SN: {{ $simples ? 'Optante' : 'Não optante' }}</span>
-                                            @endif
-                                            @if($cndFederal !== null)
-                                                <span class="mx-1">·</span>
-                                                <span>CND: {{ $cndFederal ? 'Regular' : 'Irregular' }}</span>
-                                            @endif
-                                            @if($cndt !== null)
-                                                <span class="mx-1">·</span>
-                                                <span>CNDT: {{ $cndt ? 'Regular' : 'Irregular' }}</span>
-                                            @endif
-                                        </p>
-                                        @endif
-                                        @if($mensagemResultado)
-                                        @php
-                                            $msgLimite = 140;
-                                            $msgLonga = mb_strlen($mensagemResultado) > $msgLimite;
-                                            $msgId = 'lote-msg-'.$lote->id;
-                                        @endphp
-                                        @if(!$msgLonga)
-                                        <p class="text-xs text-gray-500 mt-0.5 max-w-xl" style="overflow-wrap: anywhere">{{ $mensagemResultado }}</p>
-                                        @else
-                                        {{-- Resumo + "Saiba mais" (onclick inline, padrão DS cache-robusto):
-                                             mensagens oficiais longas não podem dominar a linha do histórico. --}}
-                                        <p class="text-xs text-gray-500 mt-0.5 max-w-xl" style="overflow-wrap: anywhere">
-                                            <span id="{{ $msgId }}-curta">{{ \Illuminate\Support\Str::limit($mensagemResultado, $msgLimite) }}</span>
-                                            <span id="{{ $msgId }}-cheia" class="hidden">{{ $mensagemResultado }}</span>
-                                            <button type="button"
-                                                    class="font-semibold text-gray-600 hover:text-gray-900 underline whitespace-nowrap"
-                                                    onclick="(function(b){var c=document.getElementById('{{ $msgId }}-curta'),f=document.getElementById('{{ $msgId }}-cheia');if(!c||!f)return;var aberto=c.classList.toggle('hidden');f.classList.toggle('hidden',!aberto);b.textContent=aberto?'Ver menos':'Saiba mais'})(this)">Saiba mais</button>
-                                        </p>
-                                        @endif
-                                        @endif
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    @if($lote->plano)
-                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $lotePlanoBadgeColors[$lote->plano->codigo] ?? '#6b7280' }}">
-                                        {{ $lote->plano->nome }}
-                                    </span>
-                                    @endif
-                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $resultadoStatusColors[$statusResultado] ?? '#6b7280' }}">
-                                        {{ $resultadoStatusLabel[$statusResultado] ?? ucfirst($statusResultado) }}
-                                    </span>
-                                    <a href="/app/consulta/lote/{{ $lote->id }}"
-                                       class="inline-flex items-center p-2 rounded text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-                                       data-link
-                                       title="Ver resultado da consulta">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                        </svg>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                    @endif
-                </div>
-                @endif
             </div>
 
             @if($assinaturaAtiva)
@@ -902,6 +768,13 @@
                     </div>
                 </div>
             @endif
+        </div>
+
+        <div class="mt-6 sm:mt-8">
+            @include('autenticado.partials._historico-consultas-perfil', [
+                'historicoConsultasPerfil' => $historicoConsultasPerfil ?? collect(),
+                'documentoPerfil' => $participante->documento,
+            ])
         </div>
     </div>
 </div>

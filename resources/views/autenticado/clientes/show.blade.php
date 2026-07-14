@@ -26,11 +26,11 @@
         ],
     ];
     $dadosCadastrais = [
-        ['label' => $cliente->tipo_pessoa === 'PJ' ? 'Razão Social' : 'Nome', 'valor' => $cliente->razao_social ?? $cliente->nome ?? '-', 'mono' => false],
-        ['label' => $cliente->tipo_pessoa === 'PJ' ? 'Nome Fantasia' : 'Nome de Exibição', 'valor' => $cliente->nome ?? '-', 'mono' => false],
+        ['label' => $cliente->tipo_pessoa === 'PJ' ? 'Razão Social' : 'Nome', 'valor' => $cliente->razao_social ?? $cliente->nome ?? '-', 'mono' => false, 'destaque' => true, 'span' => 'lg:col-span-2'],
+        ['label' => $cliente->tipo_pessoa === 'PJ' ? 'Nome Fantasia' : 'Nome de Exibição', 'valor' => $cliente->nome ?? '-', 'mono' => false, 'destaque' => true],
         ['label' => $cliente->tipo_pessoa === 'PJ' ? 'CNPJ' : 'CPF', 'valor' => $cliente->documento_formatado, 'mono' => true],
-        ['label' => 'E-mail', 'valor' => $cliente->email ?: 'Não informado', 'mono' => false],
-        ['label' => 'Telefone', 'valor' => $cliente->telefone ?: 'Não informado', 'mono' => false],
+        ['label' => 'E-mail', 'valor' => $cliente->email ?: 'Não informado', 'mono' => false, 'href' => $cliente->email ? 'mailto:'.$cliente->email : null],
+        ['label' => 'Telefone', 'valor' => $cliente->telefone ?: 'Não informado', 'mono' => false, 'href' => $cliente->telefone ? 'tel:'.preg_replace('/\D/', '', $cliente->telefone) : null],
         ['label' => 'Município / UF', 'valor' => implode(' - ', array_filter([$cliente->municipio, $cliente->uf])) ?: 'Não informado', 'mono' => false],
         ['label' => 'CEP', 'valor' => $cliente->cep ?: 'Não informado', 'mono' => true],
         ['label' => 'Situação Cadastral', 'valor' => $situacaoCadastralBadge, 'mono' => false, 'badge' => true],
@@ -120,37 +120,43 @@
             </div>
         </div>
 
-        {{-- Coluna lateral estreita e fixa (19rem) — o conteúdo principal fica com o resto do grid --}}
-        <style>
-            .perfil-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
-            @media (min-width: 1024px) {
-                .perfil-grid { grid-template-columns: minmax(0, 1fr) 19rem; }
-            }
-        </style>
-        <div class="perfil-grid">
-            <div class="space-y-6 min-w-0">
+        <div class="space-y-6 min-w-0">
                 <div class="bg-white rounded border border-gray-300 overflow-hidden">
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Dados Cadastrais</span>
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Dados Cadastrais</span>
+                                <p class="mt-1 text-[11px] text-gray-500">Identificação, contato, localização e enquadramento fiscal.</p>
+                            </div>
+                            <span class="w-fit whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusBadge['hex'] }}">
+                                Cadastro {{ $statusBadge['label'] }}
+                            </span>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-200">
+                    <dl class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-3">
                         @foreach($dadosCadastrais as $dado)
-                            <div class="px-4 py-3 sm:px-5 sm:py-4">
-                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">{{ $dado['label'] }}</p>
+                            <div class="rounded border border-gray-200 bg-gray-50 px-3 py-3 {{ $dado['span'] ?? '' }}">
+                                <dt class="mb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400">{{ $dado['label'] }}</dt>
                                 @if(!empty($dado['badge']))
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $dado['valor']['hex'] }}">{{ $dado['valor']['label'] }}</span>
+                                    <dd>
+                                        <span class="inline-flex items-center rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $dado['valor']['hex'] }}">{{ $dado['valor']['label'] }}</span>
+                                    </dd>
+                                @elseif(!empty($dado['href']))
+                                    <dd>
+                                        <a href="{{ $dado['href'] }}" class="break-words text-sm font-medium text-gray-700 hover:text-gray-900 hover:underline">{{ $dado['valor'] }}</a>
+                                    </dd>
                                 @else
-                                    <p class="text-sm text-gray-700 {{ $dado['mono'] ? 'font-mono' : '' }}">{{ $dado['valor'] }}</p>
+                                    <dd class="break-words text-sm text-gray-700 {{ $dado['mono'] ? 'font-mono' : '' }} {{ !empty($dado['destaque']) ? 'font-semibold text-gray-900' : '' }}">{{ $dado['valor'] }}</dd>
                                 @endif
                             </div>
                         @endforeach
                         @if($cliente->endereco ?? null)
-                            <div class="px-4 py-3 sm:px-5 sm:py-4 sm:col-span-2 lg:col-span-3 border-t border-gray-200">
-                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Endereço</p>
-                                <p class="text-sm text-gray-700">{{ $cliente->endereco }}</p>
+                            <div class="rounded border border-gray-200 bg-gray-50 px-3 py-3 sm:col-span-2 lg:col-span-3">
+                                <dt class="mb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400">Endereço completo</dt>
+                                <dd class="text-sm text-gray-700">{{ $cliente->endereco }}</dd>
                             </div>
                         @endif
-                    </div>
+                    </dl>
                 </div>
 
                 <div class="bg-white rounded border border-gray-300 overflow-hidden">
@@ -198,51 +204,13 @@
                 </div>
 
                 @include('autenticado.monitoramento._movimentacao-listas', ['top_produtos' => $top_produtos ?? [], 'top_cfops' => $top_cfops ?? []])
-            </div>
+        </div>
 
-            <div class="space-y-6 min-w-0">
-                <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Situação do Cadastro</span>
-                    </div>
-                    <div class="p-4 space-y-3">
-                        <div class="flex items-center justify-between gap-3">
-                            <span class="text-sm text-gray-600">Tipo de Pessoa</span>
-                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tipoPessoaBadge['hex'] }}">{{ $tipoPessoaBadge['label'] }}</span>
-                        </div>
-                        <div class="flex items-center justify-between gap-3">
-                            <span class="text-sm text-gray-600">Status</span>
-                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusBadge['hex'] }}">{{ $statusBadge['label'] }}</span>
-                        </div>
-                        @if($cliente->is_empresa_propria)
-                            <div class="flex items-center justify-between gap-3">
-                                <span class="text-sm text-gray-600">Classificação</span>
-                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $empresaBadge['hex'] }}">{{ $empresaBadge['label'] }}</span>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-                <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Metadados</span>
-                    </div>
-                    <div class="p-4 space-y-3">
-                        <div class="flex items-center justify-between gap-3">
-                            <span class="text-sm text-gray-600">Criado em</span>
-                            <span class="text-sm font-semibold text-gray-900">{{ $cliente->created_at?->format('d/m/Y H:i') ?? '-' }}</span>
-                        </div>
-                        <div class="flex items-center justify-between gap-3">
-                            <span class="text-sm text-gray-600">Documento</span>
-                            <span class="text-sm font-semibold text-gray-900 font-mono">{{ $cliente->documento_formatado }}</span>
-                        </div>
-                        <div class="flex items-center justify-between gap-3">
-                            <span class="text-sm text-gray-600">Base fiscal</span>
-                            <span class="text-sm font-semibold text-gray-900">{{ number_format($totalNotas, 0, ',', '.') }} notas</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="mt-6 sm:mt-8">
+            @include('autenticado.partials._historico-consultas-perfil', [
+                'historicoConsultasPerfil' => $historicoConsultasPerfil ?? collect(),
+                'documentoPerfil' => $cliente->documento,
+            ])
         </div>
 
         {{-- Modal do dossiê: o usuário escolhe quantos participantes vinculados

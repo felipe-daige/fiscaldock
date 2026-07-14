@@ -16,6 +16,7 @@ use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
 use App\Models\ParticipanteScore;
 use App\Models\XmlNota;
+use App\Services\Consultas\PerfilConsultaHistoricoService;
 use App\Services\Consultas\ResultadoDetalhePresenter;
 use App\Services\NotaFiscalService;
 use App\Services\ParecerFiscalService;
@@ -54,6 +55,7 @@ class ParticipanteController extends Controller
         protected SaldoService $saldoService,
         protected NotaFiscalService $notaFiscalService,
         protected ResultadoDetalhePresenter $detalhePresenter,
+        protected PerfilConsultaHistoricoService $perfilConsultaHistorico,
     ) {}
 
     /**
@@ -917,21 +919,6 @@ class ParticipanteController extends Controller
             ? $this->detalhePresenter->certidoes($ultimaConsulta)
             : [];
 
-        // Buscar lotes que incluem este participante (para histórico de consultas em lote)
-        $lotesDoParticipante = ConsultaLote::whereHas('participantes', function ($q) use ($participante) {
-            $q->where('participantes.id', $participante->id);
-        })
-            ->where('user_id', $userId)
-            ->with([
-                'plano:id,nome,codigo',
-                'resultados' => function ($q) use ($participante) {
-                    $q->where('participante_id', $participante->id)
-                        ->select(['id', 'consulta_lote_id', 'participante_id', 'status', 'resultado_dados', 'error_message', 'consultado_em']);
-                },
-            ])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
         // Se participante nao tem CEP salvo, tentar pegar da ultima consulta
         if (empty($participante->cep) && $ultimaConsulta) {
             $cepDados = $ultimaConsulta->resultado_dados['endereco']['cep'] ?? null;
@@ -996,7 +983,7 @@ class ParticipanteController extends Controller
             'ultimaConsulta' => $ultimaConsulta,
             'fontesConsulta' => $fontesConsulta,
             'certidoesConsulta' => $certidoesConsulta,
-            'lotesDoParticipante' => $lotesDoParticipante,
+            'historicoConsultasPerfil' => $this->perfilConsultaHistorico->paraParticipante($participante),
             'parecerFiscal' => $ultimaConsulta
                 ? app(ParecerFiscalService::class)->gerar($ultimaConsulta->getParecerFiscalPayload())
                 : [],

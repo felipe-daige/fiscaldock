@@ -13,6 +13,7 @@ use App\Models\Participante;
 use App\Models\SaldoTransacao;
 use App\Services\AlertaCentralService;
 use App\Services\Consultas\Fiscal\TopMovimentacaoQuery;
+use App\Services\Consultas\PerfilConsultaHistoricoService;
 use App\Services\Consultas\ResultadoDetalhePresenter;
 use App\Services\Dashboard\DashboardDataService;
 use App\Services\NotaFiscalService;
@@ -35,6 +36,7 @@ class DashboardController extends Controller
         protected AlertaCentralService $alertaCentralService,
         protected PricingCatalogService $pricingCatalogService,
         protected ResultadoDetalhePresenter $detalhePresenter,
+        protected PerfilConsultaHistoricoService $perfilConsultaHistorico,
         protected \App\Services\GuiaAlertaService $guiaAlertaService,
     ) {}
 
@@ -594,6 +596,7 @@ class DashboardController extends Controller
             'notasAjaxUrl' => "/app/cliente/{$id}/notas",
             'notasContexto' => 'cliente',
             'notasEntityId' => $cliente->id,
+            'historicoConsultasPerfil' => $this->perfilConsultaHistorico->paraCliente($cliente),
         ];
 
         $topMov = app(TopMovimentacaoQuery::class);
