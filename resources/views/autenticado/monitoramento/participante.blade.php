@@ -739,7 +739,9 @@
                                         </div>
                                     </div>
                                     <div>
-                                        <p class="text-sm font-semibold text-gray-900">Lote #{{ $lote->id }}</p>
+                                        <p class="text-sm font-semibold text-gray-900">
+                                            <a href="/app/consulta/lote/{{ $lote->id }}" data-link class="hover:underline hover:text-gray-600">Lote #{{ $lote->id }}</a>
+                                        </p>
                                         <p class="text-xs text-gray-500">{{ $dataConsulta?->format('d/m/Y H:i') ?? '-' }}</p>
                                         @if($statusResultado === 'sucesso' && ($situacao || $simples !== null))
                                         <p class="text-xs text-gray-500 mt-0.5">
@@ -761,7 +763,24 @@
                                         </p>
                                         @endif
                                         @if($mensagemResultado)
-                                        <p class="text-xs text-gray-500 mt-0.5 max-w-xl">{{ $mensagemResultado }}</p>
+                                        @php
+                                            $msgLimite = 140;
+                                            $msgLonga = mb_strlen($mensagemResultado) > $msgLimite;
+                                            $msgId = 'lote-msg-'.$lote->id;
+                                        @endphp
+                                        @if(!$msgLonga)
+                                        <p class="text-xs text-gray-500 mt-0.5 max-w-xl" style="overflow-wrap: anywhere">{{ $mensagemResultado }}</p>
+                                        @else
+                                        {{-- Resumo + "Saiba mais" (onclick inline, padrão DS cache-robusto):
+                                             mensagens oficiais longas não podem dominar a linha do histórico. --}}
+                                        <p class="text-xs text-gray-500 mt-0.5 max-w-xl" style="overflow-wrap: anywhere">
+                                            <span id="{{ $msgId }}-curta">{{ \Illuminate\Support\Str::limit($mensagemResultado, $msgLimite) }}</span>
+                                            <span id="{{ $msgId }}-cheia" class="hidden">{{ $mensagemResultado }}</span>
+                                            <button type="button"
+                                                    class="font-semibold text-gray-600 hover:text-gray-900 underline whitespace-nowrap"
+                                                    onclick="(function(b){var c=document.getElementById('{{ $msgId }}-curta'),f=document.getElementById('{{ $msgId }}-cheia');if(!c||!f)return;var aberto=c.classList.toggle('hidden');f.classList.toggle('hidden',!aberto);b.textContent=aberto?'Ver menos':'Saiba mais'})(this)">Saiba mais</button>
+                                        </p>
+                                        @endif
                                         @endif
                                     </div>
                                 </div>
@@ -774,10 +793,10 @@
                                     <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $resultadoStatusColors[$statusResultado] ?? '#6b7280' }}">
                                         {{ $resultadoStatusLabel[$statusResultado] ?? ucfirst($statusResultado) }}
                                     </span>
-                                    <a href="/app/consulta/historico?lote={{ $lote->id }}"
+                                    <a href="/app/consulta/lote/{{ $lote->id }}"
                                        class="inline-flex items-center p-2 rounded text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
                                        data-link
-                                       title="Ver detalhes do lote">
+                                       title="Ver resultado da consulta">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                         </svg>

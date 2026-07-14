@@ -88,7 +88,10 @@
                 : 'Regime tributário não consultado neste plano ou ausente no resultado.';
         @endphp
         <div class="mb-3 rounded border border-gray-300 bg-white overflow-hidden" style="border-top: 2px solid #1e4679">
-            <button type="button" data-detalhe-toggle="{{ $cadId }}" aria-expanded="false"
+            {{-- Toggle por onclick inline (padrão DS cache-robusto): o parcial roda em páginas sem
+                 o handler delegado do lote (participante, clearance) — inline funciona em todas. --}}
+            <button type="button" aria-expanded="false" aria-controls="{{ $cadId }}"
+                    onclick="(function(b){var t=document.getElementById('{{ $cadId }}');if(!t)return;var h=t.classList.toggle('hidden');b.setAttribute('aria-expanded',h?'false':'true');var c=b.querySelector('.detalhe-chevron');if(c)c.style.transform=h?'':'rotate(90deg)';var l=b.querySelector('[data-toggle-ver]');if(l)l.textContent=h?'Ver tudo':'Ocultar'})(this)"
                     class="w-full flex items-start justify-between gap-3 px-3 py-2.5 bg-gray-50 hover:bg-gray-100 border-b border-gray-200 text-left transition-colors">
                 <span class="min-w-0 flex-1">
                     <span class="flex items-center flex-wrap gap-2">
@@ -121,7 +124,7 @@
                     @endif
                 </span>
                 <span class="flex items-center gap-1 shrink-0 text-gray-400 pt-0.5">
-                    <span class="text-[10px] uppercase tracking-wide hidden sm:inline">Ver tudo</span>
+                    <span data-toggle-ver class="text-[10px] uppercase tracking-wide hidden sm:inline">Ver tudo</span>
                     <svg class="detalhe-chevron w-3.5 h-3.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
@@ -168,23 +171,37 @@
             @foreach($fontes as $bloco)
                 @php
                     $acento = $bloco['badge']['hex'] ?? '#9ca3af';
+                    $fonteId = 'fonte-'.bin2hex(random_bytes(6));
                 @endphp
                 <div class="min-w-0 rounded border border-gray-300 bg-white overflow-hidden" style="border-left: 3px solid {{ $acento }}">
-                    <div class="flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 border-b border-gray-200">
+                    {{-- Card retrátil: o badge no header preserva o status à vista; o corpo (mensagem
+                         oficial longa, itens, comprovante) só abre sob demanda. Onclick inline —
+                         mesmo padrão do cadastro acima. --}}
+                    <button type="button" aria-expanded="false" aria-controls="{{ $fonteId }}"
+                            onclick="(function(b){var t=document.getElementById('{{ $fonteId }}');if(!t)return;var h=t.classList.toggle('hidden');b.setAttribute('aria-expanded',h?'false':'true');var c=b.querySelector('.detalhe-chevron');if(c)c.style.transform=h?'':'rotate(90deg)';var l=b.querySelector('[data-toggle-ver]');if(l)l.textContent=h?'Ver tudo':'Ocultar'})(this)"
+                            class="w-full flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 text-left transition-colors">
                         <span class="text-[11px] font-semibold text-gray-600 uppercase tracking-wide truncate">{{ $bloco['titulo'] }}</span>
-                        @if(!empty($bloco['badge']))
-                            @php
-                                $badgeTooltip = trim(($bloco['titulo'] ?? '').' · '.($bloco['badge']['label'] ?? '').(!empty($bloco['mensagem']) ? "\n".$bloco['mensagem'] : ''));
-                            @endphp
-                            <span class="whitespace-nowrap px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white shrink-0 cursor-help"
-                                  style="background-color: {{ $bloco['badge']['hex'] }}"
-                                  title="{{ $badgeTooltip }}"
-                                  aria-label="{{ $badgeTooltip }}">
-                                {{ $badgeCurto($bloco['badge']['label'] ?? '') }}
+                        <span class="flex items-center gap-2 shrink-0">
+                            @if(!empty($bloco['badge']))
+                                @php
+                                    $badgeTooltip = trim(($bloco['titulo'] ?? '').' · '.($bloco['badge']['label'] ?? '').(!empty($bloco['mensagem']) ? "\n".$bloco['mensagem'] : ''));
+                                @endphp
+                                <span class="whitespace-nowrap px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white shrink-0 cursor-help"
+                                      style="background-color: {{ $bloco['badge']['hex'] }}"
+                                      title="{{ $badgeTooltip }}"
+                                      aria-label="{{ $badgeTooltip }}">
+                                    {{ $badgeCurto($bloco['badge']['label'] ?? '') }}
+                                </span>
+                            @endif
+                            <span class="flex items-center gap-1 text-gray-400">
+                                <span data-toggle-ver class="text-[10px] uppercase tracking-wide hidden sm:inline">Ver tudo</span>
+                                <svg class="detalhe-chevron w-3.5 h-3.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
                             </span>
-                        @endif
-                    </div>
-                    <div class="px-3 py-2.5 space-y-2.5">
+                        </span>
+                    </button>
+                    <div id="{{ $fonteId }}" class="hidden px-3 py-2.5 space-y-2.5 border-t border-gray-200">
                         @if(!empty($bloco['itens']))
                             <dl class="grid grid-cols-2 gap-x-4 gap-y-2">
                                 @foreach($bloco['itens'] as $item)
@@ -231,13 +248,34 @@
                         @endif
 
                         @if(!empty($bloco['comprovante_url']))
-                            <a href="{{ $bloco['comprovante_url'] }}" target="_blank" rel="noopener noreferrer"
-                               class="inline-flex items-center gap-1 text-[11px] font-medium text-gray-700 hover:text-gray-900 hover:underline">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                </svg>
-                                Ver comprovante
-                            </a>
+                            {{-- Comprovante arquivado localmente (rota app.consulta.comprovante) abre no
+                                 modal de preview (padrão /app/arquivos); URL externa do órgão não é
+                                 embutível em iframe — segue em nova aba. --}}
+                            @php
+                                $comprovanteLocal = str_starts_with($bloco['comprovante_url'], url('/app/consulta/resultado/'));
+                            @endphp
+                            @if($comprovanteLocal)
+                                <button type="button"
+                                        data-preview-url="{{ $bloco['comprovante_url'] }}?preview=1"
+                                        data-download-url="{{ $bloco['comprovante_url'] }}"
+                                        data-preview-nome="{{ $bloco['titulo'] }} — Comprovante"
+                                        onclick="(function(b){var m=document.getElementById('comprovante-preview-modal');if(!m){window.open(b.dataset.downloadUrl,'_blank');return}if(m.parentElement!==document.body)document.body.appendChild(m);document.getElementById('comprovante-preview-titulo').textContent=b.dataset.previewNome;document.getElementById('comprovante-preview-baixar').setAttribute('href',b.dataset.downloadUrl);document.getElementById('comprovante-preview-abrir').setAttribute('href',b.dataset.previewUrl);document.getElementById('comprovante-preview-frame').src=b.dataset.previewUrl;m.classList.remove('hidden');document.body.classList.add('overflow-hidden')})(this)"
+                                        class="inline-flex items-center gap-1 text-[11px] font-medium text-gray-700 hover:text-gray-900 hover:underline">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                    Ver comprovante
+                                </button>
+                            @else
+                                <a href="{{ $bloco['comprovante_url'] }}" target="_blank" rel="noopener noreferrer"
+                                   class="inline-flex items-center gap-1 text-[11px] font-medium text-gray-700 hover:text-gray-900 hover:underline">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    Ver comprovante
+                                </a>
+                            @endif
                         @endif
                     </div>
                 </div>
@@ -245,3 +283,50 @@
         </div>
     @endif
 @endif
+
+{{-- Modal de preview do comprovante (mesmo padrão de /app/arquivos — abre/fecha por onclick
+     inline, DS cache-robusto). @once: o parcial é incluído 1x por resultado no lote, o modal
+     só pode existir 1x por página. --}}
+@once
+    <div id="comprovante-preview-modal" class="hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Visualização do comprovante">
+        <div class="absolute inset-0" style="background-color: rgba(15, 23, 42, 0.55)"
+            onclick="(function(){var m=document.getElementById('comprovante-preview-modal');document.getElementById('comprovante-preview-frame').src='about:blank';m.classList.add('hidden');document.body.classList.remove('overflow-hidden')})()"></div>
+        {{-- Full-bleed no mobile; no desktop ocupa a janela com folga lateral, teto de 1440px. --}}
+        <div class="relative mx-auto w-full h-[100dvh] sm:my-6 sm:w-[calc(100%-3rem)] sm:max-w-[1440px] sm:h-[calc(100dvh-3rem)] bg-white border-0 sm:border border-gray-300 rounded-none sm:rounded shadow-xl flex flex-col overflow-hidden">
+            <div class="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-gray-200 bg-gray-50 shrink-0">
+                <span id="comprovante-preview-titulo" class="text-sm font-semibold text-gray-800 truncate"></span>
+                <div class="flex items-center gap-2 shrink-0">
+                    <a id="comprovante-preview-abrir" href="#" target="_blank" rel="noopener" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-semibold border border-gray-300 bg-white text-gray-700 hover:bg-gray-100">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5h5m0 0v5m0-5l-7 7M18 14v4a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h4"></path></svg>
+                        Abrir em nova aba
+                    </a>
+                    <a id="comprovante-preview-baixar" href="#" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-semibold text-white hover:opacity-90" style="background-color: #1e4679">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v12m0 0l-4-4m4 4l4-4M5 20h14"></path></svg>
+                        Baixar
+                    </a>
+                    <button type="button" class="p-1.5 rounded text-gray-500 hover:bg-gray-200" aria-label="Fechar visualização"
+                        onclick="(function(){var m=document.getElementById('comprovante-preview-modal');document.getElementById('comprovante-preview-frame').src='about:blank';m.classList.add('hidden');document.body.classList.remove('overflow-hidden')})()">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M6 18L18 6"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <iframe id="comprovante-preview-frame" src="about:blank" class="flex-1 w-full min-h-0 bg-gray-100" title="Visualização do comprovante"></iframe>
+        </div>
+    </div>
+
+    {{-- ESC fecha o preview. Progressivo: se este script não rodar, overlay e botão × seguem
+         fechando. Listener no document, guardado por flag pra não duplicar a cada navegação SPA. --}}
+    <script>
+        if (! window.__comprovantePreviewEsc) {
+            window.__comprovantePreviewEsc = true;
+            document.addEventListener('keydown', function (e) {
+                if (e.key !== 'Escape') return;
+                var m = document.getElementById('comprovante-preview-modal');
+                if (! m || m.classList.contains('hidden')) return;
+                document.getElementById('comprovante-preview-frame').src = 'about:blank';
+                m.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            });
+        }
+    </script>
+@endonce
