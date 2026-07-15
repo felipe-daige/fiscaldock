@@ -361,6 +361,9 @@
                                         @if($linha->natureza_operacao ?? null)
                                             <p class="text-[10px] text-gray-400 mt-0.5 normal-case">{{ $linha->natureza_operacao }}</p>
                                         @endif
+                                        @if($linha->detalhe_url ?? null)
+                                            <a href="{{ $linha->detalhe_url }}" data-link class="block text-[10px] text-gray-700 hover:text-gray-900 hover:underline mt-0.5">Ver documento</a>
+                                        @endif
                                         @if($linha->comprovante_url ?? null)
                                             <a href="{{ $linha->comprovante_url }}" target="_blank" rel="noopener" class="text-[10px] text-blue-700 hover:underline">ver na Receita ↗</a>
                                         @endif

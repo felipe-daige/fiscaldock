@@ -522,7 +522,12 @@ async function executarClearance() {
         if (resp.ok) {
             aplicarNovoSaldoReais(data.novo_saldo_reais);
             fecharModal(modalConfirm);
-            if (data.webhook_disparado) {
+            if (data.resultado_url) {
+                // A página de resultado do lote assume o acompanhamento (strip de etapas + SSE),
+                // igual ao fluxo da busca avulsa — não acompanha inline na listagem.
+                limparSelecaoStorage();
+                window.location.assign(data.resultado_url);
+            } else if (data.webhook_disparado) {
                 mostrarProgresso(5, 'Clearance despachado, aguardando provedor...');
                 abrirSseProgresso(data.tab_id || tabId);
             } else {
