@@ -29,7 +29,7 @@ class MonitoramentoPlano extends Model
     protected $casts = [
         'consultas_incluidas' => 'array',
         'etapas' => 'array',
-        'custo_creditos' => 'integer',
+        'custo_creditos' => 'float',
         'is_gratuito' => 'boolean',
         'is_active' => 'boolean',
         'ordem' => 'integer',
@@ -134,9 +134,9 @@ class MonitoramentoPlano extends Model
         return $this->resolveCatalogArray('etapas', $value);
     }
 
-    public function getCustoCreditosAttribute($value): int
+    public function getCustoCreditosAttribute($value): float
     {
-        return (int) $this->resolveCatalogScalar('custo_creditos', $value);
+        return (float) $this->resolveCatalogScalar('custo_creditos', $value);
     }
 
     public function getIsGratuitoAttribute($value): bool

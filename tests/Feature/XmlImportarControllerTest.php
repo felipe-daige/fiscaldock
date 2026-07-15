@@ -16,6 +16,7 @@ uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 function payloadImportar(int $clienteId): array
 {
     $xml = file_get_contents(base_path('tests/Fixtures/nfe/50240197551165000193550010000248021000214750-nfe.xml'));
+
     return [
         'tipo_documento' => 'NFE', 'modo_envio' => 'xml', 'cliente_id' => $clienteId,
         'tab_id' => 'tab-xyz',

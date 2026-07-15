@@ -38,7 +38,7 @@ class FecharRetryService
             $porAlvo[$af['alvo_tipo'].':'.$af['alvo_id']][] = $af['fonte'];
         }
 
-        $estorno = 0;
+        $estorno = 0.0;
         foreach ($porAlvo as $alvoKey => $fontes) {
             [$tipo, $id] = explode(':', $alvoKey);
             $id = (int) $id;
@@ -46,7 +46,7 @@ class FecharRetryService
 
             $row = ConsultaResultado::where('consulta_lote_id', $loteId)->where($chaveEscopo, $id)->first();
             $erros = $this->persistencia->normalizarFontesErro(($row?->resultado_dados ?? [])['_fontes_erro'] ?? []);
-            $cobrado = (int) Cache::get("consulta_retry_charge:{$loteId}:{$tipo}:{$id}", 0);
+            $cobrado = (float) Cache::get("consulta_retry_charge:{$loteId}:{$tipo}:{$id}", 0);
 
             // Estorna só quando NENHUMA fonte foi entregue: sucesso (fora de _fontes_erro) e
             // re-falha `erro_participante` contam como entrega — nesta classe a fonte oficial
@@ -75,7 +75,7 @@ class FecharRetryService
                 $lote->user,
                 $estorno,
                 type: 'consulta_retry_refund',
-                description: 'Estorno de R$ '.number_format(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($estorno), 2, ',', '.')." — reconsulta sem sucesso no lote #{$lote->id}",
+                description: 'Estorno de R$ '.number_format($estorno, 2, ',', '.')." — reconsulta sem sucesso no lote #{$lote->id}",
                 source: $lote,
             );
         }

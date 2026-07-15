@@ -4,7 +4,7 @@ use App\Services\ParecerFiscalService;
 
 function parecerService(): ParecerFiscalService
 {
-    return new ParecerFiscalService();
+    return new ParecerFiscalService;
 }
 
 function chavesDoParecer(array $parecer): array

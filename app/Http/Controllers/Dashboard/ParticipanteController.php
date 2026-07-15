@@ -862,14 +862,13 @@ class ParticipanteController extends Controller
         $loteSaldoUnidades = ConsultaLote::whereHas('participantes', fn ($q) => $q->where('participantes.id', $participante->id))
             ->where('user_id', $userId)
             ->get(['creditos_cobrados', 'total_participantes'])
-            ->sum(fn ($l) => ((int) $l->creditos_cobrados) / max(1, (int) $l->total_participantes));
+            ->sum(fn ($l) => ($l->creditos_cobrados) / max(1, (int) $l->total_participantes));
 
         $estatisticas = [
             'total_consultas' => $monitoramentoTotal + $consultaLoteTotal,
             'consultas_sucesso' => $monitoramentoSucesso + $consultaLoteSucesso,
             'consultas_erro' => $monitoramentoErro + $consultaLoteErro,
-            'valor_utilizado_reais' => app(\App\Services\PricingCatalogService::class)
-                ->creditsToCurrency($monitoramentoSaldoUnidades + $loteSaldoUnidades),
+            'valor_utilizado_reais' => ($monitoramentoSaldoUnidades + $loteSaldoUnidades),
         ];
 
         // Buscar última consulta com sucesso para o participante (sistema de consultas em lote)

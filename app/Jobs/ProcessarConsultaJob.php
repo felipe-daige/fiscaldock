@@ -94,7 +94,7 @@ class ProcessarConsultaJob implements ShouldQueue
         $jaPersistidas = $persistencia->chavesPersistidas($this->loteId, $this->alvoTipo, $this->alvoId);
 
         $totalFontes = count($fontes);
-        $creditosFalhos = 0;
+        $creditosFalhos = 0.0;
         $retentaveis = [];
         foreach ($fontes as $i => $fonte) {
             // Progresso por GRUPO de etapa da fonte (várias fontes → mesma etapa; sem loop).
@@ -332,10 +332,10 @@ class ProcessarConsultaJob implements ShouldQueue
         ThrottleProvider $throttle,
         PersistenciaCnpj $persistencia,
         ComprovanteArquivador $comprovanteArquivador,
-        int $creditosFalhos,
+        float $creditosFalhos,
         int $totalFontes,
         int $totalEtapas,
-    ): int {
+    ): float {
         $maxTentativas = (int) config('consultas.retry.auto.max_tentativas', 1);
         $cooldown = (int) config('consultas.retry.auto.cooldown_segundos', 30);
 

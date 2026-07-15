@@ -74,7 +74,7 @@
                         : null;
 
                     $features = [];
-                    $features[] = [$plano->creditos_inclusos > 0, \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $plano->creditos_inclusos)).' em saldo/mês', $isEnterprise ? 'Saldo sob medida' : 'Sem saldo incluso'];
+                    $features[] = [$plano->creditos_inclusos > 0, \App\Support\Dinheiro::brl(($plano->creditos_inclusos)).' em saldo/mês', $isEnterprise ? 'Saldo sob medida' : 'Sem saldo incluso'];
                     $features[] = [true, 'Clientes e participantes sem limite de cadastro', null];
                     $features[] = [true, $isFree ? '1 CNPJ no monitoramento cadastral gratuito' : 'Monitoramentos pagos sem teto comercial', null];
                     $features[] = [true, $armazenamento, null];

@@ -19,9 +19,8 @@ function realcarCardBusca() {
     const alvo = document.getElementById('busca-custo-tier');
     if (!alvo) return;
 
-    const unidades = parseInt(alvo.dataset[atual === 'full' ? 'custoFull' : 'custoBasico'] || '5', 10);
-    const precoUnit = Number((window.BUSCAR_NFE_CONFIG || {}).saldoUnitPrice || 0.20);
-    const texto = 'R$ ' + (Math.round(unidades * precoUnit * 100) / 100)
+    const reais = parseFloat(alvo.dataset[atual === 'full' ? 'custoFull' : 'custoBasico'] || '1');
+        const texto = 'R$ ' + (Math.round(reais * 100) / 100)
         .toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     alvo.textContent = texto;
@@ -40,10 +39,9 @@ function initClearanceBuscar() {
     root.dataset.clearanceBuscarInitialized = '1';
 
     const config = window.BUSCAR_NFE_CONFIG || {};
-    const CUSTO = Number(config.custo || 5);
+    const CUSTO = Number(config.custo || 1);
     // Conversão monetária definida pelo backend; toda exibição é em R$.
-    const SALDO_UNIT_PRICE = Number(config.saldoUnitPrice || 0.20);
-    const brl = (unidades) => 'R$ ' + (Math.round((unidades || 0) * SALDO_UNIT_PRICE * 100) / 100)
+        const brl = (reais) => 'R$ ' + (Math.round((reais || 0) * 100) / 100)
         .toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const ENDPOINTS = config.endpoints || {};
     const BADGE_CORES = config.cores || {};

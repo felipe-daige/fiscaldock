@@ -29,7 +29,7 @@ class ProcessarClearanceJob implements ShouldQueue
         public int $userId,
         public string $tabId,
         public ?int $clienteId,
-        public int $custoCreditos,
+        public float $custoCreditos,
         public int $indice = 1,
         public int $total = 1,
         // Faixa da barra que ESTA fase ocupa. No clearance completo os documentos vão de 0 a 50 e a

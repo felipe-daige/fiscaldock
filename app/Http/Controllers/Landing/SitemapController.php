@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Cache;
 class SitemapController extends Controller
 {
     private const BASE_URL = 'https://fiscaldock.com.br';
+
     private const CACHE_TTL = 3600;
 
     public function __invoke()
@@ -20,16 +21,16 @@ class SitemapController extends Controller
 
     private function buildXml(): string
     {
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
 
         foreach ($this->urls() as $url) {
-            $xml .= '  <url>' . "\n";
-            $xml .= '    <loc>' . self::BASE_URL . $url['loc'] . '</loc>' . "\n";
-            $xml .= '    <lastmod>' . $url['lastmod'] . '</lastmod>' . "\n";
-            $xml .= '    <changefreq>' . $url['changefreq'] . '</changefreq>' . "\n";
-            $xml .= '    <priority>' . $url['priority'] . '</priority>' . "\n";
-            $xml .= '  </url>' . "\n";
+            $xml .= '  <url>'."\n";
+            $xml .= '    <loc>'.self::BASE_URL.$url['loc'].'</loc>'."\n";
+            $xml .= '    <lastmod>'.$url['lastmod'].'</lastmod>'."\n";
+            $xml .= '    <changefreq>'.$url['changefreq'].'</changefreq>'."\n";
+            $xml .= '    <priority>'.$url['priority'].'</priority>'."\n";
+            $xml .= '  </url>'."\n";
         }
 
         $xml .= '</urlset>';
@@ -55,7 +56,7 @@ class SitemapController extends Controller
 
         foreach (BlogPostCatalog::topics() as $topic) {
             $urls[] = [
-                'loc' => '/conteudos/' . $topic['slug'],
+                'loc' => '/conteudos/'.$topic['slug'],
                 'priority' => '0.8',
                 'changefreq' => 'weekly',
                 'lastmod' => $blogIndexLastmod,
@@ -64,7 +65,7 @@ class SitemapController extends Controller
 
         foreach ($posts as $post) {
             $urls[] = [
-                'loc' => '/conteudos/' . $post['slug'],
+                'loc' => '/conteudos/'.$post['slug'],
                 'priority' => '0.7',
                 'changefreq' => 'monthly',
                 'lastmod' => $post['data'],

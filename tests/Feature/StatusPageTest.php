@@ -14,7 +14,7 @@ it('redireciona visitante para login', function () {
 });
 
 it('usuário autenticado não-admin vê a página de status', function () {
-    (new IntegracaoStatusSeeder())->run();
+    (new IntegracaoStatusSeeder)->run();
     IntegracaoStatus::where('chave', 'cnd_federal')->update(['status' => 'fora', 'mensagem' => 'Receita instável']);
 
     $html = actingAs(User::factory()->create(['is_admin' => false]))
@@ -26,7 +26,7 @@ it('usuário autenticado não-admin vê a página de status', function () {
 });
 
 it('banner geral verde quando tudo operacional', function () {
-    (new IntegracaoStatusSeeder())->run();
+    (new IntegracaoStatusSeeder)->run();
 
     $html = actingAs(User::factory()->create())
         ->get('/app/status')->assertOk()->getContent();
@@ -37,7 +37,7 @@ it('banner geral verde quando tudo operacional', function () {
 });
 
 it('banner geral reporta problemas com a cor do pior status', function () {
-    (new IntegracaoStatusSeeder())->run();
+    (new IntegracaoStatusSeeder)->run();
     IntegracaoStatus::where('chave', 'cnd_federal')->update(['status' => 'fora']);
     IntegracaoStatus::where('chave', 'sintegra')->update(['status' => 'degradado']);
 
@@ -51,7 +51,7 @@ it('banner geral reporta problemas com a cor do pior status', function () {
 });
 
 it('banner geral singulariza 1 serviço com problema', function () {
-    (new IntegracaoStatusSeeder())->run();
+    (new IntegracaoStatusSeeder)->run();
     IntegracaoStatus::where('chave', 'sintegra')->update(['status' => 'manutencao']);
 
     $html = actingAs(User::factory()->create())

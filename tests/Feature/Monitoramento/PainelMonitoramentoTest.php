@@ -160,7 +160,7 @@ it('painel renderiza a barra de consumo do ciclo quando há cap', function () {
         ->assertSee('id="consumo-ciclo-percentual"', false)
         ->assertSee('id="consumo-ciclo-barra"', false)
         ->assertSee('id="input-limite-consumo" inputmode="decimal"', false)
-        ->assertSee('value="10,00"', false)
+        ->assertSee('value="50,00"', false)
         ->assertSee('data-max-unidades="1000000"', false);
 });
 
@@ -175,11 +175,10 @@ it('modal novo monitorado expõe o estimador de custo mensal/trimestral', functi
     $resp->assertOk()
         // linha do estimador (escondida até ter alvo selecionado)
         ->assertSee('id="mon-custo-estimado"', false)
-        // dados que o JS usa pro cálculo: custo em créditos por plano,
-        // nº de membros por grupo e preço unitário do crédito no form
+        // dados que o JS usa pro cálculo: custo em R$ por plano e nº de membros por grupo
         ->assertSee('data-custo="', false)
         ->assertSee('data-membros="1"', false)
-        ->assertSee('id="form-monitorar" data-saldo-unit-price="', false);
+        ->assertSee('id="form-monitorar"', false);
 });
 
 // ── Frequência dirigida pelo produto, não pelo tier ─────────────────────────

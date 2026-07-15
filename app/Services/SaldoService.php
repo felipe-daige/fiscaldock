@@ -9,16 +9,21 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Ledger de saldo pré-pago em reais (R$). `users.credits` e `credit_transactions.amount`
+ * armazenam valores em R$ com 2 casas decimais — a unidade legada de "créditos"
+ * (1 crédito = R$ 0,20) foi removida em 2026-07-14.
+ */
 class SaldoService
 {
     /**
-     * Retorna o saldo atual do usuário na unidade interna do ledger.
+     * Retorna o saldo atual do usuário em reais.
      */
-    public function getBalance(User $user): int
+    public function getBalance(User $user): float
     {
         $user = $user->accountOwner();
 
-        return (int) $user->credits;
+        return round($user->credits, 2);
     }
 
     /**
@@ -26,17 +31,17 @@ class SaldoService
      */
     public function hasEnough(User $user, float $amount): bool
     {
-        return $this->getBalance($user) >= $amount;
+        return $this->getBalance($user) >= round($amount, 2);
     }
 
     /**
-     * Desconta saldo do usuário.
+     * Desconta saldo do usuário (valor em R$).
      * Retorna true se a operacao foi bem-sucedida, false caso contrario.
      */
     public function deduct(User $user, float $amount, string $type = 'consulta_lote', ?string $description = null, ?Model $source = null): bool
     {
         $user = $user->accountOwner();
-        $amount = (int) floor($amount);
+        $amount = round($amount, 2);
 
         if ($amount <= 0) {
             return true;
@@ -55,22 +60,22 @@ class SaldoService
         $ok = DB::transaction(function () use ($user, $amount, $type, $description, $source) {
             $freshUser = User::lockForUpdate()->find($user->id);
 
-            if (! $freshUser || $freshUser->credits < $amount) {
+            if (! $freshUser || round($freshUser->credits, 2) < $amount) {
                 return false;
             }
 
-            $freshUser->credits = (int) floor($freshUser->credits - $amount);
+            $freshUser->credits = round($freshUser->credits - $amount, 2);
 
-            if ((int) $freshUser->trial_credits_remaining > 0) {
-                $trialConsumed = min($amount, (int) $freshUser->trial_credits_remaining);
-                $freshUser->trial_credits_remaining = max(0, (int) $freshUser->trial_credits_remaining - $trialConsumed);
+            if ((float) $freshUser->trial_credits_remaining > 0) {
+                $trialConsumed = min($amount, round($freshUser->trial_credits_remaining, 2));
+                $freshUser->trial_credits_remaining = round(max(0, (float) $freshUser->trial_credits_remaining - $trialConsumed), 2);
             }
 
             $freshUser->save();
 
             $user->credits = $freshUser->credits;
 
-            $this->logTransaction($user, (int) -$amount, $freshUser->credits, $type, $description, $source);
+            $this->logTransaction($user, -$amount, (float) $freshUser->credits, $type, $description, $source);
 
             Log::info('Saldo descontado com sucesso', [
                 'user_id' => $user->id,
@@ -90,12 +95,12 @@ class SaldoService
     }
 
     /**
-     * Adiciona saldo ao usuário.
+     * Adiciona saldo ao usuário (valor em R$).
      */
     public function add(User $user, float $amount, string $type = 'manual_add', ?string $description = null, ?Model $source = null): void
     {
         $user = $user->accountOwner();
-        $amount = (int) floor($amount);
+        $amount = round($amount, 2);
 
         if ($amount <= 0) {
             return;
@@ -108,12 +113,12 @@ class SaldoService
                 return;
             }
 
-            $freshUser->credits = (int) floor($freshUser->credits + $amount);
+            $freshUser->credits = round($freshUser->credits + $amount, 2);
             $freshUser->save();
 
             $user->credits = $freshUser->credits;
 
-            $this->logTransaction($user, (int) $amount, $freshUser->credits, $type, $description, $source);
+            $this->logTransaction($user, $amount, (float) $freshUser->credits, $type, $description, $source);
 
             Log::info('Saldo adicionado com sucesso', [
                 'user_id' => $user->id,
@@ -123,8 +128,10 @@ class SaldoService
         });
     }
 
-    public function grantTrial(User $user, int $amount, CarbonInterface $expiresAt, string $source = 'landing_signup'): void
+    public function grantTrial(User $user, float $amount, CarbonInterface $expiresAt, string $source = 'landing_signup'): void
     {
+        $amount = round($amount, 2);
+
         if ($amount <= 0) {
             return;
         }
@@ -136,7 +143,7 @@ class SaldoService
                 return;
             }
 
-            $freshUser->credits = (int) floor($freshUser->credits + $amount);
+            $freshUser->credits = round($freshUser->credits + $amount, 2);
             $freshUser->trial_used = true;
             $freshUser->trial_started_at = now();
             $freshUser->trial_expires_at = $expiresAt;
@@ -158,39 +165,39 @@ class SaldoService
             $this->logTransaction(
                 $user,
                 $amount,
-                $freshUser->credits,
+                (float) $freshUser->credits,
                 'trial_bonus',
-                sprintf('Bônus de boas-vindas: R$ %s de saldo grátis válido até %s.', number_format(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($amount), 2, ',', '.'), $expiresAt->format('d/m/Y H:i')),
+                sprintf('Bônus de boas-vindas: R$ %s de saldo grátis válido até %s.', number_format($amount, 2, ',', '.'), $expiresAt->format('d/m/Y H:i')),
                 null
             );
         });
     }
 
-    public function expireTrialBalance(User $user): int
+    public function expireTrialBalance(User $user): float
     {
         return DB::transaction(function () use ($user) {
             $freshUser = User::lockForUpdate()->find($user->id);
 
-            if (! $freshUser || (int) $freshUser->trial_credits_remaining <= 0) {
-                return 0;
+            if (! $freshUser || (float) $freshUser->trial_credits_remaining <= 0) {
+                return 0.0;
             }
 
             if (! $freshUser->trial_expires_at || now()->lt($freshUser->trial_expires_at)) {
-                return 0;
+                return 0.0;
             }
 
-            $amount = min((int) $freshUser->trial_credits_remaining, (int) $freshUser->credits);
+            $amount = round(min($freshUser->trial_credits_remaining, (float) $freshUser->credits), 2);
 
             if ($amount <= 0) {
                 $freshUser->trial_credits_remaining = 0;
                 $freshUser->save();
 
-                return 0;
+                return 0.0;
             }
 
-            $freshUser->credits = max(0, (int) $freshUser->credits - $amount);
-            $freshUser->trial_credits_remaining = max(0, (int) $freshUser->trial_credits_remaining - $amount);
-            $freshUser->trial_credits_expired = (int) $freshUser->trial_credits_expired + $amount;
+            $freshUser->credits = round(max(0, (float) $freshUser->credits - $amount), 2);
+            $freshUser->trial_credits_remaining = round(max(0, (float) $freshUser->trial_credits_remaining - $amount), 2);
+            $freshUser->trial_credits_expired = round($freshUser->trial_credits_expired + $amount, 2);
             $freshUser->save();
 
             $user->credits = $freshUser->credits;
@@ -200,7 +207,7 @@ class SaldoService
             $this->logTransaction(
                 $user,
                 -$amount,
-                $freshUser->credits,
+                (float) $freshUser->credits,
                 'trial_expiration',
                 'Expiração automática do saldo promocional restante do trial.',
                 null
@@ -211,14 +218,14 @@ class SaldoService
     }
 
     /**
-     * Registra transacao no historico.
+     * Registra transacao no historico (valores em R$).
      */
-    private function logTransaction(User $user, int $amount, int $balanceAfter, string $type, ?string $description = null, ?Model $source = null): void
+    private function logTransaction(User $user, float $amount, float $balanceAfter, string $type, ?string $description = null, ?Model $source = null): void
     {
         SaldoTransacao::create([
             'user_id' => $user->id,
-            'amount' => $amount,
-            'balance_after' => $balanceAfter,
+            'amount' => round($amount, 2),
+            'balance_after' => round($balanceAfter, 2),
             'type' => $type,
             'description' => $description,
             'source_type' => $source ? get_class($source) : null,

@@ -24,7 +24,7 @@ class DivergenciaService
     public function analisar(
         Collection $snapshots,
         int $userId,
-        int $creditosCobrados,
+        float $creditosCobrados,
         ?array $declaradoMap = null
     ): array {
         if ($snapshots->isEmpty()) {
@@ -161,10 +161,10 @@ class DivergenciaService
                 ],
                 'roi' => [
                     'creditos' => $creditosCobrados,
-                    'custo_reais' => round($creditosCobrados * 0.20, 2),
+                    'custo_reais' => round($creditosCobrados, 2),
                     'exposicao_reais' => $valorDivergente,
                     'multiplicador' => ($creditosCobrados > 0 && $valorDivergente > 0)
-                        ? (int) round($valorDivergente / ($creditosCobrados * 0.20))
+                        ? (int) round($valorDivergente / $creditosCobrados)
                         : 0,
                     'total_documentos' => $snapshots->count(),
                     'conformes' => $snapshots->count() - ($totalCriticas + $totalRevisar),
@@ -788,7 +788,7 @@ class DivergenciaService
         ];
     }
 
-    private function kpisVazios(int $creditosCobrados): array
+    private function kpisVazios(float $creditosCobrados): array
     {
         return [
             'existencia' => ['total' => 0, 'encontradas' => 0, 'nao_encontradas' => 0],
@@ -796,7 +796,7 @@ class DivergenciaService
             'valor' => ['notas_divergentes' => 0, 'valor_divergente' => 0.0],
             'roi' => [
                 'creditos' => $creditosCobrados,
-                'custo_reais' => round($creditosCobrados * 0.20, 2),
+                'custo_reais' => round($creditosCobrados, 2),
                 'exposicao_reais' => 0.0,
                 'multiplicador' => 0,
                 'total_documentos' => 0,

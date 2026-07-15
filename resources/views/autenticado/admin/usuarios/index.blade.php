@@ -1,9 +1,7 @@
 @php
     $fmtN = fn ($v) => number_format((float) $v, 0, ',', '.');
     $quando = fn ($ts) => $ts ? \Carbon\Carbon::createFromTimestamp((int) $ts)->format('d/m/Y H:i') : '—';
-    $precos = app(\App\Services\PricingCatalogService::class);
-    $unitPrice = $precos->creditUnitPrice();
-    $emReais = fn ($cred) => \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $cred));
+    $emReais = fn ($valor) => \App\Support\Dinheiro::brl((float) $valor);
 @endphp
 <div class="min-h-screen bg-gray-100">
     <div class="admin-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -167,7 +165,7 @@
                 $modalCiclo = old('ciclo', $u->assinatura_ciclo ?? 'mensal');
                 $modalBucket = old('creditos_inclusos_saldo') !== null
                     ? (float) old('creditos_inclusos_saldo')
-                    : $precos->creditsToCurrency((int) ($u->assinatura_bucket ?? 0));
+                    : (($u->assinatura_bucket ?? 0));
                 $podeExcluirModal = auth()->id() !== (int) $u->id && ! $u->is_admin && ! $u->anonimizado_em;
             @endphp
             <dialog
@@ -277,8 +275,7 @@
                             class="bg-white border border-gray-200 border-l-2 rounded p-4 space-y-3"
                             style="border-left-color:#1e4679"
                             data-credit-form
-                            data-saldo="{{ (int) $u->credits }}"
-                            data-unit="{{ $unitPrice }}"
+                            data-saldo="{{ $u->credits }}"
                             data-admin-action-form="credit"
                             data-admin-action-user-id="{{ $u->id }}"
                             data-admin-action-user-name="{{ trim(($u->name ?? '').' '.($u->sobrenome ?? '')) ?: 'Usuário #'.$u->id }}"

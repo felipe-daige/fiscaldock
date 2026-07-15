@@ -65,7 +65,7 @@ it('participante stale dispara a consulta das 3 fontes', function () {
     // Lote interno: sem plano e sem cobrança neste nível (billing é per-CNPJ, fase 5).
     $lote = ConsultaLote::find($out['lote_id']);
     expect($lote->plano_id)->toBeNull()
-        ->and($lote->creditos_cobrados)->toBe(0)
+        ->and($lote->creditos_cobrados)->toBe(0.0)
         ->and((int) $lote->participantes()->count())->toBe(1);
 });
 

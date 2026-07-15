@@ -1,4 +1,5 @@
 <?php
+
 // tests/Feature/Admin/BloqueioEnforcementTest.php
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;

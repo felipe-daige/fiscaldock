@@ -150,7 +150,7 @@ it('renderiza resultado consolidado no detalhe para lote finalizado', function (
         ->assertSee('CND Federal (Receita/PGFN) · Regular', false)
         ->assertDontSee('>MEI<', false)
         ->assertSee('Consultado em')
-        ->assertDontSee("applyConsultaLoteSort(", false);
+        ->assertDontSee('applyConsultaLoteSort(', false);
 });
 
 it('renderiza parecer resumido com badge curto quando houver sinalizacao acionavel', function () {

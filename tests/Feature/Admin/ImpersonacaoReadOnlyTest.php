@@ -1,4 +1,5 @@
 <?php
+
 // tests/Feature/Admin/ImpersonacaoReadOnlyTest.php
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;

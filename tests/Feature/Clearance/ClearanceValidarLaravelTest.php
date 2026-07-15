@@ -81,7 +81,7 @@ it('valida via rota Laravel: cria lote, debita N×tier, despacha batch e NÃO ch
         // contrato consumido pelo front (clearance-notas.js) p/ acompanhar o progresso na lista.
         ->assertJsonPath('webhook_disparado', true)
         // JSON serializa float redondo (2.0) como int 2 e assertJsonPath compara estrito → cast.
-        ->assertJsonPath('valor_utilizado_reais', fn ($v) => (float) $v === app(\App\Services\PricingCatalogService::class)->creditsToCurrency(2 * $unit))
+        ->assertJsonPath('valor_utilizado_reais', fn ($v) => (float) $v === round(2 * $unit, 2))
         ->assertJsonStructure(['consulta_lote_id', 'tab_id', 'novo_saldo_reais', 'valor_cobrado_reais', 'resultado_url']);
 
     $lote = ConsultaLote::latest('id')->first();
@@ -119,7 +119,7 @@ it('valida via rota Laravel ainda roda a validação contábil local (popula val
 
 it('saldo insuficiente: 402, sem lote e sem batch', function () {
     Bus::fake();
-    $user = clrUser(credits: 1);
+    $user = clrUser(credits: 0);
     $nota = clrEfdNota($user);
 
     actingAs($user)->postJson('/app/clearance/notas/validar', [
@@ -130,7 +130,7 @@ it('saldo insuficiente: 402, sem lote e sem batch', function () {
     ])->assertStatus(402);
 
     expect(ConsultaLote::count())->toBe(0);
-    expect($user->fresh()->credits)->toBe(1);
+    expect($user->fresh()->credits)->toBe(0.0);
     Bus::assertNothingBatched();
 });
 

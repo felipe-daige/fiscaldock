@@ -14,9 +14,9 @@ class CrfFgtsFonte extends FonteCertidaoInfoSimples
         return 'caixa/regularidade';
     }
 
-    public function custoCreditos(): int
+    public function custoCreditos(): float
     {
-        return (int) config('consultas.fontes.crf_fgts', 2);
+        return (float) config('consultas.fontes.crf_fgts', 0.40);
     }
 
     /**

@@ -58,7 +58,7 @@ it('cria pagamento pending com valor/saldo do catálogo backend (não do front)'
 
     $payment = MercadoPagoPayment::first();
     expect($payment->valor)->toBe('200.00');
-    expect($payment->creditos)->toBe(1000);
+    expect($payment->creditos)->toBe(200.0);
     expect($payment->mp_payment_id)->toBe('9001');
     expect($payment->credited_at)->toBeNull();
 
@@ -113,7 +113,7 @@ it('webhook approved com assinatura válida libera saldo 1× (idempotente em ree
         'mp_payment_id' => '7777',
         'status' => 'pending',
         'valor' => 200.00,
-        'creditos' => 1000,
+        'creditos' => 200,
         'idempotency_key' => 'idem-1',
     ]);
 
@@ -141,7 +141,7 @@ it('webhook approved com assinatura válida libera saldo 1× (idempotente em ree
     $enviar()->assertOk(); // reentrega
 
     $user->refresh();
-    expect($user->credits)->toBe(1010); // 10 + 1000, só uma vez
+    expect($user->credits)->toBe(210.0); // 10 + 200, só uma vez
     expect($payment->fresh()->status)->toBe('approved');
     expect($payment->fresh()->credited_at)->not->toBeNull();
 
@@ -158,7 +158,7 @@ it('webhook com assinatura inválida retorna 401 e não credita', function () {
         'mp_payment_id' => '8888',
         'status' => 'pending',
         'valor' => 200.00,
-        'creditos' => 1000,
+        'creditos' => 200,
         'idempotency_key' => 'idem-2',
     ]);
 
@@ -172,7 +172,7 @@ it('webhook com assinatura inválida retorna 401 e não credita', function () {
         'data' => ['id' => '8888'],
     ])->assertStatus(401);
 
-    expect($user->fresh()->credits)->toBe(10);
+    expect($user->fresh()->credits)->toBe(10.0);
     Http::assertNothingSent();
 });
 
@@ -204,7 +204,7 @@ it('webhook rejected não credita', function () {
         'mp_payment_id' => '5555',
         'status' => 'pending',
         'valor' => 200.00,
-        'creditos' => 1000,
+        'creditos' => 200,
         'idempotency_key' => 'idem-3',
     ]);
 
@@ -227,7 +227,7 @@ it('webhook rejected não credita', function () {
         'data' => ['id' => '5555'],
     ])->assertOk();
 
-    expect($user->fresh()->credits)->toBe(10);
+    expect($user->fresh()->credits)->toBe(10.0);
     expect($payment->fresh()->status)->toBe('rejected');
     expect($payment->fresh()->credited_at)->toBeNull();
 });

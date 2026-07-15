@@ -11,8 +11,8 @@ return new class extends Migration
         Schema::create('credit_transactions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->integer('amount');
-            $table->integer('balance_after');
+            $table->decimal('amount', 12, 2);
+            $table->decimal('balance_after', 12, 2);
             $table->string('type', 30); // consulta_lote, sped_importacao, manual_add, purchase, refund
             $table->string('description')->nullable();
             $table->string('source_type')->nullable(); // morph type
@@ -37,7 +37,7 @@ return new class extends Migration
                 $table->string('status_detail')->nullable();
                 $table->string('payment_method', 40)->nullable(); // pix, credit_card, ...
                 $table->decimal('valor', 10, 2); // R$ cobrado (fonte: catálogo backend)
-                $table->integer('creditos'); // créditos a liberar (fonte: catálogo backend)
+                $table->decimal('creditos', 12, 2); // saldo em R$ a liberar (fonte: catálogo backend)
                 $table->string('idempotency_key')->unique(); // X-Idempotency-Key enviado ao MP
                 $table->timestamp('credited_at')->nullable(); // quando os créditos foram liberados (guard)
                 $table->jsonb('payload')->nullable(); // resposta/notificação bruta do MP
@@ -54,7 +54,7 @@ return new class extends Migration
                 $table->id();
                 $table->foreignId('user_id')->unique()->constrained('users')->onDelete('cascade');
                 $table->string('pacote');                 // slug do catálogo (business, volume, custom)
-                $table->integer('creditos');              // créditos liberados a cada cobrança (do catálogo)
+                $table->decimal('creditos', 12, 2);      // saldo em R$ liberado a cada cobrança (do catálogo)
                 $table->decimal('valor', 10, 2);          // R$ por cobrança (do catálogo backend)
                 $table->integer('frequencia_meses')->nullable()->default(1); // periodicidade (só gatilho=tempo)
                 $table->string('status')->default('pendente');   // pendente|ativa|inadimplente|cancelada
@@ -62,7 +62,7 @@ return new class extends Migration
                 $table->timestamp('ultima_cobranca_em')->nullable();
                 // Auto top-up por saldo baixo: gatilho exclusivo via vault de cartão (MIT on-demand).
                 $table->string('gatilho')->default('tempo');     // tempo | saldo
-                $table->integer('limite_creditos')->nullable();  // threshold (só gatilho=saldo)
+                $table->decimal('limite_creditos', 12, 2)->nullable(); // threshold em R$ (só gatilho=saldo)
                 $table->string('mp_customer_id')->nullable();    // vault: customer MP (só saldo)
                 $table->string('mp_card_id')->nullable();        // vault: cartão salvo (só saldo)
                 $table->boolean('cobranca_em_andamento')->default(false); // guarda de cobrança em voo

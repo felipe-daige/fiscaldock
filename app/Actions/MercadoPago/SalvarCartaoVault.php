@@ -23,7 +23,7 @@ class SalvarCartaoVault
         private PricingCatalogService $catalog = new PricingCatalogService,
     ) {}
 
-    public function execute(User $user, string $cardToken, string $pacoteSlug, int $limiteCreditos): RecargaAutomatica
+    public function execute(User $user, string $cardToken, string $pacoteSlug, float $limiteCreditos): RecargaAutomatica
     {
         $pacote = $this->catalog->resolveCheckoutSelection($pacoteSlug);
 
@@ -32,9 +32,9 @@ class SalvarCartaoVault
         }
 
         $valor = round((float) $pacote['preco'], 2);
-        $creditos = (int) $pacote['creditos'];
+        $creditos = round((float) $pacote['creditos'], 2);
 
-        if ($limiteCreditos < 1 || $creditos <= $limiteCreditos) {
+        if ($limiteCreditos < 0.01 || $creditos <= $limiteCreditos) {
             throw new RuntimeException('O pacote precisa ser maior que o limite de saldo.');
         }
 

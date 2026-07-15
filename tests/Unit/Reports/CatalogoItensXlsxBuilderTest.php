@@ -31,7 +31,7 @@ it('gera o xlsx do catálogo com números reais e linha de totais', function () 
     $path = storage_path('framework/testing/cat_'.uniqid().'.xlsx');
     app(CatalogoItensXlsxBuilder::class)->gerarArquivo($itens, [['rotulo' => 'Fonte', 'valor' => 'EFD']], $path);
 
-    $reader = new Reader();
+    $reader = new Reader;
     $reader->open($path);
     $rows = [];
     foreach ($reader->getSheetIterator() as $sheet) {

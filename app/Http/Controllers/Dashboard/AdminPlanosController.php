@@ -126,7 +126,7 @@ class AdminPlanosController extends Controller
             'nome' => $dados['nome'],
             'preco_mensal_centavos' => (int) round($dados['preco_mensal_reais'] * 100),
             'preco_anual_centavos' => (int) round($dados['preco_anual_reais'] * 100),
-            'creditos_inclusos' => app(\App\Services\PricingCatalogService::class)->currencyToCredits((float) $dados['saldo_incluso_reais']),
+            'creditos_inclusos' => round((float) $dados['saldo_incluso_reais'], 2),
             'faixa_slug' => $dados['faixa_slug'],
             // vazio = ilimitado (null)
             'limite_clientes' => $dados['limite_clientes'] ?? null,
@@ -135,7 +135,7 @@ class AdminPlanosController extends Controller
             'profundidade_auto_monitor' => $dados['profundidade_auto_monitor'],
             'assentos_inclusos' => (int) $dados['assentos_inclusos'],
             'preco_assento_extra_centavos' => array_key_exists('preco_assento_extra_reais', $dados)
-                ? (int) round(((float) ($dados['preco_assento_extra_reais'] ?? 0)) * 100)
+                ? (int) round((($dados['preco_assento_extra_reais'] ?? 0)) * 100)
                 : (int) $plano->preco_assento_extra_centavos,
             'rollover_cap_multiplicador' => (float) $dados['rollover_cap_multiplicador'],
             'ordem' => (int) $dados['ordem'],

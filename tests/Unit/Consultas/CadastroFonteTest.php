@@ -5,7 +5,7 @@ use App\Services\Consultas\Fontes\CadastroFonte;
 it('normaliza o raw da minhareceita para o shape achatado de prod', function () {
     $raw = json_decode(file_get_contents(base_path('tests/Fixtures/Consultas/minhareceita-19131243000197.json')), true);
 
-    $out = (new CadastroFonte())->normalizar($raw);
+    $out = (new CadastroFonte)->normalizar($raw);
 
     foreach (['razao_social', 'situacao_cadastral', 'situacao_cadastral_codigo', 'endereco', 'qsa', 'cnaes', 'simples_nacional', 'mei', 'consultas_realizadas'] as $k) {
         expect($out)->toHaveKey($k);
@@ -26,7 +26,7 @@ it('normaliza o raw da minhareceita para o shape achatado de prod', function () 
 });
 
 it('deriva regime_tributario real (MEI > Simples > forma RFB > Não informado)', function () {
-    $f = new CadastroFonte();
+    $f = new CadastroFonte;
     expect($f->normalizar(['opcao_pelo_mei' => true, 'opcao_pelo_simples' => true])['regime_tributario'])->toBe('MEI');
     expect($f->normalizar(['opcao_pelo_simples' => true])['regime_tributario'])->toBe('Simples Nacional');
     // usa a forma de tributação do ano mais recente publicada pela RFB
@@ -41,14 +41,14 @@ it('deriva regime_tributario real (MEI > Simples > forma RFB > Não informado)',
 });
 
 it('fornece regime_tributario e historico_simples (plano Validação)', function () {
-    $fornece = (new CadastroFonte())->fornece();
+    $fornece = (new CadastroFonte)->fornece();
     expect($fornece)->toContain('regime_tributario')->toContain('historico_simples');
 });
 
 it('expõe chave/provider/custo da fonte cadastro', function () {
-    $f = new CadastroFonte();
+    $f = new CadastroFonte;
     expect($f->chave())->toBe('cadastro');
     expect($f->provider())->toBe('minhareceita');
-    expect($f->custoCreditos())->toBe(0);
+    expect($f->custoCreditos())->toBe(0.0);
     expect($f->params(['cnpj' => '19.131.243/0001-97'])['cnpj'])->toBe('19131243000197');
 });

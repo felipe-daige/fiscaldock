@@ -41,7 +41,7 @@ class SubscriptionPlanSeeder extends Seeder
             [
                 'codigo' => 'essencial', 'nome' => 'Essencial', 'ordem' => 2,
                 'preco_mensal_centavos' => 9900, 'preco_anual_centavos' => 99000,
-                'creditos_inclusos' => 175, 'faixa_slug' => 'base',
+                'creditos_inclusos' => 35.00, 'faixa_slug' => 'base',
                 'limite_clientes' => null, 'limite_cnpjs_monitorados' => null,
                 'frequencia_padrao_dias' => 1, 'profundidade_auto_monitor' => 'due_diligence',
                 'assentos_inclusos' => 2, 'preco_assento_extra_centavos' => 3900,
@@ -57,7 +57,7 @@ class SubscriptionPlanSeeder extends Seeder
             [
                 'codigo' => 'profissional', 'nome' => 'Profissional', 'ordem' => 3,
                 'preco_mensal_centavos' => 24900, 'preco_anual_centavos' => 249000,
-                'creditos_inclusos' => 400, 'faixa_slug' => 'x',
+                'creditos_inclusos' => 80.00, 'faixa_slug' => 'x',
                 'limite_clientes' => null, 'limite_cnpjs_monitorados' => null,
                 'frequencia_padrao_dias' => 1, 'profundidade_auto_monitor' => 'due_diligence',
                 'assentos_inclusos' => 3, 'preco_assento_extra_centavos' => 3900,
@@ -73,7 +73,7 @@ class SubscriptionPlanSeeder extends Seeder
             [
                 'codigo' => 'escritorio', 'nome' => 'Escritório', 'ordem' => 4,
                 'preco_mensal_centavos' => 59900, 'preco_anual_centavos' => 599000,
-                'creditos_inclusos' => 1000, 'faixa_slug' => 'y',
+                'creditos_inclusos' => 200.00, 'faixa_slug' => 'y',
                 'limite_clientes' => null, 'limite_cnpjs_monitorados' => null,
                 'frequencia_padrao_dias' => 1, 'profundidade_auto_monitor' => 'due_diligence',
                 'assentos_inclusos' => 10, 'preco_assento_extra_centavos' => 3900,

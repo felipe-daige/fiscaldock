@@ -1,7 +1,6 @@
 <?php
 
 use App\Actions\MercadoPago\CobrarAutoTopUp;
-use App\Models\MercadoPagoPayment;
 use App\Models\RecargaAutomatica;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
@@ -17,7 +16,7 @@ function recargaSaldoVault(User $user): RecargaAutomatica
 {
     return RecargaAutomatica::create([
         'user_id' => $user->id, 'gatilho' => 'saldo', 'limite_creditos' => 50,
-        'pacote' => 'business', 'creditos' => 1000, 'valor' => 200, 'status' => 'ativa',
+        'pacote' => 'business', 'creditos' => 200, 'valor' => 200, 'status' => 'ativa',
         'mp_customer_id' => 'CUS-1', 'mp_card_id' => 'CARD-1',
     ]);
 }
@@ -34,7 +33,7 @@ it('gera token do cartão salvo e cobra /v1/payments criando payment auto_topup'
 
     expect($pay->tipo)->toBe('auto_topup');
     expect($pay->mp_payment_id)->toBe('PAY-1');
-    expect($pay->creditos)->toBe(1000);
+    expect($pay->creditos)->toBe(200.0);
     expect((float) $pay->valor)->toBe(200.0);
     Http::assertSent(fn ($req) => $req->url() === 'https://api.mercadopago.com/v1/card_tokens' && $req['card_id'] === 'CARD-1');
     Http::assertSent(fn ($req) => $req->url() === 'https://api.mercadopago.com/v1/payments'

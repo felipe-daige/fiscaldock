@@ -1,4 +1,5 @@
 <?php
+
 // tests/Feature/Admin/AdminAuditoriaViewTest.php
 use App\Models\AdminActionLog;
 use App\Models\User;

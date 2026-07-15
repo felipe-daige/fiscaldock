@@ -86,7 +86,7 @@ it('chave nova (sem acervo nem snapshot) → no_acervo=false, snapshot=null', fu
         ->assertJsonPath('success', true)
         ->assertJsonPath('no_acervo', false)
         ->assertJsonPath('snapshot', null)
-        ->assertJsonPath('custo_avulsa', ValidacaoContabilService::CUSTO_DOCUMENTO);
+        ->assertJsonPath('custo_avulsa', fn ($v) => (float) $v === ValidacaoContabilService::CUSTO_DOCUMENTO);
 });
 
 it('chave no acervo XML → no_acervo=true com nota, urls e custos', function () {
@@ -103,8 +103,8 @@ it('chave no acervo XML → no_acervo=true com nota, urls e custos', function ()
         ->assertJsonPath('no_acervo', true)
         ->assertJsonPath('origem', 'xml')
         ->assertJsonPath('nota_id', $nota->id)
-        ->assertJsonPath('custo_clearance', ValidacaoContabilService::CUSTO_DOCUMENTO)
-        ->assertJsonPath('custo_avulsa', ValidacaoContabilService::CUSTO_DOCUMENTO)
+        ->assertJsonPath('custo_clearance', fn ($v) => (float) $v === ValidacaoContabilService::CUSTO_DOCUMENTO)
+        ->assertJsonPath('custo_avulsa', fn ($v) => (float) $v === ValidacaoContabilService::CUSTO_DOCUMENTO)
         ->assertJsonPath('nota.tipo_documento', 'NFE');
 
     expect($resp->json('listagem_url'))->toContain('/app/notas')->toContain($chave);

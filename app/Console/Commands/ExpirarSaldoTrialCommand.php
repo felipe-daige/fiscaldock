@@ -15,7 +15,7 @@ class ExpirarSaldoTrialCommand extends Command
     public function handle(SaldoService $saldoService)
     {
         $expiredUsers = 0;
-        $saldoExpirado = 0;
+        $saldoExpirado = 0.0;
 
         User::query()
             ->where('trial_used', true)
@@ -36,7 +36,7 @@ class ExpirarSaldoTrialCommand extends Command
 
         $this->newLine();
         $this->info("Usuários com saldo expirado: {$expiredUsers}");
-        $this->info('Saldo expirado no total: '.\App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($saldoExpirado)));
+        $this->info('Saldo expirado no total: '.\App\Support\Dinheiro::brl($saldoExpirado));
 
         return Command::SUCCESS;
     }

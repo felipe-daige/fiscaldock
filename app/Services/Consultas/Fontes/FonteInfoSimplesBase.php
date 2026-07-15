@@ -15,7 +15,7 @@ abstract class FonteInfoSimplesBase implements Fonte
 
     abstract public function slug(): string;
 
-    abstract public function custoCreditos(): int;
+    abstract public function custoCreditos(): float;
 
     abstract public function normalizar(array $raw, string $status = 'sucesso'): array;
 

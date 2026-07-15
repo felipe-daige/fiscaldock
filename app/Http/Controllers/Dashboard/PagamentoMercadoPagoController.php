@@ -51,8 +51,7 @@ class PagamentoMercadoPagoController extends Controller
             'status' => $payment->status,
             'status_detail' => $payment->status_detail,
             'pacote' => $payment->pacote,
-            'saldo_adicionado_reais' => app(\App\Services\PricingCatalogService::class)
-                ->creditsToCurrency((float) $payment->creditos),
+            'saldo_adicionado_reais' => round($payment->creditos, 2),
             'valor' => $payment->valor,
             // Para Pix: o front renderiza o QR a partir do payload do MP.
             'point_of_interaction' => data_get($payment->payload, 'point_of_interaction'),

@@ -27,7 +27,7 @@ it('gera xlsx multi-aba com header e celula colorida, lido de volta', function (
 
     expect(is_file($path))->toBeTrue();
 
-    $reader = new Reader();
+    $reader = new Reader;
     $reader->open($path);
 
     $sheets = [];

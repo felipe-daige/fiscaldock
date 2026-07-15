@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\XmlNota;
 use App\Models\Participante;
 use App\Models\User;
+use App\Models\XmlNota;
 use App\Services\ValidacaoContabilService;
 
 beforeEach(function () {
@@ -53,7 +53,7 @@ beforeEach(function () {
 });
 
 test('service valida nota corretamente', function () {
-    $service = new ValidacaoContabilService();
+    $service = new ValidacaoContabilService;
     $resultado = $service->validarNota($this->nota);
 
     expect($resultado)
@@ -104,7 +104,7 @@ test('classificacao conforme para nota sem problemas', function () {
         ],
     ]);
 
-    $service = new ValidacaoContabilService();
+    $service = new ValidacaoContabilService;
     $resultado = $service->validarNota($notaOk, incluirOperacoes: false);
 
     expect($resultado['classificacao'])->toBe('conforme');
@@ -138,7 +138,7 @@ test('detecta ncm generico', function () {
         ],
     ]);
 
-    $service = new ValidacaoContabilService();
+    $service = new ValidacaoContabilService;
     $resultado = $service->validarNota($notaComNcmGenerico, incluirOperacoes: false);
 
     $alertasNcm = collect($resultado['alertas'])->where('categoria', 'ncm');
@@ -174,7 +174,7 @@ test('detecta cfop inconsistente com tipo nota', function () {
         ],
     ]);
 
-    $service = new ValidacaoContabilService();
+    $service = new ValidacaoContabilService;
     $resultado = $service->validarNota($notaInconsistente, incluirOperacoes: false);
 
     $alertasCfop = collect($resultado['alertas'])->where('categoria', 'cfop_cst');
@@ -187,7 +187,7 @@ test('detecta emitente baixado', function () {
     // Atualizar participante para situacao baixada
     $this->participante->update(['situacao_cadastral' => 'BAIXADA']);
 
-    $service = new ValidacaoContabilService();
+    $service = new ValidacaoContabilService;
     $resultado = $service->validarNota($this->nota, incluirOperacoes: false);
 
     $alertasCadastrais = collect($resultado['alertas'])->where('categoria', 'cadastral');
@@ -197,7 +197,7 @@ test('detecta emitente baixado', function () {
 });
 
 test('estatisticas retorna dados corretos', function () {
-    $service = new ValidacaoContabilService();
+    $service = new ValidacaoContabilService;
     $estatisticas = $service->getEstatisticas($this->user->id);
 
     expect($estatisticas)

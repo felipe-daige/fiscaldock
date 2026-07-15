@@ -55,7 +55,7 @@ class MonitoramentoController extends Controller
         $user = Auth::user();
 
         $data = [
-            'saldoReais' => $this->pricingCatalogService->creditsToCurrency($this->saldoService->getBalance($user)),
+            'saldoReais' => ($this->saldoService->getBalance($user)),
             'planos' => MonitoramentoPlano::ativos(),
             'hasMadeFirstPurchase' => $this->pricingCatalogService->userHasFirstPurchase($user),
             'firstPurchaseLockedProducts' => $this->pricingCatalogService->getFirstPurchaseLockedProducts(),
@@ -99,7 +99,7 @@ class MonitoramentoController extends Controller
         $data = [
             'consultas' => $consultas,
             'planos' => MonitoramentoPlano::ativos(),
-            'saldoReais' => $this->pricingCatalogService->creditsToCurrency($this->saldoService->getBalance($user)),
+            'saldoReais' => ($this->saldoService->getBalance($user)),
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -169,7 +169,7 @@ class MonitoramentoController extends Controller
                         && $a->proxima_execucao_em->lt($fimCiclo),
                     'custo_ciclo' => $a->custoCiclo(),
                     // Estimativa mensal: ciclos que cabem em 30 dias × custo do ciclo.
-                    'custo_mes' => (int) round($a->custoCiclo() * 30 / max(1, (int) $a->frequencia_dias)),
+                    'custo_mes' => round($a->custoCiclo() * 30 / max(1, (int) $a->frequencia_dias), 2),
                     'ultima' => $ultima ? [
                         'executado_em' => $ultima->executado_em?->format('d/m/Y H:i'),
                         'situacao' => $ultima->situacao_geral,
@@ -194,8 +194,8 @@ class MonitoramentoController extends Controller
             ->map(fn ($p) => [
                 'id' => $p->id,
                 'nome' => $p->nome,
-                'custo' => (int) $p->custo_creditos,
-                'gratuito' => (bool) $p->is_gratuito || (int) $p->custo_creditos <= 0,
+                'custo' => round((float) $p->custo_creditos, 2),
+                'gratuito' => (bool) $p->is_gratuito || (float) $p->custo_creditos <= 0,
             ])
             ->all();
 
@@ -204,7 +204,7 @@ class MonitoramentoController extends Controller
             'grupos' => $grupos,
             'gruposMonitorados' => $gruposMonitorados,
             'planos' => $planos,
-            'saldoReais' => $this->pricingCatalogService->creditsToCurrency($this->saldoService->getBalance($user)),
+            'saldoReais' => ($this->saldoService->getBalance($user)),
             // Apenas o produto gratuito restringe a recorrência a 30 dias; produtos pagos
             // podem usar qualquer frequência disponível enquanto houver saldo.
             'freqMinDias' => $this->entitlements->frequenciaMinimaMonitoramento($user),
@@ -558,7 +558,7 @@ class MonitoramentoController extends Controller
         // Produtos pagos não têm teto comercial: cada ciclo consome saldo. A única proteção de
         // quantidade/frequência é do produto cadastral gratuito, para evitar automação sem custo
         // em escala. Grupos não podem usar o produto gratuito (contornariam o teto com N membros).
-        $produtoGratuito = (bool) $plano->is_gratuito || (int) $plano->custo_creditos <= 0;
+        $produtoGratuito = (bool) $plano->is_gratuito || (float) $plano->custo_creditos <= 0;
         if ($produtoGratuito && $grupo !== null) {
             return response()->json([
                 'success' => false,
@@ -757,7 +757,7 @@ class MonitoramentoController extends Controller
                 'bloqueados_limite' => $bloqueadosPorLimite,
                 'aviso' => $algumaExcedeCap
                     ? 'Atenção: o custo de um ciclo desse monitoramento excede seu limite de consumo automático ('
-                        .Dinheiro::brl($this->pricingCatalogService->creditsToCurrency($capConsumo))
+                        .Dinheiro::brl(($capConsumo))
                         .'/ciclo). As consultas dele vão aguardar até o limite ser aumentado.'
                     : null,
             ]);
@@ -787,7 +787,7 @@ class MonitoramentoController extends Controller
         }
 
         $validated = $request->validate([
-            'limite' => ['nullable', 'integer', 'min:0', 'max:1000000'],
+            'limite' => ['nullable', 'numeric', 'min:0', 'max:1000000'],
         ]);
 
         $user = Auth::user();

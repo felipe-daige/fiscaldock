@@ -755,7 +755,7 @@ class DashboardController extends Controller
             ? app(\App\Support\AccountContext::class)->owner()
             : $user;
 
-        $saldoReais = $this->pricingCatalogService->creditsToCurrency((float) ($accountOwner->credits ?? 0));
+        $saldoReais = (($accountOwner->credits ?? 0));
 
         $dadosPerfil = [
             'user' => $user,
@@ -1331,7 +1331,7 @@ class DashboardController extends Controller
         $totalCreditosHistorico = ConsultaLote::where('user_id', $user->id)
             ->whereIn('status', ConsultaLote::successfulStatuses())
             ->sum('creditos_cobrados');
-        $mediaCreditos = $totalConsultas > 0 ? round($totalCreditosHistorico / $totalConsultas, 1) : 0;
+        $mediaCreditos = $totalConsultas > 0 ? round($totalCreditosHistorico / $totalConsultas, 2) : 0;
 
         // Ultimas 20 transacoes (consulta_lotes como fallback)
         $ultimasTransacoes = ConsultaLote::where('user_id', $user->id)
@@ -1361,7 +1361,7 @@ class DashboardController extends Controller
 
         $data = [
             'saldoAtual' => $saldoAtual,
-            'creditosUsadosMes' => (int) $creditosUsadosMes,
+            'creditosUsadosMes' => round((float) $creditosUsadosMes, 2),
             'consultasMes' => $consultasMes,
             'mediaCreditos' => $mediaCreditos,
             'ultimasTransacoes' => $ultimasTransacoes,
@@ -1399,11 +1399,11 @@ class DashboardController extends Controller
 
         $saldoAtual = (float) $user->credits;
 
-        $totalRecebido = (int) SaldoTransacao::where('user_id', $user->id)
+        $totalRecebido = (float) SaldoTransacao::where('user_id', $user->id)
             ->where('amount', '>', 0)
             ->sum('amount');
 
-        $totalConsumido = (int) abs(SaldoTransacao::where('user_id', $user->id)
+        $totalConsumido = (float) abs(SaldoTransacao::where('user_id', $user->id)
             ->where('amount', '<', 0)
             ->sum('amount'));
 
@@ -1464,7 +1464,6 @@ class DashboardController extends Controller
             'planoAtualCodigo' => $planoAtual->codigo,
             'planoAtualOrdem' => (int) $planoAtual->ordem,
             'assinaturaAtual' => $assinatura,
-            'creditUnitPrice' => $this->pricingCatalogService->creditUnitPrice(),
             'mpPublicKey' => (string) config('services.mercadopago.public_key'),
             'mpTetoCentavos' => (int) config('services.mercadopago.preapproval_teto_centavos', 400000),
             'whatsappUrl' => (string) config('support.whatsapp_url'),

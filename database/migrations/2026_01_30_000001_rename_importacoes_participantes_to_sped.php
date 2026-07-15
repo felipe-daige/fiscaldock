@@ -23,7 +23,7 @@ return new class extends Migration
         Schema::table('efd_importacoes', function (Blueprint $table) {
             $table->integer('total_notas')->default(0)->after('duplicados');
             $table->integer('notas_extraidas')->default(0)->after('total_notas');
-            $table->integer('creditos_cobrados')->default(0)->after('notas_extraidas');
+            $table->decimal('creditos_cobrados', 12, 2)->default(0)->after('notas_extraidas');
         });
     }
 

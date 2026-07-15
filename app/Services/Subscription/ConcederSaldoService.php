@@ -30,7 +30,7 @@ class ConcederSaldoService
             $plan = $sub->plan;
             $user = User::find($sub->user_id);
 
-            $mensal = (int) $plan->creditos_inclusos;
+            $mensal = round($plan->creditos_inclusos, 2);
 
             // Proration da troca de plano (marker setado em TrocarPlanoMercadoPago): a 1ª concessão
             // do tier destino reconcilia o ciclo em curso — expira o incluso antigo pro-rata e
@@ -42,20 +42,20 @@ class ConcederSaldoService
             if ($fracao > 0) {
                 $this->concederComProration($sub, $plan, $user, $mensal, $fracao);
             } else {
-                $capBancado = (int) floor(((float) $plan->rollover_cap_multiplicador) * $mensal);
+                $capBancado = round(($plan->rollover_cap_multiplicador) * $mensal, 2);
 
                 // 1) Rollover cap: expira o excedente do bucket acima do cap, limitado ao
                 //    que ainda existe no saldo do usuário (ele pode já ter gastado).
-                $saldoBucket = (int) $sub->creditos_inclusos_saldo;
+                $saldoBucket = round($sub->creditos_inclusos_saldo, 2);
                 if ($saldoBucket > $capBancado) {
-                    $excedente = $saldoBucket - $capBancado;
+                    $excedente = round($saldoBucket - $capBancado, 2);
                     $expira = min($excedente, $this->saldo->getBalance($user));
                     if ($expira > 0) {
                         $this->saldo->deduct(
                             $user,
                             $expira,
                             'subscription_expiration',
-                            'Expiração de saldo incluso acima do limite de acúmulo (R$ '.number_format(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($capBancado), 2, ',', '.').').',
+                            'Expiração de saldo incluso acima do limite de acúmulo (R$ '.number_format($capBancado, 2, ',', '.').').',
                             $sub,
                         );
                     }
@@ -68,10 +68,10 @@ class ConcederSaldoService
                         $user,
                         $mensal,
                         $primeiraComoCompra ? 'purchase' : 'subscription_credit',
-                        "Saldo incluso do plano {$plan->nome} (R$ ".number_format(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($mensal), 2, ',', '.').').',
+                        "Saldo incluso do plano {$plan->nome} (R$ ".number_format($mensal, 2, ',', '.').').',
                         $sub,
                     );
-                    $sub->creditos_inclusos_saldo = (int) $sub->creditos_inclusos_saldo + $mensal;
+                    $sub->creditos_inclusos_saldo = round($sub->creditos_inclusos_saldo + $mensal, 2);
                 }
             }
 
@@ -98,32 +98,32 @@ class ConcederSaldoService
         AccountSubscription $sub,
         \App\Models\SubscriptionPlan $plan,
         User $user,
-        int $mensal,
+        float $mensal,
         float $fracao,
     ): void {
-        $saldoBucket = (int) $sub->creditos_inclusos_saldo;
-        $expira = min((int) round($saldoBucket * $fracao), $this->saldo->getBalance($user));
+        $saldoBucket = round($sub->creditos_inclusos_saldo, 2);
+        $expira = min(round($saldoBucket * $fracao, 2), $this->saldo->getBalance($user));
         if ($expira > 0) {
             $this->saldo->deduct(
                 $user,
                 $expira,
                 'subscription_proration',
-                'Ajuste pro-rata da troca de plano: expira R$ '.number_format(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($expira), 2, ',', '.').' de saldo incluso não usado do plano anterior.',
+                'Ajuste pro-rata da troca de plano: expira R$ '.number_format($expira, 2, ',', '.').' de saldo incluso não usado do plano anterior.',
                 $sub,
             );
         }
-        $sub->creditos_inclusos_saldo = max(0, $saldoBucket - $expira);
+        $sub->creditos_inclusos_saldo = round(max(0, $saldoBucket - $expira), 2);
 
-        $concede = (int) round($mensal * $fracao);
+        $concede = round($mensal * $fracao, 2);
         if ($concede > 0) {
             $this->saldo->add(
                 $user,
                 $concede,
                 'subscription_proration',
-                'Ajuste pro-rata da troca de plano: adiciona R$ '.number_format(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($concede), 2, ',', '.')." de saldo incluso do plano {$plan->nome} pelos dias restantes do ciclo.",
+                'Ajuste pro-rata da troca de plano: adiciona R$ '.number_format($concede, 2, ',', '.')." de saldo incluso do plano {$plan->nome} pelos dias restantes do ciclo.",
                 $sub,
             );
-            $sub->creditos_inclusos_saldo = (int) $sub->creditos_inclusos_saldo + $concede;
+            $sub->creditos_inclusos_saldo = round($sub->creditos_inclusos_saldo + $concede, 2);
         }
     }
 }

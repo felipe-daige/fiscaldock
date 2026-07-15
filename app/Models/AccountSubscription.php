@@ -27,8 +27,8 @@ class AccountSubscription extends Model
     protected $casts = [
         'iniciada_em' => 'datetime',
         'renova_em' => 'datetime',
-        'creditos_inclusos_saldo' => 'integer',
-        'limite_consumo_automatico' => 'integer',
+        'creditos_inclusos_saldo' => 'float',
+        'limite_consumo_automatico' => 'float',
         'assentos_extras' => 'integer',
         'proximo_grant_em' => 'datetime',
         'ultimo_grant_em' => 'datetime',

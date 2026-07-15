@@ -20,7 +20,9 @@ return new class extends Migration
             $table->text('descricao');
             $table->json('consultas_incluidas'); // ["cnpj", "simples", "sintegra", "pgfn", "fgts", ...]
             $table->jsonb('etapas')->nullable(); // [{numero, chave, label}] — granularidade do progresso da consulta
-            $table->integer('custo_creditos');
+            // Guarda o preço em R$ (apesar do nome legado) — decimal p/ comportar centavos:
+            // PlanoCatalog usa 2.40 no enterprise; integer quebrava o seed em todo test-DB.
+            $table->decimal('custo_creditos', 8, 2);
             $table->boolean('is_gratuito')->default(false);
             $table->boolean('is_active')->default(true);
             $table->integer('ordem')->default(0);
@@ -75,7 +77,7 @@ return new class extends Migration
                 $table->string('nome');
                 $table->integer('preco_mensal_centavos')->default(0); // 0 = sob consulta (enterprise)
                 $table->integer('preco_anual_centavos')->default(0);
-                $table->integer('creditos_inclusos')->default(0);
+                $table->decimal('creditos_inclusos', 12, 2)->default(0);
                 $table->string('faixa_slug')->default('base'); // base, x, y, z — faixa comprada pelo tier
                 $table->integer('limite_clientes')->nullable();           // null = ilimitado
                 $table->integer('limite_cnpjs_monitorados')->nullable();  // null = ilimitado

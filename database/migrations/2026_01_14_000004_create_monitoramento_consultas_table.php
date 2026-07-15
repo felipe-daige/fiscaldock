@@ -29,7 +29,7 @@ return new class extends Migration
             $table->enum('situacao_geral', ['regular', 'atencao', 'irregular'])->nullable();
             $table->boolean('tem_pendencias')->default(false);
             $table->date('proxima_validade')->nullable();
-            $table->integer('creditos_cobrados')->default(0);
+            $table->decimal('creditos_cobrados', 12, 2)->default(0);
             $table->string('error_code')->nullable();
             $table->text('error_message')->nullable();
             $table->timestamp('executado_em')->nullable();

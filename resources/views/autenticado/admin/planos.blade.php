@@ -55,7 +55,7 @@
                                 </td>
                                 <td class="px-3 py-2.5 text-right text-gray-700" data-label="Mensal">{{ $p->preco_mensal_centavos > 0 ? 'R$ '.number_format($p->preco_mensal_centavos / 100, 2, ',', '.') : '—' }}</td>
                                 <td class="px-3 py-2.5 text-right text-gray-700" data-label="Anual">{{ $p->preco_anual_centavos > 0 ? 'R$ '.number_format($p->preco_anual_centavos / 100, 2, ',', '.') : '—' }}</td>
-                                <td class="px-3 py-2.5 text-right text-gray-700" data-label="Saldo incluso/mês">{{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $p->creditos_inclusos)) }}</td>
+                                <td class="px-3 py-2.5 text-right text-gray-700" data-label="Saldo incluso/mês">{{ \App\Support\Dinheiro::brl(($p->creditos_inclusos)) }}</td>
                                 <td class="px-3 py-2.5 text-right text-gray-700" data-label="Acessos">{{ $p->assentos_inclusos >= 9999 ? 'Sob medida' : number_format((int) $p->assentos_inclusos, 0, ',', '.') }}</td>
                                 <td class="px-3 py-2.5 text-right text-gray-700" data-label="Assento extra">{{ $p->preco_assento_extra_centavos > 0 ? 'R$ '.number_format($p->preco_assento_extra_centavos / 100, 2, ',', '.') : '—' }}</td>
                                 <td class="px-3 py-2.5 text-right text-gray-700" data-label="Arquivos">{{ $fmtStorage($p) }}</td>

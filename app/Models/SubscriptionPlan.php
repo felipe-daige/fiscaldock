@@ -20,7 +20,7 @@ class SubscriptionPlan extends Model
     protected $casts = [
         'preco_mensal_centavos' => 'integer',
         'preco_anual_centavos' => 'integer',
-        'creditos_inclusos' => 'integer',
+        'creditos_inclusos' => 'float',
         'limite_clientes' => 'integer',
         'limite_cnpjs_monitorados' => 'integer',
         'frequencia_padrao_dias' => 'integer',

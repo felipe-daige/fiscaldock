@@ -23,8 +23,8 @@ return [
         'frescura_dias' => (int) env('CLEARANCE_FULL_FRESCURA_DIAS', 30),
 
         // PREÇO: não fica aqui. O Clearance completo é preço FECHADO por nota —
-        // `ValidacaoContabilService::CUSTO_DOCUMENTO_FULL` (10 un = R$ 2,00), contra
-        // `CUSTO_DOCUMENTO` (5 un = R$ 1,00) do básico. Dedup + frescura reduzem o CUSTO EXTERNO
+        // `ValidacaoContabilService::CUSTO_DOCUMENTO_FULL` (R$ 2,00), contra
+        // `CUSTO_DOCUMENTO` (R$ 1,00) do básico. Dedup + frescura reduzem o CUSTO EXTERNO
         // (margem), nunca o preço cobrado.
     ],
 

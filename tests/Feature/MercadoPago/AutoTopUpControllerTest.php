@@ -40,7 +40,7 @@ it('endpoint cria recarga por saldo com limite', function () {
 
     $r = RecargaAutomatica::first();
     expect($r->gatilho)->toBe('saldo');
-    expect($r->limite_creditos)->toBe(50);
+    expect($r->limite_creditos)->toBe(50.0);
 });
 
 it('endpoint recusa limite ausente', function () {
@@ -55,7 +55,7 @@ it('cancelar recarga por saldo limpa o vault sem chamar preapproval', function (
     $user = User::factory()->create();
     RecargaAutomatica::create([
         'user_id' => $user->id, 'gatilho' => 'saldo', 'limite_creditos' => 50,
-        'pacote' => 'business', 'creditos' => 1000, 'valor' => 200, 'status' => 'ativa',
+        'pacote' => 'business', 'creditos' => 200, 'valor' => 200, 'status' => 'ativa',
         'mp_customer_id' => 'CUS-1', 'mp_card_id' => 'CARD-1',
     ]);
     actingAs($user);

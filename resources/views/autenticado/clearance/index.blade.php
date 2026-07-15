@@ -61,7 +61,7 @@
             <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
                 <span class="auth-control inline-flex items-center justify-center gap-2 bg-white border border-gray-300 rounded text-gray-700">
                     <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Saldo</span>
-                    <span class="font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $saldoCreditos))</span>
+                    <span class="font-bold text-gray-900">@brl(($saldoCreditos))</span>
                 </span>
                 <x-export-menu id="modal-exportar-clr" titulo="Exportar panorama de clearance"
                                descricao="Cobre todo o acervo (XML + EFD) com a dimensão de valor R$ que a tela não mostra."
@@ -231,9 +231,9 @@
                     </div>
                     @php
                         $precos = app(\App\Services\PricingCatalogService::class);
-                        $custoLoteBasico = $precos->creditsToCurrency((int) ($custosTiers['basico'] ?? 3));
-                        $custoLoteFull = $precos->creditsToCurrency((int) ($custosTiers['full'] ?? 8));
-                        $custoAvulsa = $precos->creditsToCurrency((int) $custoConsultaUnitaria);
+                        $custoLoteBasico = (($custosTiers['basico'] ?? 3));
+                        $custoLoteFull = (($custosTiers['full'] ?? 8));
+                        $custoAvulsa = ($custoConsultaUnitaria);
                     @endphp
                     <div>
                         <p class="font-semibold text-gray-900">3. Cobrança por documento</p>

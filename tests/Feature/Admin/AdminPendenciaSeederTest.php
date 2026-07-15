@@ -9,8 +9,8 @@ uses(RefreshDatabase::class);
 
 it('cria o lembrete do híbrido idempotente', function () {
     User::factory()->create(['is_admin' => true]); // garante um user p/ criado_por
-    (new AdminPendenciaSeeder())->run();
-    (new AdminPendenciaSeeder())->run(); // 2x não duplica
+    (new AdminPendenciaSeeder)->run();
+    (new AdminPendenciaSeeder)->run(); // 2x não duplica
 
     $itens = AdminPendencia::where('titulo', 'like', '%Simples híbrido%')->get();
     expect($itens)->toHaveCount(1);

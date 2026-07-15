@@ -137,10 +137,8 @@
     }
 
     function buildCreditData(form) {
-        var saldoCreditos = parseInt(form.getAttribute('data-saldo'), 10) || 0;
-        var unit = parseFloat(form.getAttribute('data-unit')) || 0;
+        var saldoAtual = parseFloat(form.getAttribute('data-saldo')) || 0;
         var movimento = parseDecimal(fieldValue(form, 'valor', '0'));
-        var saldoAtual = saldoCreditos * unit;
         var novoSaldo = saldoAtual + movimento;
         var novoSaldoVisivel = Math.max(0, novoSaldo);
         var operacao = movimento < 0 ? 'debitar saldo' : 'adicionar saldo';
@@ -261,8 +259,7 @@
     }
 
     function updateCreditPreview(form) {
-        var saldo = parseInt(form.getAttribute('data-saldo'), 10) || 0;
-        var unit = parseFloat(form.getAttribute('data-unit')) || 0;
+        var saldo = parseFloat(form.getAttribute('data-saldo')) || 0;
         var input = form.querySelector('[data-credit-input]');
         var out = form.querySelector('[data-credit-preview]');
 
@@ -277,7 +274,7 @@
             return;
         }
 
-        var novoReais = (saldo * unit) + movReais;
+        var novoReais = saldo + movReais;
         out.classList.remove('hidden');
         out.style.color = novoReais < 0 ? '#b91c1c' : '#047857';
         out.innerHTML = 'Novo saldo: <strong>' + brl(Math.max(0, novoReais)) + '</strong>'

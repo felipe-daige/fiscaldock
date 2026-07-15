@@ -6,6 +6,7 @@ use App\Models\Participante;
 use App\Models\User;
 use App\Support\Monitoramento\MonitoramentoNotifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+
 use function Pest\Laravel\assertDatabaseHas;
 
 uses(RefreshDatabase::class);

@@ -55,8 +55,8 @@ it('cria lote, debita N×tier e despacha um batch com N jobs', function () {
 
     expect($r['success'])->toBeTrue();
     expect($r['total_notas'])->toBe(2);
-    // Retorno expõe R$ (valor_utilizado_reais); a coluna persiste unidades (abaixo).
-    expect($r['valor_utilizado_reais'])->toBe(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(2 * $unit));
+    // Retorno e coluna já em R$.
+    expect($r['valor_utilizado_reais'])->toBe(round(2 * $unit, 2));
 
     $lote = ConsultaLote::find($r['consulta_lote_id']);
     expect($lote->status)->toBe(ConsultaLote::STATUS_PROCESSANDO);
@@ -82,7 +82,7 @@ it('mapeia modelo 57 para tipo cte e 55 para nfe', function () {
 
 it('saldo insuficiente: não debita nem despacha', function () {
     Bus::fake();
-    $user = User::factory()->create(['credits' => 1]);
+    $user = User::factory()->create(['credits' => 0]);
     $nfe = loteSvcNota($user);
 
     $r = app(ClearanceLoteService::class)->iniciar([$nfe->id], [$nfe->id => 'efd'], 'basico', $user->id, 'tab-lote');

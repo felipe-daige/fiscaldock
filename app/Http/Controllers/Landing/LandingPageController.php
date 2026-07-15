@@ -26,9 +26,9 @@ class LandingPageController extends Controller
         return $this->renderLanding($request, 'paginas.inicio', [
             'title' => 'FiscalDock | Radar de Riscos Fiscais',
             'description' => 'Monitore CNPJs, emita CND, CNDT e FGTS numa só consulta e detecte inconsistências no SPED antes da malha fiscal. Saldo pré-pago em reais, sem mensalidade.',
-            'canonical' => self::BASE_URL . '/',
+            'canonical' => self::BASE_URL.'/',
             'og_type' => 'website',
-            'og_image' => self::BASE_URL . '/binary_files/logo/Logo FiscalDock.png',
+            'og_image' => self::BASE_URL.'/binary_files/logo/Logo FiscalDock.png',
         ]);
     }
 
@@ -37,10 +37,10 @@ class LandingPageController extends Controller
         return $this->renderLanding($request, 'solucoes.index', [
             'title' => 'Soluções — FiscalDock | SPED, BI, Compliance e Reforma Tributária',
             'description' => 'Do SPED à decisão: importação EFD/XML, BI Fiscal, consultas e monitoramento CNPJ, Score, Clearance, alertas e planejamento de crédito IBS/CBS na Reforma Tributária.',
-            'canonical' => self::BASE_URL . '/solucoes',
+            'canonical' => self::BASE_URL.'/solucoes',
             'og_type' => 'website',
             'og_title' => 'Toda a operação fiscal, do arquivo à decisão — FiscalDock',
-            'og_image' => self::BASE_URL . '/binary_files/logo/Logo FiscalDock.png',
+            'og_image' => self::BASE_URL.'/binary_files/logo/Logo FiscalDock.png',
         ]);
     }
 
@@ -49,17 +49,17 @@ class LandingPageController extends Controller
         return $this->renderLanding($request, 'paginas.duvidas', [
             'title' => 'Dúvidas Frequentes — FiscalDock',
             'description' => 'Respostas sobre importação SPED, monitoramento fiscal, preços em reais e segurança dos dados na FiscalDock. Tire sua dúvida antes de começar.',
-            'canonical' => self::BASE_URL . '/duvidas',
+            'canonical' => self::BASE_URL.'/duvidas',
             'og_type' => 'website',
             'og_title' => 'Perguntas frequentes — FiscalDock',
-            'og_image' => self::BASE_URL . '/binary_files/logo/Logo FiscalDock.png',
+            'og_image' => self::BASE_URL.'/binary_files/logo/Logo FiscalDock.png',
         ], [
             // As respostas citam preço, fontes e disponibilidade de módulo: puxamos do catálogo
             // para o FAQ não virar uma segunda fonte de verdade que envelhece sozinha.
             'pricingData' => $pricingCatalogService->getLandingPricingData(),
             'clearancePricing' => [
-                'batch_basic' => $pricingCatalogService->creditsToCurrency(ValidacaoContabilService::custoUnitarioPorTier('basico')),
-                'search' => $pricingCatalogService->creditsToCurrency(ClearanceController::CLEARANCE_NFE_AVULSA_CUSTO),
+                'batch_basic' => (ValidacaoContabilService::custoUnitarioPorTier('basico')),
+                'search' => (ClearanceController::CLEARANCE_NFE_AVULSA_CUSTO),
                 'search_enabled' => (bool) config('clearance.busca_avulsa.habilitada'),
             ],
         ]);
@@ -70,16 +70,16 @@ class LandingPageController extends Controller
         return $this->renderLanding($request, 'paginas.precos', [
             'title' => 'Preços — FiscalDock | Planos, Consultas e Saldo em Reais',
             'description' => 'Compare os planos FiscalDock, preços por consulta CNPJ e Clearance de documentos. Comece com R$ 20 de saldo grátis, sem cartão.',
-            'canonical' => self::BASE_URL . '/precos',
+            'canonical' => self::BASE_URL.'/precos',
             'og_type' => 'website',
             'og_title' => 'Planos e preços transparentes — FiscalDock',
-            'og_image' => self::BASE_URL . '/binary_files/logo/Logo FiscalDock.png',
+            'og_image' => self::BASE_URL.'/binary_files/logo/Logo FiscalDock.png',
         ], [
             'pricingData' => $pricingCatalogService->getLandingPricingData(),
             'subscriptionPlans' => SubscriptionPlan::allActive(),
             'clearancePricing' => [
-                'batch_basic' => $pricingCatalogService->creditsToCurrency(ValidacaoContabilService::custoUnitarioPorTier('basico')),
-                'search' => $pricingCatalogService->creditsToCurrency(ClearanceController::CLEARANCE_NFE_AVULSA_CUSTO),
+                'batch_basic' => (ValidacaoContabilService::custoUnitarioPorTier('basico')),
+                'search' => (ClearanceController::CLEARANCE_NFE_AVULSA_CUSTO),
                 'search_enabled' => (bool) config('clearance.busca_avulsa.habilitada'),
                 'full_enabled' => (bool) config('clearance.full.habilitado'),
             ],
@@ -98,7 +98,7 @@ class LandingPageController extends Controller
 
         $email = mb_strtolower(trim($validated['email']));
 
-        $rateKey = 'landing-lead:' . $request->ip();
+        $rateKey = 'landing-lead:'.$request->ip();
         if (RateLimiter::tooManyAttempts($rateKey, 5)) {
             return back()
                 ->withErrors(['email' => 'Muitas tentativas. Tente novamente em alguns instantes.'])
@@ -124,7 +124,7 @@ class LandingPageController extends Controller
     {
         $fullViewName = "landing_page.$viewName";
 
-        if (!view()->exists($fullViewName)) {
+        if (! view()->exists($fullViewName)) {
             abort(404);
         }
 

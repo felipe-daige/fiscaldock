@@ -11,8 +11,8 @@
                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Saldo promocional</p>
                 @if($trialResumo['is_active'] ?? false)
                     <p class="mt-2 text-sm text-gray-700">
-                        Você recebeu @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($trialResumo['granted'] ?? 0))) em saldo grátis.
-                        Restam @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($trialResumo['remaining'] ?? 0))) até {{ optional($trialResumo['expires_at'])->format('d/m/Y H:i') }}.
+                        Você recebeu @brl((($trialResumo['granted'] ?? 0))) em saldo grátis.
+                        Restam @brl((($trialResumo['remaining'] ?? 0))) até {{ optional($trialResumo['expires_at'])->format('d/m/Y H:i') }}.
                     </p>
                 @else
                     <p class="mt-2 text-sm text-gray-700">
@@ -27,17 +27,17 @@
             <div class="grid grid-cols-2 lg:grid-cols-3 divide-x divide-y lg:divide-y-0 divide-gray-200">
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Saldo atual</p>
-                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($saldoAtual))</p>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(($saldoAtual))</p>
                     <p class="text-[11px] text-gray-500 mt-1">disponível para consultas</p>
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Total comprado</p>
-                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency(app(\App\Services\PricingCatalogService::class)->getPaidCreditsForUser(auth()->user())))</p>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl((app(\App\Services\PricingCatalogService::class)->getPaidCreditsForUser(auth()->user())))</p>
                     <p class="text-[11px] text-gray-500 mt-1">comprado acumulado</p>
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Usados no mês</p>
-                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($creditosUsadosMes))</p>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(($creditosUsadosMes))</p>
                     <p class="text-[11px] text-gray-500 mt-1">consumido este mês</p>
                 </div>
             </div>
@@ -89,7 +89,7 @@
                                             <td class="px-3 py-2.5 text-sm text-gray-700 text-center" data-label="Participantes">{{ $tx->total_participantes ?? '-' }}</td>
                                             <td class="px-3 py-2.5 text-sm font-semibold text-right {{ $tx->creditos_cobrados > 0 ? 'text-red-600' : 'text-gray-400' }}" data-label="Custo (R$)">
                                                 @if($tx->creditos_cobrados > 0)
-                                                    −@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $tx->creditos_cobrados))
+                                                    −@brl(($tx->creditos_cobrados))
                                                 @else
                                                     —
                                                 @endif

@@ -1,4 +1,5 @@
 <?php
+
 // tests/Unit/UserDashboardPrefsTest.php
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;

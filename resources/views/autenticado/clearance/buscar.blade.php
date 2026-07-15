@@ -206,7 +206,7 @@
                                 <p class="text-sm font-semibold text-gray-900">Consulta avulsa</p>
                                 <span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #2563eb;">Clearance</span>
                             </div>
-                            <p class="text-lg font-bold text-gray-900"><span id="busca-custo-tier-explicativo">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $custoEstimadoCreditos))</span> <span class="text-xs font-medium text-gray-500">/documento</span></p>
+                            <p class="text-lg font-bold text-gray-900"><span id="busca-custo-tier-explicativo">@brl(($custoEstimadoCreditos))</span> <span class="text-xs font-medium text-gray-500">/documento</span></p>
                             <p class="text-[11px] text-gray-500 mt-1">Cobrança unitária para NF-e, NFC-e e CT-e consultados por chave.</p>
                         </div>
                         <div class="border border-gray-300 rounded p-3">
@@ -332,8 +332,8 @@
                         @if(config('clearance.full.habilitado'))
                             @php
                                 $precos = app(\App\Services\PricingCatalogService::class);
-                                $precoBasico = $precos->creditsToCurrency(\App\Services\ValidacaoContabilService::CUSTO_DOCUMENTO);
-                                $precoFull = $precos->creditsToCurrency(\App\Services\ValidacaoContabilService::CUSTO_DOCUMENTO_FULL);
+                                $precoBasico = (\App\Services\ValidacaoContabilService::CUSTO_DOCUMENTO);
+                                $precoFull = (\App\Services\ValidacaoContabilService::CUSTO_DOCUMENTO_FULL);
                             @endphp
                             <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 <label id="busca-card-basico" for="busca-tier-basico" class="busca-plan-card flex items-start gap-2 cursor-pointer rounded border bg-white px-3 py-2.5 transition" data-tier="basico" style="border-color: #1f2937">
@@ -457,12 +457,12 @@
                             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Custo por consulta</p>
                             {{-- Acompanha o tier escolhido (Clearance × Clearance completo) — atualizado
                                  por clearance-buscar.js. Sem escolha na tela = básico. --}}
-                            <p class="text-lg font-bold text-gray-900 mt-0.5" id="busca-custo-tier" data-custo-basico="{{ \App\Services\ValidacaoContabilService::CUSTO_DOCUMENTO }}" data-custo-full="{{ \App\Services\ValidacaoContabilService::CUSTO_DOCUMENTO_FULL }}">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $custoEstimadoCreditos))</p>
+                            <p class="text-lg font-bold text-gray-900 mt-0.5" id="busca-custo-tier" data-custo-basico="{{ \App\Services\ValidacaoContabilService::CUSTO_DOCUMENTO }}" data-custo-full="{{ \App\Services\ValidacaoContabilService::CUSTO_DOCUMENTO_FULL }}">@brl(($custoEstimadoCreditos))</p>
                             <p class="text-[10px] text-gray-500 mt-0.5">por documento</p>
                         </div>
                         <div class="px-4 py-2.5">
                             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Saldo atual</p>
-                            <p id="saldo-atual-label" class="text-lg font-bold text-gray-900 mt-0.5">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $saldoAtual))</p>
+                            <p id="saldo-atual-label" class="text-lg font-bold text-gray-900 mt-0.5">@brl(($saldoAtual))</p>
                             <p class="text-[10px] text-gray-500 mt-0.5">disponíveis</p>
                         </div>
                     </div>
@@ -658,7 +658,6 @@
 <script>
     window.BUSCAR_NFE_CONFIG = {
         custo: {{ $custoEstimadoCreditos }},
-        saldoUnitPrice: {{ app(\App\Services\PricingCatalogService::class)->creditUnitPrice() }},
         endpoints: {
             consultar: '{{ route('app.clearance.buscar.consultar') }}',
             precheck: '{{ route('app.clearance.buscar.precheck') }}',

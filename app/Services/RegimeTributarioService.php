@@ -2,16 +2,16 @@
 
 namespace App\Services;
 
+use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Exception;
 
 class RegimeTributarioService
 {
     /**
      * Consulta o regime tributário de um CNPJ
      *
-     * @param string $cnpj CNPJ sem formatação
+     * @param  string  $cnpj  CNPJ sem formatação
      * @return string|null Regime tributário ou null se não encontrado
      */
     public function consultarRegimeTributario(string $cnpj): ?string
@@ -33,11 +33,11 @@ class RegimeTributarioService
         // Consulta API externa
         try {
             $regime = $this->consultarApiExterna($cnpj);
-            
+
             if ($regime) {
                 // Cacheia por 30 dias
                 Cache::put($cacheKey, $regime, now()->addDays(30));
-                
+
                 return $regime;
             }
         } catch (Exception $e) {
@@ -56,7 +56,7 @@ class RegimeTributarioService
     {
         try {
             // API ReceitaWS (gratuita, mas com limitações)
-            $url = config('services.receitaws.url') . '/' . $cnpj;
+            $url = config('services.receitaws.url').'/'.$cnpj;
             $response = Http::timeout(10)->get($url);
 
             if ($response->successful()) {
@@ -66,7 +66,7 @@ class RegimeTributarioService
                     // Mapeia situação tributária para regime
                     // A API não retorna diretamente o regime, então usamos heurísticas
                     // Em produção, pode ser necessário usar outra API ou consulta manual
-                    
+
                     // Verifica se é MEI
                     if (isset($data['porte']) && $data['porte'] === 'MICRO EMPRESA') {
                         // Pode ser MEI ou Simples, mas por padrão assumimos Simples

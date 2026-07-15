@@ -64,7 +64,7 @@ class ClearanceDashboardReportBuilder
         $resumo = $dados['resumo'];
 
         $custoUnit = ValidacaoContabilService::custoUnitarioPorTier(self::CUSTO_VERIFICACAO_TIER);
-        $backlogCreditos = (int) $resumo['pendentes'] * $custoUnit;
+        $backlogCreditos = round($resumo['pendentes'] * $custoUnit, 2);
 
         $secoes = [
             $this->secaoStatusValor($dados['status_valor'], $resumo),
@@ -80,7 +80,7 @@ class ClearanceDashboardReportBuilder
             'backlog' => [
                 'notas' => (int) $resumo['pendentes'],
                 'custo_creditos' => $backlogCreditos,
-                'custo_reais' => $this->pricing->creditsToCurrency($backlogCreditos),
+                'custo_reais' => $backlogCreditos,
                 'custo_unitario_creditos' => $custoUnit,
             ],
             'filtros' => ['Escopo' => 'Todo o acervo (XML + EFD deduplicado por chave)'],

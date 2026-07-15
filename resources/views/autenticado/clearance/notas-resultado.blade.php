@@ -307,6 +307,25 @@
                                         </td>
                                     </tr>
                                 @endif
+                                @if(($linha->itens_nota ?? null) && $linha->itens_nota->isNotEmpty())
+                                    <tr class="border-b border-gray-100" style="background-color: #f9fafb">
+                                        <td colspan="7" class="px-3 pb-3 pt-2">
+                                            <details>
+                                                <summary class="cursor-pointer select-none text-[10px] font-semibold uppercase tracking-wide text-gray-500 hover:text-gray-700">Itens da nota ({{ $linha->itens_total }}) — do seu acervo</summary>
+                                                <div class="mt-2">
+                                                    @include('autenticado.notas.partials._itens-tabela', [
+                                                        'itens' => $linha->itens_nota,
+                                                        'titulo' => 'Itens da nota',
+                                                        'subtitulo' => 'Produtos e serviços escriturados no seu acervo (XML/EFD)',
+                                                        'viaGemea' => (bool) ($linha->itens_via_gemea ?? false),
+                                                        'totalItens' => $linha->itens_total ?? null,
+                                                        'verNotaUrl' => $linha->itens_detalhe_url ?? null,
+                                                    ])
+                                                </div>
+                                            </details>
+                                        </td>
+                                    </tr>
+                                @endif
                             @endforeach
                         </tbody>
                     </table>
@@ -382,7 +401,8 @@
                                         @if(!empty($linha->motivos))
                                             <ul class="mt-1 space-y-0.5">
                                                 @foreach($linha->motivos as $m)
-                                                    <li class="text-[10px] text-gray-500 leading-snug">• {{ $m }}</li>
+                                                    {{-- Parecer positivo em verde (não cinza) — cor acompanha o veredito da linha --}}
+                                                    <li class="text-[10px] leading-snug" style="color: {{ ($linha->severidade ?? null) === 'ok' ? '#047857' : '#6b7280' }}">{{ ($linha->severidade ?? null) === 'ok' ? '✓' : '•' }} {{ $m }}</li>
                                                 @endforeach
                                             </ul>
                                         @endif
@@ -393,6 +413,25 @@
                                         <td colspan="6" class="px-3 pb-3 pt-0">
                                             <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">Conferência Declarado × SEFAZ</p>
                                             @include('autenticado.clearance.partials._conferencias', ['conferencias' => $linha->conferencias])
+                                        </td>
+                                    </tr>
+                                @endif
+                                @if(($linha->itens_nota ?? null) && $linha->itens_nota->isNotEmpty())
+                                    <tr style="background-color: #f9fafb">
+                                        <td colspan="6" class="px-3 pb-3 pt-2">
+                                            <details>
+                                                <summary class="cursor-pointer select-none text-[10px] font-semibold uppercase tracking-wide text-gray-500 hover:text-gray-700">Itens da nota ({{ $linha->itens_total }}) — do seu acervo</summary>
+                                                <div class="mt-2">
+                                                    @include('autenticado.notas.partials._itens-tabela', [
+                                                        'itens' => $linha->itens_nota,
+                                                        'titulo' => 'Itens da nota',
+                                                        'subtitulo' => 'Produtos e serviços escriturados no seu acervo (XML/EFD)',
+                                                        'viaGemea' => (bool) ($linha->itens_via_gemea ?? false),
+                                                        'totalItens' => $linha->itens_total ?? null,
+                                                        'verNotaUrl' => $linha->itens_detalhe_url ?? null,
+                                                    ])
+                                                </div>
+                                            </details>
                                         </td>
                                     </tr>
                                 @endif

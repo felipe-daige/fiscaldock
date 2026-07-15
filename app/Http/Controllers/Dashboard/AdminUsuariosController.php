@@ -64,11 +64,6 @@ class AdminUsuariosController extends Controller
     {
         $dados = $this->validarUsuario($request);
 
-        // Saldo inicial é digitado em R$ e normalizado para a unidade física do ledger.
-        if (isset($dados['credits'])) {
-            $dados['credits'] = app(\App\Services\PricingCatalogService::class)->currencyToCredits((float) $dados['credits']);
-        }
-
         $usuario = $this->acoes->criarUsuario($request->user(), $dados, $dados['motivo']);
 
         return redirect()->route('app.admin.usuarios.show', $usuario->id)

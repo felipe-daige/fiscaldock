@@ -113,15 +113,15 @@ class MonitoramentoAssinatura extends Model
      * Custo de UM ciclo desta assinatura. Grupo = N membros atuais × custo do plano — é este
      * valor que o freio §6.2 e a checagem de saldo avaliam antes do disparo.
      */
-    public function custoCiclo(): int
+    public function custoCiclo(): float
     {
-        $unit = (int) ($this->plano->custo_creditos ?? 0);
+        $unit = (float) ($this->plano->custo_creditos ?? 0);
 
         if ($this->grupo_id) {
-            return $this->membrosDoGrupo()->count() * $unit;
+            return round($this->membrosDoGrupo()->count() * $unit, 2);
         }
 
-        return $unit;
+        return round($unit, 2);
     }
 
     /**

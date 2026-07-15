@@ -69,12 +69,14 @@ class AdminAcaoService
 
     public function creditar(User $admin, User $alvo, float $valor, string $motivo): AdminActionLog
     {
-        if ((int) $valor === 0) {
+        $valor = round($valor, 2);
+
+        if ($valor == 0.0) {
             throw new \InvalidArgumentException('Valor do ajuste não pode ser zero.');
         }
 
         return DB::transaction(function () use ($admin, $alvo, $valor, $motivo) {
-            $saldoAntes = (int) $alvo->fresh()->credits;
+            $saldoAntes = (float) $alvo->fresh()->credits;
             $desc = "[admin {$admin->id}] {$motivo}";
 
             if ($valor > 0) {
@@ -88,10 +90,10 @@ class AdminAcaoService
                 $acao = 'debitar';
             }
 
-            $saldoDepois = (int) $alvo->fresh()->credits;
+            $saldoDepois = (float) $alvo->fresh()->credits;
 
             return $this->registrar($admin, $alvo, $acao, $motivo, [
-                'valor' => (int) $valor,
+                'valor' => $valor,
                 'saldo_antes' => $saldoAntes,
                 'saldo_depois' => $saldoDepois,
             ]);
@@ -241,8 +243,8 @@ class AdminAcaoService
                 'ciclo' => (string) $dados['ciclo'],
                 'iniciada_em' => $this->nullSeVazio($dados['iniciada_em'] ?? null),
                 'renova_em' => $this->nullSeVazio($dados['renova_em'] ?? null),
-                'creditos_inclusos_saldo' => (int) ($dados['creditos_inclusos_saldo'] ?? 0),
-                'limite_consumo_automatico' => $this->inteiroOuNull($dados['limite_consumo_automatico'] ?? null),
+                'creditos_inclusos_saldo' => round((float) ($dados['creditos_inclusos_saldo'] ?? 0), 2),
+                'limite_consumo_automatico' => $this->valorOuNull($dados['limite_consumo_automatico'] ?? null),
                 'assentos_extras' => (int) ($dados['assentos_extras'] ?? 0),
                 'mp_preapproval_id' => $this->nullSeVazio($dados['mp_preapproval_id'] ?? null),
                 'proximo_grant_em' => $this->nullSeVazio($dados['proximo_grant_em'] ?? null),
@@ -280,9 +282,9 @@ class AdminAcaoService
                 'trial_used' => (bool) ($dados['trial_used'] ?? false),
                 'trial_started_at' => $this->nullSeVazio($dados['trial_started_at'] ?? null),
                 'trial_expires_at' => $this->nullSeVazio($dados['trial_expires_at'] ?? null),
-                'trial_credits_granted' => (int) ($dados['trial_credits_granted'] ?? 0),
-                'trial_credits_remaining' => (int) ($dados['trial_credits_remaining'] ?? 0),
-                'trial_credits_expired' => (int) ($dados['trial_credits_expired'] ?? 0),
+                'trial_credits_granted' => round((float) ($dados['trial_credits_granted'] ?? 0), 2),
+                'trial_credits_remaining' => round((float) ($dados['trial_credits_remaining'] ?? 0), 2),
+                'trial_credits_expired' => round((float) ($dados['trial_credits_expired'] ?? 0), 2),
                 'trial_source' => $this->nullSeVazio($dados['trial_source'] ?? null),
             ])->save();
 
@@ -365,10 +367,10 @@ class AdminAcaoService
         return $valor === '' ? null : $valor;
     }
 
-    private function inteiroOuNull(mixed $valor): ?int
+    private function valorOuNull(mixed $valor): ?float
     {
         $valor = $this->nullSeVazio($valor);
 
-        return $valor === null ? null : (int) $valor;
+        return $valor === null ? null : round((float) $valor, 2);
     }
 }

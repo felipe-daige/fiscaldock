@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('plano_id')->nullable()->constrained('monitoramento_planos')->onDelete('restrict');
             $table->string('status', 20)->default('pendente'); // pendente, processando, concluido, erro
             $table->integer('total_participantes');
-            $table->integer('creditos_cobrados')->default(0);
+            $table->decimal('creditos_cobrados', 12, 2)->default(0);
             $table->string('tab_id', 36)->nullable();
             $table->jsonb('resultado_resumo')->nullable();
             $table->string('error_code', 50)->nullable();

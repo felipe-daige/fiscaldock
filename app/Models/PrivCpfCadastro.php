@@ -50,4 +50,3 @@ class PrivCpfCadastro extends Model
         return $this->hasMany(PrivCpfRelacionamento::class, 'cpf_id');
     }
 }
-

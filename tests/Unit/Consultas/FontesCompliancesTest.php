@@ -4,7 +4,7 @@ use App\Services\Consultas\Fontes\CndEstadualFonte;
 use App\Services\Consultas\Fontes\SintegraFonte;
 
 it('CND Estadual: metadados + uf no param + sucesso/611', function () {
-    $f = new CndEstadualFonte();
+    $f = new CndEstadualFonte;
     expect($f->chave())->toBe('cnd_estadual');
     expect($f->slug())->toBe('sefaz/certidao-debitos');
     expect($f->params(['cnpj' => '19131243000197', 'uf' => 'sp'])['uf'])->toBe('SP');
@@ -18,7 +18,7 @@ it('CND Estadual: metadados + uf no param + sucesso/611', function () {
 
 it('certidão sem campo tipo deriva status de conseguiu_emitir (CNDT/Estadual)', function () {
     // resposta real de CNDT/Estadual não traz `tipo` — deriva: emitiu negativa = Negativa
-    $f = new CndEstadualFonte();
+    $f = new CndEstadualFonte;
     expect($f->normalizar(['data' => [['conseguiu_emitir_certidao_negativa' => true, 'mensagem' => 'CERTIDÃO NEGATIVA']]], 'sucesso')['cnd_estadual']['status'])->toBe('Negativa');
     expect($f->normalizar(['data' => [['conseguiu_emitir_certidao_negativa' => false]]], 'sucesso')['cnd_estadual']['status'])->toBe('Positiva');
     // se vier `tipo`, usa ele
@@ -27,7 +27,7 @@ it('certidão sem campo tipo deriva status de conseguiu_emitir (CNDT/Estadual)',
 
 it('CND Estadual: cobertura por UF (aplicavelPara) + INDISPONIVEL fora da cobertura', function () {
     config()->set('consultas.cnd_estadual.ufs_cobertas', ['SP', 'RJ']);
-    $f = new CndEstadualFonte();
+    $f = new CndEstadualFonte;
 
     expect($f->aplicavelPara(['uf' => 'SP']))->toBeTrue();
     expect($f->aplicavelPara(['uf' => 'sp']))->toBeTrue(); // normaliza maiúsculas
@@ -40,7 +40,7 @@ it('CND Estadual: cobertura por UF (aplicavelPara) + INDISPONIVEL fora da cobert
 });
 
 it('SINTEGRA: cadastral (IE/situação)', function () {
-    $f = new SintegraFonte();
+    $f = new SintegraFonte;
     expect($f->chave())->toBe('sintegra');
     expect($f->slug())->toBe('sintegra/unificada');
 

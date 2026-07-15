@@ -14,9 +14,9 @@ class SintegraFonte extends FonteInfoSimplesBase
         return 'sintegra/unificada';
     }
 
-    public function custoCreditos(): int
+    public function custoCreditos(): float
     {
-        return (int) config('consultas.fontes.sintegra', 1);
+        return (float) config('consultas.fontes.sintegra', 1.00);
     }
 
     public function params(array $alvo): array

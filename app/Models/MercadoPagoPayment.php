@@ -42,7 +42,7 @@ class MercadoPagoPayment extends Model
 
     protected $casts = [
         'valor' => 'decimal:2',
-        'creditos' => 'integer',
+        'creditos' => 'float',
         'credited_at' => 'datetime',
         'payload' => 'array',
     ];

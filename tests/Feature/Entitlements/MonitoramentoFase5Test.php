@@ -63,7 +63,7 @@ it('soma o consumo do auto-monitor no ciclo e detecta o cap estourado', function
 
     $svc = app(EntitlementService::class);
 
-    expect($svc->consumoMonitoramentoNoCiclo($user))->toBe(5);
+    expect($svc->consumoMonitoramentoNoCiclo($user))->toBe(5.0);
     expect($svc->monitoramentoCapEstourado($user, 1))->toBeTrue();   // 5+1 > 5
     expect($svc->monitoramentoCapEstourado($user, 0))->toBeFalse();  // 5+0 > 5 = false
 });
@@ -72,7 +72,7 @@ it('cap <= 0 (Free sem inclusos) não aciona o freio', function () {
     $user = User::factory()->create(); // sem assinatura → Free, creditos_inclusos = 0
     $svc = app(EntitlementService::class);
 
-    expect($svc->consumptionCap($user))->toBe(0);
+    expect($svc->consumptionCap($user))->toBe(0.0);
     expect($svc->monitoramentoCapEstourado($user, 10))->toBeFalse();
 });
 

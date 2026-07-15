@@ -20,12 +20,12 @@ it('bloqueia não-admin no índice de integrações', function () {
 });
 
 it('admin abre o índice', function () {
-    (new IntegracaoStatusSeeder())->run();
+    (new IntegracaoStatusSeeder)->run();
     actingAs(adminIntegUser())->get('/app/admin/integracoes')->assertOk();
 });
 
 it('admin atualiza status e mensagem e grava atualizado_por', function () {
-    (new IntegracaoStatusSeeder())->run();
+    (new IntegracaoStatusSeeder)->run();
     $a = adminIntegUser();
     $cnd = IntegracaoStatus::where('chave', 'cnd_federal')->first();
 
@@ -40,7 +40,7 @@ it('admin atualiza status e mensagem e grava atualizado_por', function () {
 });
 
 it('rejeita status inválido', function () {
-    (new IntegracaoStatusSeeder())->run();
+    (new IntegracaoStatusSeeder)->run();
     $cnd = IntegracaoStatus::where('chave', 'cnd_federal')->first();
     actingAs(adminIntegUser())->put(route('app.admin.integracoes.update', $cnd), [
         'status' => 'explodiu',

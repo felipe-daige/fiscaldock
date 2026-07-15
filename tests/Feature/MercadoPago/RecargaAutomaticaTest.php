@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\SaldoTransacao;
 use App\Models\MercadoPagoPayment;
 use App\Models\RecargaAutomatica;
+use App\Models\SaldoTransacao;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 
@@ -46,7 +46,7 @@ it('criar recarga usa valor/saldo do catálogo (não do front) e persiste penden
 
     $recarga = RecargaAutomatica::first();
     expect($recarga->status)->toBe('pendente');
-    expect($recarga->creditos)->toBe(1000);
+    expect($recarga->creditos)->toBe(200.0);
     expect((float) $recarga->valor)->toBe(200.0);
     expect($recarga->mp_preapproval_id)->toBe('PRE-R1');
 
@@ -69,7 +69,7 @@ it('criar recarga recusa pacote inválido', function () {
 it('webhook preapproval authorized ativa a recarga (fallthrough da assinatura)', function () {
     $user = User::factory()->create();
     $recarga = RecargaAutomatica::create([
-        'user_id' => $user->id, 'pacote' => 'business', 'creditos' => 1000, 'valor' => 200,
+        'user_id' => $user->id, 'pacote' => 'business', 'creditos' => 200, 'valor' => 200,
         'status' => 'pendente', 'mp_preapproval_id' => 'PRE-RA',
     ]);
 
@@ -89,7 +89,7 @@ it('webhook preapproval authorized ativa a recarga (fallthrough da assinatura)',
 it('webhook authorized_payment approved credita o pacote 1× (idempotente)', function () {
     $user = User::factory()->create(['credits' => 0]);
     RecargaAutomatica::create([
-        'user_id' => $user->id, 'pacote' => 'business', 'creditos' => 1000, 'valor' => 200,
+        'user_id' => $user->id, 'pacote' => 'business', 'creditos' => 200, 'valor' => 200,
         'status' => 'ativa', 'mp_preapproval_id' => 'PRE-RB',
     ]);
 
@@ -108,7 +108,7 @@ it('webhook authorized_payment approved credita o pacote 1× (idempotente)', fun
     $enviar()->assertOk();
     $enviar()->assertOk(); // reentrega
 
-    expect($user->fresh()->credits)->toBe(1000); // creditou 1× só
+    expect($user->fresh()->credits)->toBe(200.0); // creditou 1× só
     expect(SaldoTransacao::where('user_id', $user->id)->where('type', 'purchase')->count())->toBe(1);
     expect(MercadoPagoPayment::where('tipo', 'recarga')->count())->toBe(1);
 });
@@ -116,7 +116,7 @@ it('webhook authorized_payment approved credita o pacote 1× (idempotente)', fun
 it('webhook authorized_payment rejected marca a recarga inadimplente e não credita', function () {
     $user = User::factory()->create(['credits' => 0]);
     RecargaAutomatica::create([
-        'user_id' => $user->id, 'pacote' => 'business', 'creditos' => 1000, 'valor' => 200,
+        'user_id' => $user->id, 'pacote' => 'business', 'creditos' => 200, 'valor' => 200,
         'status' => 'ativa', 'mp_preapproval_id' => 'PRE-RC',
     ]);
 
@@ -132,7 +132,7 @@ it('webhook authorized_payment rejected marca a recarga inadimplente e não cred
             'type' => 'subscription_authorized_payment', 'data' => ['id' => 'AP-RC'],
         ])->assertOk();
 
-    expect($user->fresh()->credits)->toBe(0);
+    expect($user->fresh()->credits)->toBe(0.0);
     expect(RecargaAutomatica::first()->status)->toBe('inadimplente');
 });
 
@@ -154,7 +154,7 @@ it('a página /app/saldo renderiza o opt-in de recarga com SDK e public key', fu
 it('cancelar recarga chama o MP e marca cancelada', function () {
     $user = User::factory()->create();
     RecargaAutomatica::create([
-        'user_id' => $user->id, 'pacote' => 'business', 'creditos' => 1000, 'valor' => 200,
+        'user_id' => $user->id, 'pacote' => 'business', 'creditos' => 200, 'valor' => 200,
         'status' => 'ativa', 'mp_preapproval_id' => 'PRE-RD',
     ]);
 

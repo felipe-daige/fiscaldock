@@ -11,9 +11,9 @@ function efdTravadaImportacao(string $status, int $minutosAtras): EfdImportacao
 {
     $user = User::factory()->create();
     $imp = EfdImportacao::create([
-        'user_id'  => $user->id,
+        'user_id' => $user->id,
         'tipo_efd' => 'EFD ICMS/IPI',
-        'status'   => $status,
+        'status' => $status,
     ]);
     DB::table('efd_importacoes')
         ->where('id', $imp->id)

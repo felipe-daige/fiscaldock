@@ -32,7 +32,7 @@ return new class extends Migration
 
         // Backfill apenas no Postgres (UPDATE...FROM não é suportado em SQLite)
         if (DB::connection()->getDriverName() === 'pgsql') {
-            DB::statement("
+            DB::statement('
                 UPDATE users
                 SET empresa = c.nome,
                     cnpj = c.documento,
@@ -40,7 +40,7 @@ return new class extends Migration
                 FROM clientes c
                 WHERE c.user_id = users.id
                   AND c.is_empresa_propria = true
-            ");
+            ');
         }
     }
 

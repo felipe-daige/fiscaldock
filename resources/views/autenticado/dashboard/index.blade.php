@@ -166,7 +166,7 @@
                                     <div class="rounded-full overflow-hidden" style="height:3px;background-color:#e5e7eb;"><div style="height:100%;width:{{ $tPct }}%;background-color:#1f2937;"></div></div>
                                 </div>
                                 <div>
-                                    <div class="flex justify-between text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1"><span>Saldo</span><span>@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $tRem))/@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $tGranted))</span></div>
+                                    <div class="flex justify-between text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1"><span>Saldo</span><span>@brl(($tRem))/@brl(($tGranted))</span></div>
                                     <div class="rounded-full overflow-hidden" style="height:3px;background-color:#e5e7eb;"><div style="height:100%;width:{{ $tCredPct }}%;background-color:#1f2937;"></div></div>
                                 </div>
                             </div>
@@ -196,8 +196,8 @@
                 </a>
                 <a href="/app/saldo" data-link data-kpi="saldo" class="block p-4 sm:p-6 hover:bg-gray-50/50 transition-colors">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Saldo</p>
-                    <p class="text-lg font-bold text-gray-900" data-kpi-valor>{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($cockpit['kpis']['saldo']['disponivel'])) }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1" data-kpi-sub>{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($cockpit['kpis']['saldo']['usado_mes'])) }} usados este mês</p>
+                    <p class="text-lg font-bold text-gray-900" data-kpi-valor>{{ \App\Support\Dinheiro::brl(($cockpit['kpis']['saldo']['disponivel'])) }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1" data-kpi-sub>{{ \App\Support\Dinheiro::brl(($cockpit['kpis']['saldo']['usado_mes'])) }} usados este mês</p>
                 </a>
             </div>
         </div>

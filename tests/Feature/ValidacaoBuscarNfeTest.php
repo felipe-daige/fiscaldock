@@ -146,8 +146,8 @@ it('rejeita quando usuário não tem créditos suficientes (402)', function () {
     ]);
 
     $response->assertStatus(402)
-        ->assertJsonPath('custo_necessario', ValidacaoContabilService::CUSTO_DOCUMENTO)
-        ->assertJsonPath('saldo_atual', $saldo);
+        ->assertJsonPath('custo_necessario', fn ($v) => (float) $v === ValidacaoContabilService::CUSTO_DOCUMENTO)
+        ->assertJsonPath('saldo_atual', fn ($v) => (float) $v === (float) $saldo);
 
     expect(ConsultaLote::count())->toBe(0);
     expect($user->fresh()->credits)->toBe($saldo);

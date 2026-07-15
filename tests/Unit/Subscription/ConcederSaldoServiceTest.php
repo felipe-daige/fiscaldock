@@ -14,7 +14,7 @@ beforeEach(function () {
 
 function assinaturaEssencial(User $user, array $overrides = []): AccountSubscription
 {
-    $plan = SubscriptionPlan::where('codigo', 'essencial')->first(); // 175 unidades/mês (R$ 35), rollover 1x
+    $plan = SubscriptionPlan::where('codigo', 'essencial')->first(); // R$ 35/mês inclusos, rollover 1x
 
     return AccountSubscription::create(array_merge([
         'user_id' => $user->id,
@@ -31,8 +31,8 @@ it('1ª concessão credita como purchase (destrava 1ª compra) e agenda o próxi
 
     (new ConcederSaldoService)->conceder($sub, primeiraComoCompra: true);
 
-    expect($user->fresh()->credits)->toBe(175);
-    expect($sub->fresh()->creditos_inclusos_saldo)->toBe(175);
+    expect((float) $user->fresh()->credits)->toBe(35.0);
+    expect((float) $sub->fresh()->creditos_inclusos_saldo)->toBe(35.0);
     expect($sub->fresh()->proximo_grant_em)->not->toBeNull();
     expect(SaldoTransacao::where('user_id', $user->id)->where('type', 'purchase')->count())->toBe(1);
 });
@@ -43,41 +43,41 @@ it('concessão mensal posterior usa type subscription_credit', function () {
 
     (new ConcederSaldoService)->conceder($sub, primeiraComoCompra: false);
 
-    expect($user->fresh()->credits)->toBe(175);
+    expect((float) $user->fresh()->credits)->toBe(35.0);
     expect(SaldoTransacao::where('type', 'subscription_credit')->count())->toBe(1);
     expect(SaldoTransacao::where('type', 'purchase')->count())->toBe(0);
 });
 
 it('rollover cap: saldo igual ao cap não expira e concede o mês cheio', function () {
-    $user = User::factory()->create(['credits' => 175]);
-    $sub = assinaturaEssencial($user, ['creditos_inclusos_saldo' => 175]);
+    $user = User::factory()->create(['credits' => 35]);
+    $sub = assinaturaEssencial($user, ['creditos_inclusos_saldo' => 35]);
 
     (new ConcederSaldoService)->conceder($sub, primeiraComoCompra: false);
 
-    // cap = 1x175 = 175 bancado; nada expira (175 <= 175); concede +175.
-    expect($user->fresh()->credits)->toBe(350);
-    expect($sub->fresh()->creditos_inclusos_saldo)->toBe(350);
+    // cap = 1x35 = 35 bancado; nada expira (35 <= 35); concede +35.
+    expect((float) $user->fresh()->credits)->toBe(70.0);
+    expect((float) $sub->fresh()->creditos_inclusos_saldo)->toBe(70.0);
 });
 
 it('rollover cap: saldo acima do cap expira o excedente antes de conceder', function () {
-    $user = User::factory()->create(['credits' => 500]);
-    $sub = assinaturaEssencial($user, ['creditos_inclusos_saldo' => 500]);
+    $user = User::factory()->create(['credits' => 100]);
+    $sub = assinaturaEssencial($user, ['creditos_inclusos_saldo' => 100]);
 
     (new ConcederSaldoService)->conceder($sub, primeiraComoCompra: false);
 
-    // cap 175: expira 500-175=325 (credits 500→175), depois concede 175 → 350.
-    expect($user->fresh()->credits)->toBe(350);
-    expect($sub->fresh()->creditos_inclusos_saldo)->toBe(350);
-    expect(SaldoTransacao::where('type', 'subscription_expiration')->sum('amount'))->toBe(-325);
+    // cap 35: expira 100-35=65 (credits 100→35), depois concede 35 → 70.
+    expect((float) $user->fresh()->credits)->toBe(70.0);
+    expect((float) $sub->fresh()->creditos_inclusos_saldo)->toBe(70.0);
+    expect((float) SaldoTransacao::where('type', 'subscription_expiration')->sum('amount'))->toBe(-65.0);
 });
 
 it('expira no máximo o que ainda existe no saldo do usuário (já gastou parte)', function () {
-    // bucket registrado 500, mas usuário só tem 100 créditos (gastou o resto). Excedente
-    // do cap = 325, mas só há 100 no saldo → expira 100 (saldo→0). Depois concede 175 → 175.
-    $user = User::factory()->create(['credits' => 100]);
-    $sub = assinaturaEssencial($user, ['creditos_inclusos_saldo' => 500]);
+    // bucket registrado 100, mas usuário só tem 20 no saldo (gastou o resto). Excedente
+    // do cap = 65, mas só há 20 no saldo → expira 20 (saldo→0). Depois concede 35 → 35.
+    $user = User::factory()->create(['credits' => 20]);
+    $sub = assinaturaEssencial($user, ['creditos_inclusos_saldo' => 100]);
 
     (new ConcederSaldoService)->conceder($sub, primeiraComoCompra: false);
 
-    expect($user->fresh()->credits)->toBe(175);
+    expect((float) $user->fresh()->credits)->toBe(35.0);
 });

@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 class ValidacaoContabilService
 {
     /**
-     * Custo do clearance SEFAZ por documento, em unidades do ledger (1 un = R$ 0,20) → R$ 1,00.
+     * Custo do clearance SEFAZ por documento, em reais → R$ 1,00.
      *
      * PRECO UNICO. Lote e busca avulsa fazem a MESMA chamada (`receita-federal/nfe` | `/cte`,
      * custo InfoSimples R$ 0,26) e gravam o MESMO snapshot (`nfe_consultas`/`cte_consultas`).
@@ -26,10 +26,10 @@ class ValidacaoContabilService
      * (tributos, itens, XML, contraparte sem mascara) sem custo externo extra — vira capability
      * de plano, nao tier por documento. Decisao de 2026-07-13, ver docs/comercial/README.md.
      */
-    public const CUSTO_DOCUMENTO = 5;
+    public const CUSTO_DOCUMENTO = 1.00;
 
     /**
-     * Clearance COMPLETO: R$ 2,00 por documento (10 un × R$ 0,20).
+     * Clearance COMPLETO: R$ 2,00 por documento.
      *
      * Inclui tudo do básico (status SEFAZ) MAIS a regularidade da CONTRAPARTE da nota —
      * situação cadastral (grátis) + SINTEGRA + CND Federal, via o motor da Consulta CNPJ.
@@ -40,7 +40,7 @@ class ValidacaoContabilService
      * Custo pior caso por nota: SEFAZ 0,26 + SINTEGRA 0,26 + CND Federal 0,26 = R$ 0,78
      * (cadastral é grátis, via minhareceita). Decisão de 2026-07-13 (Felipe).
      */
-    public const CUSTO_DOCUMENTO_FULL = 10;
+    public const CUSTO_DOCUMENTO_FULL = 2.00;
 
     // Pesos para cada categoria de validacao (soma = 1.0)
     private array $pesos = [
@@ -157,7 +157,7 @@ class ValidacaoContabilService
             'tipo' => $tipo,
             'custo_unitario' => $custoUnitario,
             'custo_total' => $custoTotal,
-            'custo_reais' => number_format($custoTotal * 0.20, 2, ',', '.'),
+            'custo_reais' => number_format($custoTotal, 2, ',', '.'),
         ];
     }
 
@@ -167,7 +167,7 @@ class ValidacaoContabilService
      * basico = R$ 1,00 (status SEFAZ) | full = R$ 2,00 (+ regularidade da contraparte).
      * Preco identico em lote e busca avulsa — o que muda o preco e o TIER, nunca a origem.
      */
-    public static function custoUnitarioPorTier(string $tipo): int
+    public static function custoUnitarioPorTier(string $tipo): float
     {
         return $tipo === 'full' ? self::CUSTO_DOCUMENTO_FULL : self::CUSTO_DOCUMENTO;
     }

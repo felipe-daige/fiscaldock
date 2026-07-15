@@ -7,13 +7,13 @@ class CsvParserService
     /**
      * Converte string CSV (separador ;) em headers e rows.
      *
-     * @param string $csv Conteúdo CSV como string
-     * @param string $delimiter Separador de colunas (padrão: ;)
+     * @param  string  $csv  Conteúdo CSV como string
+     * @param  string  $delimiter  Separador de colunas (padrão: ;)
      * @return array{headers: array, rows: array}
      */
     public function parse(string $csv, string $delimiter = ';'): array
     {
-        $lines = preg_split("/\\r\\n|\\r|\\n/", trim($csv));
+        $lines = preg_split('/\\r\\n|\\r|\\n/', trim($csv));
         $rows = [];
         $headers = [];
 
@@ -25,6 +25,7 @@ class CsvParserService
 
             if ($index === 0) {
                 $headers = $columns;
+
                 continue;
             }
 
@@ -37,5 +38,3 @@ class CsvParserService
         ];
     }
 }
-
-

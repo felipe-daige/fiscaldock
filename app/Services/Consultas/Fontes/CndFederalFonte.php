@@ -16,9 +16,9 @@ class CndFederalFonte extends FonteCertidaoInfoSimples
         return 'receita-federal/pgfn';
     }
 
-    public function custoCreditos(): int
+    public function custoCreditos(): float
     {
-        return (int) config('consultas.fontes.cnd_federal', 2);
+        return (float) config('consultas.fontes.cnd_federal', 0.40);
     }
 
     public function params(array $alvo): array

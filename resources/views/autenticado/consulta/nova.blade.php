@@ -112,7 +112,7 @@
                     $planosDetalhados[] = [
                         'codigo' => $p->codigo,
                         'nome' => $p->nome,
-                        'valor_reais' => $pricingCatalog->creditsToCurrency($pricingCatalog->getProductCreditsByPlan($p, auth()->user())),
+                        'valor_reais' => $pricingCatalog->getProductPriceByPlan($p),
                         'descricao' => $p->descricao,
                         'cor' => $meta['cor'],
                         'icone' => $meta['icone'],

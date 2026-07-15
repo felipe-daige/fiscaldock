@@ -109,8 +109,8 @@ class ParecerFiscalService
         $sufixo = $quantidade === 1 ? 'sócio pessoa jurídica' : 'sócios pessoa jurídica';
         $nomes = implode(', ', array_filter($sociosPj));
 
-        $descricao = "{$quantidade} {$sufixo} no QSA" . ($nomes !== '' ? " ({$nomes})" : '')
-            . '. Estrutura de holding ou empresa controlada — atenção a operações intragrupo e preços de transferência.';
+        $descricao = "{$quantidade} {$sufixo} no QSA".($nomes !== '' ? " ({$nomes})" : '')
+            .'. Estrutura de holding ou empresa controlada — atenção a operações intragrupo e preços de transferência.';
 
         return [
             'chave' => 'socio_pj',

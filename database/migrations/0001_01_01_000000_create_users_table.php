@@ -46,9 +46,9 @@ return new class extends Migration
             $table->boolean('trial_used')->default(false);
             $table->timestamp('trial_started_at')->nullable();
             $table->timestamp('trial_expires_at')->nullable();
-            $table->unsignedInteger('trial_credits_granted')->default(0);
-            $table->unsignedInteger('trial_credits_remaining')->default(0);
-            $table->unsignedInteger('trial_credits_expired')->default(0);
+            $table->decimal('trial_credits_granted', 12, 2)->default(0);
+            $table->decimal('trial_credits_remaining', 12, 2)->default(0);
+            $table->decimal('trial_credits_expired', 12, 2)->default(0);
             $table->string('trial_source')->nullable();
             $table->boolean('alertas_operacionais')->default(true);
             $table->boolean('alertas_monitoramento')->default(true);

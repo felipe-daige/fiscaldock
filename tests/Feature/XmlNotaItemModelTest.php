@@ -14,18 +14,18 @@ it('cria item ligado à nota e expõe a relação', function () {
         'status' => 'concluido',
     ]);
     $nota = XmlNota::create([
-        'user_id'          => $user->id,
+        'user_id' => $user->id,
         'importacao_xml_id' => $imp->id,
-        'chave_acesso'     => str_repeat('1', 44),
-        'tipo_documento'   => 'NFE',
+        'chave_acesso' => str_repeat('1', 44),
+        'tipo_documento' => 'NFE',
         'numero_documento' => 1,
-        'serie'            => 1,
-        'data_emissao'     => now(),
-        'valor_total'      => 100,
-        'tipo_nota'        => 1,
-        'emit_documento'   => '00000000000191',
-        'dest_documento'   => '00000000000191',
-        'modelo'           => '55',
+        'serie' => 1,
+        'data_emissao' => now(),
+        'valor_total' => 100,
+        'tipo_nota' => 1,
+        'emit_documento' => '00000000000191',
+        'dest_documento' => '00000000000191',
+        'modelo' => '55',
     ]);
 
     $item = XmlNotaItem::create([

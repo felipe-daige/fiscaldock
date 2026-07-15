@@ -36,7 +36,7 @@ it('admin cria usuário manualmente com trilha de auditoria', function () {
 
     expect($usuario->name)->toBe('Maria');
     expect($usuario->telefone)->toBe('11988887777');
-    expect((int) $usuario->credits)->toBe(25);
+    expect((int) $usuario->credits)->toBe(5);
     expect($usuario->terms_version)->toBeNull();
     $this->assertDatabaseHas('admin_action_logs', [
         'target_user_id' => $usuario->id,
@@ -107,7 +107,7 @@ it('admin altera plano local do usuário e o entitlement passa a usar o plano at
             'subscription_plan_id' => $profissional->id,
             'status' => 'ativa',
             'ciclo' => 'mensal',
-            // Digitados em R$ — o controller converte pra unidade do ledger (÷ 0,20).
+            // Digitados em R$ e persistidos em R$.
             'creditos_inclusos_saldo' => '220.00',
             'limite_consumo_automatico' => '100.00',
             'assentos_extras' => '1.00',
@@ -116,7 +116,7 @@ it('admin altera plano local do usuário e o entitlement passa a usar o plano at
         ->assertRedirect(route('app.admin.usuarios.index'));
 
     expect(AccountSubscription::where('user_id', $alvo->id)->first()->plan->codigo)->toBe('profissional');
-    expect(AccountSubscription::where('user_id', $alvo->id)->first()->creditos_inclusos_saldo)->toBe(1100);
+    expect(AccountSubscription::where('user_id', $alvo->id)->first()->creditos_inclusos_saldo)->toBe(220.0);
     expect(app(EntitlementService::class)->planFor($alvo->fresh())->codigo)->toBe('profissional');
     $this->assertDatabaseHas('admin_action_logs', ['target_user_id' => $alvo->id, 'acao' => 'assinatura_editar']);
 });
@@ -171,7 +171,7 @@ it('admin ajusta trial do usuário', function () {
 
     $alvo->refresh();
     expect($alvo->trial_used)->toBeTrue();
-    expect($alvo->trial_credits_remaining)->toBe(45);
+    expect($alvo->trial_credits_remaining)->toBe(45.0);
     expect($alvo->hasActiveTrial())->toBeTrue();
     $this->assertDatabaseHas('admin_action_logs', ['target_user_id' => $alvo->id, 'acao' => 'trial_editar']);
 });

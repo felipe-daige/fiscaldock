@@ -27,7 +27,7 @@ class AutoTopUpTrigger
                 return;
             }
 
-            if ((int) $user->credits >= (int) $r->limite_creditos) {
+            if ($user->credits >= (float) $r->limite_creditos) {
                 return;
             }
 

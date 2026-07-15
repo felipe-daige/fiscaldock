@@ -19,8 +19,8 @@ class SaldoTransacao extends Model
     ];
 
     protected $casts = [
-        'amount' => 'integer',
-        'balance_after' => 'integer',
+        'amount' => 'float',
+        'balance_after' => 'float',
     ];
 
     public function user()

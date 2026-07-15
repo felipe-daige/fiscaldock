@@ -49,7 +49,7 @@ it('gera xlsx de 3 abas a partir do payload do relatório', function () {
 
     expect(is_file($path))->toBeTrue();
 
-    $reader = new Reader();
+    $reader = new Reader;
     $reader->open($path);
     $sheets = [];
     foreach ($reader->getSheetIterator() as $sheet) {

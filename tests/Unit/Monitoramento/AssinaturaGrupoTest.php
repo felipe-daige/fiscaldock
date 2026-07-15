@@ -45,7 +45,7 @@ it('assinatura de grupo: alvoTipo, membros e custo do ciclo N×plano', function 
     expect($ass->alvoTipo())->toBe('grupo');
     expect($ass->grupo->id)->toBe($grupo->id);
     expect($ass->membrosDoGrupo())->toHaveCount(2);
-    expect($ass->custoCiclo())->toBe(2 * (int) agPlano()->custo_creditos);
+    expect($ass->custoCiclo())->toBe(round(2 * (float) agPlano()->custo_creditos, 2));
 });
 
 it('membros do grupo são DINÂMICOS: adicionado depois entra, removido sai', function () {
@@ -79,5 +79,5 @@ it('custoCiclo de participante/cliente = custo do plano (comportamento atual)', 
     ]);
 
     expect($ass->alvoTipo())->toBe('participante');
-    expect($ass->custoCiclo())->toBe((int) agPlano()->custo_creditos);
+    expect($ass->custoCiclo())->toBe(round((float) agPlano()->custo_creditos, 2));
 });

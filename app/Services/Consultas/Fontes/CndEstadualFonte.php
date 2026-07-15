@@ -22,9 +22,9 @@ class CndEstadualFonte extends FonteCertidaoInfoSimples
         return $uf !== '' ? "sefaz/{$uf}/certidao-debitos" : $this->slug();
     }
 
-    public function custoCreditos(): int
+    public function custoCreditos(): float
     {
-        return (int) config('consultas.fontes.cnd_estadual', 2);
+        return (float) config('consultas.fontes.cnd_estadual', 0.40);
     }
 
     public function aplicavelPara(array $alvo): bool

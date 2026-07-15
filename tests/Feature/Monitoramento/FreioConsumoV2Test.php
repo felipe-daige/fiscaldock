@@ -13,6 +13,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+
 use function Pest\Laravel\actingAs;
 
 uses(RefreshDatabase::class);
@@ -25,7 +26,7 @@ function freioAssinatura(User $user, Participante $p, array $overrides = []): Mo
 {
     return MonitoramentoAssinatura::create(array_merge([
         'user_id' => $user->id, 'participante_id' => $p->id,
-        'plano_id' => MonitoramentoPlano::porCodigo('licitacao')->id, // custo 20
+        'plano_id' => MonitoramentoPlano::porCodigo('licitacao')->id, // custo R$ 4
         'status' => 'ativo', 'frequencia_dias' => 30, 'proxima_execucao_em' => now()->subDay(),
     ], $overrides));
 }
@@ -79,7 +80,7 @@ it('cap estourado ADIA sem pausar: assinatura segue ativa e vencida, sem consult
     $user = User::factory()->create(['credits' => 100]);
     freioAssinar($user, ['limite_consumo_automatico' => 5]);
     freioConsumoNoCiclo($user, 5); // cap 5 já consumido
-    $a = freioAssinatura($user, freioParticipante($user)); // custo 20
+    $a = freioAssinatura($user, freioParticipante($user)); // custo R$ 4
 
     $this->artisan('monitoramento:executar-pendentes')->assertSuccessful();
 
@@ -108,9 +109,9 @@ it('adiada dispara sozinha quando o cap sobe no meio do ciclo', function () {
 it('adiada dispara sozinha quando o ciclo vira (consumo antigo sai da janela)', function () {
     Bus::fake();
     $user = User::factory()->create(['credits' => 100]);
-    // cap PRECISA comportar o custo (20) com consumo zerado — senão nunca dispararia
-    freioAssinar($user, ['limite_consumo_automatico' => 22]);
-    freioConsumoNoCiclo($user, 5); // 5 + 20 > 22 => adia no ciclo atual
+    // cap PRECISA comportar o custo (4) com consumo zerado — senão nunca dispararia
+    freioAssinar($user, ['limite_consumo_automatico' => 5]);
+    freioConsumoNoCiclo($user, 2); // 2 + 4 > 5 => adia no ciclo atual
     $a = freioAssinatura($user, freioParticipante($user));
 
     $this->artisan('monitoramento:executar-pendentes')->assertSuccessful();
@@ -127,13 +128,13 @@ it('adiada dispara sozinha quando o ciclo vira (consumo antigo sai da janela)', 
 it('ordena por custo: a barata dispara, a cara (que estouraria) adia', function () {
     Bus::fake();
     $user = User::factory()->create(['credits' => 100]);
-    freioAssinar($user, ['limite_consumo_automatico' => 18]);
+    freioAssinar($user, ['limite_consumo_automatico' => 4]);
     $pCara = freioParticipante($user, '11222333000181');
     $pBarata = freioParticipante($user, '11444777000161');
     // criada ANTES (id menor) mas custo maior — sem ordenação ela comeria o cap primeiro
-    $cara = freioAssinatura($user, $pCara);   // licitacao, custo 20 > cap 18 sozinha
+    $cara = freioAssinatura($user, $pCara);   // licitacao, custo R$ 4
     $barata = freioAssinatura($user, $pBarata, [
-        'plano_id' => MonitoramentoPlano::porCodigo('validacao')->id, // custo 15
+        'plano_id' => MonitoramentoPlano::porCodigo('validacao')->id, // custo R$ 3
     ]);
 
     $this->artisan('monitoramento:executar-pendentes')->assertSuccessful();
@@ -161,7 +162,7 @@ it('notifica freioAtuou 1x por ciclo mesmo com 2 runs', function () {
 it('notifica consumoProximoDoLimite ao cruzar 80% do cap, 1x por ciclo', function () {
     Bus::fake();
     $user = User::factory()->create(['credits' => 100]);
-    freioAssinar($user, ['limite_consumo_automatico' => 24]); // custo 20 => 20/24 = 83%
+    freioAssinar($user, ['limite_consumo_automatico' => 5]); // custo 4 => 4/5 = 80%
     $a = freioAssinatura($user, freioParticipante($user));
 
     $spy = $this->spy(MonitoramentoNotifier::class);
@@ -188,8 +189,8 @@ it('freioAtuou segue 1x/ciclo mesmo com âncora do ciclo estagnada (>1 mês) ent
     $user = User::factory()->create(['credits' => 100]);
     // âncora 2 meses atrás => fimCiclo no passado => TTL degenerado era 60s
     freioAssinar($user, ['limite_consumo_automatico' => 5, 'ultimo_grant_em' => now()->subMonths(2)]);
-    freioConsumoNoCiclo($user, 5); // custo do plano > cap 5 => adia
-    freioAssinatura($user, freioParticipante($user)); // custo 20
+    freioConsumoNoCiclo($user, 5); // 5 + custo 4 > cap 5 => adia
+    freioAssinatura($user, freioParticipante($user)); // custo R$ 4
 
     $spy = $this->spy(MonitoramentoNotifier::class);
 
@@ -202,7 +203,7 @@ it('freioAtuou segue 1x/ciclo mesmo com âncora do ciclo estagnada (>1 mês) ent
 
 it('criar assinatura com custo de ciclo acima do cap retorna aviso (mas cria)', function () {
     $user = User::factory()->create(['credits' => 100]);
-    freioAssinar($user, ['limite_consumo_automatico' => 5]); // cap 5 < custo 20
+    freioAssinar($user, ['limite_consumo_automatico' => 3]); // cap 3 < custo 4
     $p = freioParticipante($user);
 
     $resp = actingAs($user)->postJson(route('app.monitoramento.assinatura.criar'), [

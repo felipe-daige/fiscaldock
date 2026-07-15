@@ -37,12 +37,9 @@ it('a tela /app/consulta/nova reflete o preço de produto do override', function
         ->assertSee('data-custo="6"', false);
 });
 
-it('a tela /app/planos reflete o preço por crédito do override (via saldo incluso)', function () {
-    app(\App\Services\Admin\ComercialParametroService::class)->definir('credit_unit_price', '0.25', null);
-
+it('a tela /app/planos mostra o saldo incluso em R$ (ledger é em reais)', function () {
     actingAs(User::factory()->create())
         ->get('/app/planos')
         ->assertOk()
-        ->assertSee("R$\u{A0}43,75 em saldo/mês")      // 175 unidades inclusas × R$0,25 (override)
-        ->assertDontSee("R$\u{A0}35,00 em saldo/mês");  // valor com o peg padrão R$0,20
+        ->assertSee("R$\u{A0}35,00 em saldo/mês");  // essencial: R$ 35 inclusos, sem conversão
 });

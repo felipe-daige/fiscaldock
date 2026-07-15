@@ -20,9 +20,9 @@ class FecharClearanceLoteService
     {
         $chaves = (array) Cache::get("clearance_lote_chaves:{$loteId}", []);
 
-        $estorno = 0;
+        $estorno = 0.0;
         foreach ($chaves as $chave) {
-            $estorno += (int) Cache::pull("clearance_estorno:{$loteId}:{$chave}", 0);
+            $estorno += (float) Cache::pull("clearance_estorno:{$loteId}:{$chave}", 0);
         }
 
         $lote = DB::transaction(function () use ($loteId, $estorno, $resumo) {
@@ -45,7 +45,7 @@ class FecharClearanceLoteService
                     $lote->user,
                     $estorno,
                     'clearance_refund',
-                    'Estorno de R$ '.number_format(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($estorno), 2, ',', '.')." — documentos com falha no clearance #{$lote->id}",
+                    'Estorno de R$ '.number_format($estorno, 2, ',', '.')." — documentos com falha no clearance #{$lote->id}",
                     $lote,
                 );
             }

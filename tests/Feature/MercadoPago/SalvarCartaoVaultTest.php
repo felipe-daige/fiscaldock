@@ -30,10 +30,10 @@ it('salva cartão, grava refs e marca gatilho=saldo ativa', function () {
 
     expect($r->gatilho)->toBe('saldo');
     expect($r->status)->toBe('ativa');
-    expect($r->limite_creditos)->toBe(50);
+    expect($r->limite_creditos)->toBe(50.0);
     expect($r->mp_customer_id)->toBe('CUS-1');
     expect($r->mp_card_id)->toBe('CARD-1');
-    expect($r->creditos)->toBe(1000); // business
+    expect($r->creditos)->toBe(200.0); // business
     expect($r->mp_preapproval_id)->toBeNull();
 });
 

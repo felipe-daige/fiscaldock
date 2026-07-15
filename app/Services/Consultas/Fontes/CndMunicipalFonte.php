@@ -14,9 +14,9 @@ class CndMunicipalFonte extends FonteCertidaoInfoSimples
         return ''; // dinâmico por UF/cidade — ver slugPara()
     }
 
-    public function custoCreditos(): int
+    public function custoCreditos(): float
     {
-        return (int) config('consultas.fontes.cnd_municipal', 2);
+        return (float) config('consultas.fontes.cnd_municipal', 0.40);
     }
 
     public function slugPara(array $alvo): string

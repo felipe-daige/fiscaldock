@@ -25,7 +25,6 @@ it('permite acesso ao admin e lista os parâmetros', function () {
         ->get('/app/admin/comercial')
         ->assertOk()
         ->assertSee('Parâmetros comerciais')
-        ->assertSee('Valor de 1 unidade de saldo')
         ->assertSee('Preço Compliance (R$)');
 });
 
@@ -33,14 +32,14 @@ it('admin grava override e o PricingCatalogService passa a lê-lo', function () 
     $admin = User::factory()->create(['is_admin' => true]);
 
     actingAs($admin)
-        ->post('/app/admin/comercial/credit_unit_price', ['valor' => '0.25'])
+        ->post('/app/admin/comercial/minimum_deposit', ['valor' => '120'])
         ->assertRedirect();
 
-    $this->assertDatabaseHas('comercial_parametros', ['chave' => 'credit_unit_price', 'valor' => '0.25']);
-    expect((new PricingCatalogService)->creditUnitPrice())->toBe(0.25);
+    $this->assertDatabaseHas('comercial_parametros', ['chave' => 'minimum_deposit', 'valor' => '120']);
+    expect((new PricingCatalogService)->getMinimumDeposit())->toBe(120.00);
 });
 
-it('admin grava preço de produto em reais e o catálogo converte para cobrança', function () {
+it('admin grava preço de produto em reais e o catálogo cobra em reais', function () {
     $admin = User::factory()->create(['is_admin' => true]);
 
     actingAs($admin)
@@ -51,7 +50,6 @@ it('admin grava preço de produto em reais e o catálogo converte para cobrança
 
     $this->assertDatabaseHas('comercial_parametros', ['chave' => 'preco_compliance', 'valor' => '6']);
     expect((new PricingCatalogService)->getProductPriceByPlan($plano))->toBe(6.00);
-    expect((new PricingCatalogService)->getProductCreditsByPlan($plano, User::factory()->create()))->toBe(30);
 });
 
 it('admin reseta o override e volta ao padrão', function () {
@@ -78,6 +76,6 @@ it('valida que o valor é numérico', function () {
     $admin = User::factory()->create(['is_admin' => true]);
 
     actingAs($admin)
-        ->post('/app/admin/comercial/credit_unit_price', ['valor' => 'abc'])
+        ->post('/app/admin/comercial/minimum_deposit', ['valor' => 'abc'])
         ->assertSessionHasErrors('valor');
 });

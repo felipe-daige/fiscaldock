@@ -5,7 +5,6 @@ use App\Models\EfdImportacao;
 use App\Models\EfdNota;
 use App\Models\User;
 use App\Services\AlertaCentralService;
-use App\Services\NotasFiscaisAlertService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 

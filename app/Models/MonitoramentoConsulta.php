@@ -38,7 +38,7 @@ class MonitoramentoConsulta extends Model
         'resultado' => 'array',
         'tem_pendencias' => 'boolean',
         'proxima_validade' => 'date',
-        'creditos_cobrados' => 'integer',
+        'creditos_cobrados' => 'float',
         'executado_em' => 'datetime',
     ];
 

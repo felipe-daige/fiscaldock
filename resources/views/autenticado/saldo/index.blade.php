@@ -21,7 +21,7 @@
                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Status do trial</p>
                 @if($trialResumo['is_active'] ?? false)
                     <p class="mt-2 text-sm text-gray-700">
-                        Trial ativo: @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($trialResumo['remaining'] ?? 0)) em saldo promocional até {{ optional($trialResumo['expires_at'])->format('d/m/Y H:i') }}.
+                        Trial ativo: @brl(($trialResumo['remaining'] ?? 0)) em saldo promocional até {{ optional($trialResumo['expires_at'])->format('d/m/Y H:i') }}.
                     </p>
                 @else
                     <p class="mt-2 text-sm text-gray-700">
@@ -35,23 +35,23 @@
             <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-200">
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Saldo atual</p>
-                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($saldoAtual))</p>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(($saldoAtual))</p>
                     <p class="text-[11px] text-gray-500 mt-1">disponível</p>
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Total recebido</p>
-                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($totalRecebido))</p>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(($totalRecebido))</p>
                     <p class="text-[11px] text-gray-500 mt-1">adicionado</p>
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Total consumido</p>
-                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($totalConsumido))</p>
+                    <p class="text-lg sm:text-xl font-bold text-gray-900">@brl(($totalConsumido))</p>
                     <p class="text-[11px] text-gray-500 mt-1">consumido</p>
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Última entrada</p>
                     @if($ultimaEntrada)
-                        <p class="text-lg sm:text-xl font-bold text-gray-900">+@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $ultimaEntrada->amount))</p>
+                        <p class="text-lg sm:text-xl font-bold text-gray-900">+@brl(($ultimaEntrada->amount))</p>
                         <p class="text-[11px] text-gray-500 mt-1">{{ $ultimaEntrada->created_at->format('d/m/Y') }}</p>
                     @else
                         <p class="text-lg sm:text-xl font-bold text-gray-900">--</p>
@@ -137,9 +137,9 @@
                     {{-- Estado ativo: auto top-up por saldo baixo --}}
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <div class="text-sm text-gray-700">
-                            Recompra de <span class="font-semibold">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $recargaAtual->creditos))</span>
+                            Recompra de <span class="font-semibold">@brl(($recargaAtual->creditos))</span>
                             quando o saldo cai abaixo de
-                            <span class="font-semibold">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $recargaAtual->limite_creditos))</span>.
+                            <span class="font-semibold">@brl(($recargaAtual->limite_creditos))</span>.
                             @if($recargaAtual->status === 'inadimplente')
                                 <span class="whitespace-nowrap ml-2 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #b91c1c">Pausada</span>
                             @else
@@ -218,8 +218,8 @@
                                         <span class="whitespace-nowrap inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badge['hex'] }}">{{ $badge['label'] }}</span>
                                     </td>
                                     <td class="px-3 py-2.5 text-sm text-gray-600" data-label="Descrição">{{ $tx->description ?? '-' }}</td>
-                                    <td class="px-3 py-2.5 text-sm text-right font-semibold {{ $amountClass }}" data-label="Valor (R$)">{{ $amountPrefix }}@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) abs($tx->amount)))</td>
-                                    <td class="px-3 py-2.5 text-sm text-right text-gray-500" data-label="Saldo após">{{ $tx->balance_after !== null ? \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $tx->balance_after)) : '-' }}</td>
+                                    <td class="px-3 py-2.5 text-sm text-right font-semibold {{ $amountClass }}" data-label="Valor (R$)">{{ $amountPrefix }}@brl((abs($tx->amount)))</td>
+                                    <td class="px-3 py-2.5 text-sm text-right text-gray-500" data-label="Saldo após">{{ $tx->balance_after !== null ? \App\Support\Dinheiro::brl(($tx->balance_after)) : '-' }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

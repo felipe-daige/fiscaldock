@@ -49,11 +49,11 @@ class RecargaController extends Controller
         $dados = $request->validate([
             'pacote' => ['required', 'string'],
             'token' => ['required', 'string'],
-            'limite_creditos' => ['required', 'integer', 'min:1'],
+            'limite_creditos' => ['required', 'numeric', 'min:0.01'],
         ]);
 
         try {
-            $recarga = $action->execute(Auth::user(), $dados['token'], $dados['pacote'], (int) $dados['limite_creditos']);
+            $recarga = $action->execute(Auth::user(), $dados['token'], $dados['pacote'], round((float) $dados['limite_creditos'], 2));
         } catch (RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }

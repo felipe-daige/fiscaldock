@@ -1,4 +1,5 @@
 <?php
+
 // tests/Feature/Admin/AdminUsuarioShowAcoesTest.php
 use App\Models\AdminActionLog;
 use App\Models\User;

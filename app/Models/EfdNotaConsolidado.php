@@ -19,15 +19,15 @@ class EfdNotaConsolidado extends Model
     protected function casts(): array
     {
         return [
-            'cfop'             => 'integer',
-            'aliquota_icms'    => 'decimal:2',
-            'valor_operacao'   => 'decimal:2',
-            'valor_bc_icms'    => 'decimal:2',
-            'valor_icms'       => 'decimal:2',
+            'cfop' => 'integer',
+            'aliquota_icms' => 'decimal:2',
+            'valor_operacao' => 'decimal:2',
+            'valor_bc_icms' => 'decimal:2',
+            'valor_icms' => 'decimal:2',
             'valor_bc_icms_st' => 'decimal:2',
-            'valor_icms_st'    => 'decimal:2',
+            'valor_icms_st' => 'decimal:2',
             'valor_reducao_bc' => 'decimal:2',
-            'valor_ipi'        => 'decimal:2',
+            'valor_ipi' => 'decimal:2',
         ];
     }
 

@@ -9,9 +9,9 @@ it('gera csv com BOM UTF-8 e delimitador ponto-e-virgula', function () {
     // BOM UTF-8 no início
     expect(substr($csv, 0, 3))->toBe(chr(0xEF).chr(0xBB).chr(0xBF));
     // delimitador ";" e linhas (sem ";" no valor → fputcsv não envolve em aspas)
-    expect($csv)->toContain("Mês;Valor");
-    expect($csv)->toContain("jan;1.000,00");
-    expect($csv)->toContain("fev;2.000,00");
+    expect($csv)->toContain('Mês;Valor');
+    expect($csv)->toContain('jan;1.000,00');
+    expect($csv)->toContain('fev;2.000,00');
 });
 
 it('gera csv so com cabecalho quando nao ha linhas', function () {

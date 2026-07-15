@@ -365,7 +365,7 @@ class BlogPostCatalog
     public static function findTopic(string $slug): ?array
     {
         $metadata = self::topicsMetadata();
-        if (!isset($metadata[$slug])) {
+        if (! isset($metadata[$slug])) {
             return null;
         }
 

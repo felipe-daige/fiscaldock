@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\DB;
  *
  * A tabela `comercial_parametros` começa VAZIA → `valor()` cai no default hardcoded do registro
  * abaixo. Um admin que grava um override passa a vencer. **Garante zero mudança de preço em prod
- * até alguém editar.** A UI do admin trabalha em reais; internamente os preços por produto seguem
- * na unidade legada do ledger para não reinterpretar overrides antigos.
+ * até alguém editar.** Todos os valores são em reais (R$) — a unidade legada de "créditos" foi
+ * removida do produto em 2026-07-14.
  */
 class ComercialParametroService
 {
@@ -21,12 +21,6 @@ class ComercialParametroService
      * @var array<string, array{rotulo: string, tipo: string, default: int|float, dica?: string}>
      */
     public const DEFAULTS = [
-        'credit_unit_price' => [
-            'rotulo' => 'Valor de 1 unidade de saldo (R$)',
-            'tipo' => 'float',
-            'default' => PricingCatalogService::CREDIT_UNIT_PRICE, // 0.20
-            'dica' => 'Parâmetro legado de conversão. Os preços comerciais abaixo são preenchidos em reais.',
-        ],
         'minimum_deposit' => [
             'rotulo' => 'Depósito mínimo (R$)',
             'tipo' => 'float',
@@ -34,8 +28,8 @@ class ComercialParametroService
             'dica' => 'Valor mínimo de recarga avulsa.',
         ],
         // Preços por produto em R$ — consumidos por PricingCatalogService::getProductPriceByPlan
-        // (que converte pra unidade do ledger na cobrança). Defaults = custo_creditos do
-        // PlanoCatalog × peg (15/20/25 cr × 0,20). Tipo float: preço com centavos é válido.
+        // e cobrados diretamente do saldo em R$. Defaults = custo do PlanoCatalog (R$ 3/4/5).
+        // Tipo float: preço com centavos é válido.
         'preco_validacao' => [
             'rotulo' => 'Preço Validação (R$)',
             'tipo' => 'float',

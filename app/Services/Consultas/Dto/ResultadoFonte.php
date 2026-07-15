@@ -8,7 +8,7 @@ class ResultadoFonte
         public readonly string $chave,
         public readonly array $dados,
         public readonly string $status,
-        public readonly int $custoCreditos = 0,
+        public readonly float $custoCreditos = 0,
         public readonly ?string $mensagem = null,
     ) {}
 

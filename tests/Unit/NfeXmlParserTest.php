@@ -4,12 +4,12 @@ use App\Services\Xml\NfeXmlParser;
 
 function fixtureNfe(string $name): string
 {
-    return file_get_contents(__DIR__ . '/../Fixtures/nfe/' . $name);
+    return file_get_contents(__DIR__.'/../Fixtures/nfe/'.$name);
 }
 
 it('parseia o header de uma NF-e nfeProc', function () {
     $xml = fixtureNfe('50240197551165000193550010000248021000214750-nfe.xml');
-    $p = (new NfeXmlParser())->parse($xml);
+    $p = (new NfeXmlParser)->parse($xml);
 
     $h = $p['header'];
     expect($h['chave_acesso'])->toBe('50240197551165000193550010000248021000214750');
@@ -32,7 +32,7 @@ it('parseia o header de uma NF-e nfeProc', function () {
 
 it('parseia os itens com NCM/CFOP/valores', function () {
     $xml = fixtureNfe('50240197551165000193550010000248021000214750-nfe.xml');
-    $p = (new NfeXmlParser())->parse($xml);
+    $p = (new NfeXmlParser)->parse($xml);
 
     expect($p['itens'])->toHaveCount(7);
     $i1 = $p['itens'][0];
@@ -49,7 +49,7 @@ it('parseia os itens com NCM/CFOP/valores', function () {
 
 it('coloca o aninhado no payload e não guarda o XML cru', function () {
     $xml = fixtureNfe('50240197551165000193550010000248021000214750-nfe.xml');
-    $p = (new NfeXmlParser())->parse($xml);
+    $p = (new NfeXmlParser)->parse($xml);
 
     expect($p['payload'])->toHaveKeys(['emit', 'dest', 'transp', 'pag', 'totais']);
     expect($p['payload']['emit']['xFant'])->toBe('HIDRATOP');
@@ -57,10 +57,10 @@ it('coloca o aninhado no payload e não guarda o XML cru', function () {
 });
 
 it('parseia todas as 10 amostras sem erro', function () {
-    $files = glob(__DIR__ . '/../Fixtures/nfe/*-nfe.xml');
+    $files = glob(__DIR__.'/../Fixtures/nfe/*-nfe.xml');
     expect($files)->toHaveCount(10);
     foreach ($files as $f) {
-        $p = (new NfeXmlParser())->parse(file_get_contents($f));
+        $p = (new NfeXmlParser)->parse(file_get_contents($f));
         expect(strlen($p['header']['chave_acesso']))->toBe(44);
         expect($p['header']['modelo'])->toBe('55');
         expect(count($p['itens']))->toBeGreaterThan(0);
@@ -69,7 +69,7 @@ it('parseia todas as 10 amostras sem erro', function () {
 
 it('rejeita modelo diferente de 55', function () {
     $xml = str_replace('<mod>55</mod>', '<mod>65</mod>', fixtureNfe('50240197551165000193550010000248021000214750-nfe.xml'));
-    expect(fn () => (new NfeXmlParser())->parse($xml))
+    expect(fn () => (new NfeXmlParser)->parse($xml))
         ->toThrow(\App\Services\Xml\NfeParseException::class);
 });
 
@@ -77,7 +77,7 @@ it('rejeita modelo diferente de 55', function () {
 
 it('parseia XML com BOM UTF-8 e espaço antes do prolog', function () {
     $xml = "\xEF\xBB\xBF\n  ".fixtureNfe('50240197551165000193550010000248021000214750-nfe.xml');
-    $p = (new NfeXmlParser())->parse($xml);
+    $p = (new NfeXmlParser)->parse($xml);
     expect($p['header']['chave_acesso'])->toBe('50240197551165000193550010000248021000214750');
 });
 
@@ -86,7 +86,7 @@ it('parseia XML latin1 com encoding declarado preservando acentos', function () 
     $latin1 = mb_convert_encoding($utf8, 'ISO-8859-1', 'UTF-8');
     $latin1 = str_replace('encoding="UTF-8"', 'encoding="ISO-8859-1"', $latin1);
 
-    $p = (new NfeXmlParser())->parse($latin1);
+    $p = (new NfeXmlParser)->parse($latin1);
     expect($p['header']['natureza_operacao'])->toContain('OPERAÇÃO');
     expect($p['header']['chave_acesso'])->toHaveLength(44);
 });
@@ -96,7 +96,7 @@ it('parseia XML com bytes latin1 mas declaração UTF-8 errada (mismatch)', func
     // Mantém a declaração UTF-8 mas grava bytes ISO-8859-1 → libxml falharia sem fallback.
     $latin1 = mb_convert_encoding($utf8, 'ISO-8859-1', 'UTF-8');
 
-    $p = (new NfeXmlParser())->parse($latin1);
+    $p = (new NfeXmlParser)->parse($latin1);
     expect($p['header']['natureza_operacao'])->toContain('OPERAÇÃO');
     expect($p['header']['chave_acesso'])->toHaveLength(44);
 });
@@ -109,7 +109,7 @@ it('parseia item de Simples Nacional usando CSOSN no cst_icms', function () {
         '<ICMS><ICMSSN102><orig>0</orig><CSOSN>102</CSOSN></ICMSSN102></ICMS>',
         fixtureNfe('50240197551165000193550010000248021000214750-nfe.xml')
     );
-    $p = (new NfeXmlParser())->parse($xml);
+    $p = (new NfeXmlParser)->parse($xml);
 
     expect($p['itens'][0]['cst_icms'])->toBe('102');
     expect($p['itens'][0]['origem_mercadoria'])->toBe('0');

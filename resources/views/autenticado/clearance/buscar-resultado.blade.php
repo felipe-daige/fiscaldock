@@ -66,7 +66,7 @@
                 </div>
                 <div class="px-4 py-3">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Custo</p>
-                    <p class="text-lg font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($lote->creditos_cobrados ?? 0)))</p>
+                    <p class="text-lg font-bold text-gray-900">@brl((($lote->creditos_cobrados ?? 0)))</p>
                     <p class="text-[11px] text-gray-500 mt-1">debitados nesta consulta</p>
                 </div>
             </div>

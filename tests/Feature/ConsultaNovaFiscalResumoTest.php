@@ -67,6 +67,7 @@ it('filtra participantes por relação (inclusivo: fornecedor inclui ambos)', fu
 
     $idsDe = function (string $relacao) use ($user) {
         $resp = actingAs($user)->getJson('/app/consulta/nova/participantes?relacao='.$relacao)->assertOk()->json();
+
         return collect($resp['data'])->pluck('id')->all();
     };
 

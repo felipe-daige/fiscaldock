@@ -72,7 +72,7 @@ class EfdProgressoBuilder
     {
         $notasPorModelo = DB::table('efd_notas')
             ->where('importacao_id', $impId)
-            ->selectRaw("modelo, COUNT(*) AS qtd")
+            ->selectRaw('modelo, COUNT(*) AS qtd')
             ->groupBy('modelo')
             ->pluck('qtd', 'modelo');
 

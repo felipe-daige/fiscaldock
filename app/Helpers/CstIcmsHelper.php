@@ -27,6 +27,6 @@ class CstIcmsHelper
         $cst = str_pad((string) $cst, 2, '0', STR_PAD_LEFT);
         $cstBase = substr($cst, -2);
 
-        return self::$descricoes[$cstBase] ?? 'CST ' . $cst;
+        return self::$descricoes[$cstBase] ?? 'CST '.$cst;
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 // tests/Feature/Admin/AdminAcaoServiceTest.php
 use App\Models\AdminActionLog;
 use App\Models\User;
@@ -17,7 +18,7 @@ it('creditar positivo adiciona saldo e registra audit', function () {
 
     $log = $this->svc->creditar($this->admin, $alvo, 50, 'cortesia');
 
-    expect($alvo->fresh()->credits)->toBe(60);
+    expect($alvo->fresh()->credits)->toBe(60.0);
     expect($log->acao)->toBe('creditar');
     expect($log->detalhe['valor'])->toBe(50);
     expect($log->detalhe['saldo_depois'])->toBe(60);
@@ -29,7 +30,7 @@ it('creditar negativo debita via deduct e registra acao debitar', function () {
 
     $log = $this->svc->creditar($this->admin, $alvo, -30, 'estorno manual');
 
-    expect($alvo->fresh()->credits)->toBe(70);
+    expect($alvo->fresh()->credits)->toBe(70.0);
     expect($log->acao)->toBe('debitar');
 });
 
@@ -43,7 +44,7 @@ it('debito acima do saldo lança e não muta', function () {
     $alvo = User::factory()->create(['credits' => 10]);
     expect(fn () => $this->svc->creditar($this->admin, $alvo, -50, 'x'))
         ->toThrow(RuntimeException::class);
-    expect($alvo->fresh()->credits)->toBe(10);
+    expect($alvo->fresh()->credits)->toBe(10.0);
 });
 
 it('bloquear seta bloqueado_em e desbloquear limpa, ambos com audit', function () {

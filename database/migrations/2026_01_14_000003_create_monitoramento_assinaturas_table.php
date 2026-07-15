@@ -43,8 +43,8 @@ return new class extends Migration
                 $table->string('ciclo')->default('mensal');  // mensal, anual
                 $table->timestamp('iniciada_em')->nullable();
                 $table->timestamp('renova_em')->nullable();
-                $table->integer('creditos_inclusos_saldo')->default(0);
-                $table->integer('limite_consumo_automatico')->nullable(); // cap do cliente; null = default
+                $table->decimal('creditos_inclusos_saldo', 12, 2)->default(0);
+                $table->decimal('limite_consumo_automatico', 12, 2)->nullable(); // cap do cliente em R$; null = default
                 $table->integer('assentos_extras')->default(0);
                 $table->string('mp_preapproval_id')->nullable()->unique(); // id do preapproval (assinatura) no MP
                 $table->timestamp('proximo_grant_em')->nullable();         // quando o scheduler concede o próximo mês

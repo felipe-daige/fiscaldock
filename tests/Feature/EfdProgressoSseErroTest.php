@@ -11,9 +11,9 @@ uses(RefreshDatabase::class);
 it('stream encerra com status erro quando importacao esta erro no banco', function () {
     $user = User::factory()->create();
     $imp = EfdImportacao::create([
-        'user_id'  => $user->id,
+        'user_id' => $user->id,
         'tipo_efd' => 'EFD ICMS/IPI',
-        'status'   => 'erro',
+        'status' => 'erro',
     ]);
 
     $response = actingAs($user)->get(
@@ -27,9 +27,9 @@ it('stream descarta importacao_id de outro usuario (apenas valida nao trava)', f
     $dono = User::factory()->create();
     $outro = User::factory()->create();
     $imp = EfdImportacao::create([
-        'user_id'  => $dono->id,
+        'user_id' => $dono->id,
         'tipo_efd' => 'EFD ICMS/IPI',
-        'status'   => 'erro',
+        'status' => 'erro',
     ]);
 
     // Sem cache e com importacao_id descartado, o loop só encerraria por timeout (30 min).

@@ -10,7 +10,7 @@ uses(Illuminate\Foundation\Testing\RefreshDatabase::class);
 it('faz upsert e merge no escopo participante', function () {
     [$loteId, $participanteId] = montarLoteParticipante();
 
-    $p = new PersistenciaCnpj();
+    $p = new PersistenciaCnpj;
     $p->gravar($loteId, 'participante', $participanteId, new ResultadoFonte('cadastro', ['razao_social' => 'X', 'consultas_realizadas' => ['situacao_cadastral']], 'sucesso'));
     $p->gravar($loteId, 'participante', $participanteId, new ResultadoFonte('cnd_federal', ['cnd_federal' => ['status' => 'REGULAR'], 'consultas_realizadas' => ['cnd_federal']], 'sucesso'));
 
@@ -26,7 +26,7 @@ it('grava no escopo cliente (cliente_id setado, participante_id nulo)', function
     [$loteId, , $userId] = montarLoteParticipante();
     $clienteId = DB::table('clientes')->where('user_id', $userId)->value('id');
 
-    (new PersistenciaCnpj())->gravar($loteId, 'cliente', $clienteId, new ResultadoFonte('cadastro', ['razao_social' => 'EMP'], 'sucesso'));
+    (new PersistenciaCnpj)->gravar($loteId, 'cliente', $clienteId, new ResultadoFonte('cadastro', ['razao_social' => 'EMP'], 'sucesso'));
 
     $r = ConsultaResultado::where('consulta_lote_id', $loteId)->where('cliente_id', $clienteId)->firstOrFail();
     expect($r->participante_id)->toBeNull();

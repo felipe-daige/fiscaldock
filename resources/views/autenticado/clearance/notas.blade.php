@@ -3,7 +3,7 @@
     $clientes = $clientes ?? collect();
     $filtros = $filtros ?? [];
     $escopoNotas = $escopoNotas ?? [];
-    $saldoAtual = (int) ($saldoAtual ?? 0);
+    $saldoAtual = (float) ($saldoAtual ?? 0);
     $custosTiers = $custosTiers ?? ['basico' => 5, 'full' => 5];
     $sort = $sort ?? 'valor_total';
     $dir = $dir ?? 'desc';
@@ -128,7 +128,7 @@
     data-saldo-atual="{{ $saldoAtual }}"
     data-custo-basico="{{ $custosTiers['basico'] }}"
     data-custo-full="{{ $custosTiers['full'] }}"
-    data-saldo-unit-price="{{ app(\App\Services\PricingCatalogService::class)->creditUnitPrice() }}">
+>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <x-clearance.certificado-banner />
 
@@ -248,7 +248,7 @@
                             <p class="text-sm font-semibold text-gray-900">Clearance</p>
                             <span class="inline-block px-2 py-0.5 rounded text-white text-[10px] font-semibold" style="background-color: #6b7280;">Preço único</span>
                         </div>
-                        <p class="text-lg font-bold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $custosTiers['basico'])) <span class="text-xs font-medium text-gray-500">/nota</span></p>
+                        <p class="text-lg font-bold text-gray-900">@brl(($custosTiers['basico'])) <span class="text-xs font-medium text-gray-500">/nota</span></p>
                         <p class="text-[11px] text-gray-500 mt-1">Situação oficial + eventos de cancelamento + confronto de valores e alertas contábeis. Mesmo preço da busca por chave avulsa.</p>
                     </div>
                     <p class="text-[11px] text-gray-500 mt-3">A cobrança acontece na hora da confirmação. <strong>Falhas do provedor estornam o valor</strong> automaticamente.</p>
@@ -284,7 +284,7 @@
                         <p class="text-[10px] font-semibold uppercase tracking-wide" style="color: #047857">Saldo</p>
                         <span class="text-[9px] font-bold uppercase tracking-wide text-white px-1.5 py-0.5 rounded" style="background-color: #047857">Saldo</span>
                     </div>
-                    <p id="clearance-saldo-atual" class="text-xl font-bold mt-0.5" style="color: #047857">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($saldoAtual))</p>
+                    <p id="clearance-saldo-atual" class="text-xl font-bold mt-0.5" style="color: #047857">@brl(($saldoAtual))</p>
                     <p class="text-[11px] mt-1" style="color: #065f46">Disponível para validações</p>
                 </div>
             </div>
@@ -438,7 +438,7 @@
                         <li class="flex items-start gap-2"><svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #047857"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>Cruzamento com EFD</li>
                     </ul>
                     <div class="border-t border-gray-200 pt-3 flex items-center justify-between">
-                        <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded uppercase tracking-wide">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $custosTiers['basico'])) / nota</span>
+                        <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded uppercase tracking-wide">@brl(($custosTiers['basico'])) / nota</span>
                         <span class="flex items-center gap-1.5">
                             <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Total</span>
                             <span class="text-[10px] font-bold text-white px-2 py-0.5 rounded uppercase tracking-wide" style="background-color: #374151"><span class="plan-total" data-tier="basico">R$ 0,00</span></span>
@@ -468,7 +468,7 @@
                             <li class="flex items-start gap-2"><span class="w-3.5 flex-shrink-0 text-center font-bold" style="color: #047857">+</span>CND Federal (PGFN) da contraparte</li>
                         </ul>
                         <div class="border-t border-gray-200 pt-3 flex items-center justify-between">
-                            <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded uppercase tracking-wide">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $custosTiers['full'])) / nota</span>
+                            <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded uppercase tracking-wide">@brl(($custosTiers['full'])) / nota</span>
                             <span class="flex items-center gap-1.5">
                                 <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Total</span>
                                 <span class="text-[10px] font-bold text-white px-2 py-0.5 rounded uppercase tracking-wide" style="background-color: #374151"><span class="plan-total" data-tier="full">R$ 0,00</span></span>

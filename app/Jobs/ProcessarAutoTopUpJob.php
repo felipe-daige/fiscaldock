@@ -47,7 +47,7 @@ class ProcessarAutoTopUpJob implements ShouldQueue
             }
 
             $user = User::find($this->userId);
-            if ($user === null || (int) $user->credits >= (int) $r->limite_creditos) {
+            if ($user === null || (float) $user->credits >= (float) $r->limite_creditos) {
                 return null;
             }
 

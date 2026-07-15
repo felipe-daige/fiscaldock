@@ -9,7 +9,6 @@ use App\Models\CteConsulta;
 use App\Models\NfeConsulta;
 use App\Models\Participante;
 use App\Models\ParticipanteScore;
-use App\Models\User;
 use App\Services\Consultas\FecharLoteService;
 use App\Services\Consultas\FonteRegistry;
 use App\Services\SaldoService;
@@ -17,7 +16,6 @@ use App\Support\CertidaoBadge;
 use App\Support\Cnpj;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\Log;
 
 /**
  * Clearance Full — Camada A: investiga a REGULARIDADE da CONTRAPARTE (participante
@@ -462,5 +460,4 @@ class RegularidadeContraparteService
     {
         return (int) config('clearance.full.frescura_dias', 30);
     }
-
 }

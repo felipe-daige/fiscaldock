@@ -16,7 +16,7 @@ it('ResultadoFonte carrega chave, dados e status', function () {
     expect($r->chave)->toBe('cadastro');
     expect($r->dados['razao_social'])->toBe('X');
     expect($r->status)->toBe('sucesso');
-    expect($r->custoCreditos)->toBe(0);
+    expect($r->custoCreditos)->toBe(0.0);
     expect($r->ehFalhaEstornavel())->toBeFalse();
 });
 

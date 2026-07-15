@@ -6,7 +6,6 @@ use App\Models\MonitoramentoAssinatura;
 use App\Models\MonitoramentoConsulta;
 use App\Models\User;
 use App\Services\AlertaCentralService;
-use App\Services\PricingCatalogService;
 use App\Support\Dinheiro;
 use Illuminate\Support\Carbon;
 
@@ -14,7 +13,6 @@ class AlertaCentralNotifier implements MonitoramentoNotifier
 {
     public function __construct(
         private AlertaCentralService $alertas,
-        private PricingCatalogService $precos,
     ) {}
 
     public function assinaturaPausadaSemSaldo(MonitoramentoAssinatura $assinatura): void
@@ -58,10 +56,10 @@ class AlertaCentralNotifier implements MonitoramentoNotifier
         ]);
     }
 
-    public function consumoProximoDoLimite(User $user, int $consumoCreditos, int $capCreditos): void
+    public function consumoProximoDoLimite(User $user, float $consumoCreditos, float $capCreditos): void
     {
-        $consumoBrl = Dinheiro::brl($this->precos->creditsToCurrency($consumoCreditos));
-        $capBrl = Dinheiro::brl($this->precos->creditsToCurrency($capCreditos));
+        $consumoBrl = Dinheiro::brl($consumoCreditos);
+        $capBrl = Dinheiro::brl($capCreditos);
 
         $this->alertas->registrarAlertaMonitoramento([
             'user_id' => $user->id,

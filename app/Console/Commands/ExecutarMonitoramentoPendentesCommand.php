@@ -6,8 +6,8 @@ use App\Actions\Monitoramento\DispararConsultaMonitoramento;
 use App\Models\MonitoramentoAssinatura;
 use App\Models\MonitoramentoConsulta;
 use App\Models\User;
-use App\Services\SaldoService;
 use App\Services\Entitlements\EntitlementService;
+use App\Services\SaldoService;
 use App\Support\Monitoramento\MonitoramentoNotifier;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
@@ -142,7 +142,7 @@ class ExecutarMonitoramentoPendentesCommand extends Command
 
         $consumo = $entitlements->consumoMonitoramentoNoCiclo($user);
 
-        if ($consumo < (int) ceil($cap * 0.8)) {
+        if ($consumo < $cap * 0.8) {
             return;
         }
 

@@ -29,8 +29,7 @@ class SaldoController extends Controller
 
         return response()->json([
             'success' => true,
-            'saldo_reais' => app(\App\Services\PricingCatalogService::class)
-                ->creditsToCurrency($this->saldoService->getBalance($user)),
+            'saldo_reais' => $this->saldoService->getBalance($user),
         ]);
     }
 }

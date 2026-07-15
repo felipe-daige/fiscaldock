@@ -33,8 +33,9 @@ class AtualizarRegimeCommand extends Command
 
         $regimesValidos = ['simples_nacional', 'lucro_real', 'lucro_presumido', 'mei'];
 
-        if (!in_array($regime, $regimesValidos)) {
-            $this->error("Regime inválido. Use um dos seguintes: " . implode(', ', $regimesValidos));
+        if (! in_array($regime, $regimesValidos)) {
+            $this->error('Regime inválido. Use um dos seguintes: '.implode(', ', $regimesValidos));
+
             return Command::FAILURE;
         }
 
@@ -45,23 +46,11 @@ class AtualizarRegimeCommand extends Command
         if ($resultado) {
             $this->info("Regime tributário atualizado com sucesso para: {$regime}");
         } else {
-            $this->error("Erro ao atualizar regime tributário.");
+            $this->error('Erro ao atualizar regime tributário.');
+
             return Command::FAILURE;
         }
 
         return Command::SUCCESS;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

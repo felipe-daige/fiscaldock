@@ -3,7 +3,7 @@
 use App\Services\Consultas\ClassificadorCodigo;
 
 it('classifica cada grupo de código InfoSimples', function () {
-    $c = new ClassificadorCodigo();
+    $c = new ClassificadorCodigo;
     expect($c->classificar(200))->toBe('sucesso');
     expect($c->classificar(201))->toBe('sucesso');
     expect($c->classificar(612))->toBe('nao_encontrado');
@@ -16,5 +16,5 @@ it('classifica cada grupo de código InfoSimples', function () {
 });
 
 it('trata código desconhecido como fatal (conservador)', function () {
-    expect((new ClassificadorCodigo())->classificar(999))->toBe('fatal');
+    expect((new ClassificadorCodigo)->classificar(999))->toBe('fatal');
 });

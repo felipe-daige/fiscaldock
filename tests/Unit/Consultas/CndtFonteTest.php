@@ -3,7 +3,7 @@
 use App\Services\Consultas\Fontes\CndtFonte;
 
 it('expõe metadados da fonte CNDT', function () {
-    $f = new CndtFonte();
+    $f = new CndtFonte;
     expect($f->chave())->toBe('cndt');
     expect($f->provider())->toBe('infosimples');
     expect($f->slug())->toBe('tribunal/tst/cndt');
@@ -13,7 +13,7 @@ it('expõe metadados da fonte CNDT', function () {
 });
 
 it('normaliza sucesso e 611→INDETERMINADO', function () {
-    $f = new CndtFonte();
+    $f = new CndtFonte;
     $ok = $f->normalizar(['data' => [[
         'tipo' => 'Negativa', 'numero_certidao' => 'TST123',
         'validade_data' => '01/12/2026', 'conseguiu_emitir_certidao_negativa' => true, 'mensagem' => 'm',
@@ -28,7 +28,7 @@ it('normaliza sucesso e 611→INDETERMINADO', function () {
 });
 
 it('pronta() só com InfoSimples ativo + token', function () {
-    $f = new CndtFonte();
+    $f = new CndtFonte;
     config()->set('consultas.infosimples_ativo', false);
     expect($f->pronta())->toBeFalse();
 

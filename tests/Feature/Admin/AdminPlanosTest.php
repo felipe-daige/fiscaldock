@@ -64,7 +64,7 @@ it('admin edita limites e capabilities e persiste no catálogo', function () {
     expect($ess->nome)->toBe('Essencial+');
     expect($ess->preco_mensal_centavos)->toBe(12900); // R$ 129,00 → centavos
     expect($ess->preco_anual_centavos)->toBe(129000);
-    expect($ess->creditos_inclusos)->toBe(400); // R$ 80 ÷ 0,20
+    expect($ess->creditos_inclusos)->toBe(80.0); // R$ 80 direto
     expect($ess->limite_clientes)->toBe(20);
     expect($ess->limite_cnpjs_monitorados)->toBeNull(); // ilimitado
     expect($ess->profundidade_auto_monitor)->toBe('compliance');

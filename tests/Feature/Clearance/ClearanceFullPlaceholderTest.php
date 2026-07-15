@@ -126,8 +126,8 @@ it('com Full OFF, a tela de notas não oferece a escolha (só o card "em breve")
 it('preço: básico 5 un (R$ 1,00) e completo 10 un (R$ 2,00); avulsa espelha o básico', function () {
     expect(ClearanceController::CLEARANCE_NFE_AVULSA_CUSTO)
         ->toBe(ValidacaoContabilService::CUSTO_DOCUMENTO)
-        ->and(ValidacaoContabilService::custoUnitarioPorTier('basico'))->toBe(5)
-        ->and(ValidacaoContabilService::custoUnitarioPorTier('full'))->toBe(10);
+        ->and(ValidacaoContabilService::custoUnitarioPorTier('basico'))->toBe(1.0)
+        ->and(ValidacaoContabilService::custoUnitarioPorTier('full'))->toBe(2.0);
 });
 
 it('lote com tier=full debita R$ 2,00 por nota e marca o tier no lote', function () {

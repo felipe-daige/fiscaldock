@@ -726,7 +726,7 @@
                             </div>
                             <div class="flex items-center justify-between gap-3">
                                 <span class="text-sm text-gray-600">Custo/Execução</span>
-                                <span class="text-sm font-semibold text-gray-900">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) ($assinaturaAtiva->plano->custo_creditos ?? 0)))</span>
+                                <span class="text-sm font-semibold text-gray-900">@brl((($assinaturaAtiva->plano->custo_creditos ?? 0)))</span>
                             </div>
                             <div class="pt-3 border-t border-gray-200 flex gap-2">
                                 @if($assinaturaAtiva->status === 'ativo')
@@ -800,7 +800,7 @@
                         <option value="">Selecione...</option>
                         @foreach($planos as $plano)
                             <option value="{{ $plano->id }}">
-                                {{ $plano->nome }} ({{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) $plano->custo_creditos)) }}/consulta)
+                                {{ $plano->nome }} ({{ \App\Support\Dinheiro::brl(($plano->custo_creditos)) }}/consulta)
                             </option>
                         @endforeach
                     </select>

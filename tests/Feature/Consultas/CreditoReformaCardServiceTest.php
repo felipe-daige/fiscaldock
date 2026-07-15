@@ -2,9 +2,9 @@
 
 use App\Models\Cliente;
 use App\Models\Participante;
+use App\Models\User;
 use App\Services\Reforma\CreditoReformaCardService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\User;
 
 uses(RefreshDatabase::class);
 

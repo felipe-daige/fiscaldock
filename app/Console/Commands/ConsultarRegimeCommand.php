@@ -35,22 +35,9 @@ class ConsultarRegimeCommand extends Command
         if ($regime) {
             $this->info("Regime tributário encontrado: {$regime}");
         } else {
-            $this->warn("Regime tributário não encontrado para este CNPJ.");
+            $this->warn('Regime tributário não encontrado para este CNPJ.');
         }
 
         return Command::SUCCESS;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

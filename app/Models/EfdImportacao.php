@@ -47,7 +47,7 @@ class EfdImportacao extends Model
             'duplicados' => 'integer',
             'total_notas' => 'integer',
             'notas_extraidas' => 'integer',
-            'creditos_cobrados' => 'integer',
+            'creditos_cobrados' => 'float',
             'participante_ids' => 'array',
             'periodo_inicio' => 'date',
             'periodo_fim' => 'date',

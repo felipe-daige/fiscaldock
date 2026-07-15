@@ -48,7 +48,7 @@
                 </div>
                 <div class="p-4">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Custo</p>
-                    <p class="text-lg font-bold text-gray-900">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($kpis['total_creditos'] ?? 0))) }}</p>
+                    <p class="text-lg font-bold text-gray-900">{{ \App\Support\Dinheiro::brl((($kpis['total_creditos'] ?? 0))) }}</p>
                     <p class="text-[11px] text-gray-500 mt-1">consumidos</p>
                 </div>
                 <div class="p-4">
@@ -185,7 +185,7 @@
                                         <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ number_format($lote->total_participantes, 0, ',', '.') }}</span>
                                     </td>
                                     <td class="px-3 py-3 text-sm font-semibold text-gray-900 font-mono">
-                                        {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $lote->creditos_cobrados)) }}
+                                        {{ \App\Support\Dinheiro::brl(($lote->creditos_cobrados)) }}
                                     </td>
                                     <td class="px-3 py-3">
                                         <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusMeta['hex'] }}">{{ $statusMeta['label'] }}</span>
@@ -249,7 +249,7 @@
                                 </div>
                                 <div>
                                     <p class="text-[10px] text-gray-400 uppercase">Custo</p>
-                                    <p class="font-mono text-gray-900">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $lote->creditos_cobrados)) }}</p>
+                                    <p class="font-mono text-gray-900">{{ \App\Support\Dinheiro::brl(($lote->creditos_cobrados)) }}</p>
                                 </div>
                                 <div>
                                     <p class="text-[10px] text-gray-400 uppercase">Ações</p>

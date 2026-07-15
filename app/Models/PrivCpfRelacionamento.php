@@ -37,8 +37,3 @@ class PrivCpfRelacionamento extends Model
         return $this->belongsTo(PrivCpfCadastro::class, 'cpf_id');
     }
 }
-
-
-
-
-

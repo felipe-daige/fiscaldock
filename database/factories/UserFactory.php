@@ -46,13 +46,13 @@ class UserFactory extends Factory
      * Usuário com trial ativo — passa pelo gate de entitlements
      * (política "trial libera tudo"). Espelha o estado de um signup recente.
      */
-    public function trialAtivo(int $creditos = 50): static
+    public function trialAtivo(float $saldo = 10.00): static
     {
         return $this->state(fn (array $attributes) => [
             'trial_used' => true,
             'trial_started_at' => now(),
             'trial_expires_at' => now()->addDays(30),
-            'trial_credits_remaining' => $creditos,
+            'trial_credits_remaining' => $saldo,
         ]);
     }
 }

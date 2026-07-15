@@ -73,7 +73,7 @@ class ClearanceLoteService
      */
     public function iniciarComItens(
         Collection $itens,
-        int $custoUnit,
+        float $custoUnit,
         int $userId,
         ?string $tabId,
         string $descricaoDebito,
@@ -114,10 +114,7 @@ class ClearanceLoteService
                 'plano_id' => null,
                 'status' => ConsultaLote::STATUS_PROCESSANDO,
                 'total_participantes' => $itens->count(),
-                // Coluna canônica em unidades do ledger (lida por dashboards/relatórios/
-                // estorno). O rename saldo trocou por engano por 'valor_cobrado_reais',
-                // que NÃO é coluna → gravava 0 e sumia do relatório. R$ é campo de
-                // response (abaixo), não de persistência.
+                // Coluna canônica em R$ (lida por dashboards/relatórios/estorno).
                 'creditos_cobrados' => $custoTotal,
                 'tab_id' => $tabId,
                 // Tier contratado — a tela de resultado usa isto pra saber se a regularidade da
@@ -199,12 +196,9 @@ class ClearanceLoteService
                 'consulta_lote_id' => $lote->id,
                 'tab_id' => $tabId,
                 'total_notas' => $total,
-                'valor_cobrado_reais' => app(\App\Services\PricingCatalogService::class)
-                    ->creditsToCurrency($custoTotal),
-                'valor_utilizado_reais' => app(\App\Services\PricingCatalogService::class)
-                    ->creditsToCurrency($custoTotal),
-                'novo_saldo_reais' => app(\App\Services\PricingCatalogService::class)
-                    ->creditsToCurrency($this->saldoService->getBalance($user)),
+                'valor_cobrado_reais' => round($custoTotal, 2),
+                'valor_utilizado_reais' => round($custoTotal, 2),
+                'novo_saldo_reais' => $this->saldoService->getBalance($user),
                 'resultado_url' => route($resultadoRouteName, ['consultaLoteId' => $lote->id]),
             ];
         } catch (\Throwable $e) {

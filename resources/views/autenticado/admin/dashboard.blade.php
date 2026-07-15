@@ -4,9 +4,9 @@
     $periodos = ['30' => '30 dias', '90' => '90 dias', '365' => '12 meses', 'tudo' => 'Todo o histórico'];
     $periodoLabel = $periodos[$m['periodo']] ?? '30 dias';
     $precos = app(\App\Services\PricingCatalogService::class);
-    $saldoUsuarios = $precos->creditsToCurrency((int) $m['creditos']['saldo_base']);
-    $saldoVendido = $precos->creditsToCurrency((int) $m['creditos']['vendidos']);
-    $saldoConsumido = $precos->creditsToCurrency((int) $m['creditos']['consumidos']);
+    $saldoUsuarios = ($m['creditos']['saldo_base']);
+    $saldoVendido = ($m['creditos']['vendidos']);
+    $saldoConsumido = ($m['creditos']['consumidos']);
     $disco = $operacao['disco'];
     $totalAlertas = ($disco['status'] === 'saudavel' ? 0 : 1)
         + ($operacao['pendencias_vencidas'] > 0 ? 1 : 0)

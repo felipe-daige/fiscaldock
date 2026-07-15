@@ -14,9 +14,9 @@ class CndtFonte extends FonteCertidaoInfoSimples
         return 'tribunal/tst/cndt';
     }
 
-    public function custoCreditos(): int
+    public function custoCreditos(): float
     {
-        return (int) config('consultas.fontes.cndt', 2);
+        return (float) config('consultas.fontes.cndt', 0.40);
     }
 
     protected function mapearSucesso(array $data): array

@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class AdminPendencia extends Model
 {
     public const STATUS_ABERTA = 'aberta';
+
     public const STATUS_RESOLVIDA = 'resolvida';
 
     protected $table = 'admin_pendencias';

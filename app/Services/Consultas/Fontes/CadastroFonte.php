@@ -53,7 +53,7 @@ class CadastroFonte implements Fonte
         return ['cnpj' => preg_replace('/[^0-9]/', '', (string) ($alvo['cnpj'] ?? ''))];
     }
 
-    public function custoCreditos(): int
+    public function custoCreditos(): float
     {
         return 0;
     }

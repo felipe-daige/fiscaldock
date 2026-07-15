@@ -97,7 +97,7 @@
                     </div>
                     @php $custoPlano = (float) ($lote->plano?->custo_creditos ?? 0); @endphp
                     <span class="mt-1 inline-flex items-center self-start gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide" style="background-color: #eef2ff; color: #4338ca">
-                        {{ $custoPlano > 0 ? \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($custoPlano)).'/consulta' : 'Grátis' }}
+                        {{ $custoPlano > 0 ? \App\Support\Dinheiro::brl(($custoPlano)).'/consulta' : 'Grátis' }}
                     </span>
                 </div>
                 <div class="px-4 py-3 min-h-[96px] flex flex-col">
@@ -110,7 +110,7 @@
                 <div class="px-4 py-3 min-h-[96px] flex flex-col">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Custo</p>
                     <div class="flex-1 flex items-center">
-                        <p class="text-lg font-bold text-gray-900">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((float) ($lote->creditos_cobrados ?? 0))) }}</p>
+                        <p class="text-lg font-bold text-gray-900">{{ \App\Support\Dinheiro::brl((($lote->creditos_cobrados ?? 0))) }}</p>
                     </div>
                     <p class="text-[11px] text-gray-500 mt-1">total cobrado</p>
                 </div>

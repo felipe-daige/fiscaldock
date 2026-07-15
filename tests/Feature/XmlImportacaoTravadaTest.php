@@ -11,9 +11,9 @@ function xmlTravadaImportacao(string $status, int $minutosAtras): XmlImportacao
 {
     $user = User::factory()->create();
     $imp = XmlImportacao::create([
-        'user_id'        => $user->id,
+        'user_id' => $user->id,
         'tipo_documento' => 'nfe',
-        'status'         => $status,
+        'status' => $status,
     ]);
     DB::table('xml_importacoes')
         ->where('id', $imp->id)

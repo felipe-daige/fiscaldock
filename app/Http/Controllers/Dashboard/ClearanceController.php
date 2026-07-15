@@ -43,6 +43,9 @@ class ClearanceController extends Controller
 
     private const BUSCA_AVULSA_CACHE_TTL_MINUTES = 120;
 
+    /** Teto de itens carregados por nota nas superfícies em lote (expansivo, resultado). */
+    private const ITENS_LISTAGEM_MAX = 15;
+
     private const AUTH_VIEW_PREFIX = 'autenticado.clearance.';
 
     private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
@@ -297,7 +300,7 @@ class ClearanceController extends Controller
         $resumo = [
             'lotes' => (clone $query)->count(),
             'documentos' => (int) ((clone $query)->sum('total_participantes') ?? 0),
-            'creditos' => (int) ((clone $query)->sum('creditos_cobrados') ?? 0),
+            'creditos' => round((float) ((clone $query)->sum('creditos_cobrados') ?? 0), 2),
         ];
 
         $lotes = $query
@@ -1569,10 +1572,15 @@ class ClearanceController extends Controller
         $resultados = $this->listarConsultasDfePorLote($userId, $lote->id);
         $resumo = $this->resumirResultadosClearance($resultados);
 
+        // Itens do acervo por chave só no render da página (o polling AJAX não lista linhas).
+        if (! $this->isAjaxRequest($request)) {
+            $this->anexarItensPorChave($resultados, $userId);
+        }
+
         $analiseDivergencia = (new DivergenciaService)->analisar(
             $resultados,
             $userId,
-            (int) ($lote->creditos_cobrados ?? 0)
+            (float) ($lote->creditos_cobrados ?? 0)
         );
 
         if ($this->isAjaxRequest($request)) {
@@ -1719,7 +1727,7 @@ class ClearanceController extends Controller
         $divergencia = (new DivergenciaService)->analisar(
             $resultados,
             $userId,
-            (int) ($lote->creditos_cobrados ?? 0)
+            (float) ($lote->creditos_cobrados ?? 0)
         );
 
         $relatorio = (new RelatorioExecutivoService)->montar($lote, $resultados, $divergencia);
@@ -2075,41 +2083,45 @@ class ClearanceController extends Controller
      * só por C190 (sem C170) cai na gêmea de contribuicoes da mesma chave — onde o item
      * realmente está detalhado (mesma regra de EfdNota::itensDetalhe()).
      */
+    /**
+     * Carga em lote dos itens de um conjunto de notas (XML ou EFD), com teto por documento
+     * (window function) — nunca N+1. Retorna agrupado por id da nota, cada linha carregando
+     * `total_itens` (contagem real, pré-teto).
+     */
+    private function carregarItensDeNotas(string $tabela, string $fk, array $ids, int $userId): Collection
+    {
+        if ($ids === []) {
+            return collect();
+        }
+
+        $ncm = $tabela === 'xml_notas_itens' ? 'ncm' : 'NULL::text as ncm';
+
+        $sub = DB::table($tabela)
+            ->selectRaw("
+                {$fk} as nota_id,
+                numero_item, codigo_item, descricao, cfop, quantidade, unidade_medida,
+                valor_unitario, valor_total, {$ncm},
+                ROW_NUMBER() OVER (PARTITION BY {$fk} ORDER BY numero_item, id) as posicao,
+                COUNT(*) OVER (PARTITION BY {$fk}) as total_itens
+            ")
+            ->where('user_id', $userId)
+            ->whereIn($fk, $ids);
+
+        return DB::query()->fromSub($sub, 'itens')
+            ->where('posicao', '<=', self::ITENS_LISTAGEM_MAX)
+            ->orderBy('nota_id')
+            ->orderBy('posicao')
+            ->get()
+            ->groupBy('nota_id');
+    }
+
     private function anexarItensListagem(Collection $notas, int $userId): void
     {
-        $maxItens = 15;
-
         $xmlIds = $notas->where('origem', 'xml')->pluck('id')->map(fn ($v) => (int) $v)->values();
         $efdIds = $notas->where('origem', 'efd')->pluck('id')->map(fn ($v) => (int) $v)->values();
 
-        $carregar = function (string $tabela, string $fk, array $ids) use ($userId, $maxItens): Collection {
-            if ($ids === []) {
-                return collect();
-            }
-
-            $ncm = $tabela === 'xml_notas_itens' ? 'ncm' : 'NULL::text as ncm';
-
-            $sub = DB::table($tabela)
-                ->selectRaw("
-                    {$fk} as nota_id,
-                    numero_item, codigo_item, descricao, cfop, quantidade, unidade_medida,
-                    valor_unitario, valor_total, {$ncm},
-                    ROW_NUMBER() OVER (PARTITION BY {$fk} ORDER BY numero_item, id) as posicao,
-                    COUNT(*) OVER (PARTITION BY {$fk}) as total_itens
-                ")
-                ->where('user_id', $userId)
-                ->whereIn($fk, $ids);
-
-            return DB::query()->fromSub($sub, 'itens')
-                ->where('posicao', '<=', $maxItens)
-                ->orderBy('nota_id')
-                ->orderBy('posicao')
-                ->get()
-                ->groupBy('nota_id');
-        };
-
-        $itensXml = $carregar('xml_notas_itens', 'xml_nota_id', $xmlIds->all());
-        $itensEfd = $carregar('efd_notas_itens', 'efd_nota_id', $efdIds->all());
+        $itensXml = $this->carregarItensDeNotas('xml_notas_itens', 'xml_nota_id', $xmlIds->all(), $userId);
+        $itensEfd = $this->carregarItensDeNotas('efd_notas_itens', 'efd_nota_id', $efdIds->all(), $userId);
 
         $chavesSemItens = $notas
             ->filter(fn ($n) => $n->origem === 'efd' && ! $itensEfd->has((int) $n->id) && ! empty($n->chave))
@@ -2127,10 +2139,11 @@ class ClearanceController extends Controller
                 ->pluck('chave_acesso', 'id');
 
             if ($gemeas->isNotEmpty()) {
-                $itensGemea = $carregar(
+                $itensGemea = $this->carregarItensDeNotas(
                     'efd_notas_itens',
                     'efd_nota_id',
-                    $gemeas->keys()->map(fn ($v) => (int) $v)->all()
+                    $gemeas->keys()->map(fn ($v) => (int) $v)->all(),
+                    $userId
                 );
 
                 foreach ($gemeas as $gemeaId => $chave) {
@@ -2155,6 +2168,84 @@ class ClearanceController extends Controller
             $nota->itens_nota = $grupo?->values() ?? collect();
             $nota->itens_total = (int) ($grupo?->first()->total_itens ?? 0);
             $nota->itens_via_gemea = $viaGemea;
+        });
+    }
+
+    /**
+     * Itens negociados por CHAVE de acesso, para superfícies que só carregam o snapshot
+     * (resultado do lote): resolve cada chave contra o acervo (xml_notas preferido; senão
+     * efd_notas fiscal, com fallback na gêmea de contribuicoes) e anexa `itens_nota`,
+     * `itens_total`, `itens_via_gemea` e `itens_detalhe_url` em cada resultado. Tudo em lote.
+     */
+    private function anexarItensPorChave(Collection $resultados, int $userId): void
+    {
+        $chaves = $resultados->pluck('chave_acesso')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($chaves->isEmpty()) {
+            return;
+        }
+
+        $xmlPorChave = DB::table('xml_notas')
+            ->where('user_id', $userId)
+            ->whereIn('chave_acesso', $chaves->all())
+            ->pluck('id', 'chave_acesso');
+
+        // Todas as notas EFD das chaves (fiscal E contribuicoes) — a gêmea resolve sem query extra.
+        $efdNotas = DB::table('efd_notas')
+            ->where('user_id', $userId)
+            ->whereIn('chave_acesso', $chaves->all())
+            ->get(['id', 'chave_acesso', 'origem_arquivo']);
+
+        $itensXml = $this->carregarItensDeNotas(
+            'xml_notas_itens',
+            'xml_nota_id',
+            $xmlPorChave->values()->map(fn ($v) => (int) $v)->all(),
+            $userId
+        );
+        $itensEfd = $this->carregarItensDeNotas(
+            'efd_notas_itens',
+            'efd_nota_id',
+            $efdNotas->pluck('id')->map(fn ($v) => (int) $v)->all(),
+            $userId
+        );
+
+        $efdPorChave = $efdNotas->groupBy('chave_acesso');
+
+        $resultados->each(function ($resultado) use ($xmlPorChave, $efdPorChave, $itensXml, $itensEfd) {
+            $chave = (string) ($resultado->chave_acesso ?? '');
+            $grupo = null;
+            $viaGemea = false;
+            $detalheUrl = null;
+
+            $xmlId = $xmlPorChave->get($chave);
+            if ($xmlId !== null && $itensXml->has((int) $xmlId)) {
+                $grupo = $itensXml->get((int) $xmlId);
+                $detalheUrl = '/app/clearance/nota/'.$xmlId;
+            }
+
+            if ($grupo === null && $efdPorChave->has($chave)) {
+                $notasDaChave = $efdPorChave->get($chave)
+                    ->sortByDesc(fn ($n) => $n->origem_arquivo === 'fiscal' ? 1 : 0)
+                    ->values();
+
+                foreach ($notasDaChave as $indice => $efdNota) {
+                    if ($itensEfd->has((int) $efdNota->id)) {
+                        $grupo = $itensEfd->get((int) $efdNota->id);
+                        // Fiscal vem primeiro no sort; achar itens só na contribuicoes = gêmea.
+                        $viaGemea = $indice > 0 && $efdNota->origem_arquivo === 'contribuicoes';
+                        $detalheUrl = '/app/notas?chave='.$chave;
+                        break;
+                    }
+                }
+            }
+
+            $resultado->itens_nota = $grupo?->values() ?? collect();
+            $resultado->itens_total = (int) ($grupo?->first()->total_itens ?? 0);
+            $resultado->itens_via_gemea = $viaGemea;
+            $resultado->itens_detalhe_url = $detalheUrl;
         });
     }
 
@@ -2894,7 +2985,7 @@ class ClearanceController extends Controller
             $analise = $divergenciaService->analisar(
                 $resultados,
                 $userId,
-                (int) ($lote->creditos_cobrados ?? 0),
+                (float) ($lote->creditos_cobrados ?? 0),
                 $declarados
             );
             $linhasAnalisadas = $analise['divergencias']

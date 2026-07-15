@@ -10,8 +10,7 @@
     let currentImportacaoId = null;
     let currentNotaIds = [];
     let currentTipo = 'completa';
-    const unitPrice = Number(window.CLEARANCE_UNIT_PRICE || 0.20);
-    const brl = (unidades) => 'R$\u00a0' + (Number(unidades || 0) * unitPrice)
+    const brl = (reais) => 'R$\u00a0' + Number(reais || 0)
         .toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     // DOM Elements

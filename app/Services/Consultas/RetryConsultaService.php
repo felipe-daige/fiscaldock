@@ -43,7 +43,7 @@ class RetryConsultaService
      *   persistentes: array<int, array<string, mixed>>,
      *   suporte: ?array{contexto:string, mensagem:string},
      *   desconto_pct_efetivo: int,
-     *   total_preco_creditos: int
+     *   total_preco_creditos: float
      * }
      */
     public function pendentesRetry(ConsultaLote $lote): array
@@ -110,8 +110,8 @@ class RetryConsultaService
         // elegível). Não é soma por fonte. O backend reconsulta só as fontes com erro.
         $precoPlano = $this->precoPlanoRetry($lote);
         // Desconto efetivo exibido = preço real cobrado vs custo do plano. Pode diferir do
-        // desconto nominal (config) porque `precoPlanoRetry` arredonda p/ inteiro (ledger integer).
-        $custoPlano = (int) ($lote->plano?->custo_creditos ?? 0);
+        // desconto nominal (config) porque `precoPlanoRetry` arredonda pra cima em centavos.
+        $custoPlano = (float) ($lote->plano?->custo_creditos ?? 0);
         $descontoEfetivoPct = $custoPlano > 0
             ? (int) round((1 - $precoPlano / $custoPlano) * 100)
             : (int) config('consultas.retry.desconto_pct', 50);
@@ -160,17 +160,17 @@ class RetryConsultaService
     }
 
     /**
-     * @param  array<int, array{custo_creditos?: int}>  $elegiveis
-     * @return array{creditos:int, reais:float}
+     * @param  array<int, array{custo_creditos?: float}>  $elegiveis
+     * @return array{creditos:float, reais:float}
      */
     public function precificar(array $elegiveis): array
     {
-        $creditos = 0;
+        $creditos = 0.0;
         foreach ($elegiveis as $e) {
-            $creditos += $this->precoPorFonte((int) ($e['custo_creditos'] ?? 0));
+            $creditos += $this->precoPorFonte((float) ($e['custo_creditos'] ?? 0));
         }
 
-        return ['creditos' => $creditos, 'reais' => round($creditos * 0.20, 2)];
+        return ['creditos' => $creditos, 'reais' => round($creditos, 2)];
     }
 
     /**
@@ -179,7 +179,7 @@ class RetryConsultaService
      * CNPJs/fontes elegíveis. O settlement (estorno se o CNPJ não obtiver nenhum sucesso) é feito
      * pelo FecharRetryService no `finally` do batch.
      *
-     * @return array{creditos:int}
+     * @return array{creditos:float}
      */
     public function executar(ConsultaLote $lote): array
     {
@@ -192,7 +192,7 @@ class RetryConsultaService
         $pend = $this->pendentesRetry($lote);
         abort_if(empty($pend['alvos']), 422, 'Nenhum CNPJ elegível para reconsulta.');
 
-        $custoTotal = (int) $pend['total_preco_creditos'];
+        $custoTotal = (float) $pend['total_preco_creditos'];
         abort_unless($this->credits->hasEnough($lote->user, $custoTotal), 402, 'Saldo insuficiente para a reconsulta.');
         $this->credits->deduct($lote->user, $custoTotal, 'consulta_retry', "Reconsulta lote #{$lote->id}", $lote);
 
@@ -224,7 +224,7 @@ class RetryConsultaService
                     $alvosFontes[] = ['alvo_tipo' => $tipo, 'alvo_id' => $id, 'fonte' => $f];
                 }
                 // Envelope de cobrança per-alvo = preço do plano (escalar), p/ estorno integral se zero-sucesso.
-                Cache::put("consulta_retry_charge:{$lote->id}:{$tipo}:{$id}", (int) $alvo['preco_creditos'], 86400);
+                Cache::put("consulta_retry_charge:{$lote->id}:{$tipo}:{$id}", (float) $alvo['preco_creditos'], 86400);
                 // Índice/total REAIS: com 1/1 hardcodado, o 2º CNPJ repostava 0% depois do 100%
                 // do 1º (a barra da UI não tem clamp anti-retrocesso).
                 $jobs[] = $this->montarJob($lote, $tipo, $id, $fontes, $i + 1, $totalAlvos);
@@ -312,21 +312,28 @@ class RetryConsultaService
 
     /**
      * Preço da reconsulta por CNPJ = custo do plano consultado com o desconto de retry aplicado.
-     * Inteiro (ledger `credit_transactions.amount` é integer); arredonda p/ cima (nunca subcobra).
+     * Em R$, arredondado pra CIMA no centavo (nunca subcobra).
      */
-    public function precoPlanoRetry(ConsultaLote $lote): int
+    public function precoPlanoRetry(ConsultaLote $lote): float
     {
-        $pct = (int) config('consultas.retry.desconto_pct', 50);
-        $custoPlano = (float) ($lote->plano?->custo_creditos ?? 0);
-
-        return (int) ceil($custoPlano * (100 - $pct) / 100);
+        return $this->aplicarDesconto(($lote->plano?->custo_creditos ?? 0));
     }
 
-    private function precoPorFonte(int $custo): int
+    private function precoPorFonte(float $custo): float
+    {
+        return $this->aplicarDesconto($custo);
+    }
+
+    /**
+     * Desconto de retry sobre um valor em R$, arredondado pra CIMA no centavo (nunca subcobra).
+     * Passa por centavos inteiros pra não herdar ruído binário do float (ex.: 2.40 × 50).
+     */
+    private function aplicarDesconto(float $valor): float
     {
         $pct = (int) config('consultas.retry.desconto_pct', 50);
+        $centavos = (int) round($valor * 100);
 
-        return (int) ceil($custo * (100 - $pct) / 100);
+        return (int) ceil($centavos * (100 - $pct) / 100) / 100;
     }
 
     private function titulo(string $chave): string

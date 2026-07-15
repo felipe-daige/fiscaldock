@@ -1,9 +1,9 @@
 <?php
 
 use App\Mail\RecargaAutomaticaPausada;
-use App\Models\SaldoTransacao;
 use App\Models\MercadoPagoPayment;
 use App\Models\RecargaAutomatica;
+use App\Models\SaldoTransacao;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
@@ -28,12 +28,12 @@ it('webhook payment approved de auto_topup credita 1x e marca recarga ativa', fu
     $user = User::factory()->create(['credits' => 0]);
     $recarga = RecargaAutomatica::create([
         'user_id' => $user->id, 'gatilho' => 'saldo', 'limite_creditos' => 50,
-        'pacote' => 'business', 'creditos' => 1000, 'valor' => 200, 'status' => 'ativa',
+        'pacote' => 'business', 'creditos' => 200, 'valor' => 200, 'status' => 'ativa',
         'mp_customer_id' => 'CUS-1', 'mp_card_id' => 'CARD-1', 'cobranca_em_andamento' => true,
     ]);
     $pay = MercadoPagoPayment::create([
         'user_id' => $user->id, 'tipo' => 'auto_topup', 'pacote' => 'business',
-        'status' => 'pending', 'valor' => 200, 'creditos' => 1000,
+        'status' => 'pending', 'valor' => 200, 'creditos' => 200,
         'idempotency_key' => 'k1', 'mp_payment_id' => 'PAY-1',
     ]);
 
@@ -47,7 +47,7 @@ it('webhook payment approved de auto_topup credita 1x e marca recarga ativa', fu
     $enviar()->assertOk();
     $enviar()->assertOk(); // reentrega
 
-    expect($user->fresh()->credits)->toBe(1000);
+    expect($user->fresh()->credits)->toBe(200.0);
     expect(SaldoTransacao::where('user_id', $user->id)->where('type', 'purchase')->count())->toBe(1);
     $recarga->refresh();
     expect($recarga->status)->toBe('ativa');
@@ -60,12 +60,12 @@ it('webhook payment rejected de auto_topup marca inadimplente e notifica', funct
     $user = User::factory()->create(['credits' => 0]);
     $recarga = RecargaAutomatica::create([
         'user_id' => $user->id, 'gatilho' => 'saldo', 'limite_creditos' => 50,
-        'pacote' => 'business', 'creditos' => 1000, 'valor' => 200, 'status' => 'ativa',
+        'pacote' => 'business', 'creditos' => 200, 'valor' => 200, 'status' => 'ativa',
         'mp_customer_id' => 'CUS-1', 'mp_card_id' => 'CARD-1', 'cobranca_em_andamento' => true,
     ]);
     $pay = MercadoPagoPayment::create([
         'user_id' => $user->id, 'tipo' => 'auto_topup', 'pacote' => 'business',
-        'status' => 'pending', 'valor' => 200, 'creditos' => 1000,
+        'status' => 'pending', 'valor' => 200, 'creditos' => 200,
         'idempotency_key' => 'k2', 'mp_payment_id' => 'PAY-2',
     ]);
 
@@ -77,7 +77,7 @@ it('webhook payment rejected de auto_topup marca inadimplente e notifica', funct
         ->postJson('/api/mercado-pago/webhook?type=payment&data_id=PAY-2', ['type' => 'payment', 'data' => ['id' => 'PAY-2']])
         ->assertOk();
 
-    expect($user->fresh()->credits)->toBe(0);
+    expect($user->fresh()->credits)->toBe(0.0);
     expect($recarga->fresh()->status)->toBe('inadimplente');
     expect($recarga->fresh()->cobranca_em_andamento)->toBeFalse();
     Mail::assertQueued(RecargaAutomaticaPausada::class);

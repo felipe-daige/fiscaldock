@@ -35,7 +35,7 @@ class CriarPagamentoMercadoPago
         }
 
         $valor = round((float) $pacote['preco'], 2);
-        $creditos = (int) $pacote['creditos'];
+        $creditos = round((float) $pacote['creditos'], 2);
         $idempotencyKey = (string) Str::uuid();
 
         // Persiste pending ANTES de chamar o MP — assim temos id p/ external_reference

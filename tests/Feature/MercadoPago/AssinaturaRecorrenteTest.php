@@ -217,7 +217,7 @@ it('webhook preapproval authorized ativa a assinatura e concede o 1º mês como 
     $enviar()->assertOk(); // reentrega não concede de novo
 
     $user->refresh();
-    expect($user->credits)->toBe(175);
+    expect($user->credits)->toBe(35.0);
     expect($sub->fresh()->status)->toBe('ativa');
     expect(SaldoTransacao::where('type', 'purchase')->count())->toBe(1); // destrava 1ª compra
 });
@@ -244,7 +244,7 @@ it('webhook preapproval cancelled marca a assinatura cancelada (sem apagar saldo
         ])->assertOk();
 
     expect($sub->fresh()->status)->toBe('cancelada');
-    expect($user->fresh()->credits)->toBe(300); // saldo preservado (guardrail)
+    expect($user->fresh()->credits)->toBe(300.0); // saldo preservado (guardrail)
 });
 
 it('webhook authorized_payment approved registra a cobrança e NÃO concede saldo', function () {
@@ -268,7 +268,7 @@ it('webhook authorized_payment approved registra a cobrança e NÃO concede sald
             'type' => 'subscription_authorized_payment', 'data' => ['id' => 'AP-9'],
         ])->assertOk();
 
-    expect($user->fresh()->credits)->toBe(300); // concessão é do scheduler
+    expect($user->fresh()->credits)->toBe(300.0); // concessão é do scheduler
     expect(App\Models\MercadoPagoPayment::where('tipo', 'subscription')->where('account_subscription_id', $sub->id)->count())->toBe(1);
 });
 
@@ -322,13 +322,13 @@ it('scheduler concede saldo só de assinaturas ativas com proximo_grant vencido 
 
     $this->artisan('assinatura:conceder-saldo')->assertExitCode(0);
 
-    expect($userVencido->fresh()->credits)->toBe(175);     // concedeu
-    expect($userFuturo->fresh()->credits)->toBe(0);        // ainda não vence
-    expect($userInadimplente->fresh()->credits)->toBe(0);  // não ativa
+    expect($userVencido->fresh()->credits)->toBe(35.0);     // concedeu
+    expect($userFuturo->fresh()->credits)->toBe(0.0);        // ainda não vence
+    expect($userInadimplente->fresh()->credits)->toBe(0.0);  // não ativa
 
     // Re-rodar não concede de novo (proximo_grant avançou pro futuro).
     $this->artisan('assinatura:conceder-saldo')->assertExitCode(0);
-    expect($userVencido->fresh()->credits)->toBe(175);
+    expect($userVencido->fresh()->credits)->toBe(35.0);
     expect(SaldoTransacao::where('type', 'subscription_credit')->count())->toBe(1);
 });
 
@@ -347,7 +347,7 @@ it('cancelar chama o MP e marca a assinatura cancelada (mantém saldo até o fim
     postJson(route('app.assinatura.cancelar'))->assertOk();
 
     expect($sub->fresh()->status)->toBe('cancelada');
-    expect($user->fresh()->credits)->toBe(300); // saldo preservado
+    expect($user->fresh()->credits)->toBe(300.0); // saldo preservado
     Http::assertSent(fn ($req) => $req->method() === 'PUT' && str_ends_with($req->url(), '/preapproval/PRE-DEL'));
 });
 

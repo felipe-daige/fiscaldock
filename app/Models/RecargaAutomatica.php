@@ -34,10 +34,10 @@ class RecargaAutomatica extends Model
     ];
 
     protected $casts = [
-        'creditos' => 'integer',
+        'creditos' => 'float',
         'valor' => 'decimal:2',
         'frequencia_meses' => 'integer',
-        'limite_creditos' => 'integer',
+        'limite_creditos' => 'float',
         'cobranca_em_andamento' => 'boolean',
         'ultima_cobranca_em' => 'datetime',
         'ultima_tentativa_em' => 'datetime',

@@ -520,7 +520,7 @@
                         $monthlyPrice = $plan->preco_mensal_centavos / 100;
                         $annualPrice = $plan->preco_anual_centavos / 100;
                         $annualMonthlyEquivalent = $annualPrice > 0 ? $annualPrice / 12 : 0;
-                        $includedBalance = app(\App\Services\PricingCatalogService::class)->creditsToCurrency($plan->creditos_inclusos);
+                        $includedBalance = ($plan->creditos_inclusos);
                         $exports = collect($caps['export'] ?? [])->map(fn ($export) => strtoupper($export === 'excel' ? 'XLSX' : $export))->implode(' + ');
                         $seatLabel = $plan->assentos_inclusos >= 9999
                             ? 'Equipe sob medida'

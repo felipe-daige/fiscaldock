@@ -193,15 +193,15 @@ return [
         ],
     ],
 
-    // Custo monetário por fonte paga, usado no estorno preciso.
+    // Custo por fonte paga, em R$, usado no estorno preciso.
     'fontes' => [
-        'cnd_federal' => (int) env('CONSULTA_CREDITOS_CND_FEDERAL', 2),
-        'cndt' => (int) env('CONSULTA_CREDITOS_CNDT', 2),
-        'crf_fgts' => (int) env('CONSULTA_CREDITOS_CRF_FGTS', 2),
-        'cnd_estadual' => (int) env('CONSULTA_CREDITOS_CND_ESTADUAL', 2),
-        // SINTEGRA: R$ 1,00 por CNPJ (5 unidades internas de R$ 0,20).
-        'sintegra' => (int) env('CONSULTA_CREDITOS_SINTEGRA', 5),
-        'cnd_municipal' => (int) env('CONSULTA_CREDITOS_CND_MUNICIPAL', 2),
+        'cnd_federal' => (float) env('CONSULTA_CREDITOS_CND_FEDERAL', 0.40),
+        'cndt' => (float) env('CONSULTA_CREDITOS_CNDT', 0.40),
+        'crf_fgts' => (float) env('CONSULTA_CREDITOS_CRF_FGTS', 0.40),
+        'cnd_estadual' => (float) env('CONSULTA_CREDITOS_CND_ESTADUAL', 0.40),
+        // SINTEGRA: R$ 1,00 por CNPJ.
+        'sintegra' => (float) env('CONSULTA_CREDITOS_SINTEGRA', 1.00),
+        'cnd_municipal' => (float) env('CONSULTA_CREDITOS_CND_MUNICIPAL', 0.40),
     ],
 
     // Reconsulta de fontes com falha transitória (classe `retry`, ex. código 600).

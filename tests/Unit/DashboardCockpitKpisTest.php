@@ -14,5 +14,5 @@ it('monta os 3 KPIs do cockpit com o shape esperado', function () {
     expect($kpis)->toHaveKeys(['volume', 'saude', 'saldo'])
         ->and($kpis['volume'])->toHaveKeys(['notas', 'valor'])
         ->and($kpis['saude'])->toHaveKeys(['total', 'alertas_alta', 'risco'])
-        ->and($kpis['saldo']['disponivel'])->toBe(42);
+        ->and($kpis['saldo']['disponivel'])->toBe(42.0);
 });

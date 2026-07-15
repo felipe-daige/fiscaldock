@@ -54,4 +54,3 @@ return new class extends Migration
         Schema::dropIfExists('priv_cpf_operacoes');
     }
 };
-

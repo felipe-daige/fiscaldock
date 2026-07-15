@@ -53,7 +53,7 @@
         $planosDetalhados[] = [
             'codigo' => $p->codigo,
             'nome' => $p->nome,
-            'valor_reais' => app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $p->custo_creditos),
+            'valor_reais' => ($p->custo_creditos),
             'descricao' => $p->descricao,
             'cor' => $meta['cor'],
             'icone' => $meta['icone'],
@@ -173,7 +173,7 @@
                                     @elseif($plano['gratuito'])
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857">R$ 0,00</span>
                                     @elseif($plano['promo'])
-                                        <div class="text-gray-400 line-through text-[11px] whitespace-nowrap">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($plano['preco_original'] ?? 0)))</div>
+                                        <div class="text-gray-400 line-through text-[11px] whitespace-nowrap">@brl((($plano['preco_original'] ?? 0)))</div>
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap mt-1" style="background-color: #b45309">@brl($plano['valor_reais'])</span>
                                     @else
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #374151">@brl($plano['valor_reais'])</span>
@@ -274,7 +274,7 @@
                                     @elseif($plano['gratuito'])
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #047857">R$ 0,00</span>
                                     @elseif($plano['promo'])
-                                        <span class="text-gray-400 line-through text-[11px] whitespace-nowrap">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($plano['preco_original'] ?? 0)))</span>
+                                        <span class="text-gray-400 line-through text-[11px] whitespace-nowrap">@brl((($plano['preco_original'] ?? 0)))</span>
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap mt-1" style="background-color: #b45309">@brl($plano['valor_reais'])</span>
                                     @else
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white whitespace-nowrap" style="background-color: #374151">@brl($plano['valor_reais'])</span>

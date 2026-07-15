@@ -10,7 +10,7 @@ it('normaliza nome de cidade (acento/espacos)', function () {
 });
 
 it('resolve slug por UF+cidade do mapa e aplica só quando coberto', function () {
-    $f = new CndMunicipalFonte();
+    $f = new CndMunicipalFonte;
     expect($f->chave())->toBe('cnd_municipal');
     expect($f->fornece())->toBe(['cnd_municipal']);
 
@@ -29,18 +29,18 @@ it('resolve slug por UF+cidade do mapa e aplica só quando coberto', function ()
 });
 
 it('normaliza sucesso da CND Municipal', function () {
-    $out = (new CndMunicipalFonte())->normalizar([
+    $out = (new CndMunicipalFonte)->normalizar([
         'data' => [['tipo' => 'Negativa', 'uf' => 'RJ', 'municipio' => 'Rio de Janeiro', 'validade_data' => '01/12/2026']],
     ], 'sucesso');
     expect($out['cnd_municipal']['status'])->toBe('Negativa');
     expect($out['consultas_realizadas'])->toContain('cnd_municipal');
 
-    $ind = (new CndMunicipalFonte())->normalizar(['_motivo' => 'x'], 'nao_aplicavel');
+    $ind = (new CndMunicipalFonte)->normalizar(['_motivo' => 'x'], 'nao_aplicavel');
     expect($ind['cnd_municipal']['status'])->toBe('INDISPONIVEL');
 });
 
 it('coalesce dialetos de campo por prefeitura (validado e2e 2026-07-11)', function () {
-    $f = new CndMunicipalFonte();
+    $f = new CndMunicipalFonte;
 
     // Dialeto Chapadão do Sul/MS: data_emissao + validade + codigo_controle_certidao + endereco.uf
     $chapadao = $f->normalizar(['data' => [[

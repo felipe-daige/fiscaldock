@@ -130,8 +130,7 @@ class ConsultaController extends Controller
             'participantesUfs' => $participantesUfs,
             'clientesUfs' => $clientesUfs,
             'participantesSituacoes' => $participantesSituacoes,
-            'saldoReais' => $this->pricingCatalogService->creditsToCurrency($this->saldoService->getBalance($user)),
-            'creditUnitPrice' => $this->pricingCatalogService->creditUnitPrice(),
+            'saldoReais' => ($this->saldoService->getBalance($user)),
             'complianceSources' => $this->pricingCatalogService->getComplianceSources(),
             'hasMadeFirstPurchase' => $this->pricingCatalogService->userHasFirstPurchase($user),
             'firstPurchaseLockedProducts' => $this->pricingCatalogService->getFirstPurchaseLockedProducts(),
@@ -764,7 +763,7 @@ class ConsultaController extends Controller
             }
         }
 
-        $custoUnitario = $this->pricingCatalogService->getProductCreditsByPlan($plano, $user);
+        $custoUnitario = $this->pricingCatalogService->getProductPriceByPlan($plano);
         $custoTotal = $totalParticipantes * $custoUnitario;
         $saldoAtual = $this->saldoService->getBalance($user);
         $saldoApos = $saldoAtual - $custoTotal;
@@ -777,11 +776,11 @@ class ConsultaController extends Controller
                 'produto_nome' => $plano->nome,
                 'plano_codigo' => $plano->codigo,
                 'plano_nome' => $plano->nome,
-                'valor_unitario_reais' => $this->pricingCatalogService->creditsToCurrency($custoUnitario),
-                'valor_total_reais' => $this->pricingCatalogService->creditsToCurrency($custoTotal),
+                'valor_unitario_reais' => ($custoUnitario),
+                'valor_total_reais' => ($custoTotal),
                 'is_gratuito' => $plano->is_gratuito,
-                'saldo_atual_reais' => $this->pricingCatalogService->creditsToCurrency($saldoAtual),
-                'saldo_apos_reais' => $this->pricingCatalogService->creditsToCurrency($saldoApos),
+                'saldo_atual_reais' => ($saldoAtual),
+                'saldo_apos_reais' => ($saldoApos),
                 'saldo_suficiente' => $saldoApos >= 0,
             ],
         ]);
@@ -883,7 +882,7 @@ class ConsultaController extends Controller
             }
         }
 
-        $custoUnitario = $this->pricingCatalogService->getProductCreditsByPlan($plano, $user);
+        $custoUnitario = $this->pricingCatalogService->getProductPriceByPlan($plano);
         $custoTotal = $totalParticipantes * $custoUnitario;
 
         // Verificar saldo (se não for gratuito)
@@ -891,8 +890,8 @@ class ConsultaController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => 'Saldo insuficiente.',
-                'valor_necessario_reais' => $this->pricingCatalogService->creditsToCurrency($custoTotal),
-                'saldo_disponivel_reais' => $this->pricingCatalogService->creditsToCurrency($this->saldoService->getBalance($user)),
+                'valor_necessario_reais' => ($custoTotal),
+                'saldo_disponivel_reais' => ($this->saldoService->getBalance($user)),
             ], Response::HTTP_PAYMENT_REQUIRED);
         }
 
@@ -986,8 +985,8 @@ class ConsultaController extends Controller
                 'consulta_lote_id' => $lote->id,
                 'redirect_url' => route('app.consulta.lote.show', ['id' => $lote->id]),
                 'message' => 'Consulta iniciada com sucesso.',
-                'valor_cobrado_reais' => $this->pricingCatalogService->creditsToCurrency($custoTotal),
-                'novo_saldo_reais' => $this->pricingCatalogService->creditsToCurrency($this->saldoService->getBalance($user)),
+                'valor_cobrado_reais' => ($custoTotal),
+                'novo_saldo_reais' => ($this->saldoService->getBalance($user)),
                 'etapas' => $etapas,
             ]);
 
@@ -1606,7 +1605,7 @@ class ConsultaController extends Controller
         $kpis = [
             'total_lotes' => (clone $baseQuery)->count(),
             'total_participantes' => (int) ((clone $baseQuery)->sum('total_participantes') ?? 0),
-            'total_creditos' => (int) ((clone $baseQuery)->sum('creditos_cobrados') ?? 0),
+            'total_creditos' => round((float) ((clone $baseQuery)->sum('creditos_cobrados') ?? 0), 2),
             'finalizados' => (clone $baseQuery)->whereIn('status', ConsultaLote::successfulStatuses())->count(),
             'processando' => (clone $baseQuery)->where('status', ConsultaLote::STATUS_PROCESSANDO)->count(),
             'erro' => (clone $baseQuery)->where('status', ConsultaLote::STATUS_ERRO)->count(),
@@ -1637,7 +1636,7 @@ class ConsultaController extends Controller
             'filtrosAtivos' => count(array_filter($filtros, fn ($value) => $value !== null && $value !== '')),
             'planosFiltro' => $planosFiltro,
             'relatoriosLegados' => collect([]), // Tabelas legadas removidas
-            'saldoReais' => $this->pricingCatalogService->creditsToCurrency($this->saldoService->getBalance($user)),
+            'saldoReais' => ($this->saldoService->getBalance($user)),
             'retencaoMeses' => $retencaoMeses,
         ];
 
@@ -1765,16 +1764,16 @@ class ConsultaController extends Controller
                     ->filter(fn ($p) => (bool) $p->is_active)
                     ->sortBy('custo_creditos')
                     ->values()
-                    ->map(function ($p) use ($user) {
-                        $unit = $this->pricingCatalogService->getProductCreditsByPlan($p, $user);
+                    ->map(function ($p) {
+                        $unit = $this->pricingCatalogService->getProductPriceByPlan($p);
 
                         return [
                             'id' => $p->id,
                             'codigo' => $p->codigo,
                             'nome' => $p->nome,
-                            'valor_unitario_reais' => $this->pricingCatalogService->creditsToCurrency($unit),
+                            'valor_unitario_reais' => ($unit),
                             'rotulo_preco' => \App\Support\Dinheiro::brl(
-                                $this->pricingCatalogService->creditsToCurrency($unit)
+                                ($unit)
                             ),
                         ];
                     })->all();
@@ -1791,11 +1790,9 @@ class ConsultaController extends Controller
         $retryPendentes = $temResultadosNoLote
             ? app(\App\Services\Consultas\RetryConsultaService::class)->pendentesRetry($lote)
             : ['elegiveis' => [], 'inelegiveis' => [], 'total_preco_creditos' => 0];
-        $retryPendentes['valor_total_reais'] = $this->pricingCatalogService
-            ->creditsToCurrency((float) ($retryPendentes['total_preco_creditos'] ?? 0));
+        $retryPendentes['valor_total_reais'] = (($retryPendentes['total_preco_creditos'] ?? 0));
         $retryPendentes['alvos'] = collect($retryPendentes['alvos'] ?? [])->map(function (array $alvo) {
-            $alvo['valor_reais'] = $this->pricingCatalogService
-                ->creditsToCurrency((float) ($alvo['preco_creditos'] ?? 0));
+            $alvo['valor_reais'] = (($alvo['preco_creditos'] ?? 0));
 
             return $alvo;
         })->all();
@@ -1811,7 +1808,7 @@ class ConsultaController extends Controller
             'temResultadosNoLote' => $temResultadosNoLote,
             'aguardaPersistencia' => $aguardaPersistencia,
             'reconsultaTudo' => $reconsultaTudo,
-            'saldoReais' => $this->pricingCatalogService->creditsToCurrency($this->saldoService->getBalance($user)),
+            'saldoReais' => ($this->saldoService->getBalance($user)),
             'retryPendentes' => $retryPendentes,
         ];
 
@@ -1862,8 +1859,8 @@ class ConsultaController extends Controller
 
         return response()->json([
             'success' => true,
-            'valor_cobrado_reais' => $this->pricingCatalogService->creditsToCurrency($r['creditos']),
-            'novo_saldo_reais' => $this->pricingCatalogService->creditsToCurrency($this->saldoService->getBalance($user->fresh())),
+            'valor_cobrado_reais' => ($r['creditos']),
+            'novo_saldo_reais' => ($this->saldoService->getBalance($user->fresh())),
             'redirect_url' => route('app.consulta.lote.show', ['id' => $lote->id]),
             // RetryConsultaService::executar() troca o tab_id do lote (strip novo pro batch de
             // retry) — sem devolver o valor atualizado aqui, o front continua ouvindo o SSE do

@@ -132,7 +132,7 @@ class AuthController extends Controller
             'initialView' => 'auth.criar-conta',
             'seo' => [
                 'title' => 'Criar Conta Grátis — FiscalDock',
-                'description' => 'Crie sua conta FiscalDock e receba '.\App\Support\Dinheiro::brl((float) config('trial.saldo_reais')).' de saldo grátis para usar em até '.(int) config('trial.validade_dias').' dias.',
+                'description' => 'Crie sua conta FiscalDock e receba '.\App\Support\Dinheiro::brl(config('trial.saldo_reais')).' de saldo grátis para usar em até '.(int) config('trial.validade_dias').' dias.',
                 'canonical' => 'https://fiscaldock.com/criar-conta',
                 'robots' => 'index,follow',
                 'og_type' => 'website',
@@ -403,7 +403,7 @@ class AuthController extends Controller
 
             $this->saldoService->grantTrial(
                 $user,
-                app(\App\Services\PricingCatalogService::class)->currencyToCredits((float) config('trial.saldo_reais')),
+                (float) config('trial.saldo_reais'),
                 now()->addDays((int) config('trial.validade_dias'))
             );
 

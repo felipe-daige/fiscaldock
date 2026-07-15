@@ -19,7 +19,7 @@ interface MonitoramentoNotifier
     public function freioAtuou(\App\Models\User $user, int $assinaturasAdiadas, \Illuminate\Support\Carbon $proximoCiclo): void;
 
     /** Consumo automático do ciclo atingiu >= 80% do cap. */
-    public function consumoProximoDoLimite(\App\Models\User $user, int $consumoCreditos, int $capCreditos): void;
+    public function consumoProximoDoLimite(\App\Models\User $user, float $consumoCreditos, float $capCreditos): void;
 
     public function situacaoPiorou(MonitoramentoConsulta $consulta, ?MonitoramentoConsulta $anterior): void;
 

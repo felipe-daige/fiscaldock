@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('clientes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            
+
             // Tipo de cliente
             $table->enum('tipo_pessoa', ['PF', 'PJ'])->default('PJ');
-            
+
             // Dados principais
             // Documento é único POR usuário, não global: o mesmo CNPJ pode ser
             // cliente (ou empresa própria) de contas diferentes. Unique composto
@@ -25,15 +25,15 @@ return new class extends Migration
             $table->string('documento'); // CPF ou CNPJ
             $table->string('nome')->nullable(); // Nome fantasia ou nome da pessoa
             $table->string('razao_social')->nullable(); // Razão social (obrigatório para PJ; null p/ PF)
-            
+
             // Contato
             $table->string('telefone')->nullable();
             $table->string('email')->nullable();
-            
+
             // Dados específicos PJ
             $table->string('faturamento_anual')->nullable();
             $table->string('preparacao_reforma')->nullable();
-            
+
             // Status
             $table->boolean('ativo')->default(true);
 

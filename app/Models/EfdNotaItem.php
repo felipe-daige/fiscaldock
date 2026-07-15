@@ -20,10 +20,10 @@ class EfdNotaItem extends Model
     protected function casts(): array
     {
         return [
-            'quantidade'     => 'decimal:4',
+            'quantidade' => 'decimal:4',
             'valor_unitario' => 'decimal:4',
-            'valor_total'    => 'decimal:2',
-            'metadados'      => 'array',
+            'valor_total' => 'decimal:2',
+            'metadados' => 'array',
         ];
     }
 
@@ -38,7 +38,7 @@ class EfdNotaItem extends Model
             ->join('efd_notas', 'efd_notas.id', '=', 'efd_notas_itens.efd_nota_id')
             ->join('efd_catalogo_itens as cat', function ($join) {
                 $join->on('cat.cod_item', '=', 'efd_notas_itens.codigo_item')
-                     ->on('cat.importacao_id', '=', 'efd_notas.importacao_id');
+                    ->on('cat.importacao_id', '=', 'efd_notas.importacao_id');
             })
             ->select('efd_notas_itens.*', 'cat.cod_ncm', 'cat.tipo_item', 'cat.cod_barra');
     }

@@ -33,7 +33,6 @@ it('cnd_federal INDISPONIVEL/indeterminada e nao avaliado (null), nunca irregula
     expect($this->svc->calcularScores(['cnd_federal' => ['status' => 'Indeterminada']])['cnd_federal'])->toBeNull();
 });
 
-
 it('fgts REGULAR com conseguiu_emitir=false pontua como regular (0)', function () {
     // bug real: o FGTS volta status REGULAR + conseguiu_emitir=false; não pode virar null.
     $scores = $this->svc->calcularScores(['crf_fgts' => ['status' => 'REGULAR', 'conseguiu_emitir' => false]]);

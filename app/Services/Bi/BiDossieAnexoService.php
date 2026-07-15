@@ -25,7 +25,7 @@ final class BiDossieAnexoService
 
     /**
      * @return array{clientes: list<array>, participantes: list<array>}|null
-     *   null = sem dossiês (opção vazia/inválida ou nada a exibir).
+     *                                                                       null = sem dossiês (opção vazia/inválida ou nada a exibir).
      */
     public function montar(int $userId, ?int $clienteId, string $opcao): ?array
     {

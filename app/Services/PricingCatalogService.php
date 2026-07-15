@@ -2,15 +2,19 @@
 
 namespace App\Services;
 
-use App\Models\SaldoTransacao;
 use App\Models\MonitoramentoPlano;
+use App\Models\SaldoTransacao;
 use App\Models\User;
 use App\Support\Monitoramento\PlanoCatalog;
 
+/**
+ * Catálogo comercial. Todo valor monetário do produto — saldo, preço, custo, ledger —
+ * é expresso diretamente em reais (R$). A unidade interna legada de "créditos"
+ * (1 crédito = R$ 0,20) foi removida em 2026-07-14; `credit_transactions` e
+ * `users.credits` armazenam R$ com 2 casas.
+ */
 class PricingCatalogService
 {
-    public const CREDIT_UNIT_PRICE = 0.20;
-
     // Piso de depósito no sistema. Alinhado ao mínimo do provedor (InfoSimples ~R$100).
     public const MINIMUM_DEPOSIT = 100.00;
 
@@ -22,16 +26,7 @@ class PricingCatalogService
     ) {}
 
     /**
-     * Preço por crédito efetivo (override admin §6.1 ou o default CREDIT_UNIT_PRICE).
-     * As constantes permanecem como fallback e back-compat de consumidores estáticos.
-     */
-    public function creditUnitPrice(): float
-    {
-        return (float) $this->comercial->valor('credit_unit_price', self::CREDIT_UNIT_PRICE);
-    }
-
-    /**
-     * Atalhos de recarga destacados.
+     * Atalhos de recarga destacados. `creditos` = saldo em R$ liberado (1:1 com o preço).
      */
     public function getFeaturedOffers(): array
     {
@@ -39,7 +34,7 @@ class PricingCatalogService
             [
                 'slug' => 'business',
                 'nome' => 'Business',
-                'creditos' => 1000,
+                'creditos' => 200.00,
                 'preco' => 200.00,
                 'badge' => 'Recarga rápida',
                 'usage_hint' => 'Para a rotina do mês',
@@ -51,7 +46,7 @@ class PricingCatalogService
                 // é "Volume" para não colidir com o tier de assinatura Enterprise.
                 'slug' => 'enterprise',
                 'nome' => 'Volume',
-                'creditos' => 5000,
+                'creditos' => 1000.00,
                 'preco' => 1000.00,
                 'badge' => 'Maior volume',
                 'usage_hint' => 'Para operação intensiva',
@@ -151,7 +146,7 @@ class PricingCatalogService
         return [
             'slug' => 'custom',
             'nome' => 'Recarga personalizada',
-            'creditos' => (int) round($normalizedAmount / $this->creditUnitPrice()),
+            'creditos' => $normalizedAmount,
             'preco' => $normalizedAmount,
             'badge' => 'Valor livre',
             'usage_hint' => 'Você escolhe quanto pagar',
@@ -260,47 +255,35 @@ class PricingCatalogService
     }
 
     /**
-     * Preço em reais para exibir um produto de consulta.
-     * Override admin opcional via comercial_parametros; default = custo_creditos convertido.
+     * Preço em reais para exibir e cobrar um produto de consulta.
+     * Override admin opcional via comercial_parametros; default = custo do PlanoCatalog (R$).
      */
     public function getProductPriceByPlan(MonitoramentoPlano $plan): float
     {
-        $defaultPrice = $this->creditsToCurrency((float) $plan->custo_creditos);
-
-        return round((float) $this->comercial->valor('preco_'.$plan->codigo, $defaultPrice), 2);
+        return round((float) $this->comercial->valor('preco_'.$plan->codigo, (float) $plan->custo_creditos), 2);
     }
 
     /**
-     * Custo na unidade interna do ledger para executar um produto de consulta.
-     * O admin edita o preço em R$; aqui convertemos para a unidade cobrada hoje.
+     * Total em R$ que o usuário já comprou (compras menos estornos de compra).
      */
-    public function getProductCreditsByPlan(MonitoramentoPlano $plan, User $user): int
+    public function getPaidCreditsForUser(User $user): float
     {
-        return $this->currencyToCredits($this->getProductPriceByPlan($plan));
-    }
-
-    public function getPaidCreditsForUser(User $user): int
-    {
-        $purchased = (int) SaldoTransacao::query()
+        $purchased = (float) SaldoTransacao::query()
             ->where('user_id', $user->id)
             ->where('type', 'purchase')
             ->sum('amount');
 
-        $refunded = (int) abs(SaldoTransacao::query()
+        $refunded = abs((float) SaldoTransacao::query()
             ->where('user_id', $user->id)
             ->where('type', 'purchase_refund')
             ->sum('amount'));
 
-        return max(0, $purchased - $refunded);
+        return round(max(0, $purchased - $refunded), 2);
     }
 
     /**
      * Retorna os dados de pricing para a landing page.
-     * Cada produto tem {slug, nome, descricao, credits, price} — sem matriz de faixas.
-     *
-     * Shim backward-compat: 'tiers' e 'rows' por produto retornam [] para que
-     * views que ainda iterem essas chaves (precos.blade, plano/index) não fatalizem.
-     * Relabel das views é task posterior — aqui só paramos o 500.
+     * Cada produto tem {slug, nome, descricao, price} — sem matriz de faixas.
      */
     public function getLandingPricingData(): array
     {
@@ -324,7 +307,6 @@ class PricingCatalogService
 
         return [
             'minimum_deposit' => $this->getMinimumDeposit(),
-            'credit_unit_price' => $this->creditUnitPrice(),
             'featured_offers' => $featuredOffers,
             'packages' => $featuredOffers,
             'products' => $products,
@@ -363,9 +345,6 @@ class PricingCatalogService
 
     private function decorateOffer(array $package): array
     {
-        $package['price_per_credit'] = $package['creditos'] > 0
-            ? round($package['preco'] / $package['creditos'], 2)
-            : 0.0;
         $package['is_custom'] = false;
         $package['kind'] = 'featured';
 
@@ -386,22 +365,6 @@ class PricingCatalogService
             return null;
         }
 
-        return round((float) $amount, 2);
-    }
-
-    public function creditsToCurrency(int|float $credits): float
-    {
-        return round($credits * $this->creditUnitPrice(), 2);
-    }
-
-    public function currencyToCredits(int|float $amount): int
-    {
-        $unit = $this->creditUnitPrice();
-
-        if ($unit <= 0) {
-            return (int) round((float) $amount);
-        }
-
-        return (int) round(((float) $amount) / $unit);
+        return round($amount, 2);
     }
 }

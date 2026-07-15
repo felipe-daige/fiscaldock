@@ -222,7 +222,7 @@
 
             <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4 sm:p-5 flex flex-col">
                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Saldo</p>
-                <p class="text-2xl sm:text-3xl font-bold text-gray-900 leading-none mt-2">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($userCredits)) }}</p>
+                <p class="text-2xl sm:text-3xl font-bold text-gray-900 leading-none mt-2">{{ \App\Support\Dinheiro::brl(($userCredits)) }}</p>
                 <p class="text-[11px] text-gray-500 mt-auto pt-3">Disponível para consultas</p>
             </div>
 

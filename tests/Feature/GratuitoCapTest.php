@@ -1,8 +1,8 @@
 <?php
 
 use App\Models\ConsultaLote;
-use App\Models\SaldoTransacao;
 use App\Models\MonitoramentoPlano;
+use App\Models\SaldoTransacao;
 use App\Models\User;
 use App\Services\PricingCatalogService;
 use Illuminate\Foundation\Testing\RefreshDatabase;

@@ -69,7 +69,7 @@ function relatorioBiFixture(): array
 
 function lerWorkbook(string $path): array
 {
-    $reader = new Reader();
+    $reader = new Reader;
     $reader->open($path);
     $sheets = [];
     foreach ($reader->getSheetIterator() as $sheet) {

@@ -95,7 +95,7 @@ it('precifica a reconsulta como preço do plano com desconto por CNPJ afetado (n
     ]);
 
     $out = app(RetryConsultaService::class)->pendentesRetry($lote->fresh());
-    $precoPlano = (int) ceil($lote->plano->custo_creditos * 0.5);
+    $precoPlano = ceil((int) round($lote->plano->custo_creditos * 100) * 0.5) / 100;
 
     expect($out['alvos'])->toHaveCount(1);
     expect($out['alvos'][0]['preco_creditos'])->toBe($precoPlano);
@@ -107,14 +107,14 @@ it('precifica a reconsulta como preço do plano com desconto por CNPJ afetado (n
 it('expõe o desconto EFETIVO (preço cobrado vs plano), não o nominal — afetado por arredondamento', function () {
     config()->set('consultas.retry.desconto_pct', 50);
 
-    // compliance 25 créditos → ceil(12,5)=13 → desconto efetivo 48% (não 50).
+    // compliance R$ 5,00 → ceil em centavos = R$ 2,50 exato → desconto efetivo 50%.
     [$loteC, $pc] = montarLoteComPlano('compliance');
     gravarFontesErro($loteC->id, $pc->id, [
         'cnd_federal' => ['origem' => 'integracao', 'status' => 'retry', 'codigo' => 615, 'tentativas' => 0],
     ]);
-    expect(app(RetryConsultaService::class)->pendentesRetry($loteC->fresh())['desconto_pct_efetivo'])->toBe(48);
+    expect(app(RetryConsultaService::class)->pendentesRetry($loteC->fresh())['desconto_pct_efetivo'])->toBe(50);
 
-    // licitação 20 créditos → ceil(10)=10 → desconto efetivo 50% (bate o nominal).
+    // licitação R$ 4,00 → R$ 2,00 → desconto efetivo 50% (bate o nominal).
     [$loteL, $pl] = montarLoteComPlano('licitacao');
     gravarFontesErro($loteL->id, $pl->id, [
         'cnd_federal' => ['origem' => 'integracao', 'status' => 'retry', 'codigo' => 615, 'tentativas' => 0],
@@ -135,12 +135,12 @@ it('marca o motivo dos inelegíveis (fatal); retry segue elegível mesmo já ten
     expect(collect($out['elegiveis'])->pluck('fonte')->all())->toBe(['crf_fgts']); // já tentado, segue elegível
 });
 
-it('precifica somando ceil por fonte', function () {
+it('precifica somando ceil em centavos por fonte', function () {
     config()->set('consultas.retry.desconto_pct', 50);
     $r = app(RetryConsultaService::class)->precificar([
-        ['custo_creditos' => 5], ['custo_creditos' => 3], // ceil(2.5)+ceil(1.5)=3+2=5
+        ['custo_creditos' => 1.00], ['custo_creditos' => 0.45], // 0.50 + ceil(22.5)/100=0.23 → 0.73
     ]);
-    expect($r['creditos'])->toBe(5);
+    expect($r['creditos'])->toBe(0.73);
 });
 
 // ---------------------------------------------------------------------------
@@ -184,7 +184,7 @@ it('executar (sem seleção) debita plano×50% por CNPJ e reconsulta só as font
         'cnd_federal' => ['origem' => 'integracao', 'status' => 'retry', 'codigo' => 615, 'tentativas' => 0],
     ]);
 
-    $precoPlano = (int) ceil($lote->plano->custo_creditos * 0.5);
+    $precoPlano = ceil((int) round($lote->plano->custo_creditos * 100) * 0.5) / 100;
     $saldoAntes = app(SaldoService::class)->getBalance($user);
 
     // Backend-autoritativo: sem argumento de seleção.
@@ -202,7 +202,7 @@ it('executar (sem seleção) debita plano×50% por CNPJ e reconsulta só as font
     expect($erros['cnd_federal']['tentativas'])->toBe(1); // trava 1x antes do dispatch
 
     // envelope de cobrança do alvo = preço do plano (não soma de fontes).
-    expect((int) Cache::get("consulta_retry_charge:{$lote->id}:participante:{$p->id}"))->toBe($precoPlano);
+    expect((float) Cache::get("consulta_retry_charge:{$lote->id}:participante:{$p->id}"))->toBe($precoPlano);
 });
 
 it('executar não cobra nem reconsulta CNPJ que só tem fonte inelegível (fatal)', function () {
@@ -219,7 +219,7 @@ it('executar não cobra nem reconsulta CNPJ que só tem fonte inelegível (fatal
 
 it('settlement estorna o valor cheio do CNPJ quando NENHUMA fonte reconsultada teve sucesso', function () {
     [$lote, $p, $user] = montarLoteComPlano('compliance');
-    $precoPlano = (int) ceil($lote->plano->custo_creditos * 0.5);
+    $precoPlano = ceil((int) round($lote->plano->custo_creditos * 100) * 0.5) / 100;
 
     // envelope per-alvo = preço do plano; ambas as fontes re-falharam (ainda em _fontes_erro).
     Cache::put("consulta_retry_charge:{$lote->id}:participante:{$p->id}", $precoPlano, 86400);
@@ -239,7 +239,7 @@ it('settlement estorna o valor cheio do CNPJ quando NENHUMA fonte reconsultada t
 
 it('settlement estorna a soma de TODOS os CNPJs que re-falharam (multi-alvo, espelha lote 215)', function () {
     [$lote, $p, $user] = montarLoteComPlano('compliance');
-    $precoPlano = (int) ceil($lote->plano->custo_creditos * 0.5); // compliance 25 → 13
+    $precoPlano = ceil((int) round($lote->plano->custo_creditos * 100) * 0.5) / 100; // compliance 25 → 13
     // 2 participantes + 1 cliente, TODOS zero-sucesso (cnd_federal ainda em _fontes_erro).
     $p2 = App\Models\Participante::create(['user_id' => $user->id, 'documento' => '08906558000142', 'razao_social' => 'P2', 'uf' => 'MS']);
     $cli = App\Models\Cliente::create(['user_id' => $user->id, 'documento' => '97551165000193', 'razao_social' => 'C1']);
@@ -266,7 +266,7 @@ it('settlement estorna a soma de TODOS os CNPJs que re-falharam (multi-alvo, esp
 
 it('settlement NÃO estorna se ao menos uma fonte do CNPJ voltou com sucesso', function () {
     [$lote, $p, $user] = montarLoteComPlano('compliance');
-    $precoPlano = (int) ceil($lote->plano->custo_creditos * 0.5);
+    $precoPlano = ceil((int) round($lote->plano->custo_creditos * 100) * 0.5) / 100;
 
     Cache::put("consulta_retry_charge:{$lote->id}:participante:{$p->id}", $precoPlano, 86400);
     // cnd_federal re-falhou, mas sintegra teve sucesso (não está em _fontes_erro) → mantém cobrança.
@@ -289,7 +289,7 @@ it('settlement NÃO estorna se ao menos uma fonte do CNPJ voltou com sucesso', f
 
 it('settlement NÃO estorna re-falha erro_participante — fonte faturada pelo provedor (espelha lote 220)', function () {
     [$lote, $p, $user] = montarLoteComPlano('compliance');
-    $precoPlano = (int) ceil($lote->plano->custo_creditos * 0.5);
+    $precoPlano = ceil((int) round($lote->plano->custo_creditos * 100) * 0.5) / 100;
 
     Cache::put("consulta_retry_charge:{$lote->id}:participante:{$p->id}", $precoPlano, 86400);
     // crf_fgts re-falhou com 620: a Caixa respondeu recusando os dados do CNPJ → a InfoSimples
@@ -308,7 +308,7 @@ it('settlement NÃO estorna re-falha erro_participante — fonte faturada pelo p
 
 it('settlement misto (re-falha retry + re-falha erro_participante) mantém a cobrança do CNPJ', function () {
     [$lote, $p, $user] = montarLoteComPlano('compliance');
-    $precoPlano = (int) ceil($lote->plano->custo_creditos * 0.5);
+    $precoPlano = ceil((int) round($lote->plano->custo_creditos * 100) * 0.5) / 100;
 
     Cache::put("consulta_retry_charge:{$lote->id}:participante:{$p->id}", $precoPlano, 86400);
     // cnd_federal re-falhou por instabilidade (não faturada), mas o crf_fgts 620 foi faturado

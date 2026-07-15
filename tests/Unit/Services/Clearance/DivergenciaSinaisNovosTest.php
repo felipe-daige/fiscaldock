@@ -266,10 +266,10 @@ it('ROI: lote sem exposição reporta conformes/total e multiplicador 0', functi
 });
 
 it('ROI: com exposição calcula multiplicador = exposição / custo', function () {
-    // nota fria: declarada R$ 1.000, NAO_ENCONTRADA → exposição 1000; custo 5 créditos = R$ 1,00 → 1000×.
+    // nota fria: declarada R$ 1.000, NAO_ENCONTRADA → exposição 1000; custo R$ 1,00 → 1000×.
     $svc = svcComDeclarado(['valor_total' => 1000.0, 'contraparte_cnpj' => '11111111000111', 'data_emissao' => '2026-01-15', 'origem' => 'efd', 'id' => 1]);
 
-    $r = $svc->analisar(new Collection([snapEnr(['status' => 'NAO_ENCONTRADA', 'status_label' => 'NAO_ENCONTRADA', 'valor_total' => null])]), 1, 5);
+    $r = $svc->analisar(new Collection([snapEnr(['status' => 'NAO_ENCONTRADA', 'status_label' => 'NAO_ENCONTRADA', 'valor_total' => null])]), 1, 1.0);
     expect($r['kpis']['roi']['exposicao_reais'])->toBe(1000.0);
     expect($r['kpis']['roi']['multiplicador'])->toBe(1000);
 });

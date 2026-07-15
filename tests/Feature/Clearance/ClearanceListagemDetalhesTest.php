@@ -221,6 +221,56 @@ it('mostra os itens negociados de uma nota XML no expansivel', function () {
         ->assertSee('1 item(ns)');
 });
 
+it('trunca o expansivel em 15 itens e oferece o restante via nota completa', function () {
+    $user = User::factory()->create();
+    $cliente = clearanceDetalhesCliente($user);
+    $importacao = XmlImportacao::create([
+        'user_id' => $user->id,
+        'cliente_id' => $cliente->id,
+        'status' => 'concluido',
+        'tipo_documento' => 'NFE',
+    ]);
+    $nota = XmlNota::create([
+        'user_id' => $user->id,
+        'importacao_xml_id' => $importacao->id,
+        'cliente_id' => $cliente->id,
+        'chave_acesso' => str_repeat('5', 44),
+        'tipo_documento' => 'NFE',
+        'numero_documento' => 55001,
+        'serie' => 1,
+        'data_emissao' => '2026-02-20 10:00:00',
+        'valor_total' => 160.00,
+        'tipo_nota' => XmlNota::TIPO_SAIDA,
+        'emit_cliente_id' => $cliente->id,
+        'emit_documento' => $cliente->documento,
+        'emit_razao_social' => $cliente->razao_social,
+        'dest_documento' => '97551165000193',
+        'dest_razao_social' => 'Comprador em Volume',
+    ]);
+    foreach (range(1, 16) as $n) {
+        XmlNotaItem::create([
+            'xml_nota_id' => $nota->id,
+            'user_id' => $user->id,
+            'numero_item' => $n,
+            'codigo_item' => 'SKU-'.$n,
+            'descricao' => 'Produto Truncado Numero '.$n,
+            'quantidade' => 1,
+            'unidade_medida' => 'UN',
+            'valor_unitario' => 10.00,
+            'valor_total' => 10.00,
+            'cfop' => '5102',
+        ]);
+    }
+
+    actingAs($user)
+        ->get('/app/clearance/notas')
+        ->assertOk()
+        ->assertSee('16 item(ns)')
+        ->assertSee('Produto Truncado Numero 15')
+        ->assertDontSee('Produto Truncado Numero 16')
+        ->assertSee('+ 1 item(ns) — ver nota completa');
+});
+
 it('mostra os itens da gemea de contribuicoes quando a nota EFD fiscal so tem consolidado', function () {
     $user = User::factory()->create();
     $cliente = clearanceDetalhesCliente($user);

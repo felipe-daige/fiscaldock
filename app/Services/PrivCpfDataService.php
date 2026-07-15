@@ -14,8 +14,7 @@ class PrivCpfDataService
      * Insere ou atualiza cadastro de CPF (só preenche campos vazios).
      * Usa lógica de COALESCE: só atualiza se o valor atual for NULL e o novo valor for NOT NULL.
      *
-     * @param array $data Dados do cadastro (cpf, nome, uf, endereco, etc)
-     * @return PrivCpfCadastro
+     * @param  array  $data  Dados do cadastro (cpf, nome, uf, endereco, etc)
      */
     public function upsertCadastro(array $data): PrivCpfCadastro
     {
@@ -43,7 +42,7 @@ class PrivCpfDataService
         ];
 
         // Usar UPSERT com COALESCE via SQL raw para PostgreSQL
-        $sql = "
+        $sql = '
             INSERT INTO priv_cpf_cadastro (
                 cpf, nome, cod_pais, uf, codigo_municipal, municipio_nome,
                 cep, bairro, endereco, numero, complemento,
@@ -64,7 +63,7 @@ class PrivCpfDataService
                 inscricao_estadual = COALESCE(priv_cpf_cadastro.inscricao_estadual, EXCLUDED.inscricao_estadual),
                 suframa = COALESCE(priv_cpf_cadastro.suframa, EXCLUDED.suframa),
                 updated_at = NOW()
-        ";
+        ';
 
         DB::statement($sql, [
             $normalized['cpf'],
@@ -89,18 +88,19 @@ class PrivCpfDataService
      * Registra uma operação/documento fiscal.
      * Valida se nfe_id já existe para evitar duplicatas.
      *
-     * @param array $data Dados da operação
+     * @param  array  $data  Dados da operação
      * @return PrivCpfOperacao|null Retorna null se nfe_id já existe
      */
     public function registrarOperacao(array $data): ?PrivCpfOperacao
     {
         // Validar se nfe_id já existe (se fornecida)
-        if (!empty($data['nfe_id'])) {
+        if (! empty($data['nfe_id'])) {
             $exists = PrivCpfOperacao::where('nfe_id', $data['nfe_id'])->exists();
             if ($exists) {
                 Log::debug('Operação já registrada (nfe_id duplicada)', [
                     'nfe_id' => $data['nfe_id'],
                 ]);
+
                 return null;
             }
         }
@@ -124,13 +124,12 @@ class PrivCpfDataService
     /**
      * Atualiza ou cria relacionamento CPF ↔ CNPJ (incrementa contadores).
      *
-     * @param int $cpfId ID do cadastro CPF
-     * @param string $cnpj CNPJ do parceiro comercial
-     * @param string $razaoSocial Nome da empresa
-     * @param string $tipoRelacao 'FORNECEDOR', 'CLIENTE', 'TRANSPORTADOR'
-     * @param float $valor Valor da operação
-     * @param string $dataOperacao Data da operação (formato Y-m-d)
-     * @return PrivCpfRelacionamento
+     * @param  int  $cpfId  ID do cadastro CPF
+     * @param  string  $cnpj  CNPJ do parceiro comercial
+     * @param  string  $razaoSocial  Nome da empresa
+     * @param  string  $tipoRelacao  'FORNECEDOR', 'CLIENTE', 'TRANSPORTADOR'
+     * @param  float  $valor  Valor da operação
+     * @param  string  $dataOperacao  Data da operação (formato Y-m-d)
      */
     public function atualizarRelacionamento(
         int $cpfId,
@@ -146,18 +145,18 @@ class PrivCpfDataService
             throw new \InvalidArgumentException('CNPJ inválido: deve conter 14 dígitos');
         }
 
-        if (!in_array($tipoRelacao, ['FORNECEDOR', 'CLIENTE', 'TRANSPORTADOR'], true)) {
-            throw new \InvalidArgumentException('Tipo de relação inválido: ' . $tipoRelacao);
+        if (! in_array($tipoRelacao, ['FORNECEDOR', 'CLIENTE', 'TRANSPORTADOR'], true)) {
+            throw new \InvalidArgumentException('Tipo de relação inválido: '.$tipoRelacao);
         }
 
         // Validar formato da data
         $dataObj = \DateTime::createFromFormat('Y-m-d', $dataOperacao);
-        if (!$dataObj) {
-            throw new \InvalidArgumentException('Data inválida: ' . $dataOperacao);
+        if (! $dataObj) {
+            throw new \InvalidArgumentException('Data inválida: '.$dataOperacao);
         }
 
         // Usar UPSERT com incremento via SQL raw para PostgreSQL
-        $sql = "
+        $sql = '
             INSERT INTO priv_cpf_relacionamentos (
                 cpf_id, cnpj, razao_social, tipo_relacao,
                 total_operacoes, valor_total, primeira_operacao, ultima_operacao,
@@ -174,7 +173,7 @@ class PrivCpfDataService
                 ultima_operacao = GREATEST(priv_cpf_relacionamentos.ultima_operacao, EXCLUDED.ultima_operacao),
                 razao_social = COALESCE(EXCLUDED.razao_social, priv_cpf_relacionamentos.razao_social),
                 updated_at = NOW()
-        ";
+        ';
 
         DB::statement($sql, [
             $cpfId,
@@ -196,9 +195,8 @@ class PrivCpfDataService
      * Processa um participante completo do EFD (cadastro + operação + relacionamento).
      * Método de conveniência que orquestra os 3 anteriores.
      *
-     * @param array $participante Dados do registro 0150 (cadastro)
-     * @param array $operacao Dados do documento fiscal (C100, C170, D100)
-     * @return void
+     * @param  array  $participante  Dados do registro 0150 (cadastro)
+     * @param  array  $operacao  Dados do documento fiscal (C100, C170, D100)
      */
     public function processarParticipanteEfd(array $participante, array $operacao): void
     {
@@ -211,7 +209,7 @@ class PrivCpfDataService
             $operacaoRegistrada = $this->registrarOperacao($operacao);
 
             // Se a operação já existia (nfe_id duplicada), não atualiza relacionamento
-            if (!$operacaoRegistrada) {
+            if (! $operacaoRegistrada) {
                 return;
             }
 
@@ -221,7 +219,7 @@ class PrivCpfDataService
             $valor = (float) ($operacao['valor_total'] ?? 0);
             $dataOperacao = $operacao['data_operacao'] ?? $operacao['data_emissao'] ?? date('Y-m-d');
 
-            if (!empty($cnpjEmpresa) && !empty($tipoRelacao) && $valor > 0) {
+            if (! empty($cnpjEmpresa) && ! empty($tipoRelacao) && $valor > 0) {
                 $this->atualizarRelacionamento(
                     $cadastro->id,
                     $cnpjEmpresa,
@@ -244,9 +242,6 @@ class PrivCpfDataService
 
     /**
      * Mapeia tipo_participacao para tipo_relacao.
-     *
-     * @param string $tipoParticipacao
-     * @return string
      */
     private function mapearTipoParticipacao(string $tipoParticipacao): string
     {
@@ -260,4 +255,3 @@ class PrivCpfDataService
         };
     }
 }
-

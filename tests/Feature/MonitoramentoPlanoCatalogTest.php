@@ -6,7 +6,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 
 use function Pest\Laravel\actingAs;
 
@@ -21,10 +20,10 @@ beforeEach(function () {
 
 it('4 planos lineares com precos em credito', function () {
     $b = collect(PlanoCatalog::definitions())->keyBy('codigo');
-    expect($b['gratuito']['custo_creditos'])->toBe(0);
-    expect($b['validacao']['custo_creditos'])->toBe(15);
-    expect($b['licitacao']['custo_creditos'])->toBe(20);
-    expect($b['compliance']['custo_creditos'])->toBe(25);
+    expect($b['gratuito']['custo_creditos'])->toBe(0.0);
+    expect($b['validacao']['custo_creditos'])->toBe(3.0);
+    expect($b['licitacao']['custo_creditos'])->toBe(4.0);
+    expect($b['compliance']['custo_creditos'])->toBe(5.0);
     expect($b['due_diligence']['is_active'])->toBeFalse();
 });
 
@@ -54,7 +53,7 @@ it('migrations sobem os planos com o catalogo atual', function () {
     ]);
 
     expect($compliance)->not->toBeNull();
-    expect($compliance->custo_creditos)->toBe(25);
+    expect($compliance->custo_creditos)->toBe(5.0);
     expect($compliance->is_active)->toBeTrue();
 
     expect($dueDiligence)->not->toBeNull();
@@ -98,12 +97,12 @@ it('resolve definicao canonica quando o banco esta legado', function () {
     ]);
     expect($gratuito->etapas[0]['chave'])->toBe('inicializacao');
     expect($gratuito->etapas[2]['chave'])->toBe('finalizacao');
-    expect($gratuito->custo_creditos)->toBe(0);
+    expect($gratuito->custo_creditos)->toBe(0.0);
     expect($gratuito->is_active)->toBeTrue();
     expect($gratuito->ordem)->toBe(1);
 
     expect($compliance)->not->toBeNull();
-    expect($compliance->custo_creditos)->toBe(25);
+    expect($compliance->custo_creditos)->toBe(5.0);
     expect($compliance->is_active)->toBeTrue();
     expect(MonitoramentoPlano::ativos()->pluck('codigo')->all())->toContain('compliance');
 });

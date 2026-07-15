@@ -37,7 +37,7 @@
                 </div>
                 <div class="p-4">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Custo</p>
-                    <p class="text-lg font-bold text-gray-900 font-mono">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($resumo['creditos'] ?? 0))) }}</p>
+                    <p class="text-lg font-bold text-gray-900 font-mono">{{ \App\Support\Dinheiro::brl((($resumo['creditos'] ?? 0))) }}</p>
                 </div>
             </div>
         </div>
@@ -116,7 +116,7 @@
                                 </td>
                                 <td class="px-3 py-3 text-sm text-gray-700" data-label="Escopo">{{ $tier }}</td>
                                 <td class="px-3 py-3 text-sm text-gray-700" data-label="Documentos">{{ number_format($lote->total_participantes, 0, ',', '.') }}</td>
-                                <td class="px-3 py-3 text-sm font-mono font-semibold text-gray-900" data-label="Custo">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $lote->creditos_cobrados)) }}</td>
+                                <td class="px-3 py-3 text-sm font-mono font-semibold text-gray-900" data-label="Custo">{{ \App\Support\Dinheiro::brl(($lote->creditos_cobrados)) }}</td>
                                 <td class="px-3 py-3" data-label="Status"><span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusMeta['hex'] }}">{{ $statusMeta['label'] }}</span></td>
                                 <td class="px-3 py-3 text-right whitespace-nowrap" data-label="Ação">
                                     <button type="button"

@@ -41,7 +41,7 @@ class ConsultaLote extends Model
 
     protected $casts = [
         'total_participantes' => 'integer',
-        'creditos_cobrados' => 'integer',
+        'creditos_cobrados' => 'float',
         'resultado_resumo' => 'array',
         'processado_em' => 'datetime',
     ];

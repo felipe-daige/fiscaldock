@@ -6,9 +6,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('sem faixas, com preco por plano em reais e peg legado mantido', function () {
+it('sem faixas, com preco por plano em reais e sem o peg legado', function () {
     expect(ComercialParametroService::DEFAULTS)->not->toHaveKeys(['faixa_x_min', 'faixa_y_min', 'faixa_z_min']);
-    expect(ComercialParametroService::DEFAULTS)->toHaveKeys(['credit_unit_price', 'minimum_deposit']);
+    expect(ComercialParametroService::DEFAULTS)->not->toHaveKey('credit_unit_price');
+    expect(ComercialParametroService::DEFAULTS)->toHaveKey('minimum_deposit');
     $s = new ComercialParametroService;
     expect($s->valor('preco_compliance'))->toBe(5.00);
 });
@@ -16,14 +17,12 @@ it('sem faixas, com preco por plano em reais e peg legado mantido', function () 
 it('retorna o default quando não há override', function () {
     $service = new ComercialParametroService;
 
-    expect($service->valor('credit_unit_price'))->toBe(0.20);
     expect($service->valor('preco_validacao'))->toBe(3.00);
 });
 
 it('os defaults do registro batem com as constantes do PricingCatalogService (anti-drift)', function () {
     $defaults = ComercialParametroService::DEFAULTS;
 
-    expect($defaults['credit_unit_price']['default'])->toBe(PricingCatalogService::CREDIT_UNIT_PRICE);
     expect($defaults['minimum_deposit']['default'])->toBe(PricingCatalogService::MINIMUM_DEPOSIT);
     expect($defaults)->not->toHaveKey('faixa_x_min');
     expect($defaults)->not->toHaveKey('faixa_y_min');
@@ -36,10 +35,10 @@ it('os defaults do registro batem com as constantes do PricingCatalogService (an
 it('persiste e lê um override com tipagem correta', function () {
     $service = new ComercialParametroService;
 
-    $service->definir('credit_unit_price', 0.25, null);
+    $service->definir('minimum_deposit', 120.50, null);
 
-    expect($service->valor('credit_unit_price'))->toBe(0.25);
-    $this->assertDatabaseHas('comercial_parametros', ['chave' => 'credit_unit_price', 'valor' => '0.25']);
+    expect($service->valor('minimum_deposit'))->toBe(120.50);
+    $this->assertDatabaseHas('comercial_parametros', ['chave' => 'minimum_deposit', 'valor' => '120.5']);
 });
 
 it('faz cast monetario para parâmetros de preço', function () {
@@ -52,12 +51,12 @@ it('faz cast monetario para parâmetros de preço', function () {
 
 it('resetar remove o override e volta ao default', function () {
     $service = new ComercialParametroService;
-    $service->definir('credit_unit_price', 0.25, null);
+    $service->definir('minimum_deposit', 90.00, null);
 
-    $service->resetar('credit_unit_price');
+    $service->resetar('minimum_deposit');
 
-    expect($service->valor('credit_unit_price'))->toBe(0.20);
-    $this->assertDatabaseMissing('comercial_parametros', ['chave' => 'credit_unit_price']);
+    expect($service->valor('minimum_deposit'))->toBe(100.00);
+    $this->assertDatabaseMissing('comercial_parametros', ['chave' => 'minimum_deposit']);
 });
 
 it('rejeita chave desconhecida (não deixa criar parâmetro fora do registro)', function () {
@@ -76,8 +75,7 @@ it('efetivos() expõe default, override e valor efetivo por parâmetro', functio
     expect($efetivos['minimum_deposit']['default'])->toBe(100.00);
     expect($efetivos['minimum_deposit']['override'])->toBe(80.00);
     expect($efetivos['minimum_deposit']['efetivo'])->toBe(80.00);
-    expect($efetivos['credit_unit_price']['override'])->toBeNull();
-    expect($efetivos['credit_unit_price']['efetivo'])->toBe(0.20);
+    expect($efetivos)->not->toHaveKey('credit_unit_price');
     expect($efetivos)->toHaveKey('preco_compliance');
     expect($efetivos)->not->toHaveKey('faixa_x_min');
 });

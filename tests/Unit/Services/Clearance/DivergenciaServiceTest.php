@@ -178,8 +178,8 @@ it('agrega veredito, kpis e breakdown a partir de snapshots + declarado', functi
     expect($resultado['kpis']['existencia']['encontradas'])->toBe(5);
     expect($resultado['kpis']['status']['canceladas_declaradas'])->toBe(0);
     expect($resultado['kpis']['valor']['notas_divergentes'])->toBe(2);
-    expect($resultado['kpis']['roi']['creditos'])->toBe(50);
-    expect($resultado['kpis']['roi']['custo_reais'])->toBe(10.00);
+    expect($resultado['kpis']['roi']['creditos'])->toBe(50.0);
+    expect($resultado['kpis']['roi']['custo_reais'])->toBe(50.0);
     expect(round($resultado['kpis']['roi']['exposicao_reais'], 2))->toBe(2174.35);
 
     expect($resultado['breakdown']['valor_divergente']['count'])->toBe(2);

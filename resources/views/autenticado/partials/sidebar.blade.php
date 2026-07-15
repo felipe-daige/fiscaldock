@@ -216,7 +216,7 @@
                 </span>
                 <div class="flex items-center justify-between gap-2">
                     <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Trial</span>
-                    <span class="text-[11px] font-semibold text-gray-700">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency($__creditos))</span>
+                    <span class="text-[11px] font-semibold text-gray-700">@brl(($__creditos))</span>
                 </div>
                 <div class="mt-2 rounded-full overflow-hidden" style="height:3px;background-color:#e5e7eb;">
                     <div style="height:100%;width:{{ $__pct }}%;background-color:#1f2937;"></div>
@@ -234,8 +234,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                     </svg>
                     @php
-                        $__pricing = app(\App\Services\PricingCatalogService::class);
-                        $__saldoBrl = $__pricing->creditsToCurrency((int) ($__u?->credits ?? 0));
+                        $__saldoBrl = round(($__u?->credits ?? 0), 2);
                         $__planoAtual = $__u ? app(\App\Services\Entitlements\EntitlementService::class)->planFor($__u) : null;
                         $__planoNome = $__trialOn ? 'Trial' : ($__planoAtual?->nome ?? 'Free');
                     @endphp

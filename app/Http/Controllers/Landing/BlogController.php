@@ -29,7 +29,7 @@ class BlogController extends Controller
         $seo = [
             'title' => 'Conteúdos Fiscais e Tributários | FiscalDock',
             'description' => 'Guias e análises para contadores sobre SPED, EFD, consultas CNPJ, regularidade fiscal, compliance e validação de documentos.',
-            'canonical' => self::BASE_URL . '/conteudos',
+            'canonical' => self::BASE_URL.'/conteudos',
             'og_title' => 'Central de Conteúdo Fiscal — FiscalDock',
         ];
 
@@ -67,20 +67,20 @@ class BlogController extends Controller
         }
 
         $topic = BlogPostCatalog::findTopic($tema);
-        if (!$topic) {
+        if (! $topic) {
             abort(404);
         }
 
         $posts = BlogPostCatalog::postsByTopic($tema);
         $featuredPost = collect($posts)->firstWhere('featured', true) ?? ($posts[0] ?? null);
 
-        $canonical = self::BASE_URL . '/conteudos/' . $tema;
+        $canonical = self::BASE_URL.'/conteudos/'.$tema;
 
         $seo = [
-            'title' => $topic['title'] . ' | Central de Conteúdo Fiscal',
+            'title' => $topic['title'].' | Central de Conteúdo Fiscal',
             'description' => $topic['description'],
             'canonical' => $canonical,
-            'og_title' => $topic['title'] . ' — FiscalDock',
+            'og_title' => $topic['title'].' — FiscalDock',
         ];
 
         $viewData = [
@@ -110,7 +110,7 @@ class BlogController extends Controller
 
         $post = BlogPostCatalog::findBySlug($slug);
 
-        if (!$post || !view()->exists($post['view'])) {
+        if (! $post || ! view()->exists($post['view'])) {
             abort(404);
         }
 
@@ -121,7 +121,7 @@ class BlogController extends Controller
         $seriePos = null;
         $serieTotal = null;
 
-        if (!empty($post['serie'])) {
+        if (! empty($post['serie'])) {
             $serieAll = collect(BlogPostCatalog::featuredSeriesPosts())
                 ->where('serie', $post['serie'])
                 ->values();
@@ -139,9 +139,9 @@ class BlogController extends Controller
         }
 
         $seo = [
-            'title' => $post['title'] . ' | FiscalDock',
+            'title' => $post['title'].' | FiscalDock',
             'description' => $post['meta_description'],
-            'canonical' => self::BASE_URL . '/conteudos/' . $post['slug'],
+            'canonical' => self::BASE_URL.'/conteudos/'.$post['slug'],
             'og_type' => 'article',
         ];
 

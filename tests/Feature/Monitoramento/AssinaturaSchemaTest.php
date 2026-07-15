@@ -5,6 +5,7 @@ use App\Models\MonitoramentoAssinatura;
 use App\Models\MonitoramentoPlano;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+
 use function Pest\Laravel\assertDatabaseHas;
 
 uses(RefreshDatabase::class);

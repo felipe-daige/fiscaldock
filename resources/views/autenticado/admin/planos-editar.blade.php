@@ -6,7 +6,7 @@
     $inputCls = 'w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded focus:border-gray-800 focus:ring-0 focus:outline-none';
     $precos = app(\App\Services\PricingCatalogService::class);
     $reais = fn ($centavos) => number_format(((int) $centavos) / 100, 2, '.', '');
-    $saldoInclusoBrl = \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $plano->creditos_inclusos));
+    $saldoInclusoBrl = \App\Support\Dinheiro::brl(($plano->creditos_inclusos));
     // Marca d'água = plano sem NENHUM formato de export pago (regra do RequiresEntitlement/composer).
     $temExportPago = ! empty($exportAtual);
     $armazenamentoAtual = array_key_exists('armazenamento_mb', $caps)
@@ -92,7 +92,7 @@
                         <label class="{{ $lblInput }}">Saldo incluso / mês</label>
                         <div class="relative">
                             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-gray-400">R$</span>
-                            <input type="number" step="0.01" min="0" name="saldo_incluso_reais" value="{{ old('saldo_incluso_reais', number_format($precos->creditsToCurrency((int) $plano->creditos_inclusos), 2, '.', '')) }}" class="{{ $inputCls }} pl-9">
+                            <input type="number" step="0.01" min="0" name="saldo_incluso_reais" value="{{ old('saldo_incluso_reais', number_format(($plano->creditos_inclusos), 2, '.', '')) }}" class="{{ $inputCls }} pl-9">
                         </div>
                         <p class="text-[10px] text-gray-400 mt-1">Concedido a cada renovação; acumula até o rollover cap.</p>
                     </div>

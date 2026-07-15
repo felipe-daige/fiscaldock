@@ -40,7 +40,7 @@ interface Fonte
     public function normalizar(array $raw, string $status = 'sucesso'): array;
 
     /** Custo interno desta fonte (0 = grátis, ex.: cadastro/minhareceita). */
-    public function custoCreditos(): int;
+    public function custoCreditos(): float;
 
     /**
      * A fonte está operacional para rotear pro Laravel? Gate de cutover seguro:

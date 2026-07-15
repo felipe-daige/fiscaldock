@@ -10,8 +10,8 @@ use App\Models\User;
 use App\Models\XmlImportacao;
 use App\Services\AlertaCentralService;
 use App\Services\BiService;
-use App\Services\SaldoService;
 use App\Services\EfdAgregadorService;
+use App\Services\SaldoService;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -68,14 +68,14 @@ class DashboardDataService
 
         // Créditos
         $creditos = $this->saldoService->getBalance($user);
-        $creditosConsultas = (int) ConsultaLote::where('user_id', $userId)
+        $creditosConsultas = (float) ConsultaLote::where('user_id', $userId)
             ->whereIn('status', ConsultaLote::successfulStatuses())
             ->whereBetween('created_at', [$mesInicio, $mesFim])
             ->sum('creditos_cobrados');
-        $creditosImportacoes = (int) EfdImportacao::where('user_id', $userId)
+        $creditosImportacoes = (float) EfdImportacao::where('user_id', $userId)
             ->whereBetween('created_at', [$mesInicio, $mesFim])
             ->sum('creditos_cobrados');
-        $creditosUsadosMes = $creditosConsultas + $creditosImportacoes;
+        $creditosUsadosMes = round($creditosConsultas + $creditosImportacoes, 2);
 
         // Alertas (mesma fonte canônica da Central de Alertas)
         $resumoAlertas = $this->alertaCentralService->obterResumo($userId);

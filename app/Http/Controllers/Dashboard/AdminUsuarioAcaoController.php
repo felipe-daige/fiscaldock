@@ -22,12 +22,10 @@ class AdminUsuarioAcaoController extends Controller
         ]);
         $alvo = User::findOrFail($id);
 
-        // Movimento digitado em R$ — converte para a unidade do ledger preservando o sinal.
-        $reais = (float) $dados['valor'];
-        $creditos = ($reais < 0 ? -1 : 1) * app(\App\Services\PricingCatalogService::class)->currencyToCredits(abs($reais));
+        $reais = round((float) $dados['valor'], 2);
 
         try {
-            $this->acoes->creditar($request->user(), $alvo, (float) $creditos, $dados['motivo']);
+            $this->acoes->creditar($request->user(), $alvo, $reais, $dados['motivo']);
         } catch (\RuntimeException|\InvalidArgumentException $e) {
             return back()->withErrors(['valor' => $e->getMessage()]);
         }
@@ -89,13 +87,6 @@ class AdminUsuarioAcaoController extends Controller
             ],
             'motivo' => ['required', 'string', 'min:3', 'max:500'],
         ]);
-
-        $precos = app(\App\Services\PricingCatalogService::class);
-        foreach (['creditos_inclusos_saldo', 'limite_consumo_automatico'] as $campoReais) {
-            if (isset($dados[$campoReais])) {
-                $dados[$campoReais] = $precos->currencyToCredits((float) $dados[$campoReais]);
-            }
-        }
 
         $plano = isset($dados['subscription_plan_id'])
             ? SubscriptionPlan::find((int) $dados['subscription_plan_id'])

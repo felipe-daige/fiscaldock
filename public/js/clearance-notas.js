@@ -28,9 +28,7 @@ let idsUrl = '';
 let validarUrl = '';
 let temMaisPagina = false;
 let saldoAtual = 0;
-let custos = { basico: 5, full: 5 };
-// Conversão monetária vinda do backend; toda exibição é em R$.
-let saldoUnitPrice = 0.20;
+let custos = { basico: 1, full: 2 };
 
 let selecionados = new Set();
 let origens = new Map();
@@ -41,15 +39,15 @@ function $(id) { return document.getElementById(id); }
 
 // Formata o valor monetário em R$.
 function brl(unidades) {
-    const reais = Math.round((unidades || 0) * saldoUnitPrice * 100) / 100;
+    const reais = Math.round((unidades || 0) * 100) / 100;
     return 'R$ ' + reais.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function aplicarNovoSaldoReais(valor) {
     const reais = Number(valor);
-    if (!Number.isFinite(reais) || saldoUnitPrice <= 0) return;
+    if (!Number.isFinite(reais)) return;
 
-    saldoAtual = Math.round(reais / saldoUnitPrice);
+    saldoAtual = Math.round(reais * 100) / 100;
     const root = $('validacao-notas-container');
     if (root) root.dataset.saldoAtual = String(saldoAtual);
 
@@ -731,11 +729,10 @@ function initClearanceNotas() {
     idsUrl = root.dataset.idsUrl || '';
     validarUrl = root.dataset.validarUrl || '';
     temMaisPagina = root.dataset.temMaisPagina === '1';
-    saldoAtual = parseInt(root.dataset.saldoAtual || '0', 10);
-    saldoUnitPrice = parseFloat(root.dataset.saldoUnitPrice) || 0.20;
+    saldoAtual = parseFloat(root.dataset.saldoAtual || '0');
     custos = {
-        basico: parseInt(root.dataset.custoBasico || '5', 10),
-        full: parseInt(root.dataset.custoFull || '5', 10),
+        basico: parseFloat(root.dataset.custoBasico || '1'),
+        full: parseFloat(root.dataset.custoFull || '2'),
     };
 
     selecionados = new Set();

@@ -11,7 +11,7 @@ it('classifica flag por |Δ%|: verde <=2, amarelo <=10, vermelho >10', function 
     expect($s->classificarFlag(100.0, 100.0, true)['flag'])->toBe('verde');
     expect($s->classificarFlag(100.0, 101.0, true)['flag'])->toBe('verde');   // 1%
     expect($s->classificarFlag(100.0, 105.0, true)['flag'])->toBe('amarelo'); // 5%
-    expect($s->classificarFlag(100.0, 120.0, true)['flag'])->toBe('vermelho');// 20%
+    expect($s->classificarFlag(100.0, 120.0, true)['flag'])->toBe('vermelho'); // 20%
 });
 
 it('marca sem_dado quando a fonte de apuração não existe no mês', function () {

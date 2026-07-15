@@ -31,7 +31,7 @@ class CriarRecargaAutomatica
         }
 
         $valor = round((float) $pacote['preco'], 2);
-        $creditos = (int) $pacote['creditos'];
+        $creditos = round((float) $pacote['creditos'], 2);
         $centavos = (int) round($valor * 100);
 
         // Teto do preapproval MP: acima disso a cobrança recorrente é recusada.

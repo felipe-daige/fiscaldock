@@ -35,7 +35,7 @@ final class DossieLoteBuilder
      * @param  array<int, int>  $clienteIds
      * @param  int  $top  Participantes por cliente (top N por volume EFD). Ver TOPS_VALIDOS.
      * @return array{grupos: list<array{dossie: array, participantes: list<array>, participantes_total: int}>, truncado: bool, top: int}|null
-     *   null = nenhum cliente válido do usuário entre os ids.
+     *                                                                                                                                        null = nenhum cliente válido do usuário entre os ids.
      */
     public function montar(int $userId, array $clienteIds, int $top = 10): ?array
     {

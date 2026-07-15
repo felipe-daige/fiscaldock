@@ -32,6 +32,7 @@ function pfrSetup(): array
     $n = 0;
     $mk = function (array $a) use ($user, &$n) {
         $n++;
+
         return EfdNota::create(array_merge([
             'user_id' => $user->id, 'numero' => $n, 'serie' => '1', 'data_emissao' => '2024-03-10',
             'valor_desconto' => 0, 'cancelada' => false, 'modelo' => '55', 'origem_arquivo' => 'fiscal',

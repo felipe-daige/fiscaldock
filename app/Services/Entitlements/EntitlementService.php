@@ -120,7 +120,7 @@ class EntitlementService
         return $this->planFor($user)->faixa_slug;
     }
 
-    public function consumptionCap(User $user): int
+    public function consumptionCap(User $user): float
     {
         $subscription = $user->relationLoaded('subscription')
             ? $user->subscription
@@ -131,7 +131,7 @@ class EntitlementService
         }
 
         if ($subscription !== null && $subscription->limite_consumo_automatico !== null) {
-            return (int) $subscription->limite_consumo_automatico;
+            return round((float) $subscription->limite_consumo_automatico, 2);
         }
 
         // Sem valor explícito, não existe teto oculto do tier: o saldo é o limite real.
@@ -163,11 +163,11 @@ class EntitlementService
     }
 
     /** Saldo já consumido pelo auto-monitor no ciclo corrente (deduções type=monitoramento_assinatura). */
-    public function consumoMonitoramentoNoCiclo(User $user): int
+    public function consumoMonitoramentoNoCiclo(User $user): float
     {
         $desde = $this->cicloInicioMonitoramento($user);
 
-        return (int) abs((float) \Illuminate\Support\Facades\DB::table('credit_transactions')
+        return abs((float) \Illuminate\Support\Facades\DB::table('credit_transactions')
             ->where('user_id', $user->id)
             ->where('type', 'monitoramento_assinatura')
             ->where('amount', '<', 0)
@@ -179,7 +179,7 @@ class EntitlementService
      * Disparar um ciclo de custo `$custo` estouraria o cap de consumo automático do usuário?
      * Cap <= 0 (ex.: Free sem inclusos) = sem freio — o saldo é o limite real (monitor grátis é custo 0).
      */
-    public function monitoramentoCapEstourado(User $user, int $custo): bool
+    public function monitoramentoCapEstourado(User $user, float $custo): bool
     {
         $cap = $this->consumptionCap($user);
 

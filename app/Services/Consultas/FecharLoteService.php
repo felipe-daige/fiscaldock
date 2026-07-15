@@ -4,8 +4,8 @@ namespace App\Services\Consultas;
 
 use App\Models\ConsultaLote;
 use App\Models\ConsultaResultado;
-use App\Services\SaldoService;
 use App\Services\RiskScoreService;
+use App\Services\SaldoService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -25,12 +25,12 @@ class FecharLoteService
         $alvos = ConsultaResultado::where('consulta_lote_id', $loteId)
             ->get(['participante_id', 'cliente_id']);
 
-        $creditosFalhos = 0;
+        $creditosFalhos = 0.0;
         foreach ($alvos as $alvo) {
             [$tipo, $id] = $alvo->cliente_id
                 ? ['cliente', $alvo->cliente_id]
                 : ['participante', $alvo->participante_id];
-            $creditosFalhos += (int) Cache::pull("consulta_estorno:{$loteId}:{$tipo}:{$id}", 0);
+            $creditosFalhos += (float) Cache::pull("consulta_estorno:{$loteId}:{$tipo}:{$id}", 0);
         }
 
         DB::transaction(function () use ($loteId, $creditosFalhos, $resumo) {
@@ -43,13 +43,11 @@ class FecharLoteService
             $lote->save();
 
             if ($creditosFalhos > 0) {
-                $valorEstorno = app(\App\Services\PricingCatalogService::class)
-                    ->creditsToCurrency($creditosFalhos);
                 $this->saldoService->add(
                     $lote->user,
                     $creditosFalhos,
                     type: 'consulta_refund',
-                    description: 'Estorno de R$ '.number_format($valorEstorno, 2, ',', '.')." — fontes com falha no lote #{$lote->id}",
+                    description: 'Estorno de R$ '.number_format($creditosFalhos, 2, ',', '.')." — fontes com falha no lote #{$lote->id}",
                     source: $lote,
                 );
             }

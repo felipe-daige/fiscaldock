@@ -80,13 +80,13 @@ it('faixaFor reflete a faixa comprada pelo tier', function () {
 it('consumptionCap sem valor explícito não cria teto escondido', function () {
     $user = User::factory()->create();
     assinar($user, 'essencial');
-    expect($this->svc->consumptionCap($user))->toBe(0);
+    expect($this->svc->consumptionCap($user))->toBe(0.0);
 });
 
 it('consumptionCap respeita o limite explícito do cliente', function () {
     $user = User::factory()->create();
     assinar($user, 'essencial', ['limite_consumo_automatico' => 120]);
-    expect($this->svc->consumptionCap($user))->toBe(120);
+    expect($this->svc->consumptionCap($user))->toBe(120.0);
 });
 
 function ativarTrial(User $user, int $creditos = 50): void

@@ -124,9 +124,9 @@
 
         <div class="grid grid-cols-1 min-[380px]:grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
             @foreach([
-                ['Saldo', $fmtR($pricing->creditsToCurrency((int) $usuario->credits)), $fmtN($usuario->credits).' em saldo bruto', '#1d4ed8'],
+                ['Saldo', $fmtR(($usuario->credits)), $fmtN($usuario->credits).' em saldo bruto', '#1d4ed8'],
                 ['Total pago', $fmtR($financeiro['total_pago'] ?? $kpis['total_pago']), $fmtN($financeiro['compras_aprovadas'] ?? 0).' compra(s) aprovada(s)', '#047857'],
-                ['Consumo total', $fmtR($pricing->creditsToCurrency((int) ($financeiro['creditos_consumidos'] ?? $kpis['creditos_consumidos']))), 'débitos de saldo', '#b45309'],
+                ['Consumo total', $fmtR((($financeiro['creditos_consumidos'] ?? $kpis['creditos_consumidos']))), 'débitos de saldo', '#b45309'],
                 ['Plano', $planoAtual, $assinatura ? 'assinatura ativa' : 'sem assinatura ativa', '#334155'],
                 ['Consultas', $fmtN($kpis['qtd_consultas']), $fmtN($uso['consultas_30d'] ?? 0).' nos últimos 30 dias', '#1d4ed8'],
                 ['Importações', $fmtN($kpis['qtd_importacoes']), $fmtN($uso['importacoes_30d'] ?? 0).' nos últimos 30 dias', '#4338ca'],
@@ -211,7 +211,7 @@
                     <div class="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
                         <div class="p-4">
                             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Saldo atual</p>
-                            <p class="text-lg font-bold text-gray-900">{{ $fmtR($pricing->creditsToCurrency((int) $usuario->credits)) }}</p>
+                            <p class="text-lg font-bold text-gray-900">{{ $fmtR(($usuario->credits)) }}</p>
                             <p class="text-[11px] text-gray-500">Saldo disponível para uso</p>
                         </div>
                         <div class="p-4">
@@ -221,7 +221,7 @@
                         </div>
                         <div class="p-4">
                             <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Consumo</p>
-                            <p class="text-lg font-bold text-gray-900">{{ $fmtR($pricing->creditsToCurrency((int) ($financeiro['creditos_consumidos'] ?? 0))) }}</p>
+                            <p class="text-lg font-bold text-gray-900">{{ $fmtR((($financeiro['creditos_consumidos'] ?? 0))) }}</p>
                             <p class="text-[11px] text-gray-500">Débitos acumulados na conta</p>
                         </div>
                     </div>
@@ -398,8 +398,7 @@
                             action="{{ route('app.admin.usuarios.creditar', $usuario->id) }}"
                             class="space-y-2"
                             data-credit-form
-                            data-saldo="{{ (int) $usuario->credits }}"
-                            data-unit="{{ $pricing->creditUnitPrice() }}"
+                            data-saldo="{{ $usuario->credits }}"
                             data-admin-action-form="credit"
                             data-admin-action-user-id="{{ $usuario->id }}"
                             data-admin-action-user-name="{{ $nomeCompleto }}"

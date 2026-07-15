@@ -124,7 +124,7 @@
         <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-2 flex-wrap">
             <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Monitorados ({{ $assinaturas->count() }})</span>
             @if($assinaturas->where('status', 'ativo')->isNotEmpty())
-                <span class="text-[11px] text-gray-500">Custo mensal estimado (ativos): <span class="font-semibold text-gray-800">≈ {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $assinaturas->where('status', 'ativo')->sum('custo_mes'))) }}/mês</span></span>
+                <span class="text-[11px] text-gray-500">Custo mensal estimado (ativos): <span class="font-semibold text-gray-800">≈ {{ \App\Support\Dinheiro::brl(($assinaturas->where('status', 'ativo')->sum('custo_mes'))) }}/mês</span></span>
             @endif
         </div>
         @if($assinaturas->isEmpty())
@@ -163,8 +163,8 @@
                         <div class="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500">
                             <span>Plano: <span class="text-gray-700">{{ $a['plano_nome'] }}</span></span>
                             <span>Frequência: <span class="text-gray-700 capitalize">{{ $a['frequencia'] }}</span></span>
-                            <span>Custo/ciclo: <span class="text-gray-700">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $a['custo_ciclo'])) }}</span></span>
-                            <span>Custo/mês: <span class="text-gray-700">≈ {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $a['custo_mes'])) }}</span></span>
+                            <span>Custo/ciclo: <span class="text-gray-700">{{ \App\Support\Dinheiro::brl(($a['custo_ciclo'])) }}</span></span>
+                            <span>Custo/mês: <span class="text-gray-700">≈ {{ \App\Support\Dinheiro::brl(($a['custo_mes'])) }}</span></span>
                             <span>Próxima: <span class="text-gray-700">{{ $a['proxima_em'] ?? '—' }}</span></span>
                         </div>
                         <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-gray-500">
@@ -237,8 +237,8 @@
                                     @endif
                                 </td>
                                 <td class="px-2 text-gray-500">{{ $a['proxima_em'] ?? '—' }}</td>
-                                <td class="px-2 text-right text-gray-700 whitespace-nowrap">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $a['custo_ciclo'])) }}</td>
-                                <td class="px-2 text-right text-gray-700 whitespace-nowrap">≈ {{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $a['custo_mes'])) }}</td>
+                                <td class="px-2 text-right text-gray-700 whitespace-nowrap">{{ \App\Support\Dinheiro::brl(($a['custo_ciclo'])) }}</td>
+                                <td class="px-2 text-right text-gray-700 whitespace-nowrap">≈ {{ \App\Support\Dinheiro::brl(($a['custo_mes'])) }}</td>
                                 <td class="px-2">
                                     <div class="flex flex-wrap items-center gap-1">
                                         <span class="inline-flex px-1.5 py-0.5 rounded text-white text-[10px]" style="background-color: {{ $a['status'] === 'ativo' ? '#047857' : '#9ca3af' }}">{{ $a['status'] }}</span>
@@ -276,9 +276,9 @@
                     @if($assinaturaConta)
                         <span class="block mt-1 text-xs text-gray-600">
                             @if($capEfetivo > 0)
-                                {{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $consumoCiclo)) }} de {{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $capEfetivo)) }} usados neste ciclo · {{ $pctConsumo }}%
+                                {{ \App\Support\Dinheiro::brl(($consumoCiclo)) }} de {{ \App\Support\Dinheiro::brl(($capEfetivo)) }} usados neste ciclo · {{ $pctConsumo }}%
                             @else
-                                Sem teto definido · {{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $consumoCiclo)) }} consumidos neste ciclo
+                                Sem teto definido · {{ \App\Support\Dinheiro::brl(($consumoCiclo)) }} consumidos neste ciclo
                             @endif
                         </span>
                     @else
@@ -313,21 +313,21 @@
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                     <div class="bg-gray-50 border border-gray-200 rounded p-3">
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Teto efetivo</p>
-                        <p class="text-base font-bold text-gray-900"><span id="teto-efetivo-valor">{{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $capEfetivo)) }}</span> <span class="text-[11px] font-normal text-gray-400">/ciclo</span></p>
+                        <p class="text-base font-bold text-gray-900"><span id="teto-efetivo-valor">{{ \App\Support\Dinheiro::brl(($capEfetivo)) }}</span> <span class="text-[11px] font-normal text-gray-400">/ciclo</span></p>
                     </div>
                     <div class="bg-gray-50 border border-gray-200 rounded p-3">
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Consumido no ciclo</p>
-                        <p class="text-base font-bold text-gray-900">{{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $consumoCiclo)) }}</p>
+                        <p class="text-base font-bold text-gray-900">{{ \App\Support\Dinheiro::brl(($consumoCiclo)) }}</p>
                     </div>
                     <div class="bg-gray-50 border border-gray-200 rounded p-3">
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Padrão do plano</p>
-                        <p class="text-base font-bold text-gray-900">{{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $capPadrao)) }}</p>
+                        <p class="text-base font-bold text-gray-900">{{ \App\Support\Dinheiro::brl(($capPadrao)) }}</p>
                     </div>
                 </div>
                 <div id="consumo-ciclo-progresso" class="mb-4{{ $capEfetivo > 0 ? '' : ' hidden' }}">
                     <div class="flex items-center justify-between text-[11px] text-gray-500 mb-1">
-                        <span>Consumo do ciclo: <span id="consumo-ciclo-percentual" data-consumo-unidades="{{ (int) $consumoCiclo }}">{{ $pctConsumo }}%</span></span>
-                        <span>Projetado até o fim do ciclo: {{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $projecaoCiclo)) }}</span>
+                        <span>Consumo do ciclo: <span id="consumo-ciclo-percentual" data-consumo-creditos="{{ $consumoCiclo }}">{{ $pctConsumo }}%</span></span>
+                        <span>Projetado até o fim do ciclo: {{ \App\Support\Dinheiro::brl(($projecaoCiclo)) }}</span>
                     </div>
                     <div class="w-full h-2 rounded bg-gray-200 overflow-hidden">
                         <div id="consumo-ciclo-barra" class="h-2 rounded" style="width: {{ $pctConsumo }}%; background-color: {{ $corBarra }}"></div>
@@ -338,15 +338,14 @@
                         <label class="block text-[11px] text-gray-500 mb-1">Teto personalizado (R$)</label>
                         {{-- O usuário digita e visualiza o teto em R$. --}}
                         <input type="text" id="input-limite-consumo" inputmode="decimal" autocomplete="off"
-                               value="{{ $limiteAtual !== null && $limiteAtual !== '' ? number_format($precos->creditsToCurrency((int) $limiteAtual), 2, ',', '.') : '' }}"
-                               data-saldo-unit-price="{{ $precos->creditUnitPrice() }}"
+                               value="{{ $limiteAtual !== null && $limiteAtual !== '' ? number_format(($limiteAtual), 2, ',', '.') : '' }}"
                                data-max-unidades="1000000" aria-describedby="limite-feedback"
                                placeholder="Padrão do plano" class="h-10 text-[13px] py-2 px-3 border border-gray-300 rounded w-48">
                     </div>
                     <button id="btn-salvar-limite" type="button" class="auth-control rounded bg-gray-800 hover:bg-gray-700 text-white transition">Salvar</button>
                     <span id="limite-feedback" class="text-[12px]"></span>
                 </div>
-                <p class="text-[11px] text-gray-400 mt-2">Deixe em branco para usar o padrão do plano ({{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $capPadrao)) }} em saldo incluso). Use <span class="font-semibold">0</span> para não impor limite (o saldo passa a ser o único controle).</p>
+                <p class="text-[11px] text-gray-400 mt-2">Deixe em branco para usar o padrão do plano ({{ \App\Support\Dinheiro::brl(($capPadrao)) }} em saldo incluso). Use <span class="font-semibold">0</span> para não impor limite (o saldo passa a ser o único controle).</p>
             @endif
         </div>
     </details>
@@ -388,7 +387,7 @@
                 <span class="text-sm font-semibold text-gray-800">Novo monitorado</span>
                 <button type="button" onclick="document.getElementById('modal-monitorar').classList.add('hidden')" class="text-gray-400 text-xl leading-none">&times;</button>
             </div>
-            <form id="form-monitorar" data-saldo-unit-price="{{ $precos->creditUnitPrice() }}" class="p-4 space-y-3">
+            <form id="form-monitorar" class="p-4 space-y-3">
                 <div>
                     <label class="text-[11px] text-gray-500 block mb-1">Buscar em</label>
                     <select id="mon-tipo" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded" onchange="painelTipoChange()">
@@ -431,7 +430,7 @@
                         <label class="text-[11px] text-gray-500 block mb-1">Plano</label>
                         <select id="mon-plano" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded" onchange="monPlanoMudou()">
                             @foreach($planos as $pl)
-                                <option value="{{ $pl['id'] }}" data-custo="{{ (int) $pl['custo'] }}" data-gratuito="{{ $pl['gratuito'] ? '1' : '0' }}">{{ $pl['nome'] }} — {{ \App\Support\Dinheiro::brl($precos->creditsToCurrency((int) $pl['custo'])) }}/CNPJ</option>
+                                <option value="{{ $pl['id'] }}" data-custo="{{ $pl['custo'] }}" data-gratuito="{{ $pl['gratuito'] ? '1' : '0' }}">{{ $pl['nome'] }} — {{ \App\Support\Dinheiro::brl(($pl['custo'])) }}/CNPJ</option>
                             @endforeach
                         </select>
                     </div>
@@ -627,21 +626,20 @@
             nAlvos += parseInt(gopt.dataset.membros, 10) || 0;
         }
         var popt = document.getElementById('mon-plano').selectedOptions[0];
-        var custoCreditos = popt ? parseInt(popt.dataset.custo, 10) || 0 : 0;
+        var custoCreditos = popt ? parseFloat(popt.dataset.custo) || 0 : 0;
         // Grupo já monitorado só adiciona membros à assinatura existente (sem plano novo) —
         // o custo dela muda, mas quem dita é o plano da assinatura antiga, não este form.
-        if (grupoMonitorado || nAlvos < 1 || custoCreditos < 1) {
+        if (grupoMonitorado || nAlvos < 1 || custoCreditos <= 0) {
             box.classList.add('hidden');
             return;
         }
         var freqDias = { diario: 1, semanal: 7, quinzenal: 15, mensal: 30 }[document.getElementById('mon-frequencia').value] || 30;
-        var unitPrice = parseFloat(document.getElementById('form-monitorar').dataset.saldoUnitPrice) || 0.20;
-        var brlFmt = function (unidades) {
-            return 'R$ ' + (unidades * unitPrice).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        var brlFmt = function (reais) {
+            return 'R$ ' + (Math.round(reais * 100) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         };
         var ciclo = nAlvos * custoCreditos;
-        box.textContent = 'Custo estimado: ' + brlFmt(Math.round(ciclo * 30 / freqDias)) + '/mês · '
-            + brlFmt(Math.round(ciclo * 90 / freqDias)) + '/trimestre ('
+        box.textContent = 'Custo estimado: ' + brlFmt(ciclo * 30 / freqDias) + '/mês · '
+            + brlFmt(ciclo * 90 / freqDias) + '/trimestre ('
             + nAlvos + ' CNPJ' + (nAlvos > 1 ? 's' : '') + ' × ' + brlFmt(custoCreditos) + ' por consulta)';
         box.classList.remove('hidden');
     }
@@ -913,15 +911,14 @@
         if (!btn || !input) { return; }
 
         var token = document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '';
-        // Input e retorno são apresentados em R$.
-        var unitPrice = parseFloat(input.dataset.saldoUnitPrice) || 0.20;
-        var maxUnidades = parseInt(input.dataset.maxUnidades, 10) || 1000000;
-        var consumoCreditos = percentual ? parseInt(percentual.dataset.consumoCreditos, 10) || 0 : 0;
+        // Input, storage e retorno são em R$.
+        var maxReais = parseInt(input.dataset.maxUnidades, 10) || 1000000;
+        var consumoCreditos = percentual ? parseFloat(percentual.dataset.consumoCreditos) || 0 : 0;
         var numeroBrl = function (valor) {
             return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         };
-        var brl = function (unidades) {
-            return 'R$ ' + numeroBrl(Math.round(unidades * unitPrice * 100) / 100);
+        var brl = function (reais) {
+            return 'R$ ' + numeroBrl(Math.round(reais * 100) / 100);
         };
         var filtrarMoeda = function (valor) {
             var limpo = String(valor || '').replace(/[^\d,.]/g, '');
@@ -973,8 +970,8 @@
 
         btn.addEventListener('click', function () {
             var valor = parseMoeda(input.value);
-            var limite = valor === null ? null : Math.round(valor / unitPrice);
-            if (limite !== null && (isNaN(limite) || limite < 0 || limite > maxUnidades)) {
+            var limite = valor === null ? null : Math.round(valor * 100) / 100;
+            if (limite !== null && (isNaN(limite) || limite < 0 || limite > maxReais)) {
                 feedback.textContent = 'Valor inválido.';
                 feedback.style.color = '#dc2626';
                 return;
@@ -991,7 +988,7 @@
                   if (res.ok && res.j.success) {
                       var limiteSalvo = res.j.limite_consumo_automatico;
                       var capEfetivo = Number(res.j.cap_efetivo);
-                      input.value = limiteSalvo === null ? '' : numeroBrl(Number(limiteSalvo) * unitPrice);
+                      input.value = limiteSalvo === null ? '' : numeroBrl(Number(limiteSalvo));
                       atualizarResumo(capEfetivo);
                       feedback.textContent = '✓ Teto atualizado (' + brl(capEfetivo) + '/ciclo).';
                       feedback.style.color = '#047857';

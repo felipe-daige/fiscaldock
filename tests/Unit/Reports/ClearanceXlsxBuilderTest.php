@@ -53,7 +53,7 @@ it('gera o workbook do clearance com números reais e badge de severidade', func
     $path = storage_path('framework/testing/clr_'.uniqid().'.xlsx');
     app(ClearanceXlsxBuilder::class)->gerarArquivo(relatorioClearanceFixture(), $path);
 
-    $reader = new Reader();
+    $reader = new Reader;
     $reader->open($path);
     $sheets = [];
     foreach ($reader->getSheetIterator() as $sheet) {

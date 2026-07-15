@@ -30,7 +30,7 @@
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Valor Gasto</p>
-                    <p class="text-lg font-bold text-gray-900 font-mono">@brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) ($totalCreditos ?? 0)))</p>
+                    <p class="text-lg font-bold text-gray-900 font-mono">@brl((($totalCreditos ?? 0)))</p>
                     <p class="text-[11px] text-gray-500 mt-1">Gasto em consultas</p>
                 </div>
                 <div class="p-4 sm:p-6">
@@ -151,7 +151,7 @@
                                     @endif
                                 </td>
                                 <td class="px-3 py-3 text-sm text-gray-700 font-mono whitespace-nowrap" data-label="Custo">
-                                    @brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $consulta->creditos_cobrados))
+                                    @brl(($consulta->creditos_cobrados))
                                 </td>
                                 <td class="px-3 py-3 text-right whitespace-nowrap text-xs" data-label="Ações">
                                     <button type="button"
@@ -214,7 +214,6 @@
 </div>
 
 <script>
-    const saldoUnitPrice = Number(@json(app(\App\Services\PricingCatalogService::class)->creditUnitPrice()));
 (function() {
     'use strict';
 
@@ -406,7 +405,7 @@
             // Metadados
             html += '<div class="border-t border-gray-200 pt-4 text-xs text-gray-500">';
             html += '<p>Consulta realizada em: ' + (data.executado_em || data.created_at || '-') + '</p>';
-            html += '<p>Valor utilizado: R$ ' + ((Number(data.creditos_cobrados || 0) * saldoUnitPrice).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })) + '</p>';
+            html += '<p>Valor utilizado: R$ ' + (Number(data.creditos_cobrados || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })) + '</p>';
             html += '</div>';
 
             html += '</div>';

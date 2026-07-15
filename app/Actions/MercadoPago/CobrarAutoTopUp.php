@@ -24,7 +24,7 @@ class CobrarAutoTopUp
         }
 
         $valor = round((float) $recarga->valor, 2);
-        $creditos = (int) $recarga->creditos;
+        $creditos = round((float) $recarga->creditos, 2);
         $idempotencyKey = (string) Str::uuid();
 
         $payment = MercadoPagoPayment::create([

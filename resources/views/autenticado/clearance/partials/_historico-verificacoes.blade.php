@@ -41,7 +41,7 @@
                     </div>
                     <div>
                         <p class="text-[10px] text-gray-400 uppercase">Custo</p>
-                        <p class="text-xs font-mono font-semibold text-gray-900">{{ \App\Support\Dinheiro::brl(app(\App\Services\PricingCatalogService::class)->creditsToCurrency((int) $loteHistorico->creditos_cobrados)) }}</p>
+                        <p class="text-xs font-mono font-semibold text-gray-900">{{ \App\Support\Dinheiro::brl(($loteHistorico->creditos_cobrados)) }}</p>
                     </div>
                     <div class="col-span-2 sm:col-span-1 sm:text-right">
                         <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusMeta['hex'] }}">{{ $statusMeta['label'] }}</span>

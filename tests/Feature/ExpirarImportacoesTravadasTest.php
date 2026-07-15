@@ -14,9 +14,9 @@ function expirarEfd(string $status, int $minutosAtras): EfdImportacao
 {
     $user = User::factory()->create();
     $imp = EfdImportacao::create([
-        'user_id'  => $user->id,
+        'user_id' => $user->id,
         'tipo_efd' => 'EFD ICMS/IPI',
-        'status'   => $status,
+        'status' => $status,
     ]);
     DB::table('efd_importacoes')->where('id', $imp->id)
         ->update(['updated_at' => now()->subMinutes($minutosAtras)]);
@@ -28,9 +28,9 @@ function expirarXml(string $status, int $minutosAtras): XmlImportacao
 {
     $user = User::factory()->create();
     $imp = XmlImportacao::create([
-        'user_id'        => $user->id,
+        'user_id' => $user->id,
         'tipo_documento' => 'nfe',
-        'status'         => $status,
+        'status' => $status,
     ]);
     DB::table('xml_importacoes')->where('id', $imp->id)
         ->update(['updated_at' => now()->subMinutes($minutosAtras)]);

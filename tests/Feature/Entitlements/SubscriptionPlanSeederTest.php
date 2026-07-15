@@ -14,7 +14,7 @@ it('seeda os 5 tiers com preços e créditos do spec', function () {
     $essencial = SubscriptionPlan::where('codigo', 'essencial')->first();
     expect($essencial->preco_mensal_centavos)->toBe(9900);
     expect($essencial->preco_anual_centavos)->toBe(99000);
-    expect($essencial->creditos_inclusos)->toBe(175);
+    expect($essencial->creditos_inclusos)->toBe(35.0);
     expect($essencial->faixa_slug)->toBe('base');
     expect($essencial->limite_cnpjs_monitorados)->toBeNull();
     expect($essencial->assentos_inclusos)->toBe(2);
@@ -22,13 +22,13 @@ it('seeda os 5 tiers com preços e créditos do spec', function () {
     $profissional = SubscriptionPlan::where('codigo', 'profissional')->first();
     expect($profissional->preco_mensal_centavos)->toBe(24900);
     expect($profissional->faixa_slug)->toBe('x');
-    expect($profissional->creditos_inclusos)->toBe(400);
+    expect($profissional->creditos_inclusos)->toBe(80.0);
     expect($profissional->assentos_inclusos)->toBe(3);
 
     $escritorio = SubscriptionPlan::where('codigo', 'escritorio')->first();
     expect($escritorio->preco_mensal_centavos)->toBe(59900);
     expect($escritorio->faixa_slug)->toBe('y');
-    expect($escritorio->creditos_inclusos)->toBe(1000);
+    expect($escritorio->creditos_inclusos)->toBe(200.0);
     expect($escritorio->assentos_inclusos)->toBe(10);
 
     expect(SubscriptionPlan::where('codigo', 'enterprise')->first()->is_active)->toBeFalse();
