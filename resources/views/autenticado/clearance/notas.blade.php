@@ -579,9 +579,10 @@
                                 $isXml = $n->origem === 'xml';
                                 $origemHex = $isXml ? '#374151' : '#9ca3af';
                                 $dataEmissao = $n->data_emissao ? \Illuminate\Support\Carbon::parse($n->data_emissao) : null;
-                                $detalheUrl = $isXml
-                                    ? "/app/clearance/nota/{$n->id}"
-                                    : "/app/notas?chave={$n->chave}";
+                                $detalheUrl = route('app.notas.detalhes', [
+                                    'origem' => $n->origem,
+                                    'id' => $n->id,
+                                ], false);
                                 $modeloLabel = $n->modelo_label ?? 'N/D';
                                 $modeloHex = $n->modelo_hex ?? '#9ca3af';
                                 $notaKey = $n->origem.'-'.$n->id;

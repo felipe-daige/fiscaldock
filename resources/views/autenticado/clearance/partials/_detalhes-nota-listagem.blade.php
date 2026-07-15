@@ -203,7 +203,7 @@
                     @endif
                 </p>
             </div>
-            <a href="{{ $detalheUrl }}" data-link class="text-xs font-medium text-gray-700 hover:text-gray-900 hover:underline whitespace-nowrap">Ver nota completa →</a>
+            <a href="{{ $detalheUrl }}" data-link class="text-xs font-medium text-gray-700 hover:text-gray-900 hover:underline whitespace-nowrap">Ver detalhes da nota →</a>
         </div>
     </div>
 </div>
