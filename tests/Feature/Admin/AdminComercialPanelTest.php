@@ -28,6 +28,18 @@ it('permite acesso ao admin e lista os parâmetros', function () {
         ->assertSee('Preço Compliance (R$)');
 });
 
+it('renderiza o painel comercial no design system e em largura total', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    actingAs($admin)
+        ->get('/app/admin/comercial')
+        ->assertOk()
+        ->assertSee('class="admin-page w-full max-w-none', false)
+        ->assertDontSee('max-w-5xl', false)
+        ->assertSee('Parâmetros globais')
+        ->assertSee('auth-control', false);
+});
+
 it('admin grava override e o PricingCatalogService passa a lê-lo', function () {
     $admin = User::factory()->create(['is_admin' => true]);
 
