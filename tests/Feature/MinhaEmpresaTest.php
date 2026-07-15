@@ -32,52 +32,38 @@ function empresaPropria(User $user): Cliente
     ]);
 }
 
-test('usuario sem empresa propria ve tela de configuracao', function () {
-    $response = $this->get('/app/minha-empresa');
-    $response->assertOk();
-    $response->assertSee('Configurar Minha Empresa');
-});
-
-test('pode acessar tela de configuracao', function () {
-    Cliente::create([
-        'user_id' => $this->user->id,
-        'tipo_pessoa' => 'PJ',
-        'documento' => '12345678000100',
-        'nome' => 'Empresa 1',
-        'razao_social' => 'Empresa 1 Ltda',
-        'is_empresa_propria' => false,
-    ]);
-
-    $response = $this->get('/app/minha-empresa/configurar');
-    $response->assertOk();
-    $response->assertSee('Empresa 1 Ltda');
-});
-
-test('clique no card da configuracao define a empresa principal', function () {
-    empresaPropria($this->user);
-
+test('rotas de alteracao da empresa propria nao existem', function () {
+    $empresa = empresaPropria($this->user);
     $cliente = Cliente::create([
         'user_id' => $this->user->id,
         'tipo_pessoa' => 'PJ',
         'documento' => '12345678000100',
-        'nome' => 'Empresa Clicavel',
-        'razao_social' => 'Empresa Clicavel Ltda',
+        'nome' => 'Outro Cliente',
+        'razao_social' => 'Outro Cliente Ltda',
         'is_empresa_propria' => false,
     ]);
 
-    $response = $this->get('/app/minha-empresa/configurar');
+    $this->get('/app/minha-empresa/configurar')->assertNotFound();
+    $this->postJson('/app/minha-empresa/definir-principal', ['cliente_id' => $cliente->id])
+        ->assertNotFound();
 
-    $response->assertOk();
-    $response->assertSee('onclick="definirPrincipal('.$cliente->id.', this)"', false);
-    $response->assertSee('event.target === this', false);
-    $response->assertDontSee('onclick="selecionarEmpresa(', false);
-    $response->assertSee('style="background-color: #166534"', false);
-    expect(substr_count($response->getContent(), 'w-28'))->toBeGreaterThanOrEqual(2);
+    expect($empresa->fresh()->is_empresa_propria)->toBeTrue()
+        ->and($cliente->fresh()->is_empresa_propria)->toBeFalse();
 });
 
-test('historico sem empresa redireciona para configurar', function () {
-    $response = $this->get('/app/minha-empresa/historico');
-    $response->assertRedirect(route('app.minha-empresa.configurar'));
+test('cockpit nao oferece acao para alterar empresa propria', function () {
+    empresaPropria($this->user);
+
+    $response = $this->get('/app/minha-empresa');
+
+    $response->assertOk();
+    $response->assertDontSee('Alterar empresa');
+    $response->assertDontSee('/app/minha-empresa/configurar', false);
+});
+
+test('rotas do cockpit respondem 404 quando a empresa propria nao existe', function () {
+    $this->get('/app/minha-empresa')->assertNotFound();
+    $this->get('/app/minha-empresa/historico')->assertNotFound();
 });
 
 test('metodo empresaPropria do user retorna empresa correta', function () {
@@ -137,33 +123,6 @@ test('scope empresaPropria no model Cliente funciona', function () {
 
     expect($resultado)->toHaveCount(1);
     expect($resultado->first()->razao_social)->toBe('Empresa Scope Ltda');
-});
-
-test('usuario pode definir empresa principal programaticamente', function () {
-    $cliente = Cliente::create([
-        'user_id' => $this->user->id,
-        'tipo_pessoa' => 'PJ',
-        'documento' => '98765432000188',
-        'nome' => 'Nova Empresa',
-        'razao_social' => 'Nova Empresa SA',
-        'is_empresa_propria' => false,
-    ]);
-
-    // Test the logic directly via model instead of HTTP
-    // First remove flag from all user's empresas
-    Cliente::where('user_id', $this->user->id)
-        ->update(['is_empresa_propria' => false]);
-
-    // Set the new one
-    $cliente->update(['is_empresa_propria' => true]);
-
-    $cliente->refresh();
-    expect($cliente->is_empresa_propria)->toBeTrue();
-
-    // Also verify empresaPropria method works
-    $empresaPropria = $this->user->empresaPropria();
-    expect($empresaPropria)->not->toBeNull();
-    expect($empresaPropria->id)->toBe($cliente->id);
 });
 
 test('dashboard mostra empresa quando configurada', function () {

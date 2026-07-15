@@ -548,8 +548,6 @@ Route::middleware([
     // Minha Empresa
     Route::prefix('app/minha-empresa')->name('app.minha-empresa.')->group(function () {
         Route::get('/', [MinhaEmpresaController::class, 'index'])->name('index');
-        Route::get('/configurar', [MinhaEmpresaController::class, 'configurar'])->name('configurar');
-        Route::post('/definir-principal', [MinhaEmpresaController::class, 'definirPrincipal'])->name('definir-principal');
         Route::get('/historico', [MinhaEmpresaController::class, 'historico'])->name('historico');
         Route::post('/certificado', [MinhaEmpresaController::class, 'salvarCertificado'])->name('certificado.salvar');
         Route::delete('/certificado', [MinhaEmpresaController::class, 'removerCertificado'])->name('certificado.remover');

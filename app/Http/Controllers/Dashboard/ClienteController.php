@@ -104,7 +104,6 @@ class ClienteController extends Controller
                 'uf' => 'nullable|string|size:2',
                 'cep' => 'nullable|string|max:9',
                 'municipio' => 'nullable|string|max:255',
-                'is_empresa_propria' => 'nullable|boolean',
                 // Campos compartilhados PJ/PF
                 'nome_fantasia' => 'nullable|string|max:255',
                 'endereco' => 'nullable|string|max:255',
@@ -147,14 +146,8 @@ class ClienteController extends Controller
                 ], 401);
             }
 
-            // Cap de clientes do tier (empresa própria não conta). is_empresa_propria vem do
-            // usuário — só vale como própria se ainda NÃO houver uma; senão é cliente normal
-            // (impede burlar o cap forjando "próprias" extras). Backend nunca confia no front.
-            $querPropria = (bool) ($validated['is_empresa_propria'] ?? false);
-            $jaTemPropria = Cliente::where('user_id', $user->id)->where('is_empresa_propria', true)->exists();
-            $isPropria = $querPropria && ! $jaTemPropria;
-
-            if (! $isPropria && ! $this->entitlements->podeAdicionarCliente($user)) {
+            // A empresa própria nasce com a conta e não pode ser definida pelo CRUD de clientes.
+            if (! $this->entitlements->podeAdicionarCliente($user)) {
                 $limite = $this->entitlements->limiteClientes($user);
                 $msg = "Seu plano permite cadastrar até {$limite} cliente(s) além da sua empresa. Faça upgrade para adicionar mais.";
 
@@ -212,7 +205,7 @@ class ClienteController extends Controller
                 'cnae_principal_descricao' => $isPJ ? ($validated['cnae_principal_descricao'] ?? null) : null,
                 'cnaes_secundarios' => $isPJ ? ($validated['cnaes_secundarios'] ?? null) : null,
                 'qsa' => $isPJ ? ($validated['qsa'] ?? null) : null,
-                'is_empresa_propria' => $isPropria,
+                'is_empresa_propria' => false,
                 'ativo' => true,
             ]);
 
@@ -324,7 +317,6 @@ class ClienteController extends Controller
                 'uf' => 'nullable|string|size:2',
                 'cep' => 'nullable|string|max:9',
                 'municipio' => 'nullable|string|max:255',
-                'is_empresa_propria' => 'nullable|boolean',
                 // Campos compartilhados PJ/PF
                 'nome_fantasia' => 'nullable|string|max:255',
                 'endereco' => 'nullable|string|max:255',
@@ -388,7 +380,6 @@ class ClienteController extends Controller
                 'cnae_principal_descricao' => $isPJ ? ($validated['cnae_principal_descricao'] ?? null) : null,
                 'cnaes_secundarios' => $isPJ ? ($validated['cnaes_secundarios'] ?? null) : null,
                 'qsa' => $isPJ ? ($validated['qsa'] ?? null) : null,
-                'is_empresa_propria' => $validated['is_empresa_propria'] ?? $cliente->is_empresa_propria,
             ]);
 
             if ($this->isAjaxRequest($request)) {

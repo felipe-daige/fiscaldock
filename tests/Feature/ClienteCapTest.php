@@ -82,6 +82,57 @@ it('is_empresa_propria=true vira cliente normal quando já existe própria (cap 
         ->where('is_empresa_propria', false)->exists())->toBeTrue();
 });
 
+it('CRUD de clientes ignora tentativa de criar a empresa propria', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->postJson('/app/cliente/novo', array_merge(payloadCliente('22222222000191'), ['is_empresa_propria' => true]))
+        ->assertStatus(201);
+
+    expect(Cliente::where('user_id', $user->id)->where('documento', '22222222000191')->value('is_empresa_propria'))
+        ->toBeFalse();
+});
+
+it('CRUD de clientes nao promove nem rebaixa a empresa propria na edicao', function () {
+    $user = freeUserComPropria();
+    $empresa = $user->empresaPropria();
+    $cliente = Cliente::create([
+        'user_id' => $user->id,
+        'documento' => '22222222000191',
+        'tipo_pessoa' => 'PJ',
+        'razao_social' => 'Cliente Comum',
+        'is_empresa_propria' => false,
+        'ativo' => true,
+    ]);
+
+    $this->actingAs($user)
+        ->putJson('/app/cliente/'.$cliente->id, [
+            'documento' => $cliente->documento,
+            'razao_social' => $cliente->razao_social,
+            'is_empresa_propria' => true,
+        ])
+        ->assertOk();
+
+    $this->putJson('/app/cliente/'.$empresa->id, [
+        'documento' => $empresa->documento,
+        'razao_social' => $empresa->razao_social,
+        'is_empresa_propria' => false,
+    ])->assertOk();
+
+    expect($cliente->fresh()->is_empresa_propria)->toBeFalse()
+        ->and($empresa->fresh()->is_empresa_propria)->toBeTrue();
+});
+
+it('formulario de clientes nao exibe controle de empresa propria', function () {
+    $user = freeUserComPropria();
+
+    $response = $this->actingAs($user)->get('/app/cliente/novo');
+
+    $response->assertOk();
+    $response->assertDontSee('id="btn-empresa-propria"', false);
+    $response->assertDontSee('Esta é minha empresa');
+});
+
 it('trial ativo cadastra clientes sem cap', function () {
     $user = User::factory()->trialAtivo()->create();
     Cliente::create([

@@ -178,22 +178,6 @@
                             placeholder="email@empresa.com">
                     </div>
 
-                    {{-- Empresa Propria Toggle --}}
-                    <div class="flex items-center gap-3 pt-2 border-t border-gray-100">
-                        <button type="button" id="btn-empresa-propria"
-                            class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-gray-400 focus:ring-offset-2 {{ ($isEditing && $cliente->is_empresa_propria) ? 'bg-gray-800' : 'bg-gray-200' }}"
-                            role="switch"
-                            aria-checked="{{ ($isEditing && $cliente->is_empresa_propria) ? 'true' : 'false' }}"
-                            onclick="toggleEmpresaPropria()">
-                            <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {{ ($isEditing && $cliente->is_empresa_propria) ? 'translate-x-5' : 'translate-x-0' }}"
-                                id="toggle-knob"></span>
-                        </button>
-                        <div>
-                            <span class="text-sm font-medium text-gray-700">Esta é minha empresa</span>
-                            <p class="text-xs text-gray-400">Marque se este CNPJ é da sua própria empresa/escritório</p>
-                        </div>
-                        <input type="hidden" id="is_empresa_propria" value="{{ ($isEditing && $cliente->is_empresa_propria) ? '1' : '0' }}">
-                    </div>
                     </div>
                 </div>
 
@@ -571,7 +555,6 @@
 (function() {
     const isEditing = {{ $isEditing ? 'true' : 'false' }};
     const clienteId = {{ $isEditing ? $cliente->id : 'null' }};
-    let empresaPropria = {{ ($isEditing && $cliente->is_empresa_propria) ? 'true' : 'false' }};
 
     // PJ-only field containers
     const pjOnlyFields = ['field-razao', 'field-ie', 'field-crt', 'card-dados-rf', 'preview-crt-wrap', 'preview-situacao-wrap'];
@@ -628,32 +611,6 @@
                 var el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
             });
-        }
-    };
-
-    window.toggleEmpresaPropria = function() {
-        empresaPropria = !empresaPropria;
-        const btn = document.getElementById('btn-empresa-propria');
-        const knob = document.getElementById('toggle-knob');
-        const input = document.getElementById('is_empresa_propria');
-        const preview = document.getElementById('preview-empresa-propria');
-
-        if (empresaPropria) {
-            btn.classList.remove('bg-gray-200');
-            btn.classList.add('bg-gray-800');
-            btn.setAttribute('aria-checked', 'true');
-            knob.classList.remove('translate-x-0');
-            knob.classList.add('translate-x-5');
-            input.value = '1';
-            preview.classList.remove('hidden');
-        } else {
-            btn.classList.remove('bg-gray-800');
-            btn.classList.add('bg-gray-200');
-            btn.setAttribute('aria-checked', 'false');
-            knob.classList.remove('translate-x-5');
-            knob.classList.add('translate-x-0');
-            input.value = '0';
-            preview.classList.add('hidden');
         }
     };
 
@@ -822,7 +779,6 @@
             numero: document.getElementById('numero').value || null,
             complemento: document.getElementById('complemento').value || null,
             bairro: document.getElementById('bairro').value || null,
-            is_empresa_propria: empresaPropria,
         };
 
         // PJ-only Dados RF fields

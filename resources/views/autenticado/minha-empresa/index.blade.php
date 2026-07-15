@@ -103,20 +103,15 @@
         ];
     }
 
-    // Ação principal sobe pro header (acima da dobra); o restante vira links secundários,
-    // com "Alterar empresa" fechando a régua.
+    // Ação principal sobe pro header (acima da dobra); o restante vira links secundários.
     $acaoPrimaria = $acoes[0] ?? null;
-    $acoesSecundarias = array_slice($acoes, 1);
-    $linksSecundarios = array_merge($acoesSecundarias, [
-        ['label' => 'Alterar empresa', 'href' => '/app/minha-empresa/configurar', 'icon' => 'swap'],
-    ]);
+    $linksSecundarios = array_slice($acoes, 1);
 
     // Inner markup dos ícones (stroke currentColor) usados nos botões de ação secundária.
     $icone = fn (?string $k): string => match ($k) {
         'history' => '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3.5 2"/>',
         'chart' => '<path d="M4 4v16h16"/><path d="M8 15l3-3 2.5 2.5L19 8"/>',
         'download' => '<path d="M12 4v10m0 0l-3.5-3.5M12 14l3.5-3.5"/><path d="M5 19h14"/>',
-        'swap' => '<path d="M17 4l3 3-3 3"/><path d="M20 7H8"/><path d="M7 20l-3-3 3-3"/><path d="M4 17h12"/>',
         default => '',
     };
 

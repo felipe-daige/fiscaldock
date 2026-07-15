@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Concerns\RespondeAjax;
 use App\Http\Controllers\Controller;
-use App\Models\Cliente;
 use App\Models\ConsultaResultado;
 use App\Models\Participante;
 use App\Services\Clearance\CertificadoDigitalService;
@@ -42,9 +41,7 @@ class MinhaEmpresaController extends Controller
         $empresa = $user->empresaPropria();
 
         if (! $empresa) {
-            return $this->render($request, 'configurar', [
-                'clientes' => $user->clientes()->where('tipo_pessoa', 'PJ')->get(),
-            ]);
+            abort(404, 'Empresa própria não encontrada.');
         }
 
         // Buscar ou criar participante correspondente ao CNPJ da empresa
@@ -159,78 +156,6 @@ class MinhaEmpresaController extends Controller
     }
 
     /**
-     * Tela de configuracao para selecionar empresa principal.
-     */
-    public function configurar(Request $request)
-    {
-        if (! Auth::check()) {
-            return $this->redirectToLogin($request);
-        }
-
-        $user = Auth::user();
-        $clientes = $user->clientes()->where('tipo_pessoa', 'PJ')->get();
-        $empresaAtual = $user->empresaPropria();
-
-        return $this->render($request, 'configurar', [
-            'clientes' => $clientes,
-            'empresaAtual' => $empresaAtual,
-        ]);
-    }
-
-    /**
-     * Define qual empresa sera a principal do usuario.
-     */
-    public function definirPrincipal(Request $request)
-    {
-        if (! Auth::check()) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
-
-        $request->validate([
-            'cliente_id' => 'required|integer|exists:clientes,id',
-        ]);
-
-        $user = Auth::user();
-        $clienteId = $request->input('cliente_id');
-
-        // Verificar se o cliente pertence ao usuario e e PJ
-        $cliente = Cliente::where('id', $clienteId)
-            ->where('user_id', $user->id)
-            ->where('tipo_pessoa', 'PJ')
-            ->first();
-
-        if (! $cliente) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cliente nao encontrado ou nao e pessoa juridica',
-            ], 404);
-        }
-
-        // Remover flag de todas as empresas do usuario
-        Cliente::where('user_id', $user->id)
-            ->update(['is_empresa_propria' => false]);
-
-        // Marcar a empresa selecionada como propria
-        $cliente->update(['is_empresa_propria' => true]);
-
-        // Criar participante se nao existir
-        $cnpjLimpo = preg_replace('/\D/', '', $cliente->documento);
-        Participante::firstOrCreate(
-            ['user_id' => $user->id, 'documento' => $cnpjLimpo],
-            [
-                'razao_social' => $cliente->razao_social ?? $cliente->nome,
-                'origem_tipo' => 'PROPRIO',
-            ]
-        );
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Empresa principal definida com sucesso',
-            'redirect' => '/app/minha-empresa',
-        ]);
-    }
-
-    /**
      * Historico de consultas da empresa propria.
      */
     public function historico(Request $request)
@@ -243,7 +168,7 @@ class MinhaEmpresaController extends Controller
         $empresa = $user->empresaPropria();
 
         if (! $empresa) {
-            return redirect()->route('app.minha-empresa.configurar');
+            abort(404, 'Empresa própria não encontrada.');
         }
 
         $cnpjLimpo = preg_replace('/\D/', '', $empresa->documento);
