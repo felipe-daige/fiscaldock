@@ -1,4 +1,12 @@
 {{-- Clientes - Autenticado --}}
+@php
+    $indicadoresClientes = [
+        ['label' => 'Ativos', 'valor' => number_format($totalAtivos ?? 0, 0, ',', '.'), 'sub' => 'Cadastros ativos'],
+        ['label' => 'Inativos', 'valor' => number_format($totalInativos ?? 0, 0, ',', '.'), 'sub' => 'Cadastros inativos'],
+        ['label' => 'Pessoa Jurídica', 'valor' => number_format($totalPJ ?? 0, 0, ',', '.'), 'sub' => 'CNPJs cadastrados'],
+        ['label' => 'Pessoa Física', 'valor' => number_format($totalPF ?? 0, 0, ',', '.'), 'sub' => 'CPFs cadastrados'],
+    ];
+@endphp
 <x-cadastro-lista-layout
     container-id="clientes-container"
     titulo="Clientes"
@@ -12,6 +20,8 @@
             <span class="truncate sm:hidden">Dossiê</span>
             <span class="hidden sm:inline">Dossiê PDF</span>
         </button>
+    </x-slot:acoes>
+    <x-slot:principal>
         <a href="/app/cliente/novo" data-link class="inline-flex min-w-0 items-center justify-center gap-1.5 rounded bg-gray-800 px-3 py-2 text-xs font-medium text-white transition hover:bg-gray-700 sm:gap-2 sm:px-4 sm:text-sm">
             <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -19,37 +29,12 @@
             <span class="truncate sm:hidden">Novo</span>
             <span class="hidden sm:inline">Novo Cliente</span>
         </a>
-    </x-slot:acoes>
+    </x-slot:principal>
+    <x-slot:resumo>
+        <x-cockpit.indicadores :itens="$indicadoresClientes" />
+    </x-slot:resumo>
 
             <div id="clientes-error-region" class="hidden"></div>
-
-            <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo Operacional</span>
-                </div>
-                <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-gray-200">
-                    <div class="px-4 py-4">
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Ativos</p>
-                        <p class="text-lg font-bold text-gray-900">{{ number_format($totalAtivos ?? 0, 0, ',', '.') }}</p>
-                        <p class="text-[11px] text-gray-500 mt-1">Cadastros ativos</p>
-                    </div>
-                    <div class="px-4 py-4">
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Inativos</p>
-                        <p class="text-lg font-bold text-gray-900">{{ number_format($totalInativos ?? 0, 0, ',', '.') }}</p>
-                        <p class="text-[11px] text-gray-500 mt-1">Cadastros inativos</p>
-                    </div>
-                    <div class="px-4 py-4">
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Pessoa Jurídica</p>
-                        <p class="text-lg font-bold text-gray-900">{{ number_format($totalPJ ?? 0, 0, ',', '.') }}</p>
-                        <p class="text-[11px] text-gray-500 mt-1">CNPJs cadastrados</p>
-                    </div>
-                    <div class="px-4 py-4">
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Pessoa Física</p>
-                        <p class="text-lg font-bold text-gray-900">{{ number_format($totalPF ?? 0, 0, ',', '.') }}</p>
-                        <p class="text-[11px] text-gray-500 mt-1">CPFs cadastrados</p>
-                    </div>
-                </div>
-            </div>
 
             <form id="form-filtros-clientes" method="GET" action="/app/clientes" class="bg-white rounded border border-gray-300 overflow-hidden" data-mobile-filters>
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">

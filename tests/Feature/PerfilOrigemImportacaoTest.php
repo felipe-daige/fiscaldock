@@ -58,14 +58,14 @@ it('perfil do participante oferece o mesmo atalho na célula de origem', functio
         ->assertSee('Ver resultado da importação')
         ->assertSee('Resumo Operacional')
         ->assertSee('Valor utilizado')
-        ->assertSee('data-sidebar-assinatura="false"', false)
+        ->assertSee('data-assinatura-ativa="false"', false)
         ->assertDontSee('Saldo disponível')
         ->assertDontSee('Adicionar Saldo')
         ->assertDontSee('>Estatísticas<', false)
         ->assertSee("href=\"/app/importacao/efd/{$importacao->id}\"", false);
 });
 
-it('perfil do participante reserva a lateral somente para a assinatura ativa', function () {
+it('perfil do participante mantém a assinatura ativa no mesmo fluxo vertical', function () {
     $user = User::factory()->create();
     $participante = Participante::create([
         'user_id' => $user->id,
@@ -94,9 +94,10 @@ it('perfil do participante reserva a lateral somente para a assinatura ativa', f
     $this->actingAs($user)
         ->get("/app/participante/{$participante->id}")
         ->assertOk()
-        ->assertSee('data-sidebar-assinatura="true"', false)
+        ->assertSee('data-assinatura-ativa="true"', false)
         ->assertSee('Assinatura Ativa')
         ->assertSee('Resumo Operacional')
+        ->assertDontSee('perfil-grid', false)
         ->assertDontSee('Saldo disponível')
         ->assertDontSee('>Estatísticas<', false);
 });

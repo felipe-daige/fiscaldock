@@ -18,188 +18,120 @@
     $returnToLabel = str_starts_with($returnToUrl, '/app/participantes')
         ? 'Voltar para participantes'
         : 'Voltar para o dashboard';
+    $resumoParticipante = [
+        [
+            'label' => 'Origem',
+            'valor' => $origemParticipante['label'],
+            'sub' => $origemParticipante['arquivo'] ?: 'Sem arquivo vinculado',
+            'sub_clamp' => true,
+            'link_url' => $origemParticipante['url'],
+            'link_label' => 'Ver resultado da importação',
+        ],
+        [
+            'label' => 'Última Consulta',
+            'valor' => $participante->ultima_consulta_em ? $participante->ultima_consulta_em->format('d/m/Y') : 'Nunca',
+            'sub' => $participante->ultima_consulta_em ? $participante->ultima_consulta_em->format('H:i') : 'Sem consulta realizada',
+        ],
+        [
+            'label' => 'Consultas',
+            'valor' => number_format($estatisticas['total_consultas'] ?? 0, 0, ',', '.'),
+            'sub' => number_format($estatisticas['consultas_sucesso'] ?? 0, 0, ',', '.').' com sucesso · '.number_format($estatisticas['consultas_erro'] ?? 0, 0, ',', '.').' com erro',
+        ],
+        [
+            'label' => 'Valor utilizado',
+            'valor' => \App\Support\Dinheiro::brl($estatisticas['valor_utilizado_reais'] ?? 0),
+            'sub' => 'Neste participante',
+        ],
+        [
+            'label' => 'Notas Fiscais',
+            'valor' => number_format($totalNotasFiscais ?? 0, 0, ',', '.'),
+            'sub' => 'Documentos vinculados',
+        ],
+    ];
+    $dadosCadastraisParticipante = [
+        ['label' => $participante->is_cpf ? 'CPF' : 'CNPJ', 'valor' => $participante->cnpj_formatado, 'mono' => true],
+        ['label' => $participante->is_cpf ? 'Nome' : 'Razão Social', 'valor' => $participante->razao_social ?? '-', 'destaque' => true],
+        [
+            'label' => $participante->is_cpf ? 'Tipo de pessoa' : 'Situação Cadastral',
+            'badge' => $participante->is_cpf ? ['label' => 'Pessoa física', 'hex' => '#374151'] : $situacaoBadge,
+        ],
+        [
+            'label' => $participante->is_cpf ? 'Avaliação de crédito' : 'Regime Tributário',
+            'badge' => $participante->is_cpf ? ['label' => 'Não avaliada', 'hex' => '#6b7280'] : $regimeBadge,
+        ],
+        ['label' => 'Município / UF', 'valor' => implode(' / ', array_filter([$participante->municipio, $participante->uf])) ?: 'Não informado'],
+        ['label' => 'Porte', 'valor' => $participante->porte ?? 'Não informado'],
+        ['label' => 'Cadastrado em', 'valor' => $participante->created_at?->format('d/m/Y H:i') ?? 'Não informado'],
+    ];
+    $indicadoresMovimentacao = [
+        ['label' => 'Total de Notas', 'valor' => number_format($movimentacao['kpis']['total_notas'] ?? 0, 0, ',', '.')],
+        ['label' => 'Valor Movimentado', 'valor' => \App\Support\Dinheiro::brl($movimentacao['kpis']['valor_movimentado'] ?? 0)],
+        ['label' => 'Entradas', 'valor' => number_format($movimentacao['kpis']['entradas_qtd'] ?? 0, 0, ',', '.')],
+        ['label' => 'Saídas', 'valor' => number_format($movimentacao['kpis']['saidas_qtd'] ?? 0, 0, ',', '.')],
+    ];
 @endphp
-<div class="min-h-screen bg-gray-100" id="monitoramento-participante-container">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <div class="mb-4 sm:mb-8">
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                    <div class="flex items-center gap-3 flex-wrap">
-                    <a
-                        href="{{ $returnToUrl }}"
-                        class="text-xs text-gray-600 hover:text-gray-900 hover:underline"
-                        data-link
-                    >
-                        {{ $returnToLabel }}
-                    </a>
-                        <span class="text-gray-300 hidden sm:inline">|</span>
-                        <span class="text-xs text-gray-500">Detalhe operacional do participante</span>
-                    </div>
-                    <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide mt-2">{{ $participante->razao_social ?? 'Participante' }}</h1>
-                    <p class="text-xs text-gray-500 mt-1 font-mono whitespace-nowrap tabular-nums">{{ $participante->cnpj_formatado }}</p>
-                </div>
-                <div class="flex items-center gap-2 flex-wrap">
-                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $situacaoBadge['hex'] }}">
-                        {{ $situacaoBadge['label'] }}
-                    </span>
-                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $regimeBadge['hex'] }}">
-                        {{ $regimeBadge['label'] }}
-                    </span>
-                </div>
-            </div>
-        </div>
+<x-cockpit.layout
+    container-id="monitoramento-participante-container"
+    :titulo="$participante->razao_social ?? 'Participante'"
+    :subtitulo="$participante->cnpj_formatado"
+    eyebrow="Participante"
+    resumo-titulo="Resumo Operacional"
+>
+    <x-slot:badges>
+        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $situacaoBadge['hex'] }}">
+            {{ $situacaoBadge['label'] }}
+        </span>
+        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $regimeBadge['hex'] }}">
+            {{ $regimeBadge['label'] }}
+        </span>
+    </x-slot:badges>
 
-        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6 sm:mb-8">
-            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Ações Operacionais</span>
-                        <p class="text-[11px] text-gray-500 mt-1">Gerencie consulta, assinatura e origem cadastral deste participante.</p>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <a
-                            href="/app/participante/{{ $participante->id }}/editar"
-                            data-link
-                            class="px-3 py-2 text-sm font-medium bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded"
-                        >
-                            Editar cadastro
-                        </a>
-                        @unless($participante->is_cpf)
-                            <a
-                                href="/app/consulta/nova?participantes={{ $participante->id }}"
-                                data-link
-                                class="px-3 py-2 text-sm font-medium bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded"
-                            >
-                                Nova consulta
-                            </a>
-                        @endunless
-                        @if(!$assinaturaAtiva && ! $participante->is_cpf)
-                            <button
-                                type="button"
-                                id="btn-criar-assinatura"
-                                class="px-3 py-2 text-sm font-medium bg-gray-800 text-white hover:bg-gray-700 rounded"
-                            >
-                                Criar assinatura
-                            </button>
-                        @endif
-                    </div>
-                </div>
-            </div>
-            <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-200">
-                <div class="p-4 sm:p-6">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Origem</p>
-                    <p class="text-lg font-bold text-gray-900">{{ $origemParticipante['label'] }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">{{ $origemParticipante['arquivo'] ?: 'Sem arquivo vinculado' }}</p>
-                    @if(!empty($origemParticipante['url']))
-                        <a href="{{ $origemParticipante['url'] }}" data-link class="mt-1 inline-flex text-[11px] font-semibold text-blue-700 hover:underline">
-                            Ver resultado da importação →
-                        </a>
-                    @endif
-                </div>
-                <div class="p-4 sm:p-6">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Última Consulta</p>
-                    <p class="text-lg font-bold text-gray-900">{{ $participante->ultima_consulta_em ? $participante->ultima_consulta_em->format('d/m/Y') : 'Nunca' }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">{{ $participante->ultima_consulta_em ? $participante->ultima_consulta_em->format('H:i') : 'Sem consulta realizada' }}</p>
-                </div>
-                <div class="p-4 sm:p-6">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">{{ $participante->is_cpf ? 'Avaliação' : 'Situação' }}</p>
-                    <p class="text-lg font-bold text-gray-900">{{ $participante->is_cpf ? 'Não avaliada' : $situacaoBadge['label'] }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">{{ $participante->is_cpf ? 'Risco de crédito sem fonte integrada' : 'Base cadastral e fiscal monitorada' }}</p>
-                </div>
-                <div class="p-4 sm:p-6">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">Documento</p>
-                    <p class="text-lg font-bold text-gray-900 font-mono">{{ $participante->cnpj_formatado }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">{{ $participante->municipio ?: 'Município não informado' }}{{ $participante->uf ? ' / '.$participante->uf : '' }}</p>
-                </div>
-            </div>
-            @php
-                $resumoOperacional = [
-                    ['label' => 'Consultas', 'valor' => number_format($estatisticas['total_consultas'] ?? 0, 0, ',', '.'), 'sub' => 'Total registrado', 'hex' => '#374151'],
-                    ['label' => 'Com sucesso', 'valor' => number_format($estatisticas['consultas_sucesso'] ?? 0, 0, ',', '.'), 'sub' => 'Processadas sem erro', 'hex' => '#047857'],
-                    ['label' => 'Com erro', 'valor' => number_format($estatisticas['consultas_erro'] ?? 0, 0, ',', '.'), 'sub' => 'Exigem nova tentativa', 'hex' => '#dc2626'],
-                    ['label' => 'Valor utilizado', 'valor' => \App\Support\Dinheiro::brl($estatisticas['valor_utilizado_reais'] ?? 0), 'sub' => 'Neste participante', 'hex' => '#4338ca'],
-                    ['label' => 'Notas fiscais', 'valor' => number_format($totalNotasFiscais ?? 0, 0, ',', '.'), 'sub' => 'Documentos vinculados', 'hex' => '#0f766e'],
-                ];
-            @endphp
-            <div class="border-t border-gray-200">
-                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo Operacional</span>
-                </div>
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-y lg:divide-y-0 divide-gray-200">
-                    @foreach($resumoOperacional as $item)
-                        <div class="px-4 py-3">
-                            <div class="flex items-center gap-1.5">
-                                <span class="h-1.5 w-1.5 shrink-0 rounded-full" style="background-color: {{ $item['hex'] }}"></span>
-                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{{ $item['label'] }}</p>
-                            </div>
-                            <p class="mt-1 text-base font-bold text-gray-900">{{ $item['valor'] }}</p>
-                            <p class="text-[11px] text-gray-500">{{ $item['sub'] }}</p>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
+    <x-slot:principal>
+        @unless($participante->is_cpf)
+            <a href="/app/consulta/nova?participantes={{ $participante->id }}" data-link class="auth-control inline-flex items-center justify-center rounded bg-gray-800 px-4 text-sm font-semibold text-white hover:bg-gray-700">
+                Nova consulta
+            </a>
+        @else
+            <a href="/app/participante/{{ $participante->id }}/editar" data-link class="auth-control inline-flex items-center justify-center rounded bg-gray-800 px-4 text-sm font-semibold text-white hover:bg-gray-700">
+                Editar cadastro
+            </a>
+        @endunless
+    </x-slot:principal>
 
-        {{-- A coluna lateral só existe quando há controles de uma assinatura ativa. --}}
-        <style>
-            .perfil-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
-            @media (min-width: 1024px) {
-                .perfil-grid--com-sidebar { grid-template-columns: minmax(0, 1fr) 19rem; }
-            }
-        </style>
-        <div class="perfil-grid{{ $assinaturaAtiva ? ' perfil-grid--com-sidebar' : '' }}" data-sidebar-assinatura="{{ $assinaturaAtiva ? 'true' : 'false' }}">
-            {{-- Coluna Principal --}}
-            <div class="space-y-4 sm:space-y-6 min-w-0">
-                {{-- Dados Cadastrais --}}
-                <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Dados Cadastrais</span>
-                                <p class="mt-1 text-[11px] text-gray-500">Identificação, localização e enquadramento do participante.</p>
-                            </div>
-                            <span class="w-fit whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $participante->is_cpf ? '#374151' : $situacaoBadge['hex'] }}">
-                                {{ $participante->is_cpf ? 'Pessoa física' : $situacaoBadge['label'] }}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="p-4 sm:p-5">
-                        <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                            <div class="rounded border border-gray-200 bg-gray-50 px-3 py-3">
-                                <dt class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">{{ $participante->is_cpf ? 'CPF' : 'CNPJ' }}</dt>
-                                <dd class="mt-1 text-sm font-mono font-medium text-gray-900">{{ $participante->cnpj_formatado }}</dd>
-                            </div>
-                            <div class="rounded border border-gray-200 bg-gray-50 px-3 py-3 sm:col-span-1 lg:col-span-2">
-                                <dt class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">{{ $participante->is_cpf ? 'Nome' : 'Razão Social' }}</dt>
-                                <dd class="mt-1 break-words text-sm font-semibold text-gray-900">{{ $participante->razao_social ?? '-' }}</dd>
-                            </div>
-                            <div class="rounded border border-gray-200 bg-gray-50 px-3 py-3">
-                                <dt class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">{{ $participante->is_cpf ? 'Tipo de pessoa' : 'Situação Cadastral' }}</dt>
-                                <dd class="mt-1 text-sm text-gray-900">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $participante->is_cpf ? '#374151' : $situacaoBadge['hex'] }}">{{ $participante->is_cpf ? 'Pessoa física' : $situacaoBadge['label'] }}</span>
-                                </dd>
-                            </div>
-                            <div class="rounded border border-gray-200 bg-gray-50 px-3 py-3">
-                                <dt class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">{{ $participante->is_cpf ? 'Avaliação de crédito' : 'Regime Tributário' }}</dt>
-                                <dd class="mt-1 text-sm text-gray-900">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $participante->is_cpf ? '#6b7280' : $regimeBadge['hex'] }}">{{ $participante->is_cpf ? 'Não avaliada' : $regimeBadge['label'] }}</span>
-                                </dd>
-                            </div>
-                            <div class="rounded border border-gray-200 bg-gray-50 px-3 py-3">
-                                <dt class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Município / UF</dt>
-                                <dd class="mt-1 text-sm text-gray-700">{{ implode(' / ', array_filter([$participante->municipio, $participante->uf])) ?: '-' }}</dd>
-                            </div>
-                            <div class="rounded border border-gray-200 bg-gray-50 px-3 py-3">
-                                <dt class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Porte</dt>
-                                <dd class="mt-1 text-sm text-gray-700">{{ $participante->porte ?? '-' }}</dd>
-                            </div>
-                            <div class="rounded border border-gray-200 bg-gray-50 px-3 py-3">
-                                <dt class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Cadastrado em</dt>
-                                <dd class="mt-1 text-sm text-gray-700">{{ $participante->created_at?->format('d/m/Y H:i') ?? '-' }}</dd>
-                            </div>
-                        </dl>
-                    </div>
-                </div>
+    <x-slot:acoes>
+        <a href="{{ $returnToUrl }}" data-link class="auth-control inline-flex items-center rounded border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            {{ $returnToLabel }}
+        </a>
+        @unless($participante->is_cpf)
+            <a href="/app/participante/{{ $participante->id }}/editar" data-link class="auth-control inline-flex items-center rounded border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                Editar cadastro
+            </a>
+        @endunless
+        @if(!$assinaturaAtiva && ! $participante->is_cpf)
+            <button type="button" id="btn-criar-assinatura" class="auth-control px-3 text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded">
+                Criar assinatura
+            </button>
+        @endif
+    </x-slot:acoes>
+
+    <x-slot:resumo>
+        <x-cockpit.indicadores :itens="$resumoParticipante" />
+    </x-slot:resumo>
+
+    <div class="space-y-4 sm:space-y-6 min-w-0" data-cockpit-profile-flow data-assinatura-ativa="{{ $assinaturaAtiva ? 'true' : 'false' }}">
+        <div class="space-y-4 sm:space-y-6 min-w-0">
+            <x-cockpit.secao
+                titulo="Dados Cadastrais"
+                subtitulo="Identificação, localização e enquadramento do participante."
+                body-class="p-0"
+            >
+                <x-slot:acao>
+                    <span class="whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $participante->is_cpf ? '#374151' : $situacaoBadge['hex'] }}">
+                        {{ $participante->is_cpf ? 'Pessoa física' : $situacaoBadge['label'] }}
+                    </span>
+                </x-slot:acao>
+                <x-cockpit.dados :itens="$dadosCadastraisParticipante" />
+            </x-cockpit.secao>
 
                 {{-- Snapshot consolidado: dado mais recente disponível por fonte. --}}
                 @if($ultimaConsulta && $ultimaConsulta->resultado_dados)
@@ -646,8 +578,7 @@
                 </div>
 
                 {{-- Detalhamento do Score --}}
-                <div class="bg-white border border-gray-200 rounded-lg p-4 mt-4">
-                    <h3 class="text-[13px] font-bold text-gray-700 uppercase tracking-wide mb-3">{{ $participante->is_cpf ? 'Risco de Crédito' : 'Detalhamento do Score' }}</h3>
+                <x-cockpit.secao :titulo="$participante->is_cpf ? 'Risco de Crédito' : 'Detalhamento do Score'">
                     @include('autenticado.partials._score-detalhamento', [
                         'detalhamento' => $score_detalhamento ?? [],
                         'scoreTotal' => $score['score_total'] ?? null,
@@ -656,44 +587,37 @@
                         'isCpf' => $participante->is_cpf,
                         'mensagemCpf' => $score['mensagem'] ?? null,
                     ])
-                </div>
+                </x-cockpit.secao>
 
                 {{-- Preview de Movimentações --}}
-                <div class="bg-white border border-gray-200 rounded-lg p-4 mt-4">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-[13px] font-bold text-gray-700 uppercase tracking-wide">Movimentações</h3>
+                <x-cockpit.secao titulo="Movimentações" body-class="p-0">
+                    <x-slot:acao>
                         <div class="flex items-center gap-2">
                             <a href="/app/participante/{{ $participante->id }}/dossie" target="_blank" rel="noopener"
                                class="text-[11px] font-bold text-white rounded px-3 py-1.5" style="background-color: #1f2937">Baixar dossiê (PDF)</a>
                             <a href="/app/participante/{{ $participante->id }}/dossie?formato=xlsx" target="_blank" rel="noopener"
                                class="text-[11px] font-bold text-white rounded px-3 py-1.5" style="background-color: #047857">Planilha (XLSX)</a>
                         </div>
+                    </x-slot:acao>
+                    <x-cockpit.indicadores :itens="$indicadoresMovimentacao" class="border-b border-gray-200" />
+                    <div class="p-4 sm:p-5">
+                        <div id="chart-mov-competencia" style="min-height:220px;"></div>
+                        @include('autenticado.monitoramento._movimentacao-listas', ['top_produtos' => $top_produtos ?? [], 'top_cfops' => $top_cfops ?? []])
                     </div>
-                    <div class="grid grid-cols-4 gap-3 mb-4">
-                        <div><div class="text-[11px] text-gray-500">Total Notas</div><div class="text-[15px] font-bold">{{ $movimentacao['kpis']['total_notas'] }}</div></div>
-                        <div><div class="text-[11px] text-gray-500">Valor Movimentado</div><div class="text-[15px] font-bold">R$&nbsp;{{ number_format($movimentacao['kpis']['valor_movimentado'], 2, ',', '.') }}</div></div>
-                        <div><div class="text-[11px] text-gray-500">Entradas</div><div class="text-[15px] font-bold">{{ $movimentacao['kpis']['entradas_qtd'] }}</div></div>
-                        <div><div class="text-[11px] text-gray-500">Saídas</div><div class="text-[15px] font-bold">{{ $movimentacao['kpis']['saidas_qtd'] }}</div></div>
-                    </div>
-                    <div id="chart-mov-competencia" style="min-height:220px;"></div>
-                    @include('autenticado.monitoramento._movimentacao-listas', ['top_produtos' => $top_produtos ?? [], 'top_cfops' => $top_cfops ?? []])
-                </div>
+                </x-cockpit.secao>
 
             </div>
 
             @if($assinaturaAtiva)
-                {{-- Coluna lateral reservada aos controles da assinatura ativa. --}}
+                {{-- A assinatura participa do mesmo fluxo vertical do perfil. --}}
                 <div class="space-y-4 sm:space-y-6 min-w-0">
-                    <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Assinatura Ativa</span>
-                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">
-                                    ATIVA
-                                </span>
-                            </div>
-                        </div>
-                        <div class="p-4 space-y-3">
+                    <x-cockpit.secao titulo="Assinatura Ativa">
+                        <x-slot:acao>
+                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">
+                                ATIVA
+                            </span>
+                        </x-slot:acao>
+                        <div class="space-y-3">
                             <div class="flex items-center justify-between gap-3">
                                 <span class="text-sm text-gray-600">Plano</span>
                                 <span class="text-sm font-semibold text-gray-900">{{ $assinaturaAtiva->plano->nome ?? '-' }}</span>
@@ -765,19 +689,18 @@
                                 </button>
                             </div>
                         </div>
-                    </div>
+                    </x-cockpit.secao>
                 </div>
             @endif
         </div>
 
-        <div class="mt-6 sm:mt-8">
+        <div>
             @include('autenticado.partials._historico-consultas-perfil', [
                 'historicoConsultasPerfil' => $historicoConsultasPerfil ?? collect(),
                 'documentoPerfil' => $participante->documento,
             ])
         </div>
-    </div>
-</div>
+</x-cockpit.layout>
 
 {{-- Modal Criar Assinatura --}}
 <div id="modal-criar-assinatura" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">

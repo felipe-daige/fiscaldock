@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Cliente;
+use App\Models\Participante;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -14,13 +16,59 @@ it('mantém o mesmo shell estrutural nas listagens de clientes e participantes',
         $html = actingAs($user)->get($url)->assertOk()->getContent();
 
         expect($html)
-            ->toContain('class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8"')
-            ->toContain('class="space-y-6"')
-            ->toContain('class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"')
-            ->toContain('class="grid w-full grid-cols-2 gap-2 sm:w-auto sm:flex sm:items-center sm:justify-end"')
-            ->toContain('class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"')
+            ->toContain('data-cockpit-layout="stack"')
+            ->toContain('data-cockpit-identidade')
+            ->toContain('data-cadastro-lista-layout')
+            ->toContain('data-cockpit-acoes')
+            ->toContain('data-cockpit-indicadores')
+            ->toContain('data-mobile-filters')
             ->toContain('class="w-full min-w-[960px] table-fixed"')
             ->toContain('class="relative bg-white rounded border border-gray-300 max-w-md w-full p-6 z-10"');
+    }
+});
+
+it('aplica o cockpit vertical aos formulários e perfis de clientes e participantes', function () {
+    $user = User::factory()->trialAtivo()->create();
+    $cliente = Cliente::create([
+        'user_id' => $user->id,
+        'tipo_pessoa' => 'PJ',
+        'documento' => '12345678000195',
+        'razao_social' => 'Cliente Estrutural Ltda',
+        'ativo' => true,
+    ]);
+    $participante = Participante::create([
+        'user_id' => $user->id,
+        'documento' => '11444777000161',
+        'razao_social' => 'Participante Estrutural Ltda',
+        'origem_tipo' => 'MANUAL',
+    ]);
+
+    $formularios = [
+        '/app/cliente/novo',
+        '/app/cliente/'.$cliente->id.'/editar',
+        '/app/participante/novo',
+        '/app/participante/'.$participante->id.'/editar',
+    ];
+
+    foreach ($formularios as $url) {
+        $html = actingAs($user)->get($url)->assertOk()->getContent();
+
+        expect($html)
+            ->toContain('data-cockpit-layout="stack"')
+            ->toContain('data-cockpit-identidade')
+            ->toContain('data-cockpit-form-flow');
+    }
+
+    foreach (['/app/cliente/'.$cliente->id, '/app/participante/'.$participante->id] as $url) {
+        $html = actingAs($user)->get($url)->assertOk()->getContent();
+
+        expect($html)
+            ->toContain('data-cockpit-layout="stack"')
+            ->toContain('data-cockpit-identidade')
+            ->toContain('data-cockpit-indicadores')
+            ->toContain('data-cockpit-profile-flow')
+            ->toContain('data-cockpit-dados')
+            ->not->toContain('perfil-grid');
     }
 });
 

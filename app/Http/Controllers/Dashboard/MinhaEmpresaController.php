@@ -80,7 +80,11 @@ class MinhaEmpresaController extends Controller
 
         // Geocodifica o participante espelho (uma vez, cacheado no DB) p/ o mapa de localização,
         // a partir do endereço da última consulta. Falha de rede nunca quebra a página.
-        $this->geocodificarSeNecessario($participante, $dadosConsulta['endereco'] ?? []);
+        $enderecoConsulta = $dadosConsulta['endereco'] ?? [];
+        $this->geocodificarSeNecessario(
+            $participante,
+            is_array($enderecoConsulta) ? $enderecoConsulta : []
+        );
 
         // Alertas recentes. `_fontes_erro` = fontes pedidas pelo plano que não voltaram
         // (ex.: CND Federal com código de retry esgotado) — o usuário pagou, precisa saber.

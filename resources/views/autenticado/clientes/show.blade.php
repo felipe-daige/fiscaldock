@@ -22,165 +22,78 @@
             'label' => 'Origem',
             'valor' => $origemCliente['label'],
             'sub' => $origemCliente['arquivo'] ?: 'Sem importação vinculada',
-            'url' => $origemCliente['url'],
+            'sub_clamp' => true,
+            'link_url' => $origemCliente['url'],
+            'link_label' => 'Ver resultado da importação',
         ],
     ];
     $dadosCadastrais = [
-        ['label' => $cliente->tipo_pessoa === 'PJ' ? 'Razão Social' : 'Nome', 'valor' => $cliente->razao_social ?? $cliente->nome ?? '-', 'mono' => false, 'destaque' => true, 'span' => 'lg:col-span-2'],
+        ['label' => $cliente->tipo_pessoa === 'PJ' ? 'Razão Social' : 'Nome', 'valor' => $cliente->razao_social ?? $cliente->nome ?? '-', 'mono' => false, 'destaque' => true],
         ['label' => $cliente->tipo_pessoa === 'PJ' ? 'Nome Fantasia' : 'Nome de Exibição', 'valor' => $cliente->nome ?? '-', 'mono' => false, 'destaque' => true],
         ['label' => $cliente->tipo_pessoa === 'PJ' ? 'CNPJ' : 'CPF', 'valor' => $cliente->documento_formatado, 'mono' => true],
         ['label' => 'E-mail', 'valor' => $cliente->email ?: 'Não informado', 'mono' => false, 'href' => $cliente->email ? 'mailto:'.$cliente->email : null],
         ['label' => 'Telefone', 'valor' => $cliente->telefone ?: 'Não informado', 'mono' => false, 'href' => $cliente->telefone ? 'tel:'.preg_replace('/\D/', '', $cliente->telefone) : null],
+        ['label' => 'Endereço completo', 'valor' => $cliente->endereco ?: 'Não informado', 'mono' => false],
         ['label' => 'Município / UF', 'valor' => implode(' - ', array_filter([$cliente->municipio, $cliente->uf])) ?: 'Não informado', 'mono' => false],
         ['label' => 'CEP', 'valor' => $cliente->cep ?: 'Não informado', 'mono' => true],
-        ['label' => 'Situação Cadastral', 'valor' => $situacaoCadastralBadge, 'mono' => false, 'badge' => true],
-        ['label' => 'Regime Tributário', 'valor' => $regimeTributarioBadge, 'mono' => false, 'badge' => true],
+        ['label' => 'Situação Cadastral', 'badge' => $situacaoCadastralBadge],
+        ['label' => 'Regime Tributário', 'badge' => $regimeTributarioBadge],
         ['label' => 'Status do Cadastro', 'valor' => $cliente->ativo ? 'Ativo' : 'Inativo', 'mono' => false],
     ];
 @endphp
 
-<div class="min-h-screen bg-gray-100" id="cliente-show-container">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <div class="mb-4 sm:mb-8">
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                    <div class="flex items-center gap-3 flex-wrap">
-                        <a
-                            href="/app/clientes"
-                            class="text-xs text-gray-600 hover:text-gray-900 hover:underline"
-                            data-link
-                        >
-                            Voltar para clientes
-                        </a>
-                        <span class="text-gray-300 hidden sm:inline">|</span>
-                        <span class="text-xs text-gray-500">Cadastro operacional</span>
-                    </div>
-                    <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide mt-2">{{ $clienteNome }}</h1>
-                    <p class="text-xs text-gray-500 mt-1">{{ $cliente->documento_formatado }}</p>
-                </div>
-                <div class="flex flex-wrap items-center gap-2">
-                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tipoPessoaBadge['hex'] }}">{{ $tipoPessoaBadge['label'] }}</span>
-                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusBadge['hex'] }}">{{ $statusBadge['label'] }}</span>
-                    @if($cliente->is_empresa_propria)
-                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $empresaBadge['hex'] }}">{{ $empresaBadge['label'] }}</span>
-                    @endif
-                </div>
-            </div>
-        </div>
+<x-cockpit.layout
+    container-id="cliente-show-container"
+    :titulo="$clienteNome"
+    :subtitulo="$cliente->documento_formatado"
+    eyebrow="Cliente"
+    resumo-titulo="Visão Geral"
+>
+    <x-slot:badges>
+        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tipoPessoaBadge['hex'] }}">{{ $tipoPessoaBadge['label'] }}</span>
+        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusBadge['hex'] }}">{{ $statusBadge['label'] }}</span>
+        @if($cliente->is_empresa_propria)
+            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $empresaBadge['hex'] }}">{{ $empresaBadge['label'] }}</span>
+        @endif
+    </x-slot:badges>
 
-        <div class="bg-white rounded border border-gray-300 overflow-hidden mb-6 sm:mb-8">
-            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Ações Operacionais</span>
-                        <p class="text-[11px] text-gray-500 mt-1">Gerencie o cadastro e acompanhe os vínculos fiscais do cliente.</p>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <button
-                            type="button"
-                            id="btn-dossie-cliente"
-                            class="px-3 py-2 text-sm font-medium bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded"
-                        >
-                            Dossiê PDF
-                        </button>
-                        <a
-                            href="{{ route('app.cliente.edit', $cliente->id) }}"
-                            data-link
-                            class="px-3 py-2 text-sm font-medium bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded"
-                        >
-                            Editar cadastro
-                        </a>
-                        @if(!$cliente->is_empresa_propria)
-                            <button
-                                type="button"
-                                id="btn-excluir-cliente"
-                                data-id="{{ $cliente->id }}"
-                                data-nome="{{ $clienteNome }}"
-                                class="px-3 py-2 text-sm font-medium bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 rounded"
-                            >
-                                Excluir
-                            </button>
-                        @endif
-                    </div>
-                </div>
-            </div>
-            <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-200">
-                @foreach($resumoCliente as $item)
-                    <div class="p-4 sm:p-6">
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 sm:mb-2">{{ $item['label'] }}</p>
-                        <p class="text-lg font-bold text-gray-900">{{ $item['valor'] }}</p>
-                        <p class="text-[11px] text-gray-500 mt-1">{{ $item['sub'] }}</p>
-                        @if(!empty($item['url']))
-                            <a href="{{ $item['url'] }}" data-link class="mt-1 inline-flex text-[11px] font-semibold text-blue-700 hover:underline">
-                                Ver resultado da importação →
-                            </a>
-                        @endif
-                    </div>
-                @endforeach
-            </div>
-        </div>
+    <x-slot:principal>
+        <a href="{{ route('app.cliente.edit', $cliente->id) }}" data-link class="auth-control inline-flex items-center justify-center rounded bg-gray-800 px-4 text-sm font-semibold text-white hover:bg-gray-700">
+            Editar cadastro
+        </a>
+    </x-slot:principal>
 
-        <div class="space-y-6 min-w-0">
-                <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Dados Cadastrais</span>
-                                <p class="mt-1 text-[11px] text-gray-500">Identificação, contato, localização e enquadramento fiscal.</p>
-                            </div>
-                            <span class="w-fit whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusBadge['hex'] }}">
-                                Cadastro {{ $statusBadge['label'] }}
-                            </span>
-                        </div>
-                    </div>
-                    <dl class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-3">
-                        @foreach($dadosCadastrais as $dado)
-                            <div class="rounded border border-gray-200 bg-gray-50 px-3 py-3 {{ $dado['span'] ?? '' }}">
-                                <dt class="mb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400">{{ $dado['label'] }}</dt>
-                                @if(!empty($dado['badge']))
-                                    <dd>
-                                        <span class="inline-flex items-center rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $dado['valor']['hex'] }}">{{ $dado['valor']['label'] }}</span>
-                                    </dd>
-                                @elseif(!empty($dado['href']))
-                                    <dd>
-                                        <a href="{{ $dado['href'] }}" class="break-words text-sm font-medium text-gray-700 hover:text-gray-900 hover:underline">{{ $dado['valor'] }}</a>
-                                    </dd>
-                                @else
-                                    <dd class="break-words text-sm text-gray-700 {{ $dado['mono'] ? 'font-mono' : '' }} {{ !empty($dado['destaque']) ? 'font-semibold text-gray-900' : '' }}">{{ $dado['valor'] }}</dd>
-                                @endif
-                            </div>
-                        @endforeach
-                        @if($cliente->endereco ?? null)
-                            <div class="rounded border border-gray-200 bg-gray-50 px-3 py-3 sm:col-span-2 lg:col-span-3">
-                                <dt class="mb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400">Endereço completo</dt>
-                                <dd class="text-sm text-gray-700">{{ $cliente->endereco }}</dd>
-                            </div>
-                        @endif
-                    </dl>
-                </div>
+    <x-slot:acoes>
+        <a href="/app/clientes" data-link class="auth-control inline-flex items-center rounded border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            Voltar para clientes
+        </a>
+        <button type="button" id="btn-dossie-cliente" class="auth-control px-3 text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded">
+            Dossiê PDF
+        </button>
+        @if(!$cliente->is_empresa_propria)
+            <button type="button" id="btn-excluir-cliente" data-id="{{ $cliente->id }}" data-nome="{{ $clienteNome }}" class="auth-control px-3 text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded">
+                Excluir
+            </button>
+        @endif
+    </x-slot:acoes>
 
-                <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                        <div class="flex items-center justify-between gap-3">
-                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo Relacional</span>
-                            <a href="/app/clientes" data-link class="text-xs text-gray-600 hover:text-gray-900 hover:underline">
-                                Voltar à carteira
-                            </a>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-gray-200">
-                        <div class="px-4 py-4">
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Participantes vinculados</p>
-                            <p class="text-base font-bold text-gray-900">{{ number_format($totalParticipantes, 0, ',', '.') }}</p>
-                            <p class="text-[11px] text-gray-500 mt-1">Cadastros que usam este cliente como vínculo operacional.</p>
-                        </div>
-                        <div class="px-4 py-4">
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Notas registradas</p>
-                            <p class="text-base font-bold text-gray-900">{{ number_format($totalNotas, 0, ',', '.') }}</p>
-                            <p class="text-[11px] text-gray-500 mt-1">Movimentação fiscal consolidada disponível para análise.</p>
-                        </div>
-                    </div>
-                </div>
+    <x-slot:resumo>
+        <x-cockpit.indicadores :itens="$resumoCliente" />
+    </x-slot:resumo>
+
+    <div class="space-y-4 sm:space-y-6 min-w-0" data-cockpit-profile-flow>
+        <x-cockpit.secao
+            titulo="Dados Cadastrais"
+            subtitulo="Identificação, contato, localização e enquadramento fiscal."
+            body-class="p-0"
+        >
+            <x-slot:acao>
+                <span class="whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusBadge['hex'] }}">
+                    Cadastro {{ $statusBadge['label'] }}
+                </span>
+            </x-slot:acao>
+            <x-cockpit.dados :itens="$dadosCadastrais" />
+        </x-cockpit.secao>
 
                 <div class="mt-0">
                     @include('autenticado.partials.notas-fiscais-card', [
@@ -193,20 +106,19 @@
                 </div>
 
                 {{-- Detalhamento do Score --}}
-                <div class="bg-white border border-gray-200 rounded-lg p-4 mt-4">
-                    <h3 class="text-[13px] font-bold text-gray-700 uppercase tracking-wide mb-3">Detalhamento do Score</h3>
+                <x-cockpit.secao titulo="Detalhamento do Score">
                     @include('autenticado.partials._score-detalhamento', [
                         'detalhamento' => $score_detalhamento ?? [],
                         'scoreTotal' => $score['score_total'] ?? null,
                         'classificacao' => $score['classificacao'] ?? 'nao_avaliado',
                         'comHeadline' => true,
                     ])
-                </div>
+                </x-cockpit.secao>
 
                 @include('autenticado.monitoramento._movimentacao-listas', ['top_produtos' => $top_produtos ?? [], 'top_cfops' => $top_cfops ?? []])
         </div>
 
-        <div class="mt-6 sm:mt-8">
+        <div>
             @include('autenticado.partials._historico-consultas-perfil', [
                 'historicoConsultasPerfil' => $historicoConsultasPerfil ?? collect(),
                 'documentoPerfil' => $cliente->documento,
@@ -375,5 +287,4 @@
             })();
             </script>
         @endif
-    </div>
-</div>
+</x-cockpit.layout>

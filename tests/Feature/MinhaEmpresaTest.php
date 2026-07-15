@@ -61,6 +61,28 @@ test('cockpit nao oferece acao para alterar empresa propria', function () {
     $response->assertDontSee('/app/minha-empresa/configurar', false);
 });
 
+test('cockpit usa fluxo vertical estavel sem o grid assimetrico anterior', function () {
+    empresaPropria($this->user);
+
+    $response = $this->get('/app/minha-empresa');
+
+    $response->assertOk();
+    $response->assertSee('data-empresa-layout="stack"', false);
+    $response->assertSee('data-cockpit-identidade', false);
+    $response->assertSee('data-cockpit-indicadores', false);
+    $response->assertSee('data-empresa-indicadores', false);
+    $response->assertSee('data-empresa-alertas', false);
+    $response->assertSee('data-empresa-cadastro', false);
+    $response->assertSee('data-empresa-score', false);
+    $response->assertSee('data-empresa-certidoes', false);
+    $response->assertSee('data-empresa-gestao', false);
+    $response->assertSee('Nenhuma atividade informada na última consulta');
+    $response->assertSee('Nenhum integrante informado na última consulta');
+    $response->assertSee('O perfil de risco será exibido após a primeira consulta.');
+    $response->assertDontSee('data-empresa-overview-grid', false);
+    $response->assertDontSee('xl:col-span-7', false);
+});
+
 test('rotas do cockpit respondem 404 quando a empresa propria nao existe', function () {
     $this->get('/app/minha-empresa')->assertNotFound();
     $this->get('/app/minha-empresa/historico')->assertNotFound();

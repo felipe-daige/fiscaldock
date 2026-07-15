@@ -3,32 +3,23 @@
     $isEditing = isset($participante) && $participante;
     $tipoDoc = $isEditing ? ($participante->tipo_documento ?? 'PJ') : 'PJ';
 @endphp
-<div class="bg-gray-100 min-h-screen" id="novo-participante-container">
-    {{-- Main Content --}}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-
-        {{-- Header inline --}}
-        <div class="mb-4 sm:mb-8">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">{{ $isEditing ? 'Editar Participante' : 'Novo Participante' }}</h1>
-                    <p class="mt-1 text-xs text-gray-500">
-                        @if($isEditing)
-                            Atualize os dados do participante <strong>{{ $participante->cnpj_formatado }}</strong>.
-                        @else
-                            Cadastre pessoa jurídica (CNPJ) ou física (CPF).
-                        @endif
-                    </p>
-                </div>
-                <a href="{{ $isEditing ? '/app/participante/' . $participante->id : '/app/participantes' }}" data-link
-                   class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 bg-white text-gray-700 text-sm font-medium rounded hover:bg-gray-50 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                    </svg>
-                    Voltar
-                </a>
-            </div>
-        </div>
+<x-cockpit.layout
+    container-id="novo-participante-container"
+    :titulo="$isEditing ? 'Editar Participante' : 'Novo Participante'"
+    :subtitulo="$isEditing
+        ? 'Atualize os dados do participante '.$participante->cnpj_formatado.'.'
+        : 'Cadastre pessoa jurídica (CNPJ) ou física (CPF).'"
+    eyebrow="Cadastros"
+>
+    <x-slot:acoes>
+        <a href="{{ $isEditing ? '/app/participante/' . $participante->id : '/app/participantes' }}" data-link
+           class="auth-control inline-flex items-center gap-2 rounded border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Voltar
+        </a>
+    </x-slot:acoes>
 
         {{-- Info box --}}
         <div class="bg-white border border-gray-300 rounded p-4 mb-6">
@@ -54,9 +45,8 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-            {{-- Form Area (2/3) --}}
-            <div class="lg:col-span-2 space-y-4 sm:space-y-6">
+        <div class="space-y-4 sm:space-y-6" data-cockpit-form-flow>
+            <div class="space-y-4 sm:space-y-6">
                 <form id="form-novo-participante" method="POST" class="space-y-4 sm:space-y-6"
                     @if($isEditing) data-participante-id="{{ $participante->id }}" @endif>
                     @csrf
@@ -366,9 +356,9 @@
                 </form>
             </div>
 
-            {{-- Preview Sidebar (1/3) --}}
-            <div class="lg:col-span-1">
-                <div class="sticky top-4 bg-white rounded border border-gray-300 p-4 sm:p-6">
+            {{-- Preview em seção própria: não reduz a largura do formulário. --}}
+            <div>
+                <div class="bg-white rounded border border-gray-300 p-4 sm:p-6">
                     <h3 class="text-xs uppercase tracking-wide text-gray-400 font-semibold mb-4">Preview</h3>
                     <div class="space-y-4">
                         <div class="flex items-center gap-2">
@@ -444,8 +434,7 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
+</x-cockpit.layout>
 
 {{-- Toast notification container --}}
 <div id="np_toast" class="fixed top-4 right-4 z-50 hidden">

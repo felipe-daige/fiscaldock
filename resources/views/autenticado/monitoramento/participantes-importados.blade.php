@@ -1,6 +1,12 @@
 {{-- Monitoramento - Lista de Participantes Importados --}}
 @php
     $currentListUrl = $currentListUrl ?? request()->getRequestUri();
+    $indicadoresParticipantes = [
+        ['label' => 'Total', 'valor' => number_format($totalParticipantes ?? 0, 0, ',', '.'), 'sub' => 'Participantes importados'],
+        ['label' => 'Situação Ativa', 'valor' => number_format($totalAtiva ?? 0, 0, ',', '.'), 'sub' => 'Cadastro regular'],
+        ['label' => 'Irregular', 'valor' => number_format($totalIrregular ?? 0, 0, ',', '.'), 'sub' => 'Requer atenção'],
+        ['label' => 'Sem Consulta', 'valor' => number_format($totalSemConsulta ?? 0, 0, ',', '.'), 'sub' => 'Aguardando consulta'],
+    ];
 @endphp
 <x-cadastro-lista-layout
     container-id="monitoramento-participantes-importados-container"
@@ -15,6 +21,8 @@
             <span class="truncate sm:hidden">Dossiê</span>
             <span class="hidden sm:inline">Dossiê PDF</span>
         </button>
+    </x-slot:acoes>
+    <x-slot:principal>
         <a
             href="/app/participante/novo"
             class="inline-flex min-w-0 items-center justify-center gap-1.5 rounded bg-gray-800 px-3 py-2 text-xs font-medium text-white transition hover:bg-gray-700 sm:gap-2 sm:px-4 sm:text-sm"
@@ -26,36 +34,10 @@
             <span class="truncate sm:hidden">Novo</span>
             <span class="hidden sm:inline">Novo Participante</span>
         </a>
-    </x-slot:acoes>
-
-        {{-- Estatísticas --}}
-        <div class="bg-white rounded border border-gray-300 overflow-hidden">
-            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resumo Operacional</span>
-            </div>
-            <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-gray-200">
-                <div class="px-4 py-4">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Total</p>
-                    <p class="text-lg font-bold text-gray-900">{{ number_format($totalParticipantes ?? 0, 0, ',', '.') }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">Participantes importados</p>
-                </div>
-                <div class="px-4 py-4">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Situação Ativa</p>
-                    <p class="text-lg font-bold text-gray-900">{{ number_format($totalAtiva ?? 0, 0, ',', '.') }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">Cadastro regular</p>
-                </div>
-                <div class="px-4 py-4">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Irregular</p>
-                    <p class="text-lg font-bold text-gray-900">{{ number_format($totalIrregular ?? 0, 0, ',', '.') }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">Requer atenção</p>
-                </div>
-                <div class="px-4 py-4">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Sem Consulta</p>
-                    <p class="text-lg font-bold text-gray-900">{{ number_format($totalSemConsulta ?? 0, 0, ',', '.') }}</p>
-                    <p class="text-[11px] text-gray-500 mt-1">Aguardando consulta</p>
-                </div>
-            </div>
-        </div>
+    </x-slot:principal>
+    <x-slot:resumo>
+        <x-cockpit.indicadores :itens="$indicadoresParticipantes" />
+    </x-slot:resumo>
 
         {{-- Filtros --}}
         <form id="form-filtros" method="GET" action="/app/participantes" class="bg-white rounded border border-gray-300 overflow-hidden" data-mobile-filters>
