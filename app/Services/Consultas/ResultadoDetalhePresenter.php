@@ -2,6 +2,7 @@
 
 namespace App\Services\Consultas;
 
+use App\Models\Cliente;
 use App\Models\ConsultaResultado;
 use App\Models\Participante;
 use App\Support\CertidaoBadge;
@@ -111,6 +112,7 @@ class ResultadoDetalhePresenter
     {
         $ultima = ConsultaResultado::where('participante_id', $participante->id)
             ->where('status', ConsultaResultado::STATUS_SUCESSO)
+            ->whereHas('lote', fn ($query) => $query->where('user_id', $participante->user_id))
             ->with('lote.plano')
             ->orderByDesc('consultado_em')
             ->first();
@@ -119,6 +121,80 @@ class ResultadoDetalhePresenter
             return null;
         }
 
+        return $this->montarDetalhe(
+            $ultima,
+            [
+                'razao' => $participante->razao_social,
+                'documento' => $participante->cnpj_formatado ?? $participante->documento,
+                'uf' => $participante->uf,
+                'situacao' => $participante->situacao_cadastral
+                    ?? ($ultima->resultado_dados['situacao_cadastral'] ?? null),
+            ],
+            $somenteConsultadas,
+            $somenteFontes,
+        );
+    }
+
+    /**
+     * Detalhe da consulta mais recente do cliente. Considera tanto resultados vinculados
+     * diretamente ao cliente quanto o participante equivalente pelo mesmo CNPJ.
+     *
+     * @param  array<int,string>|null  $somenteFontes
+     * @return array{blocos: array, resumo: ?string, certidoes: array, cabecalho: array, consultado_em: mixed}|null
+     */
+    public function detalheDoCliente(Cliente $cliente, bool $somenteConsultadas = false, ?array $somenteFontes = null): ?array
+    {
+        $documento = Cnpj::digitos((string) $cliente->documento);
+        $participanteIds = strlen($documento) === 14
+            ? Participante::query()
+                ->where('user_id', $cliente->user_id)
+                ->where('documento', $documento)
+                ->pluck('id')
+            : collect();
+
+        $ultima = ConsultaResultado::query()
+            ->where('status', ConsultaResultado::STATUS_SUCESSO)
+            ->whereHas('lote', fn ($query) => $query->where('user_id', $cliente->user_id))
+            ->where(function ($query) use ($cliente, $participanteIds) {
+                $query->where('cliente_id', $cliente->id);
+
+                if ($participanteIds->isNotEmpty()) {
+                    $query->orWhereIn('participante_id', $participanteIds);
+                }
+            })
+            ->with('lote.plano')
+            ->orderByDesc('consultado_em')
+            ->first();
+
+        if (! $ultima) {
+            return null;
+        }
+
+        return $this->montarDetalhe(
+            $ultima,
+            [
+                'razao' => $cliente->razao_social ?? $cliente->nome,
+                'documento' => $cliente->documento_formatado ?? $cliente->documento,
+                'uf' => $cliente->uf,
+                'situacao' => $cliente->situacao_cadastral
+                    ?? ($ultima->resultado_dados['situacao_cadastral'] ?? null),
+            ],
+            $somenteConsultadas,
+            $somenteFontes,
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $cabecalho
+     * @param  array<int,string>|null  $somenteFontes
+     * @return array{blocos: array, resumo: ?string, certidoes: array, cabecalho: array, consultado_em: mixed}
+     */
+    private function montarDetalhe(
+        ConsultaResultado $ultima,
+        array $cabecalho,
+        bool $somenteConsultadas,
+        ?array $somenteFontes,
+    ): array {
         // esperadas vazio = fonte sem dado simplesmente não aparece (nem card, nem chip).
         $esperadas = $somenteConsultadas ? [] : $this->esperadasDoResultado($ultima);
 
@@ -126,13 +202,7 @@ class ResultadoDetalhePresenter
             'blocos' => $this->filtrarPorFonte($this->blocos($ultima, $esperadas), $somenteFontes),
             'resumo' => $this->resumoTextual($ultima),
             'certidoes' => $this->filtrarPorFonte($this->certidoes($ultima, $esperadas), $somenteFontes),
-            'cabecalho' => [
-                'razao' => $participante->razao_social,
-                'documento' => $participante->cnpj_formatado ?? $participante->documento,
-                'uf' => $participante->uf,
-                'situacao' => $participante->situacao_cadastral
-                    ?? ($ultima->resultado_dados['situacao_cadastral'] ?? null),
-            ],
+            'cabecalho' => $cabecalho,
             'consultado_em' => $ultima->consultado_em,
         ];
     }

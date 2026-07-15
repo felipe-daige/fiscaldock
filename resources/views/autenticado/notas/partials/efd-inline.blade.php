@@ -57,74 +57,42 @@
         </div>
     </div>
 
-    @if($nota->participante)
-        @php
-            $p = $nota->participante;
-            $situacaoBadge = null;
-            if ($p->situacao_cadastral) {
-                $situacaoBadge = strtolower((string) $p->situacao_cadastral) === 'ativa'
-                    ? ['label' => strtoupper($p->situacao_cadastral), 'hex' => '#047857']
-                    : ['label' => strtoupper($p->situacao_cadastral), 'hex' => '#dc2626'];
-            }
-        @endphp
-        <div class="bg-white rounded border border-gray-300 overflow-hidden">
-            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Participante</span>
-            </div>
-            <div class="p-4">
-                <div class="flex flex-wrap items-start justify-between gap-3">
-                    <div class="min-w-0">
-                        <p class="text-sm font-semibold text-gray-900">
-                            <a href="/app/participante/{{ $p->id }}" data-link class="text-gray-900 hover:text-gray-600 hover:underline">{{ $p->razao_social ?? '—' }}</a>
-                        </p>
-                        @if($p->nome_fantasia)
-                            <p class="text-[11px] text-gray-500 mt-1">{{ $p->nome_fantasia }}</p>
-                        @endif
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        @if($situacaoBadge)
-                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $situacaoBadge['hex'] }}">{{ $situacaoBadge['label'] }}</span>
-                        @endif
-                        @if($p->regime_tributario)
-                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #0f766e">{{ strtoupper($p->regime_tributario) }}</span>
-                        @endif
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
-                    <div>
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">CNPJ / CPF</p>
-                        <p class="text-sm font-mono text-gray-700">{{ $p->cnpj_formatado ?? '—' }}</p>
-                    </div>
-                    @if($p->uf)
-                        <div>
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">UF</p>
-                            <p class="text-sm text-gray-700">{{ $p->uf }}</p>
-                        </div>
-                    @endif
-                    @if($p->municipio)
-                        <div>
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Município</p>
-                            <p class="text-sm text-gray-700">{{ $p->municipio }}</p>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-    @endif
+    @php
+        $partesOperacao = [];
 
-    @if($nota->cliente)
-        <div class="bg-white rounded border border-gray-300 overflow-hidden">
-            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Cliente</span>
-            </div>
-            <div class="p-4">
-                <p class="text-sm font-semibold text-gray-900">
-                    <a href="/app/cliente/{{ $nota->cliente->id }}" data-link class="text-gray-900 hover:text-gray-600 hover:underline">{{ $nota->cliente->razao_social ?? '—' }}</a>
-                </p>
-                @if($nota->cliente->documento_formatado)
-                    <p class="text-[11px] font-mono text-gray-500 mt-1">{{ $nota->cliente->documento_formatado }}</p>
-                @endif
-            </div>
+        if ($nota->participante) {
+            $partesOperacao[] = \App\Support\DesignSystem\ParteOperacaoPresenter::card(
+                $nota->participante,
+                'Participante',
+                modo: \App\Support\DesignSystem\ParteOperacaoPresenter::MODO_COMPACTO,
+            );
+        }
+
+        if ($nota->cliente) {
+            $partesOperacao[] = \App\Support\DesignSystem\ParteOperacaoPresenter::card(
+                $nota->cliente,
+                'Cliente',
+                modo: \App\Support\DesignSystem\ParteOperacaoPresenter::MODO_COMPACTO,
+                papel: $nota->cliente->is_empresa_propria ? 'Empresa própria' : null,
+            );
+        }
+    @endphp
+
+    @if($partesOperacao)
+        <div class="grid grid-cols-1 {{ count($partesOperacao) === 2 ? 'lg:grid-cols-2' : '' }} items-stretch gap-4" data-partes-operacao>
+            @foreach($partesOperacao as $parte)
+                <x-parte-operacao-card
+                    :titulo="$parte['titulo']"
+                    :nome="$parte['nome']"
+                    :href="$parte['href']"
+                    :descricao="$parte['descricao']"
+                    :situacao="$parte['situacao']"
+                    :situacao-hex="$parte['situacao_hex']"
+                    :papel="$parte['papel']"
+                    :papel-hex="$parte['papel_hex']"
+                    :campos="$parte['campos']"
+                />
+            @endforeach
         </div>
     @endif
 

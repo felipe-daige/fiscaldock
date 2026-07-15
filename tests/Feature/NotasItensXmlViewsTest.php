@@ -67,7 +67,7 @@ beforeEach(function () {
 });
 
 it('mostra os itens no card inline do drill-down da nota XML', function () {
-    actingAs($this->user)
+    $html = actingAs($this->user)
         ->get('/app/notas/xml/'.$this->nota->id, [
             'X-Requested-With' => 'XMLHttpRequest',
             'X-Nota-Detalhe' => 'inline',
@@ -76,17 +76,31 @@ it('mostra os itens no card inline do drill-down da nota XML', function () {
         ->assertSee('Itens da Nota')
         ->assertSee('Esmerilhadeira Angular 900W')
         ->assertSee('84672920')
-        ->assertSee('SKU-450');
+        ->assertSee('SKU-450')
+        ->assertSee('data-partes-documento', false)
+        ->getContent();
+
+    expect(substr_count($html, 'data-parte-operacao-card'))->toBe(2)
+        ->and(substr_count($html, 'data-dados-tabela'))->toBe(2)
+        ->and(substr_count($html, 'data-dado-celula'))->toBe(8);
 });
 
 it('mostra os itens na pagina cheia da nota XML', function () {
-    actingAs($this->user)
+    $html = actingAs($this->user)
         ->get('/app/notas/xml/'.$this->nota->id)
         ->assertOk()
         ->assertSee('Itens da Nota')
         ->assertSee('Esmerilhadeira Angular 900W')
         ->assertSee('84672920')
-        ->assertSee('5102');
+        ->assertSee('5102')
+        ->assertSee('data-partes-documento', false)
+        ->getContent();
+
+    expect(substr_count($html, 'data-parte-operacao-card'))->toBe(2)
+        ->and(substr_count($html, 'data-dados-tabela'))->toBe(2)
+        ->and(substr_count($html, 'data-dado-celula'))->toBe(18)
+        ->and(substr_count($html, 'Abrir cadastro completo'))->toBe(1)
+        ->and(substr_count($html, 'Perfil cadastral não disponível'))->toBe(1);
 });
 
 it('nao mostra o card de itens quando a nota XML nao tem itens extraidos', function () {

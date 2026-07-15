@@ -39,19 +39,12 @@
         || ($nota->cofins_valor ?? 0) > 0
         || ($nota->ipi_valor ?? 0) > 0;
 
-    $emitentePrincipal = $nota->emitente;
-    $destinatarioPrincipal = $nota->destinatario;
-
     $validacaoBadgeHex = match (strtolower((string) ($nota->validacao_classificacao_label ?? ''))) {
         'ok', 'conforme' => '#047857',
         'divergente', 'atencao', 'atenção' => '#b45309',
         'critico', 'crítico', 'erro' => '#dc2626',
         default => '#374151',
     };
-
-    $clientePapel = $nota->cliente
-        ? ($nota->cliente->id === $nota->emit_cliente_id ? 'Cliente vinculado ao emitente' : ($nota->cliente->id === $nota->dest_cliente_id ? 'Cliente vinculado ao destinatario' : 'Cliente relacionado'))
-        : null;
 @endphp
 
 <div class="bg-gray-100 min-h-screen">
@@ -121,125 +114,10 @@
 
         @include('autenticado.notas.partials._consulta-clearance', ['consulta' => $consulta ?? null, 'chaveConsulta' => $nota->chave_acesso, 'nota' => $nota, 'auditoria' => $auditoria ?? null])
 
-        @php
-            // Papel de cada lado: o DONO (perspectiva) é o seu cliente; o outro é o participante (contraparte).
-            $papelBadge = function (string $lado) use ($nota) {
-                if ($nota->lado_dono === $lado) {
-                    $cli = $lado === 'emit' ? $nota->emitCliente : $nota->destCliente;
-                    return ['label' => $cli?->is_empresa_propria ? 'Empresa própria' : 'Cliente', 'hex' => '#1d4ed8'];
-                }
-                return ['label' => 'Participante', 'hex' => '#6b7280'];
-            };
-            $badgeEmit = $papelBadge('emit');
-            $badgeDest = $papelBadge('dest');
-        @endphp
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-            <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-2">
-                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Emitente</span>
-                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeEmit['hex'] }}">{{ $badgeEmit['label'] }}</span>
-                </div>
-                <div class="p-4">
-                    <div class="flex flex-wrap items-start justify-between gap-3">
-                        <div class="min-w-0">
-                            @if($nota->emit_participante_id)
-                                <a href="/app/participante/{{ $nota->emit_participante_id }}" data-link class="text-sm font-semibold text-gray-900 hover:text-gray-600 hover:underline">{{ $nota->emit_razao_social ?? '—' }}</a>
-                            @else
-                                <p class="text-sm font-semibold text-gray-900">{{ $nota->emit_razao_social ?? '—' }}</p>
-                            @endif
-                            @if($emitentePrincipal?->nome_fantasia)
-                                <p class="text-[11px] text-gray-500 mt-1">{{ $emitentePrincipal->nome_fantasia }}</p>
-                            @endif
-                        </div>
-                        @if($emitentePrincipal?->situacao_cadastral)
-                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ strtolower((string) $emitentePrincipal->situacao_cadastral) === 'ativa' ? '#047857' : '#dc2626' }}">
-                                {{ strtoupper($emitentePrincipal->situacao_cadastral) }}
-                            </span>
-                        @endif
-                    </div>
-
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
-                        <div>
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">CNPJ</p>
-                            <p class="text-sm font-mono text-gray-700">{{ $nota->emit_documento_formatado ?? '—' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">UF</p>
-                            <p class="text-sm text-gray-700">{{ $nota->emit_uf ?: '—' }}</p>
-                        </div>
-                        @if($emitentePrincipal?->municipio)
-                            <div>
-                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Municipio</p>
-                                <p class="text-sm text-gray-700">{{ $emitentePrincipal->municipio }}</p>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-2">
-                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Destinatario</span>
-                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeDest['hex'] }}">{{ $badgeDest['label'] }}</span>
-                </div>
-                <div class="p-4">
-                    <div class="flex flex-wrap items-start justify-between gap-3">
-                        <div class="min-w-0">
-                            @if($nota->dest_participante_id)
-                                <a href="/app/participante/{{ $nota->dest_participante_id }}" data-link class="text-sm font-semibold text-gray-900 hover:text-gray-600 hover:underline">{{ $nota->dest_razao_social ?? '—' }}</a>
-                            @else
-                                <p class="text-sm font-semibold text-gray-900">{{ $nota->dest_razao_social ?? '—' }}</p>
-                            @endif
-                            @if($destinatarioPrincipal?->nome_fantasia)
-                                <p class="text-[11px] text-gray-500 mt-1">{{ $destinatarioPrincipal->nome_fantasia }}</p>
-                            @endif
-                        </div>
-                        @if($destinatarioPrincipal?->situacao_cadastral)
-                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ strtolower((string) $destinatarioPrincipal->situacao_cadastral) === 'ativa' ? '#047857' : '#dc2626' }}">
-                                {{ strtoupper($destinatarioPrincipal->situacao_cadastral) }}
-                            </span>
-                        @endif
-                    </div>
-
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
-                        <div>
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">CNPJ</p>
-                            <p class="text-sm font-mono text-gray-700">{{ $nota->dest_documento_formatado ?? '—' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">UF</p>
-                            <p class="text-sm text-gray-700">{{ $nota->dest_uf ?: '—' }}</p>
-                        </div>
-                        @if($destinatarioPrincipal?->municipio)
-                            <div>
-                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Municipio</p>
-                                <p class="text-sm text-gray-700">{{ $destinatarioPrincipal->municipio }}</p>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        @if($nota->cliente)
-            <div class="bg-white rounded border border-gray-300 overflow-hidden mb-4">
-                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Cliente</span>
-                </div>
-                <div class="p-4">
-                    <p class="text-sm font-semibold text-gray-900">
-                        <a href="/app/cliente/{{ $nota->cliente->id }}" data-link class="text-gray-900 hover:text-gray-600 hover:underline">{{ $nota->cliente->razao_social ?? '—' }}</a>
-                    </p>
-                    @if($clientePapel)
-                        <p class="text-[11px] text-gray-500 mt-1">{{ $clientePapel }}</p>
-                    @endif
-                    @if($nota->cliente->documento_formatado)
-                        <p class="text-[11px] font-mono text-gray-500 mt-1">{{ $nota->cliente->documento_formatado }}</p>
-                    @endif
-                </div>
-            </div>
-        @endif
+        @include('autenticado.notas.partials._partes-xml', [
+            'modoPartes' => \App\Support\DesignSystem\ParteOperacaoPresenter::MODO_COMPLETO,
+            'wrapperClass' => 'mb-4',
+        ])
 
         @include('autenticado.notas.partials._itens-tabela', [
             'itens' => $nota->itens,

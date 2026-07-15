@@ -187,4 +187,7 @@ it('drill-down inline da listagem serve o card compacto (efd)', function () {
     // Marcador exclusivo do card inline; a página cheia não tem este link.
     expect($html)->toContain('Ver detalhes completos');
     expect($html)->not->toContain('Voltar para Notas Fiscais');
+    expect($html)->toContain('data-partes-operacao')
+        ->and(substr_count($html, 'data-parte-operacao-card'))->toBe(1)
+        ->and(substr_count($html, 'data-dado-celula'))->toBe(4);
 });

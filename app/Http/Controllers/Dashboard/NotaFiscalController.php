@@ -11,6 +11,7 @@ use App\Models\EfdNota;
 use App\Models\NfeConsulta;
 use App\Models\Participante;
 use App\Models\XmlNota;
+use App\Services\Consultas\ResultadoDetalhePresenter;
 use App\Services\NotaFiscalService;
 use App\Support\Cfop;
 use Illuminate\Http\Request;
@@ -22,7 +23,10 @@ class NotaFiscalController extends Controller
 
     private const AUTH_LAYOUT_VIEW = 'autenticado.layouts.app';
 
-    public function __construct(private NotaFiscalService $service) {}
+    public function __construct(
+        private NotaFiscalService $service,
+        private ResultadoDetalhePresenter $detalhePresenter,
+    ) {}
 
     public function index(Request $request)
     {
@@ -98,7 +102,7 @@ class NotaFiscalController extends Controller
         if ($origem === 'efd') {
             $nota = EfdNota::where('id', $id)
                 ->where('user_id', $userId)
-                ->with(['participante', 'itens', 'cliente', 'consolidados'])
+                ->with(['participante', 'itens' => fn ($q) => $q->orderBy('numero_item')->orderBy('id'), 'cliente', 'consolidados'])
                 ->first();
 
             if (! $nota) {
@@ -108,28 +112,40 @@ class NotaFiscalController extends Controller
             $consulta = $this->consultaSnapshot($userId, $nota->chave_acesso);
             $auditoria = $this->auditoriaSnapshot($userId, $consulta);
 
-            if ($this->isAjaxRequest($request)) {
-                // Drill-down da listagem pede o card compacto (header X-Nota-Detalhe: inline).
-                // Navegação SPA (data-link) serve a página cheia, idêntica ao reload direto.
-                $view = $this->querDetalheInline($request)
-                    ? 'autenticado.notas.partials.efd-inline'
-                    : 'autenticado.importacao.efd-nota';
+            // O drill-down da listagem permanece leve: não consulta a regularidade das partes.
+            if ($this->isAjaxRequest($request) && $this->querDetalheInline($request)) {
+                return view('autenticado.notas.partials.efd-inline', compact('nota', 'consulta', 'auditoria'));
+            }
 
-                return view($view, compact('nota', 'consulta', 'auditoria'));
+            $participanteConsultaDetalhe = $nota->participante
+                ? $this->detalhePresenter->detalheDoParticipante($nota->participante, somenteConsultadas: true)
+                : null;
+            $clienteConsultaDetalhe = $nota->cliente
+                ? $this->detalhePresenter->detalheDoCliente($nota->cliente, somenteConsultadas: true)
+                : null;
+            $viewData = compact(
+                'nota',
+                'consulta',
+                'auditoria',
+                'participanteConsultaDetalhe',
+                'clienteConsultaDetalhe',
+            );
+
+            if ($this->isAjaxRequest($request)) {
+                // Navegação SPA serve a página cheia, idêntica ao reload direto.
+                return view('autenticado.importacao.efd-nota', $viewData);
             }
 
             return view(self::AUTH_LAYOUT_VIEW, [
                 'initialView' => 'autenticado.importacao.efd-nota',
-                'nota' => $nota,
-                'consulta' => $consulta,
-                'auditoria' => $auditoria,
+                ...$viewData,
             ]);
         }
 
         if ($origem === 'xml') {
             $nota = XmlNota::where('id', $id)
                 ->where('user_id', $userId)
-                ->with(['emitCliente', 'destCliente', 'cliente', 'itens'])
+                ->with(['emitCliente', 'destCliente', 'cliente', 'itens' => fn ($q) => $q->orderBy('numero_item')->orderBy('id')])
                 ->first();
 
             if (! $nota) {

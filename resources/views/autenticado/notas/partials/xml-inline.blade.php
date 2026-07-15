@@ -53,73 +53,9 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="bg-white rounded border border-gray-300 overflow-hidden">
-            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Emitente</span>
-            </div>
-            <div class="p-4">
-                @if($nota->emit_participante_id)
-                    <a href="/app/participante/{{ $nota->emit_participante_id }}" data-link class="text-sm font-semibold text-gray-900 hover:text-gray-600 hover:underline">{{ $nota->emit_razao_social ?? '—' }}</a>
-                @else
-                    <p class="text-sm font-semibold text-gray-900">{{ $nota->emit_razao_social ?? '—' }}</p>
-                @endif
-                <div class="grid grid-cols-2 gap-4 mt-3">
-                    <div>
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">CNPJ</p>
-                        <p class="text-sm font-mono text-gray-700">{{ $nota->emit_documento_formatado ?? '—' }}</p>
-                    </div>
-                    @if($nota->emit_uf)
-                        <div>
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">UF</p>
-                            <p class="text-sm text-gray-700">{{ $nota->emit_uf }}</p>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded border border-gray-300 overflow-hidden">
-            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Destinatário</span>
-            </div>
-            <div class="p-4">
-                @if($nota->dest_participante_id)
-                    <a href="/app/participante/{{ $nota->dest_participante_id }}" data-link class="text-sm font-semibold text-gray-900 hover:text-gray-600 hover:underline">{{ $nota->dest_razao_social ?? '—' }}</a>
-                @else
-                    <p class="text-sm font-semibold text-gray-900">{{ $nota->dest_razao_social ?? '—' }}</p>
-                @endif
-                <div class="grid grid-cols-2 gap-4 mt-3">
-                    <div>
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">CNPJ</p>
-                        <p class="text-sm font-mono text-gray-700">{{ $nota->dest_documento_formatado ?? '—' }}</p>
-                    </div>
-                    @if($nota->dest_uf)
-                        <div>
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">UF</p>
-                            <p class="text-sm text-gray-700">{{ $nota->dest_uf }}</p>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-
-    @if($nota->cliente)
-        <div class="bg-white rounded border border-gray-300 overflow-hidden">
-            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Cliente</span>
-            </div>
-            <div class="p-4">
-                <p class="text-sm font-semibold text-gray-900">
-                    <a href="/app/cliente/{{ $nota->cliente->id }}" data-link class="text-gray-900 hover:text-gray-600 hover:underline">{{ $nota->cliente->razao_social ?? '—' }}</a>
-                </p>
-                @if($nota->cliente->documento_formatado)
-                    <p class="text-[11px] font-mono text-gray-500 mt-1">{{ $nota->cliente->documento_formatado }}</p>
-                @endif
-            </div>
-        </div>
-    @endif
+    @include('autenticado.notas.partials._partes-xml', [
+        'modoPartes' => \App\Support\DesignSystem\ParteOperacaoPresenter::MODO_COMPACTO,
+    ])
 
     @include('autenticado.notas.partials._itens-tabela', [
         'itens' => $nota->itens,
