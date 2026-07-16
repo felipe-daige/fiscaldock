@@ -2,6 +2,55 @@ import './bootstrap';
 
 document.addEventListener('DOMContentLoaded', () => {
     const app = document.getElementById('app');
+    if (!app) return;
+
+    const _SPA_STATE_KEY = '__fiscaldockSpa';
+    const _HISTORY_CACHE_LIMIT = 24;
+    const _historyCache = new Map();
+    const _newHistoryKey = () => `spa-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const _browserUrl = (url = window.location.href) => {
+        const parsed = new URL(url, window.location.origin);
+        return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    };
+    const _spaState = (state = history.state) => (
+        state && typeof state === 'object' && state[_SPA_STATE_KEY]
+            ? state[_SPA_STATE_KEY]
+            : null
+    );
+    const _stateWithSpa = (key, url) => ({
+        ...(history.state && typeof history.state === 'object' ? history.state : {}),
+        [_SPA_STATE_KEY]: { key, url },
+    });
+    const _storeHistoryEntry = (key, html, url, scrollY = 0) => {
+        if (!key || typeof html !== 'string') return;
+
+        _historyCache.delete(key);
+        _historyCache.set(key, { html, url, scrollY: Math.max(0, Number(scrollY) || 0) });
+
+        while (_historyCache.size > _HISTORY_CACHE_LIMIT) {
+            _historyCache.delete(_historyCache.keys().next().value);
+        }
+    };
+
+    // O HTML inicial precisa ser capturado antes de qualquer processamento dos scripts.
+    // Ele vira o snapshot restaurável da primeira entrada do histórico desta aba.
+    const _initialHistoryMeta = _spaState();
+    let _renderedHistoryKey = _initialHistoryMeta?.key || _newHistoryKey();
+    if (!_initialHistoryMeta?.key) {
+        history.replaceState(_stateWithSpa(_renderedHistoryKey, _browserUrl()), '', window.location.href);
+    }
+    _storeHistoryEntry(_renderedHistoryKey, app.innerHTML, _browserUrl(), window.scrollY);
+
+    if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+    }
+
+    function salvarEntradaRenderizada() {
+        const entry = _historyCache.get(_renderedHistoryKey);
+        if (entry) {
+            entry.scrollY = Math.max(0, Number(window.scrollY) || 0);
+        }
+    }
 
     // Sistema de gerenciamento de recursos globais
     window._spaResources = {
@@ -16,6 +65,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // e o tag do load inicial (fora do <head>) não era encontrado na re-navegação → recarga +
     // listeners/gráficos duplicados. Semeado no boot com todo <script src> já presente.
     const _scriptsCarregados = new Set();
+    // Scripts de view são carregados uma única vez, mas precisam reinicializar seus
+    // bindings quando o HTML volta ao #app. A chave é o PATH normalizado do src.
+    const _spaScriptInitializers = {
+        '/js/dashboard.js': 'initDashboard',
+        '/js/bi.js': 'initBi',
+        '/js/equipe.js': 'initEquipe',
+        '/js/risk-score.js': 'initRiskScore',
+        '/js/clearance.js': 'initValidacao',
+        '/js/clearance-resultado.js': 'initClearanceResultado',
+        '/js/clearance-notas.js': 'initClearanceNotas',
+        '/js/clearance-buscar.js': 'initClearanceBuscar',
+        '/js/consulta-lote.js': 'initConsultaLote',
+        '/js/consulta-lote-detalhe.js': 'initConsultaLoteDetalhe',
+        '/js/recarga.js': 'initRecarga',
+        '/js/assinatura.js': 'initPlanos',
+        '/js/efd-importacao-progresso.js': 'initEfdImportacaoProgresso',
+        '/js/xml-importacao-progresso.js': 'initXmlImportacaoProgresso',
+    };
     const _normalizarScriptSrc = (src) => {
         try {
             return new URL(src, window.location.origin).pathname;
@@ -67,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearance: null, // Código inline/script externo por view de clearance
         cliente: null, // Código inline na view
         clientes: null, // Código inline na view
+        perfil: '/js/perfil.js',
         configuracoes: null, // Código inline na view (sem isso o SPA busca /js/configuracoes.js → 404)
         arquivos: null, // Página usa formulários/downloads nativos; não há bundle JS dedicado
     };
@@ -107,9 +175,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const nomeFuncao = nomePagina === 'cliente'
             ? null
             : `init${nomePagina.charAt(0).toUpperCase() + nomePagina.slice(1)}`;
+        const autenticada = segmentos[0] === 'app';
         const scriptPath = Object.prototype.hasOwnProperty.call(_spaScriptOverrides, nomePagina)
             ? _spaScriptOverrides[nomePagina]
-            : `/js/${nomePagina}.js`;
+            : (autenticada ? null : `/js/${nomePagina}.js`);
 
         return { nomePagina, scriptPath, nomeFuncao };
     }
@@ -423,7 +492,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const browserUrl = `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
 
         try {
-            const { updateHistory = true } = options;
+            const {
+                updateHistory = true,
+                historyKey = null,
+                historyHtml = null,
+                restoreScroll = null,
+            } = options;
 
             // Fechar sidebar drawer no mobile antes de navegar
             if (window.closeSidebarDrawer) {
@@ -451,9 +525,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Mostrar loading
             mostrarLoading();
-            
-            // Limpar recursos antes de navegar
-            limparRecursos();
+
+            // No popstate, o snapshot da entrada deixa URL e DOM coerentes no mesmo
+            // instante, sem manter a página antiga já desmontada durante um novo fetch.
+            if (typeof historyHtml === 'string') {
+                renderizar(historyHtml);
+                return;
+            }
 
             // Cache hit de prefetch → renderiza instantâneo, sem round-trip ao servidor.
             // Só HTML puro (200, não-JSON) é cacheado; consome ao usar pra não servir velho.
@@ -507,15 +585,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (!resposta.ok) {
                 console.error('[SPA] Resposta não OK:', resposta.status, resposta.statusText);
-                app.innerHTML = `
-                    <div class="flex flex-col items-center justify-center min-h-[60vh] text-gray-500">
-                        <div class="text-6xl font-bold text-gray-300 mb-4">${resposta.status}</div>
-                        <p class="text-lg mb-6">${resposta.status === 404 ? 'Página não encontrada' : 'Erro ao carregar a página'}</p>
-                        <button onclick="history.back()" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
-                            ← Voltar
-                        </button>
-                    </div>`;
-                esconderLoading();
+                window.location.href = targetUrl.toString();
                 return;
             }
             
@@ -560,23 +630,43 @@ document.addEventListener('DOMContentLoaded', () => {
             // Usado tanto pelo fetch normal quanto pelo cache de prefetch (função
             // declarada = hoisted, então a chamada do cache-check acima também a acha).
             function renderizar(htmlNovo) {
+                if (meuToken !== _navToken) return;
+
                 // Mesma página (paginação/filtros/ordenação) → preserva a posição de
                 // scroll em vez de jogar ao topo. Captura ANTES de trocar o conteúdo.
                 const mesmaPagina = urlPath === currentPath;
                 const scrollAnterior = window.scrollY;
 
+                // A view atual continua funcional enquanto a próxima está em trânsito.
+                // O cleanup só acontece quando a resposta vencedora vai de fato trocar o DOM.
+                salvarEntradaRenderizada();
+                limparRecursos();
                 app.innerHTML = htmlNovo;
 
+                let entryKey = historyKey;
                 if (updateHistory) {
-                    history.pushState(null, '', browserUrl);
+                    entryKey = _newHistoryKey();
+                    history.pushState(_stateWithSpa(entryKey, browserUrl), '', browserUrl);
+                } else if (!entryKey) {
+                    entryKey = _spaState()?.key || _newHistoryKey();
+                    history.replaceState(_stateWithSpa(entryKey, browserUrl), '', browserUrl);
                 }
+
+                const scrollDestino = restoreScroll !== null && Number.isFinite(Number(restoreScroll))
+                    ? Math.max(0, Number(restoreScroll))
+                    : (mesmaPagina ? scrollAnterior : 0);
+                _renderedHistoryKey = entryKey;
+                _storeHistoryEntry(entryKey, htmlNovo, browserUrl, scrollDestino);
+
+                // Marca o que está de fato renderizado antes de qualquer init da view.
+                _caminhoRenderizado = urlPath;
 
                 // Atualizar CSRF token após navegação SPA
                 atualizarCsrfToken();
                 // Destacar link ativo
                 destacarLinkAtivo(targetUrl.toString());
                 // Executar scripts da nova página
-                executarScripts();
+                executarScripts(meuToken);
 
                 // Inicializar layout (menu mobile, etc.)
                 if (window.initLayout && typeof window.initLayout === 'function') {
@@ -587,7 +677,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                window.scrollTo(0, mesmaPagina ? scrollAnterior : 0);
+                window.scrollTo(0, scrollDestino);
 
                 // Deep-link por âncora (#id) após render SPA — ex.: banner do clearance
                 // apontando pro cadastro de certificado em /app/minha-empresa#certificado-digital.
@@ -598,8 +688,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                // Marca o que está de fato renderizado (usado pela comparação de contexto).
-                _caminhoRenderizado = urlPath;
             }
 
         } catch (erro) {
@@ -610,13 +698,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 stack: erro.stack
             });
             
-            // Só mostrar alert se não for erro de rede
-            if (erro.message && !erro.message.includes('Failed to fetch')) {
-                // Erro de navegação - tentar recarregar a página completa como fallback
-                console.warn('[SPA] Erro na navegação SPA, recarregando página completa:', url);
-                window.location.href = targetUrl.toString();
-                return;
-            }
+            if (meuToken !== _navToken) return;
+
+            // Inclusive em falha de rede: no popstate a URL já mudou, então deixar o DOM
+            // anterior seria uma inconsistência permanente. O reload é o fallback seguro.
+            console.warn('[SPA] Erro na navegação SPA, recarregando página completa:', url);
+            window.location.href = targetUrl.toString();
+            return;
         } finally {
             esconderLoading();
         }
@@ -628,7 +716,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2.1. NAVEGAÇÃO PARCIAL DE LISTA PAGINADA (troca só o container, preserva scroll)
     async function navegarLista(link, container) {
+        const meuToken = ++_navToken;
         const url = link.href;
+        const targetUrl = new URL(url, window.location.origin);
+        const browserUrl = `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
         const containerId = container.id;
 
         // Mostrar loading localizado (overlay esmaecido sobre a lista)
@@ -643,6 +734,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 credentials: 'same-origin'
             });
 
+            if (meuToken !== _navToken) return;
+
             // Sessão expirada → login (igual ao navegar())
             if (resposta.status === 401 || resposta.status === 419) {
                 window.location.href = '/login';
@@ -656,6 +749,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const html = await resposta.text();
+            if (meuToken !== _navToken) return;
+
             const doc = new DOMParser().parseFromString(html, 'text/html');
             const novo = doc.getElementById(containerId);
 
@@ -666,10 +761,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Trocar SÓ o miolo da lista — não tocar no scroll
+            salvarEntradaRenderizada();
             container.innerHTML = novo.innerHTML;
 
             // Atualizar URL (back/forward e F5 mantêm a página)
-            history.pushState(null, '', url);
+            const entryKey = _newHistoryKey();
+            history.pushState(_stateWithSpa(entryKey, browserUrl), '', browserUrl);
+            _renderedHistoryKey = entryKey;
+            _caminhoRenderizado = targetUrl.pathname;
+            _storeHistoryEntry(entryKey, html, browserUrl, window.scrollY);
 
             // Avisar quem precisa reagir ao swap (estado derivado, badges, etc.)
             document.dispatchEvent(new CustomEvent('spa:list-updated', {
@@ -724,7 +824,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // 4. EXECUTAR SCRIPTS
-    function executarScripts() {
+    function executarScripts(navigationToken = _navToken) {
         // Remover os <script> inline já executados da navegação anterior. Eles ficam inertes
         // no <head> após rodar (a IIFE já executou; estado/listeners são limpos por limparRecursos),
         // então acumulavam ~1 tag por navegação. Os scripts externos (src) NÃO são tocados —
@@ -733,6 +833,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const scripts = app.querySelectorAll('script');
         const loadPromises = [];
+        const initializersToReplay = new Set();
 
         scripts.forEach((script, index) => {
             try {
@@ -750,6 +851,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (script.src) {
                     const scriptSrc = script.getAttribute('src');
                     const scriptPath = _normalizarScriptSrc(scriptSrc);
+                    const initializer = script.dataset.spaInit || _spaScriptInitializers[scriptPath] || null;
                     if (!_scriptsCarregados.has(scriptPath)) {
                         _scriptsCarregados.add(scriptPath);
                         const novoScript = document.createElement('script');
@@ -761,6 +863,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                         loadPromises.push(p);
                         document.head.appendChild(novoScript);
+                    } else if (initializer) {
+                        // O código global já existe, mas os nós do DOM são novos.
+                        // Reexecuta apenas o init declarado, nunca o arquivo inteiro.
+                        initializersToReplay.add(initializer);
                     }
                     script.parentNode.removeChild(script);
                     return;
@@ -793,8 +899,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         function chamarFuncoesEspecificas() {
+            if (navigationToken !== _navToken) return;
+
+            initializersToReplay.forEach((initializer) => {
+                if (navigationToken !== _navToken) return;
+                if (typeof window[initializer] !== 'function') return;
+
+                try {
+                    window[initializer]();
+                } catch (error) {
+                    console.error(`Erro ao reinicializar ${initializer}:`, error);
+                }
+            });
+
             try {
-                executarFuncoesEspecificas();
+                executarFuncoesEspecificas(navigationToken, initializersToReplay);
             } catch (error) {
                 console.error('Erro ao executar funções específicas:', error);
             }
@@ -810,78 +929,61 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // 4.1. EXECUTAR FUNÇÕES ESPECÍFICAS
-    function executarFuncoesEspecificas() {
+    function executarFuncoesEspecificas(navigationToken = _navToken, funcoesJaExecutadas = new Set()) {
+        if (navigationToken !== _navToken) return;
+
         const caminho = window.location.pathname;
-
-        // Carregar JavaScript específico da página se necessário
-        carregarJavaScriptEspecifico(caminho);
-
         const infoPagina = obterInfoPagina(caminho);
         const funcaoAlvo = Object.prototype.hasOwnProperty.call(funcoesEspecificas, caminho)
             ? funcoesEspecificas[caminho]
             : infoPagina.nomeFuncao;
 
-        if (!funcaoAlvo) {
+        if (!funcaoAlvo || funcoesJaExecutadas.has(funcaoAlvo)) {
             return;
         }
 
         if (window[funcaoAlvo] && typeof window[funcaoAlvo] === 'function') {
-            window[funcaoAlvo]();
+            try {
+                window[funcaoAlvo]();
+            } catch (error) {
+                console.error(`Erro ao executar função ${funcaoAlvo}:`, error);
+            }
+            return;
         }
+
+        carregarJavaScriptEspecifico(caminho, navigationToken, funcaoAlvo);
     }
     
     // 4.2. CARREGAR JAVASCRIPT ESPECÍFICO (SISTEMA DINÂMICO)
-    function carregarJavaScriptEspecifico(caminho) {
-        const { scriptPath, nomePagina } = obterInfoPagina(caminho);
+    function carregarJavaScriptEspecifico(caminho, navigationToken = _navToken, nomeFuncao = null) {
+        if (navigationToken !== _navToken) return;
 
-        if (nomePagina && nomePagina !== '') {
-            // Verificar se a função já está disponível (código inline já foi executado)
-            const infoPagina = obterInfoPagina(caminho);
-            const nomeFuncao = Object.prototype.hasOwnProperty.call(funcoesEspecificas, caminho)
-                ? funcoesEspecificas[caminho]
-                : infoPagina.nomeFuncao;
-            if (nomeFuncao && window[nomeFuncao] && typeof window[nomeFuncao] === 'function') {
-                // Função já está disponível (provavelmente de código inline), não precisa carregar arquivo
-                return;
-            }
+        const infoPagina = obterInfoPagina(caminho);
+        const funcaoAlvo = nomeFuncao || (Object.prototype.hasOwnProperty.call(funcoesEspecificas, caminho)
+            ? funcoesEspecificas[caminho]
+            : infoPagina.nomeFuncao);
+        const scriptPath = infoPagina.scriptPath;
 
-            // Se scriptPath for null ou vazio, não tentar carregar arquivo externo (código está inline)
-            if (!scriptPath || scriptPath === 'null' || scriptPath === '') {
-                // Código está inline, apenas tentar executar a função quando disponível
-                setTimeout(() => {
-                    executarFuncaoEspecifica(caminho);
-                }, 100);
-                return;
-            }
+        if (!funcaoAlvo || !scriptPath) return;
 
-            const scriptExistente = document.querySelector(`script[src="${scriptPath}"]`);
-
-            if (!scriptExistente) {
-                const script = document.createElement('script');
-                script.src = scriptPath;
-                script.onload = function() {
-                    // Aguardar um pouco para garantir que a função foi definida
-                    setTimeout(() => {
-                        executarFuncaoEspecifica(caminho);
-                    }, 100);
-                };
-                script.onerror = function() {
-                    // Arquivo não encontrado (normal se não tiver JavaScript específico ou se o código estiver inline)
-                    // Tentar executar a função mesmo assim, caso esteja disponível via código inline
-                    setTimeout(() => {
-                        executarFuncaoEspecifica(caminho);
-                    }, 100);
-                };
-                document.head.appendChild(script);
-            } else {
-                // Script já carregado, executar função
-                executarFuncaoEspecifica(caminho);
-            }
+        const normalizedPath = _normalizarScriptSrc(scriptPath);
+        if (_scriptsCarregados.has(normalizedPath)) {
+            tentarExecutarFuncao(funcaoAlvo, 0, navigationToken);
+            return;
         }
+
+        _scriptsCarregados.add(normalizedPath);
+        const script = document.createElement('script');
+        script.src = scriptPath;
+        script.onload = () => tentarExecutarFuncao(funcaoAlvo, 0, navigationToken);
+        script.onerror = () => console.warn(`[SPA] Script de página não encontrado: ${scriptPath}`);
+        document.head.appendChild(script);
     }
     
     // 4.3. EXECUTAR FUNÇÃO ESPECÍFICA (SISTEMA DINÂMICO)
-    function executarFuncaoEspecifica(caminho) {
+    function executarFuncaoEspecifica(caminho, navigationToken = _navToken) {
+        if (navigationToken !== _navToken) return;
+
         // Sistema dinâmico: gera nome da função automaticamente
         // /contato → initContato
         // /sobre → initSobre
@@ -893,12 +995,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (nomeFuncao && infoPagina.nomePagina !== '') {
             // Tentar executar a função com retry
-            tentarExecutarFuncao(nomeFuncao, 0);
+            tentarExecutarFuncao(nomeFuncao, 0, navigationToken);
         }
     }
     
     // 4.4. TENTAR EXECUTAR FUNÇÃO COM RETRY
-    function tentarExecutarFuncao(nomeFuncao, tentativas) {
+    function tentarExecutarFuncao(nomeFuncao, tentativas, navigationToken = _navToken) {
+        if (navigationToken !== _navToken) return;
+
         if (window[nomeFuncao] && typeof window[nomeFuncao] === 'function') {
             try {
                 window[nomeFuncao]();
@@ -908,7 +1012,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (tentativas < 15) {
             // Função ainda não está disponível, tentar novamente
             setTimeout(() => {
-                tentarExecutarFuncao(nomeFuncao, tentativas + 1);
+                tentarExecutarFuncao(nomeFuncao, tentativas + 1, navigationToken);
             }, 200);
         } else {
             console.warn(`Função ${nomeFuncao} não encontrada após ${tentativas} tentativas`);
@@ -925,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // 6. BOTÕES VOLTAR/AVANÇAR
-    window.addEventListener('popstate', () => {
+    window.addEventListener('popstate', (event) => {
         // Cruzou a fronteira autenticado (/app/*) ↔ público? O layout/header muda, então
         // recarrega a página inteira (o location já é o destino) em vez de fazer swap SPA.
         const alvoIsApp = location.pathname.startsWith('/app/');
@@ -934,89 +1038,37 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.reload();
             return;
         }
-        navegar(window.location.href, { updateHistory: false });
+
+        salvarEntradaRenderizada();
+        const meta = _spaState(event.state);
+        const cached = meta?.key ? _historyCache.get(meta.key) : null;
+
+        navegar(window.location.href, {
+            updateHistory: false,
+            historyKey: meta?.key || null,
+            historyHtml: cached?.url === _browserUrl() ? cached.html : null,
+            restoreScroll: cached?.scrollY ?? null,
+        });
     });
     
     // 7. INICIALIZAR
     destacarLinkAtivo(window.location.href);
     
-    // 8. PROCESSAR SCRIPTS INLINE NA PRIMEIRA CARGA
-    // Esta função processa scripts inline que já estão no DOM na primeira carga
-    // Garante que funções definidas em scripts inline estejam disponíveis antes de executar funções específicas
-    function processarScriptsInline() {
-        const scripts = app.querySelectorAll('script');
-        scripts.forEach((script, index) => {
-            try {
-                // Data-islands (ex.: <script type="application/json" id="cockpit-initial">) NÃO são
-                // JS executável. Recriá-los apaga type/id e quebra quem lê o dado. Deixar intactos.
-                const tipoScript = (script.getAttribute('type') || '').toLowerCase();
-                if (tipoScript && tipoScript !== 'text/javascript' && tipoScript !== 'application/javascript' && tipoScript !== 'module') {
-                    return;
-                }
-
-                // Script externo com src - carregar dinamicamente
-                if (script.src) {
-                    const scriptSrc = script.getAttribute('src');
-                    const existente = document.head.querySelector('script[src="' + scriptSrc + '"]');
-                    if (!existente) {
-                        // Mover tag para <head> como referência para navegações SPA futuras.
-                        // Script já foi executado pelo parser — mover NÃO re-executa (HTML spec: "already started" flag).
-                        document.head.appendChild(script);
-                    } else {
-                        script.parentNode.removeChild(script);
-                    }
-                    return;
-                }
-
-                const novoScript = document.createElement('script');
-                novoScript.textContent = script.textContent;
-                novoScript.setAttribute('data-spa-inline', '1'); // marca p/ remoção na próxima navegação
-
-                // Validar se o script tem conteúdo válido antes de executar
-                if (script.textContent && script.textContent.trim() !== '') {
-                    // Adicionar handler de erro para capturar erros de sintaxe
-                    novoScript.onerror = function(error) {
-                        console.error('Erro ao executar script inline:', error);
-                    };
-                    
-                    // Adicionar ao head para executar
-                    document.head.appendChild(novoScript);
-
-                    // Remover script original do app
-                    script.parentNode.removeChild(script);
-                } else {
-                    // Remover script vazio
-                    script.parentNode.removeChild(script);
-                }
-            } catch (error) {
-                console.error('Erro ao processar script inline:', error);
-                // Continuar com outros scripts mesmo se um falhar
-            }
-        });
-    }
-    
-    // 9. CARREGAR JAVASCRIPT NA PRIMEIRA CARGA
+    // 8. CARREGAR JAVASCRIPT NA PRIMEIRA CARGA
     function carregarJavaScriptInicial() {
-        const caminho = window.location.pathname;
-        
-        // Primeiro, processar scripts inline que já estão no DOM
-        processarScriptsInline();
-
-        // Aguardar um delay para garantir que todos os scripts foram executados
+        // Scripts presentes no HTML inicial já foram executados pelo parser. Recriá-los aqui
+        // executava cada IIFE duas vezes e deixava listeners órfãos após a primeira navegação.
+        // Só chamamos o init de página (ou carregamos o bundle convencional, se explícito).
         setTimeout(() => {
-            carregarJavaScriptEspecifico(caminho);
-
-            setTimeout(() => {
-                try {
-                    executarFuncoesEspecificas();
-                } catch (error) {
-                    console.error('Erro ao executar funções específicas na primeira carga:', error);
-                }
-            }, 100);
+            try {
+                executarFuncoesEspecificas(_navToken);
+            } catch (error) {
+                console.error('Erro ao executar funções específicas na primeira carga:', error);
+            }
         }, 150);
     }
     
-    // 10. CARREGAR JAVASCRIPT NA PRIMEIRA CARGA
+    // 9. CARREGAR JAVASCRIPT NA PRIMEIRA CARGA
     carregarJavaScriptInicial();
 
 });

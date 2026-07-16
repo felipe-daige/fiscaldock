@@ -835,7 +835,6 @@
         window.exportParticipantesIds = function() {
             return getIdsSelecionados();
         };
-        });
 
         // Botao consultar selecionados
         if (btnMonitorar) {
