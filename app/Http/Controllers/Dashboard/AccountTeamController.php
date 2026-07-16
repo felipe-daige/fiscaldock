@@ -30,19 +30,23 @@ class AccountTeamController extends Controller
     /** Números do add-on de assento pra tela/modal (preço, extras atuais, pró-rata, saldo). */
     private function assentoAddonInfo(AccountContext $context, Account $account): array
     {
+        // Só o dono compra add-on — sem ownership não vale consultar assinatura/saldo.
+        if (! $context->isOwner()) {
+            return ['is_owner' => false, 'tem_assinatura' => false, 'extras' => 0, 'preco_mensal' => 0.0, 'fracao' => 1.0, 'saldo' => 0.0];
+        }
+
         $owner = $account->owner;
         $sub = $owner->subscription()
             ->where('status', \App\Models\AccountSubscription::STATUS_ATIVA)
             ->first();
 
         return [
-            'is_owner' => $context->isOwner(),
+            'is_owner' => true,
             'tem_assinatura' => (bool) $sub,
             'extras' => $sub ? (int) $sub->assentos_extras : 0,
             'preco_mensal' => $this->addons->precoAssentoReais($owner),
             'fracao' => $sub ? $this->addons->fracaoRestante($sub) : 1.0,
             'saldo' => app(\App\Services\SaldoService::class)->getBalance($owner),
-            'assentos_inclusos' => $this->accounts->seatsIncluded($account) - ($sub ? (int) $sub->assentos_extras : 0),
         ];
     }
 

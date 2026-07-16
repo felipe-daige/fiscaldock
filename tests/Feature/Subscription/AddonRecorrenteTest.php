@@ -149,3 +149,23 @@ it('renovação sem add-ons é idêntica ao comportamento atual', function () {
     expect((float) $user->fresh()->credits)->toBe(35.0)
         ->and(SaldoTransacao::where('user_id', $user->id)->where('type', 'addon_renewal')->count())->toBe(0);
 });
+
+it('ativação (primeiraComoCompra) NÃO cobra add-ons retidos de assinatura reativada', function () {
+    $user = User::factory()->create();
+    $sub = assinaturaAtivaAddon($user, 'essencial', [
+        'assentos_extras' => 2,          // retidos de antes do cancelamento
+        'espaco_extra_pacotes' => 1,
+        'proximo_grant_em' => now()->subMinute(),
+    ]);
+    app(SaldoService::class)->add($user, 200, 'manual_add');
+
+    // reativação: grant de ativação, não renovação
+    app(ConcederSaldoService::class)->conceder($sub, primeiraComoCompra: true);
+
+    // grant do essencial (35) entra; add-ons NÃO são cobrados na ativação
+    expect((float) $user->fresh()->credits)->toBe(235.0);
+    expect(SaldoTransacao::where('user_id', $user->id)->where('type', 'addon_renewal')->count())->toBe(0);
+    // campos preservados (owner recontrata explicitamente se quiser)
+    expect($sub->fresh()->assentos_extras)->toBe(2)
+        ->and($sub->fresh()->espaco_extra_pacotes)->toBe(1);
+});

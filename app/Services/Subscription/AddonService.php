@@ -132,9 +132,12 @@ class AddonService
             return;
         }
 
+        // Preço do plano DESTE sub (não re-consulta via planFor: o plano já vem no sub).
+        $precoAssento = round(((int) ($sub->plan?->preco_assento_extra_centavos ?? 0)) / 100, 2);
+
         $extras = (int) $sub->assentos_extras;
         if ($extras > 0) {
-            $valor = round($this->precoAssentoReais($owner) * $extras, 2);
+            $valor = round($precoAssento * $extras, 2);
             if ($valor > 0 && ! $this->saldo->deduct($owner, $valor, 'addon_renewal', "Renovação mensal: {$extras} assento(s) extra(s).", $sub)) {
                 $sub->assentos_extras = 0;
                 $sub->save();

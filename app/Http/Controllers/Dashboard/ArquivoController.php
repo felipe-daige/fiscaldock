@@ -28,21 +28,26 @@ class ArquivoController extends Controller
     ) {}
 
     /** Números do add-on de espaço pra tela/modal (preço, pacotes atuais, pró-rata, saldo). */
-    private function espacoAddonInfo(\App\Models\User $owner): array
+    private function espacoAddonInfo(\App\Models\User $user): array
     {
-        $context = app(\App\Support\AccountContext::class);
-        $sub = $owner->accountOwner()->subscription()
+        // Só o dono contrata add-on — membro não vê o card; evita queries de assinatura/saldo à toa.
+        if (! app(\App\Support\AccountContext::class)->isOwner()) {
+            return ['is_owner' => false, 'tem_assinatura' => false, 'pacotes' => 0, 'pacote_mb' => $this->addons->pacoteEspacoMb(), 'preco_mensal' => 0.0, 'fracao' => 1.0, 'saldo' => 0.0];
+        }
+
+        $owner = $user->accountOwner();
+        $sub = $owner->subscription()
             ->where('status', \App\Models\AccountSubscription::STATUS_ATIVA)
             ->first();
 
         return [
-            'is_owner' => $context->isOwner(),
+            'is_owner' => true,
             'tem_assinatura' => (bool) $sub,
             'pacotes' => $sub ? (int) $sub->espaco_extra_pacotes : 0,
             'pacote_mb' => $this->addons->pacoteEspacoMb(),
             'preco_mensal' => $this->addons->precoPacoteEspacoReais(),
             'fracao' => $sub ? $this->addons->fracaoRestante($sub) : 1.0,
-            'saldo' => app(\App\Services\SaldoService::class)->getBalance($owner->accountOwner()),
+            'saldo' => app(\App\Services\SaldoService::class)->getBalance($owner),
         ];
     }
 

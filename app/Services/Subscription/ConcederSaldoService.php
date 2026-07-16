@@ -78,9 +78,13 @@ class ConcederSaldoService
                 }
 
                 // 2.5) Cobra a mensalidade dos add-ons (assento extra / espaço adicional) no
-                //      grant mensal — só no ramo rollover. A proration de troca NÃO cobra add-on
-                //      (o ciclo já foi pago; recobrar aqui duplicaria a cobrança).
-                $this->addons->cobrarRenovacaoAddons($sub);
+                //      grant mensal — só no ramo rollover E só em renovação de verdade. A ativação
+                //      (primeiraComoCompra) NÃO cobra: numa reativação os campos ficam retidos do
+                //      ciclo anterior e recobrá-los aqui debitaria sem o owner re-solicitar. A
+                //      proration de troca também não passa por aqui (é o outro ramo).
+                if (! $primeiraComoCompra) {
+                    $this->addons->cobrarRenovacaoAddons($sub);
+                }
             }
 
             // 3) Agenda a próxima concessão (cadência mensal pra mensal E anual) e limpa o marker.
