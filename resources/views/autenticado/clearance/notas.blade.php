@@ -417,96 +417,19 @@
             </div>
         </div>
 
-        {{-- Plan cards + CTA (escondido sem seleção) --}}
+        {{-- CTA de validação (escondido sem seleção). O TIER é escolhido no modal de confirmação. --}}
         <div id="clearance-planos" class="mb-4 hidden">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {{-- Escolha EXCLUSIVA de tier (radio): ou Clearance, ou Clearance completo.
-                     O completo é CUMULATIVO — faz tudo do básico e ainda investiga a contraparte. --}}
-                <label id="plan-card-basico" for="tier-basico"
-                       class="plan-card block cursor-pointer bg-white rounded border p-4 transition" data-tier="basico" style="border-color: #1f2937">
-                    <div class="flex items-start gap-2.5 mb-3">
-                        <input type="radio" name="clearance_tier" id="tier-basico" value="basico" class="mt-0.5 h-4 w-4" style="accent-color: #1f2937" checked>
-                        <div>
-                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Verificação oficial</p>
-                            <p class="text-base font-bold text-gray-900">Clearance</p>
-                            <p class="text-[11px] text-gray-500 mt-0.5">Confere o documento.</p>
-                        </div>
-                    </div>
-                    <ul class="space-y-1.5 text-xs text-gray-700 mb-3">
-                        <li class="flex items-start gap-2"><svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #047857"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>Status SEFAZ (NF-e)</li>
-                        <li class="flex items-start gap-2"><svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #047857"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>Validação contábil local</li>
-                        <li class="flex items-start gap-2"><svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #047857"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>Cruzamento com EFD</li>
-                    </ul>
-                    <div class="border-t border-gray-200 pt-3 flex items-center justify-between">
-                        <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded uppercase tracking-wide">@brl(($custosTiers['basico'])) / nota</span>
-                        <span class="flex items-center gap-1.5">
-                            <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Total</span>
-                            <span class="text-[10px] font-bold text-white px-2 py-0.5 rounded uppercase tracking-wide" style="background-color: #374151"><span class="plan-total" data-tier="basico">R$ 0,00</span></span>
-                        </span>
-                    </div>
-                </label>
-
-                {{-- Clearance completo: CUMULATIVO — tudo do Clearance + regularidade da contraparte
-                     (situação cadastral grátis + SINTEGRA + CND Federal). Preço fechado por nota.
-                     Spec: docs/clearance/clearance-full-camada-a.md --}}
-                @if(config('clearance.full.habilitado'))
-                    <label id="plan-card-full" for="tier-full"
-                           class="plan-card block cursor-pointer rounded border p-4 transition bg-white" data-tier="full" style="border-color: #d1d5db">
-                        <div class="flex items-start gap-2.5 mb-3">
-                            <input type="radio" name="clearance_tier" id="tier-full" value="full" class="mt-0.5 h-4 w-4" style="accent-color: #1f2937">
-                            <div>
-                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Documento + contraparte</p>
-                                <p class="text-base font-bold text-gray-900">Clearance completo</p>
-                                <p class="text-[11px] text-gray-500 mt-0.5">Confere o documento <strong>e</strong> quem emitiu.</p>
-                            </div>
-                        </div>
-                        <ul class="space-y-1.5 text-xs text-gray-700 mb-3">
-                            {{-- Deixa EXPLÍCITO que inclui o básico — não é alternativa, é upgrade. --}}
-                            <li class="flex items-start gap-2 font-semibold text-gray-900"><svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #047857"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>Tudo do Clearance (status SEFAZ, validação contábil, cruzamento EFD)</li>
-                            <li class="flex items-start gap-2"><span class="w-3.5 flex-shrink-0 text-center font-bold" style="color: #047857">+</span>Situação cadastral da contraparte na Receita Federal</li>
-                            <li class="flex items-start gap-2"><span class="w-3.5 flex-shrink-0 text-center font-bold" style="color: #047857">+</span>SINTEGRA — inscrição estadual (crédito de ICMS)</li>
-                            <li class="flex items-start gap-2"><span class="w-3.5 flex-shrink-0 text-center font-bold" style="color: #047857">+</span>CND Federal (PGFN) da contraparte</li>
-                        </ul>
-                        <div class="border-t border-gray-200 pt-3 flex items-center justify-between">
-                            <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded uppercase tracking-wide">@brl(($custosTiers['full'])) / nota</span>
-                            <span class="flex items-center gap-1.5">
-                                <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Total</span>
-                                <span class="text-[10px] font-bold text-white px-2 py-0.5 rounded uppercase tracking-wide" style="background-color: #374151"><span class="plan-total" data-tier="full">R$ 0,00</span></span>
-                            </span>
-                        </div>
-                    </label>
-                @else
-                    <div class="rounded border border-dashed p-4" style="border-color: #d1d5db; background-color: #f9fafb;">
-                        <div class="flex items-start justify-between mb-3">
-                            <div>
-                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Documento + contraparte</p>
-                                <p class="text-base font-bold text-gray-500">Clearance completo</p>
-                            </div>
-                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #6b7280">Em breve</span>
-                        </div>
-                        <p class="text-[11px] text-gray-500">Tudo do Clearance + a regularidade da contraparte de cada nota (situação cadastral, SINTEGRA e CND Federal).</p>
-                    </div>
-                @endif
-            </div>
-
-            {{-- Certificado A1: capability de conta, NÃO tier por documento. Com o cert cadastrado, a
-                 MESMA consulta (mesmo preço) volta completa — a SEFAZ só devolve tributos, itens e XML
-                 pra quem se autentica. O consumo do cert já está implementado; o confronto
-                 Declarado × SEFAZ desses dados é que ainda não. Ver docs/clearance/certificado-a1.md --}}
-            <div class="mt-3 rounded border bg-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2" style="border-color: #e5e7eb">
+            {{-- Certificado A1: com o cert cadastrado a MESMA consulta (mesmo preço) volta completa. --}}
+            <div class="rounded border bg-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2" style="border-color: #e5e7eb">
                 <p class="text-[11px] text-gray-600">
                     <strong class="text-gray-900">Certificado digital A1:</strong>
-                    com o certificado da empresa cadastrado, a consulta acima vem completa (tributos, itens com NCM/CFOP/CST, XML e contraparte sem máscara) — <strong>sem custo adicional por nota</strong>.
+                    com o certificado da empresa cadastrado, a consulta vem completa (tributos, itens com NCM/CFOP/CST, XML e contraparte sem máscara) — <strong>sem custo adicional por nota</strong>.
                 </p>
                 <a href="/app/minha-empresa#certificado-digital" target="_blank" rel="noopener"
                    class="text-[11px] font-semibold whitespace-nowrap px-2.5 py-1 rounded text-white" style="background-color: #1f2937">Cadastrar certificado</a>
             </div>
 
-            <div class="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white rounded border border-gray-300 px-4 py-3">
-                <span class="flex items-center gap-2">
-                    <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Saldo após</span>
-                    <span id="saldo-apos-label" class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded">—</span>
-                </span>
+            <div class="mt-3 flex items-center justify-end bg-white rounded border border-gray-300 px-4 py-3">
                 <button type="button" id="btn-validar" class="px-4 py-2 rounded text-[11px] font-bold uppercase tracking-wide text-white disabled:opacity-40" style="background-color: #047857" disabled>Validar</button>
             </div>
         </div>
@@ -675,32 +598,54 @@
         @include('autenticado.clearance.partials._historico-verificacoes')
     </div>
 
-    {{-- Barra fixa de ação: sempre visível enquanto há seleção --}}
-    <div id="clearance-sticky-cta" class="hidden fixed inset-x-0 bottom-0 z-40 pointer-events-none">
-        <div class="max-w-7xl mx-auto px-4 pb-4">
-            <div class="pointer-events-auto bg-white rounded border border-gray-300 shadow-lg px-4 py-3 flex items-center justify-between gap-3">
-                <div class="flex items-center gap-2">
-                    <span class="text-white text-[11px] font-bold px-2 py-0.5 rounded" style="background-color: #1f2937"><span id="sticky-count">0</span> nota(s)</span>
-                    <span class="text-xs text-gray-600">Custo <span id="sticky-custo" class="font-semibold text-gray-900">R$ 0,00</span></span>
-                </div>
-                <button type="button" id="btn-validar-sticky" class="px-4 py-2 rounded text-[11px] font-bold uppercase tracking-wide text-white disabled:opacity-40" style="background-color: #047857" disabled>Validar</button>
-            </div>
-        </div>
-    </div>
 </div>
 
-{{-- Modal: Confirmar Clearance --}}
+{{-- Modal: Confirmar Clearance (a escolha de TIER vive aqui — foi tirada do topo da tela) --}}
 <div id="modal-confirmar-validacao" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded border border-gray-300 shadow-lg max-w-md w-full">
-        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
             <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Confirmar Clearance</span>
-            <span id="modal-confirm-tier-chip" class="text-[9px] font-bold uppercase tracking-wide text-white px-2 py-0.5 rounded" style="background-color: #1f2937">Clearance</span>
         </div>
         <div class="p-5 space-y-4">
-            <p class="text-sm text-gray-700">
-                Será executada a verificação <strong id="modal-confirm-tier-label">Clearance</strong>
-                em <strong id="modal-confirm-qtd">0</strong> nota(s).
-            </p>
+            <p class="text-sm text-gray-700">Como validar <strong id="modal-confirm-qtd">0</strong> nota(s)?</p>
+
+            {{-- Escolha EXCLUSIVA de tier (radio). name=clearance_tier: o JS (tierAtual) lê daqui. --}}
+            <div class="space-y-2">
+                <label for="tier-basico" data-tier-opt="basico" class="flex items-start gap-2.5 rounded border p-3 cursor-pointer transition" style="border-color: #1f2937; background-color: #f9fafb">
+                    <input type="radio" name="clearance_tier" id="tier-basico" value="basico" class="mt-0.5 h-4 w-4" style="accent-color: #1f2937" checked>
+                    <span class="flex-1 min-w-0">
+                        <span class="flex items-center justify-between gap-2">
+                            <span class="text-sm font-bold text-gray-900">Clearance</span>
+                            <span class="text-sm font-bold text-gray-900" data-tier-total="basico">R$ 0,00</span>
+                        </span>
+                        <span class="block text-[11px] text-gray-500 mt-0.5">Status SEFAZ, validação contábil e cruzamento EFD. <span class="text-gray-400">@brl(($custosTiers['basico']))/nota</span></span>
+                    </span>
+                </label>
+                @if(config('clearance.full.habilitado'))
+                <label for="tier-full" data-tier-opt="full" class="flex items-start gap-2.5 rounded border p-3 cursor-pointer transition" style="border-color: #d1d5db">
+                    <input type="radio" name="clearance_tier" id="tier-full" value="full" class="mt-0.5 h-4 w-4" style="accent-color: #1f2937">
+                    <span class="flex-1 min-w-0">
+                        <span class="flex items-center justify-between gap-2">
+                            <span class="text-sm font-bold text-gray-900">Clearance completo</span>
+                            <span class="text-sm font-bold text-gray-900" data-tier-total="full">R$ 0,00</span>
+                        </span>
+                        <span class="block text-[11px] text-gray-500 mt-0.5">Tudo do Clearance <strong>+</strong> regularidade da contraparte (cadastral, SINTEGRA, CND Federal). <span class="text-gray-400">@brl(($custosTiers['full']))/nota</span></span>
+                    </span>
+                </label>
+                @else
+                {{-- Full desligado: teaser (sem radio) pra manter o upsell visível. --}}
+                <div class="flex items-start gap-2.5 rounded border border-dashed p-3" style="border-color: #d1d5db; background-color: #f9fafb">
+                    <span class="flex-1 min-w-0">
+                        <span class="flex items-center justify-between gap-2">
+                            <span class="text-sm font-bold text-gray-500">Clearance completo</span>
+                            <span class="text-[9px] font-bold uppercase tracking-wide text-white px-2 py-0.5 rounded" style="background-color: #6b7280">Em breve</span>
+                        </span>
+                        <span class="block text-[11px] text-gray-500 mt-0.5">Tudo do Clearance + a regularidade da contraparte de cada nota (situação cadastral, SINTEGRA e CND Federal).</span>
+                    </span>
+                </div>
+                @endif
+            </div>
+
             <div class="grid grid-cols-2 divide-x divide-gray-200 border border-gray-200 rounded overflow-hidden">
                 <div class="px-3 py-3">
                     <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Custo total</p>
@@ -722,7 +667,7 @@
         </div>
         <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-2">
             <button type="button" id="modal-confirm-cancelar" class="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">Cancelar</button>
-            <button type="button" id="modal-confirm-ok" class="px-4 py-2 text-xs font-semibold text-white rounded" style="background-color: #1f2937">Confirmar validação</button>
+            <button type="button" id="modal-confirm-ok" class="px-4 py-2 text-xs font-semibold text-white rounded disabled:opacity-40 disabled:cursor-not-allowed" style="background-color: #1f2937">Confirmar validação</button>
         </div>
     </div>
 </div>

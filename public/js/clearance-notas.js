@@ -14,13 +14,13 @@ function tierAtual() {
     return marcado && marcado.value === TIER_FULL ? TIER_FULL : TIER_BASICO;
 }
 
-// Destaca o card do tier selecionado (borda escura) e apaga o outro.
+// Destaca a opção de tier selecionada no modal (borda escura) e apaga a outra.
 function realcarCardTier() {
     const atual = tierAtual();
-    document.querySelectorAll('.plan-card').forEach((card) => {
-        const selecionado = card.dataset.tier === atual;
-        card.style.borderColor = selecionado ? '#1f2937' : '#d1d5db';
-        card.style.backgroundColor = selecionado ? '#f9fafb' : '#ffffff';
+    document.querySelectorAll('[data-tier-opt]').forEach((opt) => {
+        const selecionado = opt.dataset.tierOpt === atual;
+        opt.style.borderColor = selecionado ? '#1f2937' : '#d1d5db';
+        opt.style.backgroundColor = selecionado ? '#f9fafb' : '#ffffff';
     });
 }
 
@@ -355,53 +355,44 @@ function origensSelecionadas() {
     return map;
 }
 
+// Botão Validar inline: só liga/desliga pela seleção. O custo por tier + saldo saem no modal
+// (a escolha de tier mora lá agora). Sem preço no botão pra não fixar um tier na tela.
 function atualizarCusto() {
     const n = selecionados.size;
-
-    document.querySelectorAll('.plan-total').forEach((el) => {
-        const tier = el.dataset.tier;
-        el.textContent = brl(n * (custos[tier] || 0));
-    });
-
-    const total = n * (custos[tierAtual()] || 0);
-    const saldoApos = saldoAtual - total;
-    const insuficiente = saldoApos < 0;
-
-    const saldoAposLabel = $('saldo-apos-label');
-    if (saldoAposLabel) {
-        saldoAposLabel.textContent = brl(saldoApos);
-        if (insuficiente) {
-            saldoAposLabel.style.backgroundColor = '#fee2e2';
-            saldoAposLabel.style.color = '#b91c1c';
-        } else {
-            saldoAposLabel.style.backgroundColor = '#e5e7eb';
-            saldoAposLabel.style.color = '#374151';
-        }
-    }
-
     const btnValidar = $('btn-validar');
     if (btnValidar) {
-        if (n === 0) {
-            btnValidar.textContent = 'Validar';
-            btnValidar.disabled = true;
-        } else if (insuficiente) {
-            btnValidar.textContent = 'Saldo insuficiente';
-            btnValidar.disabled = true;
-        } else {
-            btnValidar.textContent = `Validar ${n} nota(s) · ${brl(total)}`;
-            btnValidar.disabled = false;
-        }
+        btnValidar.disabled = n === 0;
+        btnValidar.textContent = n === 0 ? 'Validar' : `Validar ${n} nota(s)`;
     }
+}
 
-    const stickyCount = $('sticky-count');
-    if (stickyCount) stickyCount.textContent = String(n);
-    const stickyCusto = $('sticky-custo');
-    if (stickyCusto) stickyCusto.textContent = brl(total);
-    const btnValidarSticky = $('btn-validar-sticky');
-    if (btnValidarSticky) {
-        btnValidarSticky.disabled = n === 0 || insuficiente;
-        btnValidarSticky.textContent = insuficiente ? 'Saldo insuficiente' : 'Validar';
+// Recalcula custo/saldo/regularidade DENTRO do modal, conforme o tier escolhido lá.
+function atualizarModalCusto() {
+    const n = selecionados.size;
+    const full = tierAtual() === TIER_FULL;
+    const total = n * (custos[tierAtual()] || 0);
+    const saldoApos = saldoAtual - total;
+
+    document.querySelectorAll('[data-tier-total]').forEach((el) => {
+        el.textContent = brl(n * (custos[el.dataset.tierTotal] || 0));
+    });
+
+    const qtd = $('modal-confirm-qtd');
+    if (qtd) qtd.textContent = String(n);
+    const custo = $('modal-confirm-custo');
+    if (custo) custo.textContent = brl(total);
+    const saldoAposEl = $('modal-confirm-saldo-apos');
+    if (saldoAposEl) {
+        saldoAposEl.textContent = brl(saldoApos);
+        saldoAposEl.style.color = saldoApos < 0 ? '#b91c1c' : '#111827';
     }
+    const aviso = $('modal-confirm-regularidade');
+    if (aviso) aviso.classList.toggle('hidden', !full);
+
+    const ok = $('modal-confirm-ok');
+    if (ok) ok.disabled = n === 0 || saldoApos < 0;
+
+    realcarCardTier();
 }
 
 function atualizarSelecao() {
@@ -438,11 +429,6 @@ function atualizarSelecao() {
     const planosContainer = $('clearance-planos');
     if (planosContainer) {
         planosContainer.classList.toggle('hidden', n === 0);
-    }
-
-    const stickyBar = $('clearance-sticky-cta');
-    if (stickyBar) {
-        stickyBar.classList.toggle('hidden', n === 0);
     }
 
     atualizarCusto();
@@ -585,32 +571,9 @@ async function handleSelecionarTodas() {
 function handleValidarClick() {
     const ids = selecionadosArray();
     if (ids.length === 0) return;
-    const total = ids.length * (custos[tierAtual()] || 0);
-    const saldoApos = saldoAtual - total;
-
-    const modalConfirmQtd = $('modal-confirm-qtd');
-    const modalConfirmCusto = $('modal-confirm-custo');
-    const modalConfirmTierLabel = $('modal-confirm-tier-label');
-    const modalConfirmTierChip = $('modal-confirm-tier-chip');
-    const modalConfirmSaldoApos = $('modal-confirm-saldo-apos');
-
-    const full = tierAtual() === TIER_FULL;
-    const label = full ? 'Clearance completo' : 'Clearance';
-
-    if (modalConfirmQtd) modalConfirmQtd.textContent = String(ids.length);
-    if (modalConfirmCusto) modalConfirmCusto.textContent = brl(total);
-    if (modalConfirmTierLabel) modalConfirmTierLabel.textContent = label;
-    if (modalConfirmTierChip) modalConfirmTierChip.textContent = label;
-    if (modalConfirmSaldoApos) {
-        modalConfirmSaldoApos.textContent = brl(saldoApos);
-        modalConfirmSaldoApos.style.color = saldoApos < 0 ? '#b91c1c' : '#111827';
-    }
-
-    // O custo acima é só o dos documentos: a regularidade das contrapartes é cobrada à parte
-    // (por contraparte nova, valor conhecido só após a consulta). Avisa em vez de esconder.
-    const avisoRegularidade = $('modal-confirm-regularidade');
-    if (avisoRegularidade) avisoRegularidade.classList.toggle('hidden', !full);
-
+    // O tier é escolhido DENTRO do modal; abre com o estado atual (default básico) e deixa o
+    // usuário trocar lá. atualizarModalCusto popula custo/saldo/regularidade + destaca a opção.
+    atualizarModalCusto();
     abrirModal($('modal-confirmar-validacao'));
 }
 
@@ -634,10 +597,9 @@ function onDocumentChange(e) {
     const target = e.target;
     if (!target || !target.matches) return;
 
-    // Troca de tier (Clearance ↔ Clearance completo): repinta o card e recalcula o total.
+    // Troca de tier (Clearance ↔ Clearance completo) — os radios agora vivem no modal.
     if (target.name === 'clearance_tier') {
-        realcarCardTier();
-        atualizarCusto();
+        atualizarModalCusto();
         return;
     }
 
@@ -675,7 +637,7 @@ function onDocumentClick(e) {
         return;
     }
 
-    if (target.closest('#btn-validar') || target.closest('#btn-validar-sticky')) {
+    if (target.closest('#btn-validar')) {
         handleValidarClick();
         return;
     }
