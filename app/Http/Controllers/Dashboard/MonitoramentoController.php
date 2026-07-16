@@ -335,7 +335,7 @@ class MonitoramentoController extends Controller
         if (is_array($resultado) && is_array($resultado['detalhes'] ?? null)) {
             $fontesCertidao = [
                 'cnd_federal', 'cnd_estadual', 'cnd_municipal',
-                'fgts', 'crf_fgts', 'cndt', 'sintegra',
+                'fgts', 'crf_fgts', 'sintegra',
             ];
 
             foreach ($fontesCertidao as $fonte) {

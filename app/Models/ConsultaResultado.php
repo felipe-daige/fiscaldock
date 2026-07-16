@@ -276,14 +276,6 @@ class ConsultaResultado extends Model
     }
 
     /**
-     * Retorna dados da CNDT.
-     */
-    public function getCndt(): ?array
-    {
-        return $this->getDado('cndt');
-    }
-
-    /**
      * @return array<int, string>
      */
     private function getMensagemExibivelFallbackBlocks(): array
@@ -292,7 +284,6 @@ class ConsultaResultado extends Model
             'cnd_federal',
             'cnd_estadual',
             'crf_fgts',
-            'cndt',
             'sintegra',
             'nfe_clearance',
             'cte_clearance',

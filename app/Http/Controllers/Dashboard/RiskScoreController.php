@@ -318,7 +318,6 @@ class RiskScoreController extends Controller
                 'cnd_federal' => $scoreModel->score_cnd_federal,
                 'cnd_estadual' => $scoreModel->score_cnd_estadual,
                 'fgts' => $scoreModel->score_fgts,
-                'trabalhista' => $scoreModel->score_trabalhista,
             ])
             : [];
 

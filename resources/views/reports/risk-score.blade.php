@@ -103,8 +103,7 @@
                                     Cad {{ $inteiro($registro['score_cadastral']) }} ·
                                     Fed {{ $inteiro($registro['score_cnd_federal']) }} ·
                                     Est {{ $inteiro($registro['score_cnd_estadual']) }}<br>
-                                    FGTS {{ $inteiro($registro['score_fgts']) }} ·
-                                    CNDT {{ $inteiro($registro['score_trabalhista']) }}
+                                    FGTS {{ $inteiro($registro['score_fgts']) }}
                                 </td>
                                 <td>{{ $registro['credito_reforma'] }}</td>
                                 <td>{{ $registro['ultima_consulta'] }}</td>

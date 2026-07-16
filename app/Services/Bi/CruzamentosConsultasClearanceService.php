@@ -228,7 +228,6 @@ class CruzamentosConsultasClearanceService
         $certidoes = [
             'score_cnd_federal' => 'CND Federal positiva',
             'score_cnd_estadual' => 'CND Estadual positiva',
-            'score_trabalhista' => 'CNDT positiva (débitos trabalhistas)',
         ];
 
         foreach ($certidoes as $coluna => $rotulo) {

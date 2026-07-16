@@ -11,7 +11,7 @@ class CndFederal
     /**
      * Analisa o retorno de uma certidão e isola o caso INDETERMINADO. Nasceu para a
      * CND Federal (PGFN/RFB), mas a regra vale para qualquer certidão (Estadual,
-     * Municipal, CNDT, FGTS...) — CertidaoBadge a aplica a todas.
+     * Municipal, FGTS...) — CertidaoBadge a aplica a todas.
      *
      * Regra canônica: INDETERMINADO nunca é irregular — significa que a fonte
      * oficial não conseguiu emitir a certidão pela internet E não há documento

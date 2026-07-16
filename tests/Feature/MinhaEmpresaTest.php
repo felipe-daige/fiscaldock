@@ -204,8 +204,8 @@ test('dashboard reflete consulta gravada no cliente da empresa propria', functio
         'status' => ConsultaResultado::STATUS_SUCESSO,
         'resultado_dados' => [
             'situacao_cadastral' => 'ATIVA',
-            'cndt' => ['status' => 'NEGATIVA', 'validade' => now()->addMonths(3)->toDateString()],
-            'consultas_realizadas' => ['cadastro', 'cndt'],
+            'crf_fgts' => ['status' => 'REGULAR', 'validade' => now()->addMonths(3)->toDateString()],
+            'consultas_realizadas' => ['cadastro', 'crf_fgts'],
         ],
         'consultado_em' => now(),
     ]);
@@ -277,7 +277,7 @@ test('alertas usam data_validade formato BR e avisam certidao vencendo', functio
         'resultado_dados' => [
             'situacao_cadastral' => 'ATIVA',
             'crf_fgts' => ['status' => 'REGULAR', 'data_validade' => now()->addDays(3)->format('d/m/Y')],
-            'cndt' => ['status' => 'Negativa', 'data_validade' => '24/08/2099'],
+            'cnd_federal' => ['status' => 'Negativa', 'data_validade' => '24/08/2099'],
         ],
         'consultado_em' => now(),
     ]);
@@ -592,9 +592,9 @@ test('certidoes usam o card retratil canonico do participante, sem tabela', func
         'status' => ConsultaResultado::STATUS_SUCESSO,
         'resultado_dados' => [
             'situacao_cadastral' => 'ATIVA',
-            'cndt' => ['status' => 'NEGATIVA', 'data_validade' => '24/08/2099'],
+            'cnd_federal' => ['status' => 'NEGATIVA', 'data_validade' => '24/08/2099'],
             'crf_fgts' => ['status' => 'REGULAR', 'data_validade' => now()->addMonths(2)->format('d/m/Y')],
-            'consultas_realizadas' => ['cadastro', 'cndt', 'crf_fgts'],
+            'consultas_realizadas' => ['cadastro', 'cnd_federal', 'crf_fgts'],
         ],
         'consultado_em' => now(),
     ]);
@@ -607,7 +607,7 @@ test('certidoes usam o card retratil canonico do participante, sem tabela', func
     $response->assertSee('aria-expanded="false"', false);
     $response->assertSee('Ver tudo');
     // Fontes renderizadas pelo presenter canônico.
-    $response->assertSee('CNDT');
+    $response->assertSee('CND Federal');
     $response->assertSee('24/08/2099');
     // Tabela antiga de certidões morreu.
     $response->assertDontSee('Última Emissão');

@@ -30,7 +30,7 @@ it('injeta badge canonico por fonte no detalhe da consulta', function () {
             'detalhes' => [
                 'cnd_federal' => ['status' => 'POSITIVA COM EFEITOS DE NEGATIVA', 'validade' => '01/12/2026'],
                 'fgts' => ['status' => 'Regular'],
-                'cndt' => ['status' => 'POSITIVA'],
+                'cnd_estadual' => ['status' => 'POSITIVA'],
             ],
         ],
     ]);
@@ -46,8 +46,8 @@ it('injeta badge canonico por fonte no detalhe da consulta', function () {
     expect($detalhes['cnd_federal']['badge']['label'])->toBe('Regular')
         ->and($detalhes['cnd_federal']['badge']['hex'])->toBe(CertidaoBadge::HEX_REGULAR)
         ->and($detalhes['fgts']['badge']['label'])->toBe('Regular')
-        ->and($detalhes['cndt']['badge']['label'])->toBe('Irregular')
-        ->and($detalhes['cndt']['badge']['hex'])->toBe(CertidaoBadge::HEX_IRREGULAR);
+        ->and($detalhes['cnd_estadual']['badge']['label'])->toBe('Irregular')
+        ->and($detalhes['cnd_estadual']['badge']['hex'])->toBe(CertidaoBadge::HEX_IRREGULAR);
 });
 
 it('preserva o caso INDETERMINADO da CND Federal no badge', function () {

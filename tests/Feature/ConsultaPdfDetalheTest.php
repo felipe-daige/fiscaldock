@@ -49,7 +49,7 @@ function pdfDetResultado(ConsultaLote $lote, User $user): ConsultaResultado
             'razao_social' => 'Fornecedor Detalhe',
             'situacao_cadastral' => 'ATIVA',
             'cnd_federal' => ['status' => 'Negativa', 'tipo' => 'Negativa', 'comprovante' => 'https://ex.com/cnd-federal.pdf'],
-            'cndt' => ['status' => 'Negativa', 'comprovante' => 'https://ex.com/cndt.pdf'],
+            'crf_fgts' => ['status' => 'Negativa', 'comprovante' => 'https://ex.com/crf-fgts.pdf'],
             'sintegra' => ['situacao' => 'Habilitado', 'comprovante' => 'https://ex.com/sintegra.pdf'],
         ],
         'consultado_em' => now(),
@@ -69,7 +69,7 @@ it('getDetalhes traz blocos por fonte com link de comprovante de TODAS as fontes
     $urls = collect($d['blocos'])->pluck('comprovante_url')->filter()->values()->all();
 
     expect($urls)->toContain('https://ex.com/cnd-federal.pdf')
-        ->toContain('https://ex.com/cndt.pdf')
+        ->toContain('https://ex.com/crf-fgts.pdf')
         ->toContain('https://ex.com/sintegra.pdf');
 });
 
@@ -101,12 +101,12 @@ it('view PDF renderiza detalhamento completo com links de comprovante clicaveis'
 
     // Links diretos pros PDFs das certidões
     expect($html)->toContain('https://ex.com/cnd-federal.pdf')
-        ->toContain('https://ex.com/cndt.pdf')
+        ->toContain('https://ex.com/crf-fgts.pdf')
         ->toContain('https://ex.com/sintegra.pdf');
 
     // Descrições/labels das fontes
     expect($html)->toContain('CND Federal')
-        ->toContain('CNDT')
+        ->toContain('CRF FGTS')
         ->toContain('SINTEGRA');
 });
 

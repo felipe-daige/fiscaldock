@@ -637,7 +637,7 @@ class RiskScoreService
     }
 
     /**
-     * Certidão (CND/CRF/CNDT) → subscore, classificada pelo padrão canônico CertidaoBadge.
+     * Certidão (CND/CRF) → subscore, classificada pelo padrão canônico CertidaoBadge.
      * Regular → 0; Irregular → penalidade; INDETERMINADA/indisponível/ausente → null.
      */
     private function subscoreCertidao(mixed $valor, int $penalidade): ?int

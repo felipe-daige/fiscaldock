@@ -40,7 +40,7 @@
                 <div>
                     <p class="text-[11px] font-bold text-gray-900 uppercase tracking-wide mb-0.5">Fornecedor irregular × compras</p>
                     <p class="text-xs text-gray-600 leading-relaxed">
-                        <strong>Irregular</strong> = a última consulta do CNPJ apontou certidão positiva (CND Federal, Estadual ou CNDT com débito)
+                        <strong>Irregular</strong> = a última consulta do CNPJ apontou certidão positiva (CND Federal ou Estadual com débito)
                         ou situação cadastral não ativa (Baixada, Inapta, Suspensa, Nula). É a <strong>mesma classificação</strong> do
                         <a href="{{ route('app.risk.index') }}" data-link class="text-blue-600 hover:underline">Score de Risco</a> e da
                         <a href="{{ route('app.alertas') }}" data-link class="text-blue-600 hover:underline">Central de Alertas</a> — as telas nunca divergem.

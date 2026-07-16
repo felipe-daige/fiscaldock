@@ -58,7 +58,6 @@ class ArquivarComprovantesCommand extends Command
             'cnd_estadual',
             'cnd_municipal',
             'crf_fgts',
-            'cndt',
             'sintegra',
         ];
 

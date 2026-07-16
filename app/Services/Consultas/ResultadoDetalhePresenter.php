@@ -29,7 +29,6 @@ class ResultadoDetalhePresenter
         'cnd_estadual',
         'cnd_municipal',
         'crf_fgts',
-        'cndt',
         'sintegra',
     ];
 
@@ -39,7 +38,6 @@ class ResultadoDetalhePresenter
         'cnd_estadual' => 'EST',
         'cnd_municipal' => 'MUN',
         'crf_fgts' => 'FGTS',
-        'cndt' => 'CNDT',
         'sintegra' => 'SINT',
     ];
 
@@ -49,7 +47,6 @@ class ResultadoDetalhePresenter
         'cnd_federal' => 'A Receita Federal/PGFN',
         'cnd_estadual' => 'A Secretaria da Fazenda Estadual (SEFAZ)',
         'cnd_municipal' => 'A Prefeitura',
-        'cndt' => 'O Tribunal Superior do Trabalho (TST)',
         'crf_fgts' => 'A Caixa Econômica Federal',
         'sintegra' => 'O SINTEGRA (SEFAZ)',
     ];
@@ -58,7 +55,7 @@ class ResultadoDetalhePresenter
      * Certidões de regularidade que viram badge (CertidaoBadge) no resumo/situação geral.
      * Distinta de SIGLAS: exclui `sintegra` (inscrição estadual, não certidão de regularidade).
      */
-    private const CERTIDOES_BADGE = ['cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts', 'cndt'];
+    private const CERTIDOES_BADGE = ['cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts'];
 
     /**
      * Certidões de regularidade (dentre as canônicas) que um plano inclui — usar como
@@ -104,7 +101,7 @@ class ResultadoDetalhePresenter
      *                                                 entra sempre — é a identidade do CNPJ). Serve pra um produto
      *                                                 não exibir fonte que ELE não cobre: a última consulta do
      *                                                 participante pode ser de uma Consulta CNPJ de plano maior,
-     *                                                 e o Clearance completo (3 fontes) mostraria EST/MUN/FGTS/CNDT
+     *                                                 e o Clearance completo (3 fontes) mostraria EST/MUN/FGTS
      *                                                 que ele nunca consultou.
      * @return array{blocos: array, resumo: ?string, certidoes: array, cabecalho: array}|null
      */
@@ -768,7 +765,7 @@ class ResultadoDetalhePresenter
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // Certidões (CND Federal/Estadual/Municipal, FGTS, CNDT)
+    // Certidões (CND Federal/Estadual/Municipal, FGTS)
     // ──────────────────────────────────────────────────────────────────────────
 
     private function blocoCertidao(
@@ -921,7 +918,6 @@ class ResultadoDetalhePresenter
             'cnd_estadual' => 'CND Estadual (SEFAZ'.$sufixoUf.')',
             'cnd_municipal' => 'CND Municipal'.($uf ? ' ('.strtoupper($uf).')' : ''),
             'crf_fgts' => 'CRF FGTS (Caixa)',
-            'cndt' => 'CNDT (débitos trabalhistas)',
             default => $this->nomeFonte($chave),
         };
     }

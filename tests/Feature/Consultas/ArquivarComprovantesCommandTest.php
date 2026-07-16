@@ -33,7 +33,7 @@ it('backfill arquiva o comprovante vivo e pula o expirado', function () {
             'cnd_federal' => [
                 'comprovante' => "https://host/infosimples-storage/sig/{$vivo}/salt/vivo.pdf",
             ],
-            'cndt' => [
+            'crf_fgts' => [
                 'comprovante' => "https://host/infosimples-storage/sig/{$expirado}/salt/morto.pdf",
             ],
         ],
@@ -47,6 +47,6 @@ it('backfill arquiva o comprovante vivo e pula o expirado', function () {
 
     $dados = $resultado->fresh()->resultado_dados;
     expect($dados['cnd_federal']['comprovante_arquivo'])->toStartWith("comprovantes/{$user->id}/")
-        ->and($dados['cndt'])->not->toHaveKey('comprovante_arquivo');
+        ->and($dados['crf_fgts'])->not->toHaveKey('comprovante_arquivo');
     Storage::disk('local')->assertExists($dados['cnd_federal']['comprovante_arquivo']);
 });

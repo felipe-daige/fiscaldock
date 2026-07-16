@@ -46,7 +46,6 @@ class DashboardController extends Controller
         'cnd_estadual' => 'Estadual',
         'cnd_municipal' => 'Municipal',
         'crf_fgts' => 'FGTS',
-        'cndt' => 'CNDT',
         'sintegra' => 'Sintegra',
     ];
 
@@ -423,7 +422,7 @@ class DashboardController extends Controller
             }
 
             // Badge compacto de TODAS as fontes que a consulta trouxe (CND Federal/Estadual/
-            // Municipal, FGTS, CNDT, SINTEGRA). A cor reflete a regularidade, classificada
+            // Municipal, FGTS, SINTEGRA). A cor reflete a regularidade, classificada
             // pela fonte única (CertidaoBadge via ResultadoDetalhePresenter).
             $certidoesBadges = [];
             if ($ultimoResultado) {

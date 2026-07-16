@@ -18,7 +18,6 @@ class ComprovanteArquivador
         'cnd_estadual' => 'CND Estadual',
         'cnd_municipal' => 'CND Municipal',
         'crf_fgts' => 'CRF FGTS',
-        'cndt' => 'CNDT',
         'sintegra' => 'SINTEGRA',
     ];
 

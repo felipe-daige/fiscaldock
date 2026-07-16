@@ -47,7 +47,6 @@ class ParticipanteController extends Controller
         'cnd_estadual' => 'Estadual',
         'cnd_municipal' => 'Municipal',
         'crf_fgts' => 'FGTS',
-        'cndt' => 'CNDT',
         'sintegra' => 'Sintegra',
     ];
 
@@ -613,7 +612,7 @@ class ParticipanteController extends Controller
             }
 
             // Badge compacto de TODAS as fontes que a última consulta trouxe (CND Federal/
-            // Estadual/Municipal, FGTS, CNDT, SINTEGRA). A cor reflete a regularidade
+            // Estadual/Municipal, FGTS, SINTEGRA). A cor reflete a regularidade
             // classificada pela fonte única (CertidaoBadge via presenter).
             $certidoesBadges = [];
             if ($ultimoResultado) {
@@ -894,7 +893,7 @@ class ParticipanteController extends Controller
                 (array) ($dadosConsolidados['consultas_realizadas'] ?? []),
                 (array) ($dadosAtuais['consultas_realizadas'] ?? []),
                 array_values(array_intersect(
-                    ['cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts', 'cndt', 'sintegra', 'qsa'],
+                    ['cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts', 'sintegra', 'qsa'],
                     array_keys($dadosConsolidados)
                 )),
             )));

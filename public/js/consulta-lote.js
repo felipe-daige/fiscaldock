@@ -23,7 +23,6 @@
         cnd_federal: 'CND Federal (PGFN)',
         crf_fgts: 'CRF/FGTS',
         cnd_estadual: 'CND Estadual',
-        cndt: 'CNDT (Trabalhista)',
         lista_devedores_pgfn: 'Lista Devedores PGFN',
         processos_cnj: 'Processos CNJ'
     };
@@ -1867,7 +1866,6 @@
                 + '<td class="px-3 py-2 text-xs text-center">' + formatRegimeTributario(r.regime_tributario, r.regime_tributario_nota) + '</td>'
                 + '<td class="px-3 py-2 text-xs text-center">' + formatCndFederal(r.cnd_federal) + '</td>'
                 + '<td class="px-3 py-2 text-xs text-center">' + formatRegularidade(r.crf_fgts) + '</td>'
-                + '<td class="px-3 py-2 text-xs text-center">' + formatRegularidade(r.cndt) + '</td>'
                 + '<td class="px-3 py-2 text-xs">' + formatParecer(r.parecer) + '</td>'
                 + '<td class="px-3 py-2 text-xs text-center">' + statusCell + '</td>'
                 + '</tr>';
@@ -1896,7 +1894,6 @@
             + '<th class="px-3 py-2 text-xs font-semibold text-gray-600 text-center whitespace-nowrap">Regime Tributário</th>'
             + '<th class="px-3 py-2 text-xs font-semibold text-gray-600 text-center">CND Federal</th>'
             + '<th class="px-3 py-2 text-xs font-semibold text-gray-600 text-center">FGTS</th>'
-            + '<th class="px-3 py-2 text-xs font-semibold text-gray-600 text-center">CNDT</th>'
             + '<th class="px-3 py-2 text-xs font-semibold text-gray-600">Parecer Fiscal</th>'
             + '<th class="px-3 py-2 text-xs font-semibold text-gray-600 text-center">Status</th>'
             + '</tr></thead>'

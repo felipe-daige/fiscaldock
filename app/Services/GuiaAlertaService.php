@@ -99,17 +99,17 @@ class GuiaAlertaService
             [
                 'tipos' => ['certidao_positiva'],
                 'guia' => [
-                    'texto_o_que_e' => 'Uma ou mais certidões de regularidade (CND Federal, Estadual, FGTS ou Trabalhista) deste fornecedor/cliente estão POSITIVAS — indicam débito(s) exigível(is) na fonte oficial. Certidão positiva é risco fiscal concreto, não apenas cadastral.',
+                    'texto_o_que_e' => 'Uma ou mais certidões de regularidade (CND Federal, Estadual ou FGTS) deste fornecedor/cliente estão POSITIVAS — indicam débito(s) exigível(is) na fonte oficial. Certidão positiva é risco fiscal concreto, não apenas cadastral.',
                     'texto_acao' => 'Verifique as certidões no perfil, confirme os débitos junto ao fornecedor/cliente e avalie o impacto (crédito, contratação, licitação). Uma nova consulta regularizada faz o alerta sumir sozinho.',
                     'cta_text' => 'Ver perfil e certidões',
                     'cta_url' => ':participante',
-                    'metodologia' => 'Fonte: última consulta de regularidade persistida (participante_scores). Gatilho: ao menos uma certidão (CND Federal, Estadual, FGTS/CRF ou CNDT) classificada como POSITIVA pelo padrão CertidaoBadge — "Negativa" e "Positiva com efeitos de negativa" contam como REGULARES; só "Positiva" pura dispara. Severidade: CND Federal/Estadual = alta; FGTS/CNDT = média (mesma gravidade que aplica o piso no Score de Risco). Valor comprado = soma de entradas fiscais (efd_notas, origem ICMS/IPI, tipo_operacao "entrada"), em três janelas por data de emissão: ÚLTIMOS 12 MESES (exposição corrente / risco vivo), 5 ANOS (janela de decadência do CTN — exposição sujeita a glosa de crédito) e TOTAL histórico (contexto, reconcilia com o Cruzamentos). Débito antigo sem compra recente aparece como baixa exposição; compra fora dos 5 anos é sinalizada como sem exposição a glosa. Racional do período: docs/alertas/README.md.',
+                    'metodologia' => 'Fonte: última consulta de regularidade persistida (participante_scores). Gatilho: ao menos uma certidão (CND Federal, Estadual ou FGTS/CRF) classificada como POSITIVA pelo padrão CertidaoBadge — "Negativa" e "Positiva com efeitos de negativa" contam como REGULARES; só "Positiva" pura dispara. Severidade: CND Federal/Estadual = alta; FGTS = média (mesma gravidade que aplica o piso no Score de Risco). Valor comprado = soma de entradas fiscais (efd_notas, origem ICMS/IPI, tipo_operacao "entrada"), em três janelas por data de emissão: ÚLTIMOS 12 MESES (exposição corrente / risco vivo), 5 ANOS (janela de decadência do CTN — exposição sujeita a glosa de crédito) e TOTAL histórico (contexto, reconcilia com o Cruzamentos). Débito antigo sem compra recente aparece como baixa exposição; compra fora dos 5 anos é sinalizada como sem exposição a glosa. Racional do período: docs/alertas/README.md.',
                 ],
             ],
             [
                 'tipos' => ['certidao_vencendo'],
                 'guia' => [
-                    'texto_o_que_e' => 'Uma certidão de regularidade (CND Federal, Estadual, FGTS ou Trabalhista) hoje REGULAR está prestes a vencer (ou já venceu). Certidão vencida deixa de comprovar a regularidade — trava licitação, contrato e crédito até ser renovada.',
+                    'texto_o_que_e' => 'Uma certidão de regularidade (CND Federal, Estadual ou FGTS) hoje REGULAR está prestes a vencer (ou já venceu). Certidão vencida deixa de comprovar a regularidade — trava licitação, contrato e crédito até ser renovada.',
                     'texto_acao' => 'Emita a nova certidão junto ao órgão (Receita/PGFN, SEFAZ, Caixa, TST) antes do vencimento. Ao registrar a nova consulta com a certidão renovada, o alerta some sozinho.',
                     'cta_text' => 'Ver perfil e certidões',
                     'cta_url' => ':participante',
