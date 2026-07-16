@@ -196,7 +196,7 @@ it('gera resumo textual com situação cadastral e regularidade quando tudo OK',
         'situacao_cadastral' => 'ATIVA',
         'regime_tributario' => 'Simples Nacional',
         'cnd_federal' => ['status' => 'Negativa'],
-        'cndt' => ['status' => 'Negativa'],
+        'crf_fgts' => ['status' => 'Regular'],
     ]));
 
     expect($texto)->toContain('ATIVA');
@@ -221,12 +221,12 @@ it('agrega a análise do lote por fonte e por CNPJ', function () {
         ['detalhe_blocos' => $presenter->blocos(resultadoComDados([
             'situacao_cadastral' => 'ATIVA',
             'cnd_federal' => ['status' => 'Negativa'],
-            'cndt' => ['status' => 'Negativa'],
+            'crf_fgts' => ['status' => 'Regular'],
         ]))],
         ['detalhe_blocos' => $presenter->blocos(resultadoComDados([
             'situacao_cadastral' => 'ATIVA',
             'cnd_federal' => ['status' => 'Positiva'],
-            'cndt' => ['status' => 'Negativa'],
+            'crf_fgts' => ['status' => 'Regular'],
         ]))],
     ];
 
@@ -262,16 +262,16 @@ it('certidoes() classifica fontes presentes com sigla e badge', function () {
     $certs = (new ResultadoDetalhePresenter)->certidoes(resultadoComDados([
         'cnd_federal' => ['status' => 'Negativa'],
         'crf_fgts' => ['status' => 'Regular'],
-        'cndt' => ['status' => 'Positiva'],
-    ]), ['cnd_federal', 'crf_fgts', 'cndt']);
+        'cnd_estadual' => ['status' => 'Positiva'],
+    ]), ['cnd_federal', 'crf_fgts', 'cnd_estadual']);
 
     $fed = collect($certs)->firstWhere('chave', 'cnd_federal');
     expect($fed['sigla'])->toBe('FED');
     expect($fed['hex'])->toBe(\App\Support\CertidaoBadge::HEX_REGULAR);
     expect($fed['estado'])->toBe('regular');
 
-    $cndt = collect($certs)->firstWhere('chave', 'cndt');
-    expect($cndt['hex'])->toBe(\App\Support\CertidaoBadge::HEX_IRREGULAR);
+    $est = collect($certs)->firstWhere('chave', 'cnd_estadual');
+    expect($est['hex'])->toBe(\App\Support\CertidaoBadge::HEX_IRREGULAR);
 });
 
 it('certidoes() marca erro do provedor (default) fonte esperada ausente sem marcador', function () {
