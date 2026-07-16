@@ -24,7 +24,7 @@ it('explica reforma e crédito tributário com transparência', function () {
         ->assertSee('A consulta CNPJ alimenta o eixo de crédito IBS/CBS.', false)
         ->assertSee('Preserva origem real ou estimada do regime', false)
         ->assertSee('não reduzem o valor estimado em R$ sem evidência oficial de recolhimento', false)
-        ->assertSee('Volume de entradas × alíquota × fator do regime', false)
+        ->assertSee('Entradas × alíquota × fator do regime', false)
         ->assertSee('2026')
         ->assertSee('2033+')
         ->assertSee('não apuração oficial nem garantia de aproveitamento', false);

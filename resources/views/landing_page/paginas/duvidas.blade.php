@@ -69,7 +69,7 @@
         [
             'cat' => 'consultas',
             'q' => 'O que a consulta de CNPJ verifica?',
-            'a' => 'São '.$sourceCount.' fontes oficiais em uma única consulta: cadastro da Receita Federal (situação, CNAEs, QSA, capital, regime), CND Federal (PGFN/RFB), CND Estadual (SEFAZ), CND Municipal (prefeitura do participante), CNDT (TST), CRF do FGTS (Caixa) e SINTEGRA (inscrição estadual). O resultado vem normalizado, com data, origem e status por fonte — e vira Score Fiscal e alerta quando algo vence ou fica irregular.',
+            'a' => 'São '.$sourceCount.' fontes oficiais em uma única consulta: cadastro da Receita Federal (situação, CNAEs, QSA, capital, regime), CND Federal (PGFN/RFB), CND Estadual (SEFAZ), CND Municipal (prefeitura do participante), CRF do FGTS (Caixa) e SINTEGRA (inscrição estadual). O resultado vem normalizado, com data, origem e status por fonte — e vira Score Fiscal e alerta quando algo vence ou fica irregular.',
             'link' => ['label' => 'Consulta e monitoramento de CNPJ', 'url' => route('solucoes').'#risco'],
         ],
         [

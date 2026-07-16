@@ -11,7 +11,7 @@
 <ul class="list-disc pl-6 space-y-2 my-4">
     <li><strong>CNPJ baixado ou inapto:</strong> a empresa deixou de existir ou foi declarada inapta pela Receita Federal. Notas emitidas após o encerramento podem ser consideradas inidôneas.</li>
     <li><strong>IE cancelada ou suspensa:</strong> a inscrição estadual é obrigatória para operações com ICMS. Sem IE válida, o crédito de ICMS pode ser glosado.</li>
-    <li><strong>Débitos fiscais ou trabalhistas:</strong> certidão positiva na Receita/PGFN, na Fazenda Estadual/Municipal ou débitos trabalhistas (CNDT) sinalizam contingência e podem inviabilizar contratos em licitação.</li>
+    <li><strong>Débitos fiscais:</strong> certidão positiva na Receita/PGFN ou na Fazenda Estadual/Municipal sinaliza contingência e pode inviabilizar contratos em licitação.</li>
     <li><strong>Optante pelo Simples indevidamente:</strong> se o fornecedor é do Simples Nacional, o regime de crédito de PIS/COFINS muda. Tomar crédito integral nesses casos é uma irregularidade comum.</li>
 </ul>
 
@@ -25,9 +25,9 @@
 
 <p>O SINTEGRA permite verificar a IE do fornecedor por estado. Uma IE cancelada ou nula indica que o fornecedor não pode emitir notas com ICMS.</p>
 
-<h3 class="text-xl font-bold text-gray-900 mt-8 mb-3">3. Consulta às certidões negativas (CND/CNDT/FGTS)</h3>
+<h3 class="text-xl font-bold text-gray-900 mt-8 mb-3">3. Consulta às certidões negativas (CND/FGTS)</h3>
 
-<p>As certidões negativas de débito — CND Federal (Receita/PGFN), CND Estadual, CND Municipal, CNDT (trabalhista) e a regularidade do FGTS — revelam se o fornecedor tem pendências fiscais ou trabalhistas. Uma certidão positiva é sinal de contingência e, em licitações, pode inviabilizar o contrato.</p>
+<p>As certidões negativas de débito — CND Federal (Receita/PGFN), CND Estadual, CND Municipal e a regularidade do FGTS — revelam se o fornecedor tem pendências fiscais. Uma certidão positiva é sinal de contingência e, em licitações, pode inviabilizar o contrato.</p>
 
 <h3 class="text-xl font-bold text-gray-900 mt-8 mb-3">4. Verificação de Simples Nacional</h3>
 
@@ -47,7 +47,7 @@
     <li><strong>Importe o SPED:</strong> o sistema extrai automaticamente todos os participantes do arquivo.</li>
     <li><strong>Consulta em lote:</strong> com um clique, consulte a situação cadastral de todos os participantes na Receita Federal.</li>
     <li><strong>Monitoramento contínuo:</strong> os participantes ficam monitorados. Quando algo muda, você recebe um alerta automático.</li>
-    <li><strong>Enriquecimento:</strong> dados de SINTEGRA, certidões (CND Federal/Estadual/Municipal, CNDT, FGTS) e Simples Nacional complementam o perfil de cada participante.</li>
+    <li><strong>Enriquecimento:</strong> dados de SINTEGRA, certidões (CND Federal/Estadual/Municipal, FGTS) e Simples Nacional complementam o perfil de cada participante.</li>
 </ol>
 
 <h2 class="text-2xl font-bold text-gray-900 mt-10 mb-4">Conclusão</h2>

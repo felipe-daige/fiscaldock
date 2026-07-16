@@ -11,7 +11,7 @@
             <tr><td><strong>CNPJ baixado</strong></td><td>Crédito indevido, fornecedor não existia ao emitir</td></tr>
             <tr><td><strong>Situação cadastral inapta</strong></td><td>Documento pode ser contestado pelo fisco</td></tr>
             <tr><td><strong>IE suspensa</strong></td><td>Glosa de crédito de ICMS</td></tr>
-            <tr><td><strong>Certidão positiva (CND/CNDT)</strong></td><td>Débitos fiscais ou trabalhistas — contingência e risco em licitação</td></tr>
+            <tr><td><strong>Certidão positiva (CND)</strong></td><td>Débitos fiscais — contingência e risco em licitação</td></tr>
             <tr><td><strong>Simples Nacional irregular</strong></td><td>Alíquota e tratamento diferente do declarado</td></tr>
         </tbody>
     </table>
@@ -22,7 +22,7 @@
 <ol class="list-decimal pl-6 space-y-3 my-4">
     <li>consulta cadastral na Receita e na SEFAZ do estado</li>
     <li>checagem de regime tributário e optante do Simples</li>
-    <li>verificação das certidões negativas (CND Federal/Estadual/Municipal, CNDT, FGTS)</li>
+    <li>verificação das certidões negativas (CND Federal/Estadual/Municipal, FGTS)</li>
     <li>registro do resultado junto ao lançamento — não em planilha paralela</li>
 </ol>
 
