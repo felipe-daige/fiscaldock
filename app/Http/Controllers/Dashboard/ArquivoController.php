@@ -24,7 +24,49 @@ class ArquivoController extends Controller
     public function __construct(
         private ArquivoUsuarioService $arquivos,
         private EntitlementService $entitlements,
+        private \App\Services\Subscription\AddonService $addons = new \App\Services\Subscription\AddonService,
     ) {}
+
+    /** Números do add-on de espaço pra tela/modal (preço, pacotes atuais, pró-rata, saldo). */
+    private function espacoAddonInfo(\App\Models\User $owner): array
+    {
+        $context = app(\App\Support\AccountContext::class);
+        $sub = $owner->accountOwner()->subscription()
+            ->where('status', \App\Models\AccountSubscription::STATUS_ATIVA)
+            ->first();
+
+        return [
+            'is_owner' => $context->isOwner(),
+            'tem_assinatura' => (bool) $sub,
+            'pacotes' => $sub ? (int) $sub->espaco_extra_pacotes : 0,
+            'pacote_mb' => $this->addons->pacoteEspacoMb(),
+            'preco_mensal' => $this->addons->precoPacoteEspacoReais(),
+            'fracao' => $sub ? $this->addons->fracaoRestante($sub) : 1.0,
+            'saldo' => app(\App\Services\SaldoService::class)->getBalance($owner->accountOwner()),
+        ];
+    }
+
+    /**
+     * Contratar/reduzir pacotes de espaço adicional (add-on recorrente via saldo). Owner-only.
+     * Sucesso → redireciona pra billing (/app/saldo, débito visível no histórico).
+     */
+    public function espaco(Request $request): RedirectResponse
+    {
+        $context = app(\App\Support\AccountContext::class);
+        abort_unless($context->isOwner(), 403);
+
+        $data = $request->validate([
+            'espaco_extra_pacotes' => ['required', 'integer', 'min:0', 'max:99'],
+        ]);
+
+        try {
+            $this->addons->definirEspacoExtraPacotes($request->user(), (int) $data['espaco_extra_pacotes']);
+        } catch (\RuntimeException $e) {
+            return redirect()->route('app.arquivos.index')->withErrors(['espaco_extra_pacotes' => $e->getMessage()]);
+        }
+
+        return redirect()->route('app.saldo')->with('success', 'Espaço adicional atualizado. O ajuste aparece no histórico de saldo.');
+    }
 
     public function index(Request $request)
     {
@@ -75,6 +117,7 @@ class ArquivoController extends Controller
             'uploadMaximoMb' => (int) config('arquivos.upload_maximo_mb', 50),
             'uploadMaximoPorLote' => (int) config('arquivos.upload_maximo_por_lote', 10),
             'extensoesArquivos' => (array) config('arquivos.extensoes_permitidas', []),
+            'espacoAddon' => $this->espacoAddonInfo($user),
         ];
 
         if ($this->isAjaxRequest($request)) {

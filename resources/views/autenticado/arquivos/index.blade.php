@@ -61,9 +61,26 @@
                             @endif
                         </p>
                     </div>
-                    <a href="{{ route('app.planos') }}" data-link class="inline-flex self-start items-center justify-center px-3 py-2 rounded border border-gray-300 text-xs font-semibold text-gray-700 hover:bg-gray-50">
-                        Ver opções de espaço
-                    </a>
+                    @if(($espacoAddon['is_owner'] ?? false) && ($espacoAddon['tem_assinatura'] ?? false) && !$quotaIlimitada)
+                        <div class="self-start text-right">
+                            @if(($espacoAddon['pacotes'] ?? 0) > 0)
+                                <p class="text-[10px] text-gray-400 mb-1">{{ $espacoAddon['pacotes'] }} pacote(s) extra(s) ativo(s)</p>
+                            @endif
+                            <input type="number" min="0" max="99" id="espaco-alvo" value="{{ $espacoAddon['pacotes'] }}"
+                                data-preco="{{ $espacoAddon['preco_mensal'] }}" data-fracao="{{ $espacoAddon['fracao'] }}"
+                                data-pacotes="{{ $espacoAddon['pacotes'] }}" data-saldo="{{ $espacoAddon['saldo'] }}"
+                                data-mb="{{ $espacoAddon['pacote_mb'] }}"
+                                class="w-16 text-sm border border-gray-300 rounded px-2 py-1.5 text-center align-middle mr-1">
+                            <button type="button" onclick="abrirModalEspaco()" class="inline-flex items-center justify-center px-3 py-2 rounded text-xs font-semibold text-white" style="background-color:#1e4679">
+                                Contratar espaço
+                            </button>
+                            <p class="text-[10px] text-gray-400 mt-1">+{{ number_format($espacoAddon['pacote_mb'] / 1024, 0) }} GB por R$ {{ number_format($espacoAddon['preco_mensal'], 2, ',', '.') }}/mês</p>
+                        </div>
+                    @else
+                        <a href="{{ route('app.planos') }}" data-link class="inline-flex self-start items-center justify-center px-3 py-2 rounded border border-gray-300 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                            Ver opções de espaço
+                        </a>
+                    @endif
                 </div>
 
                 @unless($quotaIlimitada)
@@ -351,4 +368,80 @@
             });
         }
     </script>
+
+    @if(($espacoAddon['is_owner'] ?? false) && ($espacoAddon['tem_assinatura'] ?? false))
+        <div id="modal-espaco" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background-color:rgba(15,23,42,.55)">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+                <div class="px-5 py-4 border-b border-gray-200"><h3 class="text-base font-bold text-gray-900">Confirmar espaço adicional</h3></div>
+                <div class="px-5 py-4 space-y-3 text-sm">
+                    <div class="flex items-center justify-between"><span class="text-gray-600">Pacotes de espaço</span><strong id="modal-espaco-qtd" class="text-gray-900"></strong></div>
+                    <div class="flex items-center justify-between"><span class="text-gray-600">Espaço adicional</span><strong id="modal-espaco-gb" class="text-gray-900"></strong></div>
+                    <div class="flex items-center justify-between"><span class="text-gray-600">Cobrança de hoje (pró-rata)</span><strong id="modal-espaco-hoje" class="text-gray-900"></strong></div>
+                    <p id="modal-espaco-explica" class="text-[11px] text-gray-400 leading-relaxed"></p>
+                    <div class="flex items-center justify-between pt-2 border-t border-gray-100"><span class="text-gray-600">A partir do próximo ciclo</span><strong id="modal-espaco-mensal" class="text-gray-900"></strong></div>
+                    <div class="flex items-center justify-between"><span class="text-gray-600">Seu saldo</span><strong id="modal-espaco-saldo" class="text-gray-900"></strong></div>
+                    <p id="modal-espaco-erro" class="hidden text-[11px] leading-relaxed rounded px-2 py-1.5" style="color:#991b1b;background-color:#fef2f2"></p>
+                </div>
+                <div class="px-5 py-4 border-t border-gray-200 flex items-center justify-end gap-2">
+                    <button type="button" onclick="fecharModalEspaco()" class="px-3 py-2 rounded text-sm font-medium text-gray-600">Cancelar</button>
+                    <a id="modal-espaco-recarga" href="{{ route('app.saldo') }}" data-link class="hidden px-3 py-2 rounded text-sm font-bold text-white" style="background-color:#b45309">Adicionar saldo</a>
+                    <form id="modal-espaco-form" method="POST" action="{{ route('app.arquivos.espaco') }}">
+                        @csrf
+                        <input type="hidden" name="espaco_extra_pacotes" id="modal-espaco-input">
+                        <button type="submit" id="modal-espaco-confirmar" class="px-3 py-2 rounded text-sm font-bold text-white" style="background-color:#1e4679">Confirmar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <script>
+            function brlEspaco(v) { return 'R$ ' + v.toFixed(2).replace('.', ','); }
+            function abrirModalEspaco() {
+                var el = document.getElementById('espaco-alvo');
+                var alvo = Math.max(0, parseInt(el.value || '0', 10));
+                var atual = parseInt(el.dataset.pacotes, 10);
+                var preco = parseFloat(el.dataset.preco);
+                var fracao = parseFloat(el.dataset.fracao);
+                var saldo = parseFloat(el.dataset.saldo);
+                var gbPorPacote = parseFloat(el.dataset.mb) / 1024;
+                var delta = alvo - atual;
+
+                document.getElementById('modal-espaco-qtd').textContent = atual + ' → ' + alvo;
+                document.getElementById('modal-espaco-gb').textContent = (alvo * gbPorPacote).toFixed(0) + ' GB';
+                document.getElementById('modal-espaco-mensal').textContent = brlEspaco(alvo * preco) + '/mês';
+                document.getElementById('modal-espaco-saldo').textContent = brlEspaco(saldo);
+                document.getElementById('modal-espaco-input').value = alvo;
+
+                var hoje = document.getElementById('modal-espaco-hoje');
+                var explica = document.getElementById('modal-espaco-explica');
+                var erro = document.getElementById('modal-espaco-erro');
+                var recarga = document.getElementById('modal-espaco-recarga');
+                var confirmar = document.getElementById('modal-espaco-confirmar');
+                erro.classList.add('hidden'); recarga.classList.add('hidden'); confirmar.classList.remove('hidden');
+
+                if (delta > 0) {
+                    var cobranca = Math.round(delta * preco * fracao * 100) / 100;
+                    hoje.textContent = brlEspaco(cobranca);
+                    explica.textContent = 'Proporcional aos dias restantes até a próxima renovação. As renovações seguintes cobram o valor mensal cheio.';
+                    if (cobranca > saldo) {
+                        erro.textContent = 'Saldo insuficiente para esta contratação. Adicione saldo e tente de novo.';
+                        erro.classList.remove('hidden'); recarga.classList.remove('hidden'); confirmar.classList.add('hidden');
+                    }
+                } else if (delta < 0) {
+                    hoje.textContent = brlEspaco(0);
+                    explica.textContent = 'Redução aplicada no ato — nada é apagado, mas uploads acima da nova quota ficam bloqueados. Sem reembolso da fração já paga.';
+                } else {
+                    hoje.textContent = brlEspaco(0);
+                    explica.textContent = 'Nenhuma mudança.';
+                    confirmar.classList.add('hidden');
+                }
+
+                var m = document.getElementById('modal-espaco');
+                m.classList.remove('hidden'); m.classList.add('flex');
+            }
+            function fecharModalEspaco() {
+                var m = document.getElementById('modal-espaco');
+                m.classList.add('hidden'); m.classList.remove('flex');
+            }
+        </script>
+    @endif
 </div>

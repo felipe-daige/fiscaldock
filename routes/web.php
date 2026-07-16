@@ -142,6 +142,7 @@ Route::middleware([
     Route::prefix('/app/arquivos')->name('app.arquivos.')->group(function () {
         Route::get('/', [ArquivoController::class, 'index'])->name('index');
         Route::post('/', [ArquivoController::class, 'store'])->name('store');
+        Route::post('/espaco', [ArquivoController::class, 'espaco'])->name('espaco');
         Route::get('/{arquivo}/download', [ArquivoController::class, 'download'])
             ->where('arquivo', '[A-Za-z0-9_-]+')->name('download');
         Route::get('/{arquivo}/preview', [ArquivoController::class, 'preview'])

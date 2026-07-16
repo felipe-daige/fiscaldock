@@ -479,7 +479,17 @@ class ArquivoUsuarioService
             );
 
         if ($quotaMb === null) {
-            return null;
+            return null; // plano ilimitado: pacotes extras não fazem sentido
+        }
+
+        // Add-on de espaço adicional: soma os pacotes contratados (mensal via saldo).
+        $owner = $user->accountOwner();
+        $sub = $owner->subscription()
+            ->where('status', \App\Models\AccountSubscription::STATUS_ATIVA)
+            ->first();
+        $pacotes = $sub ? (int) $sub->espaco_extra_pacotes : 0;
+        if ($pacotes > 0) {
+            $quotaMb = (int) $quotaMb + $pacotes * app(\App\Services\Subscription\AddonService::class)->pacoteEspacoMb();
         }
 
         return max(0, (int) $quotaMb) * 1024 * 1024;
