@@ -18,7 +18,7 @@ it('semeia 10 integrações (6 consultas + 4 plataforma)', function () {
 it('é idempotente (rodar 2x não duplica)', function () {
     (new IntegracaoStatusSeeder)->run();
     (new IntegracaoStatusSeeder)->run();
-    expect(IntegracaoStatus::count())->toBe(11);
+    expect(IntegracaoStatus::count())->toBe(10);
 });
 
 it('não sobrescreve status/mensagem ajustados pelo admin', function () {
