@@ -21,7 +21,8 @@ class AccountSubscription extends Model
     protected $fillable = [
         'user_id', 'subscription_plan_id', 'status', 'ciclo', 'iniciada_em',
         'renova_em', 'creditos_inclusos_saldo', 'limite_consumo_automatico', 'assentos_extras',
-        'mp_preapproval_id', 'proximo_grant_em', 'ultimo_grant_em', 'proration_pendente',
+        'espaco_extra_pacotes', 'mp_preapproval_id', 'proximo_grant_em', 'ultimo_grant_em',
+        'proration_pendente',
     ];
 
     protected $casts = [
@@ -30,6 +31,7 @@ class AccountSubscription extends Model
         'creditos_inclusos_saldo' => 'float',
         'limite_consumo_automatico' => 'float',
         'assentos_extras' => 'integer',
+        'espaco_extra_pacotes' => 'integer',
         'proximo_grant_em' => 'datetime',
         'ultimo_grant_em' => 'datetime',
         'proration_pendente' => 'array',

@@ -180,6 +180,7 @@ Route::middleware([
         Route::delete('/convites/{invitation}', [AccountTeamController::class, 'revokeInvitation'])->name('convites.revogar');
         Route::patch('/membros/{member}', [AccountTeamController::class, 'update'])->name('membros.atualizar');
         Route::delete('/membros/{member}', [AccountTeamController::class, 'remove'])->name('membros.remover');
+        Route::post('/assentos', [AccountTeamController::class, 'assentos'])->name('assentos');
     });
 
     // Mercado Pago — cria o pagamento do pacote (front Bricks envia o meio de pagamento).

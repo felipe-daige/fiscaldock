@@ -96,6 +96,40 @@
             </section>
 
             <div class="lg:col-span-2 space-y-5">
+                @if($assentoAddon['is_owner'])
+                    <section class="bg-white border border-gray-300 rounded overflow-hidden">
+                        <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                            <h2 class="text-sm font-bold text-gray-900">Assentos extras</h2>
+                            <p class="text-[11px] text-gray-400 mt-0.5">R$ {{ number_format($assentoAddon['preco_mensal'], 2, ',', '.') }}/mês por assento, cobrado do saldo.</p>
+                        </div>
+                        @if(!$assentoAddon['tem_assinatura'])
+                            <div class="p-4 text-xs text-gray-500 leading-relaxed">
+                                Assentos extras exigem um plano de assinatura ativo.
+                                <a href="{{ route('app.planos') }}" data-link class="font-medium" style="color:#0b1f3a">Ver planos →</a>
+                            </div>
+                        @else
+                            <div class="p-4 space-y-3">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="text-gray-600">Assentos extras contratados</span>
+                                    <strong class="text-gray-900">{{ $assentoAddon['extras'] }}</strong>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <label class="text-[11px] font-medium text-gray-500">Novo total de extras</label>
+                                    <input type="number" min="0" max="99" id="assentos-alvo" value="{{ $assentoAddon['extras'] }}"
+                                        class="w-20 text-sm border border-gray-300 rounded px-2 py-1.5 text-center"
+                                        data-preco="{{ $assentoAddon['preco_mensal'] }}"
+                                        data-fracao="{{ $assentoAddon['fracao'] }}"
+                                        data-extras="{{ $assentoAddon['extras'] }}"
+                                        data-saldo="{{ $assentoAddon['saldo'] }}">
+                                </div>
+                                <button type="button" onclick="abrirModalAssentos()"
+                                    class="w-full px-3 py-2.5 rounded text-sm font-bold text-white" style="background-color:#0b1f3a">Revisar cobrança</button>
+                                <p class="text-[10px] text-gray-400 leading-relaxed">Reduzir remove capacidade no ato, sem reembolso da fração já paga. Renova mensalmente junto do plano.</p>
+                            </div>
+                        @endif
+                    </section>
+                @endif
+
                 <section class="bg-white border border-gray-300 rounded overflow-hidden">
                     <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
                         <h2 class="text-sm font-bold text-gray-900">Convidar pessoa</h2>
@@ -151,6 +185,95 @@
         </div>
     </div>
 </div>
+
+@if($assentoAddon['is_owner'] && $assentoAddon['tem_assinatura'])
+    <div id="modal-assentos" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background-color:rgba(15,23,42,.55)">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-200">
+                <h3 class="text-base font-bold text-gray-900">Confirmar contratação</h3>
+            </div>
+            <div class="px-5 py-4 space-y-3 text-sm">
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Assentos extras</span>
+                    <strong id="modal-assentos-qtd" class="text-gray-900"></strong>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Cobrança de hoje (pró-rata)</span>
+                    <strong id="modal-assentos-hoje" class="text-gray-900"></strong>
+                </div>
+                <p id="modal-assentos-explica" class="text-[11px] text-gray-400 leading-relaxed"></p>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                    <span class="text-gray-600">A partir do próximo ciclo</span>
+                    <strong id="modal-assentos-mensal" class="text-gray-900"></strong>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Seu saldo</span>
+                    <strong id="modal-assentos-saldo" class="text-gray-900"></strong>
+                </div>
+                <p id="modal-assentos-erro" class="hidden text-[11px] leading-relaxed rounded px-2 py-1.5" style="color:#991b1b;background-color:#fef2f2"></p>
+            </div>
+            <div class="px-5 py-4 border-t border-gray-200 flex items-center justify-end gap-2">
+                <button type="button" onclick="fecharModalAssentos()" class="px-3 py-2 rounded text-sm font-medium text-gray-600">Cancelar</button>
+                <a id="modal-assentos-recarga" href="{{ route('app.saldo') }}" data-link class="hidden px-3 py-2 rounded text-sm font-bold text-white" style="background-color:#b45309">Adicionar saldo</a>
+                <form id="modal-assentos-form" method="POST" action="{{ route('app.equipe.assentos') }}">
+                    @csrf
+                    <input type="hidden" name="assentos_extras" id="modal-assentos-input">
+                    <button type="submit" id="modal-assentos-confirmar" class="px-3 py-2 rounded text-sm font-bold text-white" style="background-color:#0b1f3a">Confirmar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        function brl(v) { return 'R$ ' + v.toFixed(2).replace('.', ','); }
+        function abrirModalAssentos() {
+            var el = document.getElementById('assentos-alvo');
+            var alvo = Math.max(0, parseInt(el.value || '0', 10));
+            var atual = parseInt(el.dataset.extras, 10);
+            var preco = parseFloat(el.dataset.preco);
+            var fracao = parseFloat(el.dataset.fracao);
+            var saldo = parseFloat(el.dataset.saldo);
+            var delta = alvo - atual;
+
+            document.getElementById('modal-assentos-qtd').textContent = atual + ' → ' + alvo;
+            document.getElementById('modal-assentos-mensal').textContent = brl(alvo * preco) + '/mês';
+            document.getElementById('modal-assentos-saldo').textContent = brl(saldo);
+            document.getElementById('modal-assentos-input').value = alvo;
+
+            var hoje = document.getElementById('modal-assentos-hoje');
+            var explica = document.getElementById('modal-assentos-explica');
+            var erro = document.getElementById('modal-assentos-erro');
+            var recarga = document.getElementById('modal-assentos-recarga');
+            var confirmar = document.getElementById('modal-assentos-confirmar');
+            erro.classList.add('hidden'); recarga.classList.add('hidden'); confirmar.classList.remove('hidden');
+
+            if (delta > 0) {
+                var cobranca = Math.round(delta * preco * fracao * 100) / 100;
+                hoje.textContent = brl(cobranca);
+                explica.textContent = 'Proporcional aos dias restantes até a próxima renovação. As renovações seguintes cobram o valor mensal cheio.';
+                if (cobranca > saldo) {
+                    erro.textContent = 'Saldo insuficiente para esta contratação. Adicione saldo e tente de novo.';
+                    erro.classList.remove('hidden');
+                    recarga.classList.remove('hidden');
+                    confirmar.classList.add('hidden');
+                }
+            } else if (delta < 0) {
+                hoje.textContent = brl(0);
+                explica.textContent = 'Redução aplicada no ato. Sem reembolso da fração já paga; o novo valor mensal vale a partir do próximo ciclo.';
+            } else {
+                hoje.textContent = brl(0);
+                explica.textContent = 'Nenhuma mudança.';
+                confirmar.classList.add('hidden');
+            }
+
+            var m = document.getElementById('modal-assentos');
+            m.classList.remove('hidden'); m.classList.add('flex');
+        }
+        function fecharModalAssentos() {
+            var m = document.getElementById('modal-assentos');
+            m.classList.add('hidden'); m.classList.remove('flex');
+        }
+    </script>
+@endif
 
 <script type="application/json" id="team-role-presets">@json($rolePresets)</script>
 <script src="{{ asset('js/equipe.js') }}?v={{ is_file(public_path('js/equipe.js')) ? filemtime(public_path('js/equipe.js')) : 1 }}"></script>

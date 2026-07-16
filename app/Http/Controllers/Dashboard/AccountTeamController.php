@@ -22,7 +22,51 @@ class AccountTeamController extends Controller
 {
     use RespondeAjax;
 
-    public function __construct(private AccountService $accounts) {}
+    public function __construct(
+        private AccountService $accounts,
+        private \App\Services\Subscription\AddonService $addons = new \App\Services\Subscription\AddonService,
+    ) {}
+
+    /** Números do add-on de assento pra tela/modal (preço, extras atuais, pró-rata, saldo). */
+    private function assentoAddonInfo(AccountContext $context, Account $account): array
+    {
+        $owner = $account->owner;
+        $sub = $owner->subscription()
+            ->where('status', \App\Models\AccountSubscription::STATUS_ATIVA)
+            ->first();
+
+        return [
+            'is_owner' => $context->isOwner(),
+            'tem_assinatura' => (bool) $sub,
+            'extras' => $sub ? (int) $sub->assentos_extras : 0,
+            'preco_mensal' => $this->addons->precoAssentoReais($owner),
+            'fracao' => $sub ? $this->addons->fracaoRestante($sub) : 1.0,
+            'saldo' => app(\App\Services\SaldoService::class)->getBalance($owner),
+            'assentos_inclusos' => $this->accounts->seatsIncluded($account) - ($sub ? (int) $sub->assentos_extras : 0),
+        ];
+    }
+
+    /**
+     * Contratar/reduzir assentos extras (add-on recorrente cobrado do saldo). Owner-only:
+     * é uma ação de cobrança. Sucesso → redireciona pra billing (/app/saldo, débito visível).
+     */
+    public function assentos(Request $request)
+    {
+        $context = app(AccountContext::class);
+        abort_unless($context->isOwner(), 403);
+
+        $data = $request->validate([
+            'assentos_extras' => ['required', 'integer', 'min:0', 'max:99'],
+        ]);
+
+        try {
+            $this->addons->definirAssentosExtras($context->owner(), (int) $data['assentos_extras']);
+        } catch (RuntimeException $e) {
+            return redirect()->route('app.equipe.index')->withErrors(['assentos_extras' => $e->getMessage()]);
+        }
+
+        return redirect()->route('app.saldo')->with('status', 'Assentos atualizados. O ajuste aparece no histórico de saldo.');
+    }
 
     public function index(Request $request)
     {
@@ -46,6 +90,7 @@ class AccountTeamController extends Controller
             'invitations' => $invitations,
             'seatsIncluded' => $this->accounts->seatsIncluded($account),
             'seatsUsed' => $this->accounts->seatsUsed($account),
+            'assentoAddon' => $this->assentoAddonInfo($context, $account),
             'roles' => $roles,
             'rolePresets' => collect(array_keys($roles))
                 ->mapWithKeys(fn (string $role) => [$role => AccountMember::permissoesPadrao($role)])

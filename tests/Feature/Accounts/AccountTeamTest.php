@@ -414,3 +414,52 @@ it('suspende colaboradores quando a conta do owner está bloqueada', function ()
     $this->actingAs($member)->get('/app/clientes')->assertRedirect(route('login'));
     expect(auth()->check())->toBeFalse();
 });
+
+it('owner contrata assento extra: debita pró-rata do saldo e redireciona pro billing', function () {
+    [$owner, $account] = accountOwnerWithPlan('essencial'); // assento extra R$ 39,00
+    app(App\Services\SaldoService::class)->add($owner, 100, 'manual_add');
+
+    $this->actingAs($owner)
+        ->post(route('app.equipe.assentos'), ['assentos_extras' => 1])
+        ->assertRedirect(route('app.saldo'));
+
+    $sub = $owner->subscription()->first();
+    expect($sub->assentos_extras)->toBe(1);
+    // sem âncora de ciclo → fração 1.0 → cobra mês cheio (39,00)
+    expect((float) $owner->fresh()->credits)->toBe(61.0);
+});
+
+it('assento extra sem saldo volta com erro e não altera a conta', function () {
+    [$owner, $account] = accountOwnerWithPlan('essencial');
+    app(App\Services\SaldoService::class)->add($owner, 10, 'manual_add');
+
+    $this->actingAs($owner)
+        ->post(route('app.equipe.assentos'), ['assentos_extras' => 1])
+        ->assertRedirect(route('app.equipe.index'))
+        ->assertSessionHasErrors('assentos_extras');
+
+    expect($owner->subscription()->first()->assentos_extras)->toBe(0)
+        ->and((float) $owner->fresh()->credits)->toBe(10.0);
+});
+
+it('membro comum não pode contratar assento (owner-only)', function () {
+    [$owner, $account] = accountOwnerWithPlan('essencial');
+    $member = User::factory()->create();
+    AccountMember::create([
+        'account_id' => $account->id, 'user_id' => $member->id, 'papel' => 'admin',
+        'permissoes' => AccountMember::permissoesPadrao('admin'), 'entrou_em' => now(),
+    ]);
+
+    $this->actingAs($member)
+        ->post(route('app.equipe.assentos'), ['assentos_extras' => 1])
+        ->assertForbidden();
+});
+
+it('a tela de equipe renderiza o card de assentos extras pro owner', function () {
+    [$owner, $account] = accountOwnerWithPlan('essencial');
+
+    $this->actingAs($owner)->get(route('app.equipe.index'))
+        ->assertOk()
+        ->assertSee('Assentos extras')
+        ->assertSee('modal-assentos');
+});

@@ -46,6 +46,7 @@ return new class extends Migration
                 $table->decimal('creditos_inclusos_saldo', 12, 2)->default(0);
                 $table->decimal('limite_consumo_automatico', 12, 2)->nullable(); // cap do cliente em R$; null = default
                 $table->integer('assentos_extras')->default(0);
+                $table->integer('espaco_extra_pacotes')->default(0); // pacotes de armazenamento extra (add-on mensal via saldo)
                 $table->string('mp_preapproval_id')->nullable()->unique(); // id do preapproval (assinatura) no MP
                 $table->timestamp('proximo_grant_em')->nullable();         // quando o scheduler concede o próximo mês
                 $table->timestamp('ultimo_grant_em')->nullable();          // última concessão (guard de idempotência)
@@ -62,6 +63,14 @@ return new class extends Migration
             && ! Schema::hasColumn('account_subscriptions', 'proration_pendente')) {
             Schema::table('account_subscriptions', function (Blueprint $table) {
                 $table->jsonb('proration_pendente')->nullable()->after('ultimo_grant_em');
+            });
+        }
+
+        // Coluna do add-on de espaço (idempotente): cobre bancos onde a tabela já existia.
+        if (Schema::hasTable('account_subscriptions')
+            && ! Schema::hasColumn('account_subscriptions', 'espaco_extra_pacotes')) {
+            Schema::table('account_subscriptions', function (Blueprint $table) {
+                $table->integer('espaco_extra_pacotes')->default(0)->after('assentos_extras');
             });
         }
     }

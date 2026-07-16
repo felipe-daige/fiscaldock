@@ -21,7 +21,10 @@ use Illuminate\Support\Facades\DB;
  */
 class ConcederSaldoService
 {
-    public function __construct(private SaldoService $saldo = new SaldoService) {}
+    public function __construct(
+        private SaldoService $saldo = new SaldoService,
+        private AddonService $addons = new AddonService,
+    ) {}
 
     public function conceder(AccountSubscription $sub, bool $primeiraComoCompra = false): void
     {
@@ -73,6 +76,11 @@ class ConcederSaldoService
                     );
                     $sub->creditos_inclusos_saldo = round($sub->creditos_inclusos_saldo + $mensal, 2);
                 }
+
+                // 2.5) Cobra a mensalidade dos add-ons (assento extra / espaço adicional) no
+                //      grant mensal — só no ramo rollover. A proration de troca NÃO cobra add-on
+                //      (o ciclo já foi pago; recobrar aqui duplicaria a cobrança).
+                $this->addons->cobrarRenovacaoAddons($sub);
             }
 
             // 3) Agenda a próxima concessão (cadência mensal pra mensal E anual) e limpa o marker.

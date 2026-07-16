@@ -19,6 +19,16 @@ return [
         'critico_percentual' => (float) env('ARQUIVOS_DISCO_CRITICO_PERCENTUAL', 85),
     ],
 
+    /*
+    | Add-on de espaço adicional (pacote mensal, cobrado do saldo em R$).
+    | Empilhável (N pacotes por conta). Overrides admin via comercial_parametros
+    | (chaves arquivos_pacote_extra_mb / arquivos_pacote_extra_preco_centavos).
+    */
+    'pacote_extra' => [
+        'mb' => (int) env('ARQUIVOS_PACOTE_EXTRA_MB', 5 * 1024),
+        'preco_centavos' => (int) env('ARQUIVOS_PACOTE_EXTRA_PRECO_CENTAVOS', 1990),
+    ],
+
     'quota_padrao_mb' => (int) env('ARQUIVOS_QUOTA_PADRAO_MB', 250),
     'quota_por_plano_mb' => [
         'free' => 250,
