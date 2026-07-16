@@ -20,13 +20,13 @@ it('seeda os 5 tiers com preços e créditos do spec', function () {
     expect($essencial->assentos_inclusos)->toBe(2);
 
     $profissional = SubscriptionPlan::where('codigo', 'profissional')->first();
-    expect($profissional->preco_mensal_centavos)->toBe(24900);
+    expect($profissional->preco_mensal_centavos)->toBe(29900);
     expect($profissional->faixa_slug)->toBe('x');
     expect($profissional->creditos_inclusos)->toBe(80.0);
     expect($profissional->assentos_inclusos)->toBe(3);
 
     $escritorio = SubscriptionPlan::where('codigo', 'escritorio')->first();
-    expect($escritorio->preco_mensal_centavos)->toBe(59900);
+    expect($escritorio->preco_mensal_centavos)->toBe(79900);
     expect($escritorio->faixa_slug)->toBe('y');
     expect($escritorio->creditos_inclusos)->toBe(200.0);
     expect($escritorio->assentos_inclusos)->toBe(10);

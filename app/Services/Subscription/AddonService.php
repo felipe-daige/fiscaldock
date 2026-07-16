@@ -68,66 +68,58 @@ class AddonService
     public function definirAssentosExtras(User $user, int $alvo): void
     {
         $owner = $user->accountOwner();
-        $sub = $this->assinaturaAtiva($owner);
         $alvo = max(0, $alvo);
-        $atual = (int) $sub->assentos_extras;
 
-        if ($alvo === $atual) {
-            return;
-        }
+        // Tudo sob lock da assinatura pra evitar lost-update (dois cliques cobrariam 2× e
+        // gravariam 1). deduct faz seu próprio lock do saldo — os dois compõem atomicamente.
+        DB::transaction(function () use ($owner, $alvo) {
+            $sub = $this->assinaturaAtivaLocked($owner);
+            $atual = (int) $sub->assentos_extras;
 
-        if ($alvo < $atual) {
-            $this->assertReducaoAssentosPermitida($owner, $sub, $alvo);
-            $sub->assentos_extras = $alvo;
-            $sub->save();
-
-            return;
-        }
-
-        $delta = $alvo - $atual;
-        $this->cobrarProRata(
-            $owner,
-            $sub,
-            $this->precoAssentoReais($owner) * $delta,
-            $delta.' assento(s) extra(s)',
-            function () use ($sub, $alvo) {
+            if ($alvo === $atual) {
+                return;
+            }
+            if ($alvo < $atual) {
+                $this->assertReducaoAssentosPermitida($owner, $sub, $alvo);
                 $sub->assentos_extras = $alvo;
                 $sub->save();
-            },
-        );
+
+                return;
+            }
+
+            $delta = $alvo - $atual;
+            $this->cobrarProRata($owner, $sub, $this->precoAssentoReais($owner) * $delta, $delta.' assento(s) extra(s)');
+            $sub->assentos_extras = $alvo;
+            $sub->save();
+        });
     }
 
     /** Define o total de pacotes de espaço extra da conta (owner). Cobra pró-rata o incremento. */
     public function definirEspacoExtraPacotes(User $user, int $alvo): void
     {
         $owner = $user->accountOwner();
-        $sub = $this->assinaturaAtiva($owner);
         $alvo = max(0, $alvo);
-        $atual = (int) $sub->espaco_extra_pacotes;
 
-        if ($alvo === $atual) {
-            return;
-        }
+        DB::transaction(function () use ($owner, $alvo) {
+            $sub = $this->assinaturaAtivaLocked($owner);
+            $atual = (int) $sub->espaco_extra_pacotes;
 
-        if ($alvo < $atual) {
-            // Reduzir espaço é sempre permitido: nada se apaga, upload novo acima da quota trava.
-            $sub->espaco_extra_pacotes = $alvo;
-            $sub->save();
-
-            return;
-        }
-
-        $delta = $alvo - $atual;
-        $this->cobrarProRata(
-            $owner,
-            $sub,
-            $this->precoPacoteEspacoReais() * $delta,
-            $delta.' pacote(s) de espaço adicional',
-            function () use ($sub, $alvo) {
+            if ($alvo === $atual) {
+                return;
+            }
+            if ($alvo < $atual) {
+                // Reduzir espaço é sempre permitido: nada se apaga, upload novo acima da quota trava.
                 $sub->espaco_extra_pacotes = $alvo;
                 $sub->save();
-            },
-        );
+
+                return;
+            }
+
+            $delta = $alvo - $atual;
+            $this->cobrarProRata($owner, $sub, $this->precoPacoteEspacoReais() * $delta, $delta.' pacote(s) de espaço adicional');
+            $sub->espaco_extra_pacotes = $alvo;
+            $sub->save();
+        });
     }
 
     // ── Renovação (chamada por ConcederSaldoService no grant mensal) ───────────
@@ -187,21 +179,21 @@ class AddonService
         return max(0.0, min(1.0, $restante / $total));
     }
 
-    private function cobrarProRata(User $owner, AccountSubscription $sub, float $valorMensalCheio, string $rotulo, callable $aplicar): void
+    /** Debita a fração corrente do valor mensal. Chamado DENTRO da transação com o sub travado. */
+    private function cobrarProRata(User $owner, AccountSubscription $sub, float $valorMensalCheio, string $rotulo): void
     {
         $valor = round($valorMensalCheio * $this->fracaoRestante($sub), 2);
-
-        DB::transaction(function () use ($owner, $sub, $valor, $rotulo, $aplicar) {
-            if ($valor > 0 && ! $this->saldo->deduct($owner, $valor, 'addon_purchase', "Contratação pró-rata: {$rotulo}.", $sub)) {
-                throw new RuntimeException('Saldo insuficiente para contratar '.$rotulo.'. Adicione saldo e tente novamente.');
-            }
-            $aplicar();
-        });
+        if ($valor > 0 && ! $this->saldo->deduct($owner, $valor, 'addon_purchase', "Contratação pró-rata: {$rotulo}.", $sub)) {
+            throw new RuntimeException('Saldo insuficiente para contratar '.$rotulo.'. Adicione saldo e tente novamente.');
+        }
     }
 
-    private function assinaturaAtiva(User $owner): AccountSubscription
+    private function assinaturaAtivaLocked(User $owner): AccountSubscription
     {
-        $sub = $owner->subscription()->where('status', AccountSubscription::STATUS_ATIVA)->first();
+        $sub = $owner->subscription()
+            ->where('status', AccountSubscription::STATUS_ATIVA)
+            ->lockForUpdate()
+            ->first();
         if (! $sub) {
             throw new RuntimeException('Add-ons exigem uma assinatura ativa. Faça upgrade de plano primeiro.');
         }
