@@ -21,7 +21,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Services\Consultas\FonteRegistry::class, fn () => new \App\Services\Consultas\FonteRegistry([
             new \App\Services\Consultas\Fontes\CadastroFonte,
             new \App\Services\Consultas\Fontes\CndFederalFonte,
-            new \App\Services\Consultas\Fontes\CndtFonte,
             new \App\Services\Consultas\Fontes\CrfFgtsFonte,
             new \App\Services\Consultas\Fontes\CndEstadualFonte,
             new \App\Services\Consultas\Fontes\SintegraFonte,

@@ -19,7 +19,6 @@ class IntegracaoStatusSeeder extends Seeder
             ['chave' => 'cnd_federal', 'nome' => 'CND Federal (Receita/PGFN)', 'grupo' => 'consultas', 'ordem' => 2],
             ['chave' => 'cnd_estadual', 'nome' => 'CND Estadual (SEFAZ)', 'grupo' => 'consultas', 'ordem' => 3],
             ['chave' => 'cnd_municipal', 'nome' => 'CND Municipal', 'grupo' => 'consultas', 'ordem' => 4],
-            ['chave' => 'cndt', 'nome' => 'CNDT (débitos trabalhistas)', 'grupo' => 'consultas', 'ordem' => 5],
             ['chave' => 'crf_fgts', 'nome' => 'CRF FGTS (Caixa)', 'grupo' => 'consultas', 'ordem' => 6],
             ['chave' => 'sintegra', 'nome' => 'SINTEGRA', 'grupo' => 'consultas', 'ordem' => 7],
             // grupo plataforma

@@ -26,7 +26,6 @@ final class PlanoConsultaLabels
             'parecer_fiscal' => 'Parecer fiscal automático',
             'cnd_federal' => 'CND Federal (PGFN/RFB)',
             'crf_fgts' => 'Regularidade do FGTS (CRF)',
-            'cndt' => 'CNDT (débitos trabalhistas)',
             'cnd_estadual' => 'CND Estadual',
             'cnd_municipal' => 'CND Municipal',
             'sintegra' => 'SINTEGRA (inscrição estadual)',

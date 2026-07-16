@@ -3,7 +3,7 @@
 namespace App\Services\Consultas\Fontes;
 
 /**
- * Base para certidões via InfoSimples (CND Federal, CNDT, CRF FGTS, CND Estadual...).
+ * Base para certidões via InfoSimples (CND Federal, CRF FGTS, CND Estadual...).
  * Trata o fluxo comum de não-sucesso (611→INDETERMINADO, 612→NAO_ENCONTRADA,
  * técnico→nada). Cada certidão só implementa `mapearSucesso()` (data[0]→bloco).
  */
@@ -13,8 +13,8 @@ abstract class FonteCertidaoInfoSimples extends FonteInfoSimplesBase
     abstract protected function mapearSucesso(array $data): array;
 
     /**
-     * Status da certidão a partir do data[0]. Nem toda certidão traz `tipo` (ex: CNDT, CND
-     * Estadual não trazem) — nesse caso deriva de `conseguiu_emitir_certidao_negativa`:
+     * Status da certidão a partir do data[0]. Nem toda certidão traz `tipo` (ex: CND
+     * Estadual não traz) — nesse caso deriva de `conseguiu_emitir_certidao_negativa`:
      * true → Negativa (regular), false → Positiva (com débitos).
      */
     protected function statusCertidao(array $data): ?string
@@ -55,7 +55,7 @@ abstract class FonteCertidaoInfoSimples extends FonteInfoSimplesBase
         // Não consultado: ou a fonte não se aplica ao alvo (path aplicavelPara=false, que injeta
         // o _motivo específico — ex.: UF/cidade sem cobertura), ou o provider devolveu nao_aplicavel
         // sem motivo (ex.: bloqueio de allowlist). O fallback NÃO presume causa geográfica, pois
-        // certidões nacionais (Federal/CNDT/FGTS) não têm recorte de UF/cidade.
+        // certidões nacionais (Federal/FGTS) não têm recorte de UF/cidade.
         if ($status === 'nao_aplicavel') {
             return $this->bloco([
                 'status' => 'INDISPONIVEL',

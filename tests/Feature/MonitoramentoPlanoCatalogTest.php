@@ -29,8 +29,10 @@ it('4 planos lineares com precos em credito', function () {
 
 it('licitacao = 3 federais; compliance = 6 fontes sem sancoes', function () {
     $b = collect(PlanoCatalog::definitions())->keyBy('codigo');
-    expect($b['licitacao']['consultas_incluidas'])->toContain('cnd_federal', 'crf_fgts', 'cndt');
-    expect($b['compliance']['consultas_incluidas'])->toContain('cnd_federal', 'crf_fgts', 'cndt', 'cnd_estadual', 'cnd_municipal', 'sintegra');
+    expect($b['licitacao']['consultas_incluidas'])->toContain('cnd_federal', 'crf_fgts')
+        ->not->toContain('cndt');
+    expect($b['compliance']['consultas_incluidas'])->toContain('cnd_federal', 'crf_fgts', 'cnd_estadual', 'cnd_municipal', 'sintegra')
+        ->not->toContain('cndt');
     expect($b['compliance']['consultas_incluidas'])->not->toContain('cgu_cnc', 'cnj_improbidade');
 });
 

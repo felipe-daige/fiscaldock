@@ -36,12 +36,11 @@ return [
     ))),
 
     // Mapa fonte → etapa (grupo) do progresso. Várias fontes compartilham a mesma etapa
-    // (ex: cnd_federal/cndt/crf_fgts = certidoes_federais), p/ o strip avançar por grupo e não
+    // (ex: cnd_federal/crf_fgts = certidoes_federais), p/ o strip avançar por grupo e não
     // repetir um "loop" por fonte. As chaves de etapa vêm de PlanoCatalog (resolvedEtapas).
     'fonte_etapa' => [
         'cadastro' => 'cadastrais',
         'cnd_federal' => 'certidoes_federais',
-        'cndt' => 'certidoes_federais',
         'crf_fgts' => 'certidoes_federais',
         'cnd_estadual' => 'certidoes_estaduais',
         'cnd_municipal' => 'certidoes_estaduais',
@@ -54,7 +53,6 @@ return [
     'fonte_nome' => [
         'cadastro' => 'Dados Cadastrais',
         'cnd_federal' => 'CND Federal (Receita/PGFN)',
-        'cndt' => 'CNDT (débitos trabalhistas)',
         'crf_fgts' => 'CRF FGTS (Caixa)',
         'cnd_estadual' => 'CND Estadual (SEFAZ)',
         'cnd_municipal' => 'CND Municipal',
@@ -196,7 +194,6 @@ return [
     // Custo por fonte paga, em R$, usado no estorno preciso.
     'fontes' => [
         'cnd_federal' => (float) env('CONSULTA_CREDITOS_CND_FEDERAL', 0.40),
-        'cndt' => (float) env('CONSULTA_CREDITOS_CNDT', 0.40),
         'crf_fgts' => (float) env('CONSULTA_CREDITOS_CRF_FGTS', 0.40),
         'cnd_estadual' => (float) env('CONSULTA_CREDITOS_CND_ESTADUAL', 0.40),
         // SINTEGRA: R$ 1,00 por CNPJ.
