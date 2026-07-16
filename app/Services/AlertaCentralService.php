@@ -861,7 +861,6 @@ class AlertaCentralService
         'cnd_federal' => ['score' => 'score_cnd_federal', 'chaves' => ['cnd_federal'], 'label' => 'CND Federal'],
         'cnd_estadual' => ['score' => 'score_cnd_estadual', 'chaves' => ['cnd_estadual'], 'label' => 'CND Estadual'],
         'fgts' => ['score' => 'score_fgts', 'chaves' => ['crf_fgts', 'fgts'], 'label' => 'FGTS/CRF'],
-        'trabalhista' => ['score' => 'score_trabalhista', 'chaves' => ['cndt'], 'label' => 'CNDT (Trabalhista)'],
     ];
 
     /**

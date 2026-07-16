@@ -47,7 +47,6 @@ beforeEach(function () {
         'score_cnd_federal' => 70,
         'score_cnd_estadual' => 0,
         'score_fgts' => 0,
-        'score_trabalhista' => 0,
         'score_credito_reforma' => 100,
         'classificacao' => 'alto',
         'ultima_consulta_em' => now(),
@@ -157,7 +156,7 @@ it('metodologia() expõe pesos, penalidades, faixas e pisos reais do service', f
         ->and($porLabel['Situação Cadastral']['peso_pct'])->toBe(15)
         ->and($porLabel['Situação Cadastral']['penalidade'])->toBeNull()
         ->and($porLabel['FGTS/CRF']['penalidade'])->toBe(50)
-        ->and($porLabel['CNDT (Trabalhista)']['penalidade'])->toBe(40);
+        ->and($porLabel->has('CNDT (Trabalhista)'))->toBeFalse();
 
     // Faixas na ordem crescente de risco
     expect(collect($met['faixas'])->pluck('faixa')->all())->toBe(['0–20', '21–50', '51–80', '81–100']);

@@ -17,7 +17,6 @@ class ParticipanteScore extends Model
         'score_cnd_federal',
         'score_cnd_estadual',
         'score_fgts',
-        'score_trabalhista',
         'score_total',
         'score_credito_reforma',
         'classificacao',
@@ -33,7 +32,6 @@ class ParticipanteScore extends Model
             'score_cnd_federal' => 'integer',
             'score_cnd_estadual' => 'integer',
             'score_fgts' => 'integer',
-            'score_trabalhista' => 'integer',
             'score_total' => 'integer',
             'score_credito_reforma' => 'integer',
             'ultima_consulta_em' => 'datetime',
@@ -175,11 +173,6 @@ class ParticipanteScore extends Model
                 'score' => $this->score_fgts,
                 'avaliado' => $this->score_fgts !== null,
             ],
-            'trabalhista' => [
-                'label' => $labels['trabalhista'],
-                'score' => $this->score_trabalhista,
-                'avaliado' => $this->score_trabalhista !== null,
-            ],
         ];
     }
 
@@ -208,7 +201,6 @@ class ParticipanteScore extends Model
             ['score_cnd_federal', 'CND Federal positiva', 2],
             ['score_cnd_estadual', 'CND Estadual positiva', 3],
             ['score_fgts', 'FGTS/CRF positivo', 4],
-            ['score_trabalhista', 'CNDT positiva', 5],
         ] as [$coluna, $label, $ordem]) {
             if (($this->{$coluna} ?? 0) > 0) {
                 $motivos[] = [
