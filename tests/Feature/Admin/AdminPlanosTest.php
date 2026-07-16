@@ -25,8 +25,8 @@ it('admin lista os planos', function () {
         ->assertSee('Anual')
         ->assertSee('Acessos')
         ->assertSee('Assento extra')
-        ->assertSee("R$\u{A0}249,00")
-        ->assertSee("R$\u{A0}599,00")
+        ->assertSee("R$\u{A0}299,00")
+        ->assertSee("R$\u{A0}799,00")
         ->assertSee("R$\u{A0}39,00");
 });
 

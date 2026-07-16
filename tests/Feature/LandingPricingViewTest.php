@@ -45,8 +45,8 @@ it('mantém todos os cards de assinatura na matriz comercial aprovada', function
 
     foreach ([
         'Essencial' => ['99', '990', '35,00', '2 acessos individuais incluídos'],
-        'Profissional' => ['249', '2.490', '80,00', '3 acessos individuais incluídos'],
-        'Escritório' => ['599', '5.990', '200,00', '10 acessos individuais incluídos'],
+        'Profissional' => ['299', '2.990', '80,00', '3 acessos individuais incluídos'],
+        'Escritório' => ['799', '7.990', '200,00', '10 acessos individuais incluídos'],
     ] as $nome => [$mensal, $anual, $saldo, $acessos]) {
         expect($html)->toContain($nome)
             ->toContain('data-monthly="'.$mensal.'.00"')
@@ -59,8 +59,8 @@ it('mantém todos os cards de assinatura na matriz comercial aprovada', function
         ->toContain('1 acesso individual incluído')
         ->toContain('grid-template-columns: repeat(4, minmax(0, 1fr))')
         ->not->toContain('Certificado digital A1 disponível')
-        ->not->toContain('R$&nbsp;299')
-        ->not->toContain('R$&nbsp;799')
+        ->not->toContain('R$&nbsp;249')
+        ->not->toContain('R$&nbsp;599')
         ->not->toContain('Plano Enterprise');
 
     expect(substr_count($html, 'PDF executivo'))->toBe(4);

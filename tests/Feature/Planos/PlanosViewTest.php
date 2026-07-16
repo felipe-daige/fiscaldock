@@ -27,8 +27,8 @@ it('renderiza os 4 tiers ativos com preços, saldo e assentos aprovados', functi
     // Preços e saldo incluso canônicos (CFO). Preço vem hardcoded na view
     // como "R$&nbsp;{n}"; saldo/mês vem de Dinheiro::brl (NBSP real).
     expect($html)->toContain('R$&nbsp;99');
-    expect($html)->toContain('R$&nbsp;249');
-    expect($html)->toContain('R$&nbsp;599');
+    expect($html)->toContain('R$&nbsp;299');
+    expect($html)->toContain('R$&nbsp;799');
     expect($html)->toContain(\App\Support\Dinheiro::brl(35).' em saldo/mês');
     expect($html)->toContain(\App\Support\Dinheiro::brl(80).' em saldo/mês');
     expect($html)->toContain(\App\Support\Dinheiro::brl(200).' em saldo/mês');
