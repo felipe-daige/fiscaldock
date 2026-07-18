@@ -195,7 +195,7 @@
                                                     @endif
                                                 </p>
                                             </div>
-                                            <span class="text-[10px] text-gray-500 uppercase tracking-wide whitespace-nowrap">{{ $recentImp->created_at->diffForHumans() }}</span>
+                                            <span class="text-[10px] text-gray-500 uppercase tracking-wide whitespace-nowrap">{{ $recentImp->created_at->locale('pt_BR')->diffForHumans() }}</span>
                                         </div>
                                     </a>
                                 @endforeach

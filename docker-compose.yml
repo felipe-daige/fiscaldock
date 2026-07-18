@@ -8,6 +8,7 @@ services:
       - traefik-public
       - postgres-internal
     volumes:
+      - /usr/share/zoneinfo:/usr/share/zoneinfo:ro
       - /var/www/html/resources:/var/www/html/resources
       - /var/www/html/routes:/var/www/html/routes
       - /var/www/html/app:/var/www/html/app
@@ -21,6 +22,7 @@ services:
       - ./storage/logs:/var/www/html/storage/logs
       - ./opcache-dev.ini:/usr/local/etc/php/conf.d/zz-opcache-dev.ini:ro
     environment:
+      TZ: America/Sao_Paulo
       APP_ENV: ${APP_ENV:-production}
       APP_DEBUG: ${APP_DEBUG:-false}
       APP_URL: ${APP_URL:-https://fiscaldock.com.br}
@@ -94,6 +96,7 @@ services:
     networks:
       - postgres-internal
     volumes:
+      - /usr/share/zoneinfo:/usr/share/zoneinfo:ro
       - /var/www/html/app:/var/www/html/app
       - /var/www/html/config:/var/www/html/config
       - /var/www/html/database:/var/www/html/database
@@ -102,6 +105,7 @@ services:
       - app_storage:/var/www/html/storage
       - ./storage/logs:/var/www/html/storage/logs
     environment:
+      TZ: America/Sao_Paulo
       APP_ENV: ${APP_ENV:-production}
       APP_DEBUG: ${APP_DEBUG:-false}
       APP_URL: ${APP_URL:-https://fiscaldock.com.br}
@@ -142,6 +146,7 @@ services:
     networks:
       - postgres-internal
     volumes:
+      - /usr/share/zoneinfo:/usr/share/zoneinfo:ro
       # Código vivo (mesmo mount seletivo do serviço app) — sem isso o worker roda
       # o código antigo da imagem e jobs novos viram __PHP_Incomplete_Class.
       # vendor/ vem da imagem.
@@ -154,6 +159,7 @@ services:
       - app_storage:/var/www/html/storage
       - ./storage/logs:/var/www/html/storage/logs
     environment:
+      TZ: America/Sao_Paulo
       APP_ENV: ${APP_ENV:-production}
       APP_KEY: ${APP_KEY}
       DB_CONNECTION: ${DB_CONNECTION:-pgsql}
@@ -173,6 +179,10 @@ services:
   mailpit:
     image: axllent/mailpit:latest
     restart: unless-stopped
+    environment:
+      TZ: America/Sao_Paulo
+    volumes:
+      - /usr/share/zoneinfo:/usr/share/zoneinfo:ro
     networks:
       - postgres-internal
     ports:

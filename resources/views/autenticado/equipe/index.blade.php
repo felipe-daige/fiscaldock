@@ -170,7 +170,7 @@
                                 <div class="p-3 flex items-start justify-between gap-2">
                                     <div class="min-w-0">
                                         <p class="text-xs font-medium text-gray-800 truncate">{{ $invite->email }}</p>
-                                        <p class="text-[10px] text-gray-400">Expira {{ $invite->expira_em->diffForHumans() }}</p>
+                                        <p class="text-[10px] text-gray-400">Expira {{ $invite->expira_em->locale('pt_BR')->diffForHumans() }}</p>
                                     </div>
                                     <form method="POST" action="{{ route('app.equipe.convites.revogar', $invite->id) }}">
                                         @csrf @method('DELETE')

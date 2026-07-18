@@ -42,7 +42,7 @@
                 @endif
             </div>
             @if($ultimaAtualizacao)
-                <span class="text-[11px] text-white/80 whitespace-nowrap">Atualizado {{ $ultimaAtualizacao->diffForHumans() }}</span>
+                <span class="text-[11px] text-white/80 whitespace-nowrap">Atualizado {{ $ultimaAtualizacao->locale('pt_BR')->diffForHumans() }}</span>
             @endif
         </div>
 
@@ -67,7 +67,7 @@
                                             <p class="text-xs text-gray-600 mt-0.5 whitespace-pre-line">{{ $i->mensagem }}</p>
                                         @endif
                                         <p class="text-[11px] text-gray-400 mt-1">
-                                            atualizado {{ $i->updated_at->diffForHumans() }}
+                                            atualizado {{ $i->updated_at->locale('pt_BR')->diffForHumans() }}
                                             @if($i->atualizadoPor) · por {{ $i->atualizadoPor->name }} @endif
                                         </p>
                                     </div>
