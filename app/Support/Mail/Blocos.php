@@ -167,6 +167,187 @@ class Blocos
     }
 
     /**
+     * Abertura executiva do resumo semanal. Reúne status, período, volume de alertas
+     * e exposição numa única peça; evita que a informação mais importante fique
+     * espalhada em título, parágrafo e cartões com escalas visuais diferentes.
+     */
+    public static function panoramaSemanal(
+        int $totalAlertas,
+        int $altas,
+        int $medias,
+        float $exposicao,
+        string $periodo
+    ): HtmlString {
+        if ($altas > 0) {
+            $fundo = self::VERMELHO;
+            $status = 'Ação prioritária';
+            $descricao = $altas.' '.($altas === 1 ? 'ocorrência exige' : 'ocorrências exigem')
+                .' revisão imediata.';
+        } elseif ($medias > 0) {
+            $fundo = self::AMBAR;
+            $status = 'Pontos de atenção';
+            $descricao = $medias.' '.($medias === 1 ? 'ocorrência merece' : 'ocorrências merecem')
+                .' acompanhamento.';
+        } elseif ($totalAlertas > 0) {
+            $fundo = self::NAVY;
+            $status = 'Acompanhamento';
+            $descricao = 'Há somente ocorrências informativas no período.';
+        } else {
+            $fundo = self::VERDE;
+            $status = 'Semana em ordem';
+            $descricao = 'Nenhuma nova ocorrência foi detectada na sua carteira.';
+        }
+
+        [$tinta, $fio] = self::HERO_ESTILO[$fundo] ?? self::HERO_ESTILO[self::NAVY];
+        $rotuloAlertas = $totalAlertas === 1 ? 'alerta novo' : 'alertas novos';
+
+        $exposicaoHtml = '';
+        if ($exposicao > 0) {
+            $exposicaoHtml = '<tr><td style="padding: 18px 26px; border-top: 1px solid '.$fio.'; '
+                .self::bgSolido($fundo).'">'
+                .'<table width="100%" cellpadding="0" cellspacing="0" role="presentation"><tr>'
+                .'<td valign="middle" style="font-size: 10px; font-weight: 700; letter-spacing: 0.12em; '
+                .'text-transform: uppercase; color: '.$tinta.'; line-height: 1.4;">Exposição mapeada</td>'
+                .'<td align="right" valign="middle" style="font-size: 18px; font-weight: 700; white-space: nowrap; '
+                .'letter-spacing: -0.01em; color: #ffffff; line-height: 1.2;">'.e(self::brl($exposicao)).'</td>'
+                .'</tr></table>'
+                .'<div style="margin-top: 7px; font-size: 12px; color: '.$tinta.'; line-height: 1.5;">'
+                .'Valor associado às prioridades exibidas neste resumo.</div>'
+                .'</td></tr>';
+        }
+
+        return new HtmlString(
+            '<table width="100%" cellpadding="0" cellspacing="0" role="presentation" '
+            .'style="margin: 22px 0 30px 0; border-collapse: separate;">'
+            .'<tr><td style="height: 4px; line-height: 4px; font-size: 0; '.self::bgSolido($fio).' '
+            .'border-radius: 6px 6px 0 0;">&nbsp;</td></tr>'
+            .'<tr><td style="padding: 24px 26px 22px 26px; '.self::bgSolido($fundo).'">'
+            .'<table width="100%" cellpadding="0" cellspacing="0" role="presentation"><tr>'
+            .'<td valign="middle"><span style="display: inline-block; padding: 5px 9px; border: 1px solid '.$fio.'; '
+            .'border-radius: 3px; font-size: 9px; font-weight: 700; letter-spacing: 0.13em; '
+            .'text-transform: uppercase; color: #ffffff;">'.e($status).'</span></td>'
+            .'<td align="right" valign="middle" style="font-size: 11px; font-weight: 600; color: '.$tinta.';">'
+            .e($periodo).'</td>'
+            .'</tr></table>'
+            .'<div style="margin-top: 20px; color: #ffffff; line-height: 1;">'
+            .'<span style="font-size: 40px; font-weight: 700; letter-spacing: -0.03em;">'.$totalAlertas.'</span>'
+            .'<span style="font-size: 18px; font-weight: 600;"> '.e($rotuloAlertas).'</span>'
+            .'</div>'
+            .'<div style="margin-top: 10px; font-size: 14px; color: '.$tinta.'; line-height: 1.55;">'
+            .e($descricao).'</div>'
+            .'</td></tr>'
+            .$exposicaoHtml
+            .'<tr><td style="height: 1px; line-height: 1px; font-size: 0; '.self::bgSolido($fundo).' '
+            .'border-radius: 0 0 6px 6px;">&nbsp;</td></tr>'
+            .'</table>'
+        );
+    }
+
+    /** Cabeçalho numerado de seção, com escala tipográfica única no resumo. */
+    public static function tituloSecao(string $numero, string $titulo, string $descricao): HtmlString
+    {
+        return new HtmlString(
+            '<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin: 30px 0 14px 0;">'
+            .'<tr>'
+            .'<td width="38" valign="top" style="padding-right: 12px;">'
+            .'<table cellpadding="0" cellspacing="0" role="presentation"><tr>'
+            .'<td width="30" height="30" align="center" valign="middle" style="width: 30px; height: 30px; '
+            .self::bgSolido(self::NAVY).' border-radius: 15px; color: #ffffff; font-size: 11px; '
+            .'font-weight: 700; letter-spacing: 0.04em; line-height: 30px;">'.e($numero).'</td>'
+            .'</tr></table>'
+            .'</td>'
+            .'<td valign="top">'
+            .'<div style="font-size: 17px; font-weight: 700; letter-spacing: -0.01em; color: '.self::TEXTO.'; '
+            .'line-height: 1.3;">'.e($titulo).'</div>'
+            .'<div style="margin-top: 4px; font-size: 13px; color: '.self::TEXTO_SUAVE.'; line-height: 1.55;">'
+            .e($descricao).'</div>'
+            .'</td>'
+            .'</tr></table>'
+        );
+    }
+
+    /**
+     * Distribuição dos alertas com três células idênticas. Os microtextos traduzem
+     * severidade em decisão, em vez de deixar o usuário interpretar apenas cores.
+     *
+     * @param  array{alta:int, media:int, baixa:int}  $severidades
+     */
+    public static function severidades(array $severidades): HtmlString
+    {
+        $itens = [
+            ['alta', 'Alta', 'Agir agora', self::VERMELHO],
+            ['media', 'Média', 'Acompanhar', self::AMBAR],
+            ['baixa', 'Baixa', 'Informativo', '#6b7280'],
+        ];
+        $celulas = '';
+
+        foreach ($itens as $i => [$chave, $rotulo, $orientacao, $cor]) {
+            $borda = $i === 0 ? '' : 'border-left: 1px solid '.self::BORDA.';';
+            $celulas .= '<td width="33.33%" align="center" valign="top" style="padding: 0; '.$borda.'">'
+                .'<div style="height: 4px; line-height: 4px; font-size: 0; '.self::bgSolido($cor).'">&nbsp;</div>'
+                .'<div style="padding: 16px 7px 15px 7px;">'
+                .'<div style="font-size: 27px; font-weight: 700; color: '.$cor.'; line-height: 1;">'
+                .(int) ($severidades[$chave] ?? 0).'</div>'
+                .'<div style="margin-top: 7px; font-size: 11px; font-weight: 700; color: '.self::TEXTO.'; '
+                .'line-height: 1.3;">'.e($rotulo).'</div>'
+                .'<div style="margin-top: 3px; font-size: 10px; color: '.self::TEXTO_SUAVE.'; line-height: 1.3;">'
+                .e($orientacao).'</div>'
+                .'</div></td>';
+        }
+
+        return new HtmlString(
+            '<table width="100%" cellpadding="0" cellspacing="0" role="presentation" '
+            .'style="margin: 16px 0 24px 0; border: 1px solid '.self::BORDA.'; border-radius: 5px; '
+            .'border-collapse: separate; overflow: hidden; background-color: #ffffff;"><tr>'.$celulas.'</tr></table>'
+        );
+    }
+
+    /** Aviso editorial com título, explicação e tom semântico. */
+    public static function aviso(string $titulo, string $texto, string $tom = 'info'): HtmlString
+    {
+        $estilos = [
+            'critico' => [self::VERMELHO, '#fef2f2', '#fecaca', '!'],
+            'atencao' => [self::AMBAR, '#fffbeb', '#fde68a', '!'],
+            'sucesso' => [self::VERDE, '#ecfdf5', '#a7f3d0', '✓'],
+            'info' => [self::NAVY, '#f1f5f9', '#cbd5e1', 'i'],
+        ];
+        [$cor, $fundo, $borda, $icone] = $estilos[$tom] ?? $estilos['info'];
+
+        return new HtmlString(
+            '<table width="100%" cellpadding="0" cellspacing="0" role="presentation" '
+            .'style="margin: 18px 0 24px 0; border: 1px solid '.$borda.'; border-radius: 5px; '
+            .'background-color: '.$fundo.';"><tr>'
+            .'<td width="46" valign="top" style="padding: 17px 0 17px 16px;">'
+            .'<table cellpadding="0" cellspacing="0" role="presentation"><tr>'
+            .'<td width="28" height="28" align="center" valign="middle" style="width: 28px; height: 28px; '
+            .self::bgSolido($cor).' border-radius: 14px; color: #ffffff; font-size: 14px; font-weight: 700; '
+            .'line-height: 28px;">'.$icone.'</td>'
+            .'</tr></table></td>'
+            .'<td valign="top" style="padding: 16px 16px 16px 10px;">'
+            .'<div style="font-size: 14px; font-weight: 700; color: '.self::TEXTO.'; line-height: 1.4;">'
+            .e($titulo).'</div>'
+            .'<div style="margin-top: 4px; font-size: 13px; color: '.self::TEXTO_SUAVE.'; line-height: 1.55;">'
+            .e($texto).'</div>'
+            .'</td></tr></table>'
+        );
+    }
+
+    /** Nota de preferências com link secundário, visualmente separada do conteúdo. */
+    public static function preferenciasResumo(string $url): HtmlString
+    {
+        return new HtmlString(
+            '<table width="100%" cellpadding="0" cellspacing="0" role="presentation" '
+            .'style="margin: 28px 0 0 0; border-top: 1px solid '.self::BORDA.';"><tr>'
+            .'<td style="padding: 18px 0 0 0; font-size: 12px; color: #64748b; line-height: 1.6;">'
+            .'<strong style="color: '.self::TEXTO.';">Você controla este resumo.</strong> '
+            .'Altere a frequência ou desative o envio em '
+            .'<a href="'.e($url).'" style="color: '.self::NAVY.'; font-weight: 700; text-decoration: underline;">'
+            .'Configurações de notificações</a>.'
+            .'</td></tr></table>'
+        );
+    }
+
+    /**
      * Placar de números (atividade da semana). Colunas separadas por espaço real,
      * não por borda — fica mais leve que uma grade de caixas cinzas.
      *
@@ -176,19 +357,26 @@ class Blocos
     {
         $celulas = '';
         $largura = (int) round(100 / max(count($kpis), 1));
+        $i = 0;
 
         foreach ($kpis as $rotulo => $valor) {
-            $celulas .= '<td width="'.$largura.'%" align="center" valign="top" style="padding: 18px 10px;">'
-                .'<div style="font-size: 28px; font-weight: 700; color: '.self::NAVY.'; line-height: 1;">'.e((string) $valor).'</div>'
-                .'<div style="margin-top: 6px; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; '
-                .'text-transform: uppercase; color: #6b7280; line-height: 1.4;">'.e($rotulo).'</div>'
+            $borda = $i++ === 0 ? '' : 'border-left: 1px solid '.self::BORDA.';';
+            $celulas .= '<td width="'.$largura.'%" align="center" valign="top" '
+                .'style="padding: 18px 8px 17px 8px; '.$borda.'">'
+                .'<div style="font-size: 27px; font-weight: 700; color: '.self::NAVY.'; line-height: 1;">'
+                .e((string) $valor).'</div>'
+                .'<div style="margin-top: 7px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; '
+                .'text-transform: uppercase; color: #64748b; line-height: 1.4;">'.e($rotulo).'</div>'
                 .'</td>';
         }
 
         return new HtmlString(
             '<table width="100%" cellpadding="0" cellspacing="0" role="presentation" '
-            .'style="margin: 22px 0; border: 1px solid '.self::BORDA.'; border-radius: 4px; '
-            .'background-color: '.self::FUNDO_SUAVE.';"><tr>'.$celulas.'</tr></table>'
+            .'style="margin: 16px 0 24px 0; border: 1px solid '.self::BORDA.'; border-radius: 5px; '
+            .'border-collapse: separate; overflow: hidden; background-color: '.self::FUNDO_SUAVE.';">'
+            .'<tr><td colspan="'.count($kpis).'" style="height: 3px; line-height: 3px; font-size: 0; '
+            .self::bgSolido(self::OURO).'">&nbsp;</td></tr>'
+            .'<tr>'.$celulas.'</tr></table>'
         );
     }
 
@@ -273,28 +461,43 @@ class Blocos
     }
 
     /**
-     * Lista priorizada de alertas (resumo semanal): faixa de severidade + título + valor.
+     * Lista priorizada de alertas: faixa de severidade, contexto, título e exposição.
      *
      * @param  array<int, array{titulo: string, severidade: string, valor_risco: float}>  $itens
      */
-    public static function listaAlertas(array $itens): HtmlString
+    public static function listaAlertas(array $itens, bool $numerar = false): HtmlString
     {
         $linhas = '';
         $total = count($itens);
+        $rotulos = [
+            'alta' => 'Risco alto',
+            'media' => 'Risco médio',
+            'baixa' => 'Risco baixo',
+        ];
 
         foreach ($itens as $i => $item) {
             [, $cor] = self::SEVERIDADES[$item['severidade']] ?? self::SEVERIDADES['baixa'];
             $borda = $i === $total - 1 ? 'none' : '1px solid #e8ebef';
+            $contexto = $rotulos[$item['severidade']] ?? $rotulos['baixa'];
+            if ($numerar) {
+                $contexto .= ' · prioridade '.str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT);
+            }
 
             $valor = $item['valor_risco'] > 0
-                ? '<div style="margin-top: 4px; font-size: 12px; font-weight: 600; color: '.self::VERMELHO.';">'
-                    .self::brl($item['valor_risco']).' em notas escrituradas</div>'
+                ? '<div style="margin-top: 8px; font-size: 11px; color: '.self::TEXTO_SUAVE.'; line-height: 1.4;">'
+                    .'<span style="font-size: 9px; font-weight: 700; letter-spacing: 0.08em; '
+                    .'text-transform: uppercase; color: '.self::TEXTO_SUAVE.';">Exposição mapeada</span>'
+                    .'<span style="padding-left: 6px; font-size: 13px; font-weight: 700; color: '.self::VERMELHO.';">'
+                    .e(self::brl($item['valor_risco'])).'</span></div>'
                 : '';
 
             $linhas .= '<tr>'
-                .'<td width="4" style="'.self::bgSolido($cor).'"></td>'
-                .'<td style="padding: 13px 16px; background-color: #ffffff; border-bottom: '.$borda.';">'
-                .'<div style="font-size: 14px; font-weight: 600; color: '.self::TEXTO.'; line-height: 1.4;">'.e($item['titulo']).'</div>'
+                .'<td width="5" style="'.self::bgSolido($cor).'"></td>'
+                .'<td style="padding: 15px 17px 16px 17px; background-color: #ffffff; border-bottom: '.$borda.';">'
+                .'<div style="font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; '
+                .'color: '.$cor.'; line-height: 1.3;">'.e($contexto).'</div>'
+                .'<div style="margin-top: 5px; font-size: 14px; font-weight: 700; color: '.self::TEXTO.'; '
+                .'line-height: 1.45;">'.e($item['titulo']).'</div>'
                 .$valor
                 .'</td>'
                 .'</tr>';
@@ -302,7 +505,7 @@ class Blocos
 
         return new HtmlString(
             '<table width="100%" cellpadding="0" cellspacing="0" role="presentation" '
-            .'style="margin: 18px 0; border: 1px solid '.self::BORDA.'; border-radius: 4px; '
+            .'style="margin: 16px 0 18px 0; border: 1px solid '.self::BORDA.'; border-radius: 5px; '
             .'border-collapse: separate; overflow: hidden; background-color: #ffffff;">'.$linhas.'</table>'
         );
     }

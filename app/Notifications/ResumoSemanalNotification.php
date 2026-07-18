@@ -30,47 +30,89 @@ class ResumoSemanalNotification extends Notification implements ShouldQueue
         $periodo = $r['periodo_inicio']->format('d/m').' a '.$r['periodo_fim']->format('d/m/Y');
         $sev = $r['por_severidade'];
         $totalAlertas = $sev['alta'] + $sev['media'] + $sev['baixa'];
-
         $exposicao = array_sum(array_column($r['destaques'], 'valor_risco'));
+        $temAlertas = $totalAlertas > 0;
 
-        $mail = Blocos::comEtiqueta(new MailMessage, 'Resumo do período · '.$periodo);
+        $corEtiqueta = $sev['alta'] > 0
+            ? Blocos::VERMELHO
+            : ($sev['media'] > 0 ? Blocos::AMBAR : Blocos::VERDE);
 
-        $mail->subject('Seu resumo · '.$periodo)
-            ->greeting($totalAlertas > 0
-                ? $totalAlertas.' '.($totalAlertas === 1 ? 'alerta novo' : 'alertas novos').' na sua carteira'
-                : 'Carteira limpa no período');
+        $mail = Blocos::comEtiqueta(
+            new MailMessage,
+            'Resumo semanal · '.$periodo,
+            $corEtiqueta
+        );
 
-        // Exposição primeiro: é o número que decide se ele abre o painel hoje ou não.
-        if ($exposicao > 0) {
-            $mail->line(Blocos::hero(
-                Blocos::brl($exposicao),
-                'Exposição a glosa',
-                'Notas escrituradas com contrapartes irregulares',
-                Blocos::VERMELHO
+        $assunto = $temAlertas
+            ? 'Resumo fiscal: '.$totalAlertas.' '.($totalAlertas === 1 ? 'alerta novo' : 'alertas novos')
+            : 'Resumo fiscal: semana sem novos alertas';
+
+        $mail->subject($assunto.' · '.$periodo)
+            ->greeting('Sua semana fiscal, em um olhar')
+            ->line(Blocos::panoramaSemanal(
+                $totalAlertas,
+                $sev['alta'],
+                $sev['media'],
+                $exposicao,
+                $periodo
             ));
-        }
 
-        if ($totalAlertas > 0) {
-            $mail->line('## Prioridades da semana');
-            $mail->line('Ordenados por gravidade e valor. Resolva de cima para baixo.');
-            $mail->line(Blocos::listaAlertas($r['destaques']));
+        if ($temAlertas) {
+            $mail->line(Blocos::tituloSecao(
+                '01',
+                'Mapa de atenção',
+                'A distribuição mostra o que pede ação agora e o que pode ser apenas acompanhado.'
+            ));
+            $mail->line(Blocos::severidades($sev));
+
+            $mail->line(Blocos::tituloSecao(
+                '02',
+                'Prioridades para revisar',
+                'Ordenadas por gravidade e exposição financeira, da mais sensível para a menos urgente.'
+            ));
+            $mail->line(Blocos::listaAlertas($r['destaques'], true));
 
             $resto = $totalAlertas - count($r['destaques']);
+            $complemento = $resto > 0
+                ? ' A central reúne mais '.$resto.' '.($resto === 1 ? 'ocorrência' : 'ocorrências')
+                    .' além das cinco prioridades deste e-mail.'
+                : '';
 
-            if ($resto > 0) {
-                $mail->line('E mais **'.$resto.'** '.($resto === 1 ? 'alerta' : 'alertas')
-                    .' de menor gravidade na central.');
+            if ($sev['alta'] > 0) {
+                $mail->line(Blocos::aviso(
+                    'Primeiro movimento recomendado',
+                    'Revise os itens de risco alto antes de validar créditos, participar de licitações ou fechar o período.'
+                        .$complemento,
+                    'critico'
+                ));
+            } elseif ($sev['media'] > 0) {
+                $mail->line(Blocos::aviso(
+                    'Programe uma revisão nesta semana',
+                    'Os pontos de risco médio ainda não são críticos, mas merecem acompanhamento para não evoluírem.'
+                        .$complemento,
+                    'atencao'
+                ));
+            } else {
+                $mail->line(Blocos::aviso(
+                    'Acompanhamento suficiente',
+                    'As ocorrências deste período são informativas e podem entrar na sua rotina normal de conferência.'
+                        .$complemento,
+                    'info'
+                ));
             }
         } else {
-            $mail->line(Blocos::destaque(
-                '<strong style="color: #047857;">Nenhum alerta novo nesta semana.</strong><br>'
-                .'Certidões em dia, nenhuma contraparte virou irregular e sem divergência nova no acervo.',
-                Blocos::VERDE
+            $mail->line(Blocos::aviso(
+                'Nenhuma ação corretiva nova',
+                'O período terminou sem novas irregularidades, vencimentos ou divergências detectadas na carteira.',
+                'sucesso'
             ));
         }
 
-        // Placar por último: é o "o que você levou", não o que pede ação.
-        $mail->line('## O que a plataforma processou');
+        $mail->line(Blocos::tituloSecao(
+            $temAlertas ? '03' : '01',
+            'Atividade processada',
+            'Volume concluído pelo FiscalDock durante o período deste resumo.'
+        ));
         $mail->line(Blocos::placar([
             'CNPJs consultados' => $r['consultas'],
             'Documentos na SEFAZ' => $r['clearance'],
@@ -78,7 +120,10 @@ class ResumoSemanalNotification extends Notification implements ShouldQueue
         ]));
 
         return $mail
-            ->action('Abrir central de alertas', url('/app/alertas'))
-            ->line('Ajuste a frequência (semanal/mensal) ou desligue em Configurações › Notificações.');
+            ->action(
+                $temAlertas ? 'Revisar prioridades na central' : 'Abrir painel fiscal',
+                $temAlertas ? url('/app/alertas') : url('/app/dashboard')
+            )
+            ->line(Blocos::preferenciasResumo(url('/app/configuracoes')));
     }
 }
