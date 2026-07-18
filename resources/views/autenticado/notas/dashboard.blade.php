@@ -740,11 +740,14 @@
                             <option value="consulta">Última consulta</option>
                             <option value="nome">Nome</option>
                         </select>
-                        <button id="dnf-comp-consultar-todos" disabled
-                            class="px-3 py-1.5 text-xs font-medium rounded bg-gray-100 text-gray-400 cursor-not-allowed"
-                            title="Em breve — consulta à fonte oficial">
-                            Consultar todos pendentes
-                        </button>
+                        {{-- Consulta CNPJ está viva: leva pro fluxo real (seleção + custo) em vez de
+                             botão cinza eterno. Bulk direto daqui seria feature nova (custo/plano). --}}
+                        <a href="/app/consulta/nova" data-link
+                           class="px-3 py-1.5 text-xs font-medium rounded text-white hover:opacity-90"
+                           style="background-color: #1e4679"
+                           title="Abrir a Consulta de CNPJ para escolher os participantes e consultar">
+                            Consultar CNPJs
+                        </a>
                     </div>
                 </div>
             </div>
@@ -2222,7 +2225,7 @@
                 + '<td class="px-3 sm:px-4 py-3 text-right ' + volumeClass + '">' + formatBrl(p.volume) + '</td>'
                 + '<td class="px-3 sm:px-4 py-3 text-gray-600 text-xs">' + (p.ultima_consulta_em || '<span class="text-yellow-600">Nunca</span>') + '</td>'
                 + '<td class="px-3 sm:px-4 py-3 text-center">'
-                + '<button disabled class="px-2.5 py-1 text-xs font-medium rounded bg-gray-100 text-gray-400 cursor-not-allowed" title="Em breve — consulta à fonte oficial">Consultar</button>'
+                + '<a href="/app/consulta/nova" data-link class="inline-block px-2.5 py-1 text-xs font-medium rounded border border-gray-300 text-gray-700 hover:bg-gray-50" title="Consultar este CNPJ nas fontes oficiais">Consultar</a>'
                 + '</td>'
                 + '</tr>';
         });
