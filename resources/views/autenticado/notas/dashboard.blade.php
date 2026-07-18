@@ -2225,7 +2225,7 @@
                 + '<td class="px-3 sm:px-4 py-3 text-right ' + volumeClass + '">' + formatBrl(p.volume) + '</td>'
                 + '<td class="px-3 sm:px-4 py-3 text-gray-600 text-xs">' + (p.ultima_consulta_em || '<span class="text-yellow-600">Nunca</span>') + '</td>'
                 + '<td class="px-3 sm:px-4 py-3 text-center">'
-                + '<a href="/app/consulta/nova" data-link class="inline-block px-2.5 py-1 text-xs font-medium rounded border border-gray-300 text-gray-700 hover:bg-gray-50" title="Consultar este CNPJ nas fontes oficiais">Consultar</a>'
+                + '<a href="/app/consulta/nova" data-link class="inline-block px-2.5 py-1 text-xs font-medium rounded border border-gray-300 text-gray-700 hover:bg-gray-50" title="Abrir a Consulta de CNPJ (selecione o participante lá)">Consultar</a>'
                 + '</td>'
                 + '</tr>';
         });
