@@ -96,7 +96,6 @@ class AuthController extends Controller
                 'robots' => 'noindex,follow',
                 'og_type' => 'website',
                 'og_title' => 'Contato comercial — FiscalDock',
-                'og_image' => 'https://fiscaldock.com/binary_files/logo/Logo FiscalDock.png',
             ],
             'whatsAppUrl' => 'https://wa.me/5567999844366?text='.rawurlencode($whatsAppMessage),
         ]);
@@ -137,7 +136,6 @@ class AuthController extends Controller
                 'robots' => 'index,follow',
                 'og_type' => 'website',
                 'og_title' => 'Crie sua conta grátis — FiscalDock',
-                'og_image' => 'https://fiscaldock.com/binary_files/logo/Logo FiscalDock.png',
             ],
         ]);
     }
@@ -161,7 +159,6 @@ class AuthController extends Controller
                 'robots' => 'index,follow',
                 'og_type' => 'website',
                 'og_title' => 'Termos de uso — FiscalDock',
-                'og_image' => 'https://fiscaldock.com/binary_files/logo/Logo FiscalDock.png',
             ],
         ]);
     }
@@ -185,7 +182,6 @@ class AuthController extends Controller
                 'robots' => 'index,follow',
                 'og_type' => 'website',
                 'og_title' => 'Política de privacidade — FiscalDock',
-                'og_image' => 'https://fiscaldock.com/binary_files/logo/Logo FiscalDock.png',
             ],
         ]);
     }

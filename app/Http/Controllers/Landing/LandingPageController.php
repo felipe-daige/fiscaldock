@@ -28,7 +28,6 @@ class LandingPageController extends Controller
             'description' => 'Monitore CNPJs, emita CND e FGTS numa só consulta e detecte inconsistências no SPED antes da malha fiscal. Saldo pré-pago em reais, sem mensalidade.',
             'canonical' => self::BASE_URL.'/',
             'og_type' => 'website',
-            'og_image' => self::BASE_URL.'/binary_files/logo/Logo FiscalDock.png',
         ]);
     }
 
@@ -40,7 +39,6 @@ class LandingPageController extends Controller
             'canonical' => self::BASE_URL.'/solucoes',
             'og_type' => 'website',
             'og_title' => 'Toda a operação fiscal, do arquivo à decisão — FiscalDock',
-            'og_image' => self::BASE_URL.'/binary_files/logo/Logo FiscalDock.png',
         ]);
     }
 
@@ -52,7 +50,6 @@ class LandingPageController extends Controller
             'canonical' => self::BASE_URL.'/duvidas',
             'og_type' => 'website',
             'og_title' => 'Perguntas frequentes — FiscalDock',
-            'og_image' => self::BASE_URL.'/binary_files/logo/Logo FiscalDock.png',
         ], [
             // As respostas citam preço, fontes e disponibilidade de módulo: puxamos do catálogo
             // para o FAQ não virar uma segunda fonte de verdade que envelhece sozinha.
@@ -73,7 +70,6 @@ class LandingPageController extends Controller
             'canonical' => self::BASE_URL.'/precos',
             'og_type' => 'website',
             'og_title' => 'Planos e preços transparentes — FiscalDock',
-            'og_image' => self::BASE_URL.'/binary_files/logo/Logo FiscalDock.png',
         ], [
             'pricingData' => $pricingCatalogService->getLandingPricingData(),
             'subscriptionPlans' => SubscriptionPlan::allActive(),
