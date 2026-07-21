@@ -12,6 +12,9 @@ return new class extends Migration
             // Dados complementares
             $table->string('nome_fantasia', 255)->nullable()->after('razao_social');
             $table->string('inscricao_estadual', 20)->nullable()->after('nome_fantasia');
+            // Inscrição municipal (IM). Número estável: resolvido UMA vez e persistido; nunca
+            // reconsultado. Só a CERTIDÃO municipal (CND) reconsulta. Ver InscricaoMunicipalResolver.
+            $table->string('inscricao_municipal', 30)->nullable()->after('inscricao_estadual');
             $table->smallInteger('crt')->nullable()->after('inscricao_estadual');
 
             // Endereco expandido

@@ -31,6 +31,8 @@ return new class extends Migration
             $table->string('uf', 2)->nullable();
             $table->string('cnpj_matriz', 14)->nullable()->index();
             $table->string('inscricao_estadual')->nullable();
+            // IM: número estável, resolvido 1× e persistido; nunca reconsultado (só a CND municipal).
+            $table->string('inscricao_municipal')->nullable();
             $table->string('suframa')->nullable();
             $table->string('endereco')->nullable();
             $table->string('numero')->nullable();

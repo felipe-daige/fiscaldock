@@ -25,6 +25,7 @@ class PrivCpfCadastro extends Model
         'numero',
         'complemento',
         'inscricao_estadual',
+        'inscricao_municipal',
         'suframa',
     ];
 

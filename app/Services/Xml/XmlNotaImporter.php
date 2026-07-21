@@ -7,6 +7,7 @@ use App\Models\Participante;
 use App\Models\XmlImportacao;
 use App\Models\XmlNota;
 use App\Models\XmlNotaItem;
+use App\Services\Consultas\InscricaoMunicipalResolver;
 use App\Services\Entitlements\EntitlementService;
 use Illuminate\Support\Facades\DB;
 
@@ -17,7 +18,10 @@ use Illuminate\Support\Facades\DB;
  */
 class XmlNotaImporter
 {
-    public function __construct(private EntitlementService $entitlements = new EntitlementService) {}
+    public function __construct(
+        private EntitlementService $entitlements = new EntitlementService,
+        private InscricaoMunicipalResolver $imResolver = new InscricaoMunicipalResolver,
+    ) {}
 
     /**
      * @param  string|null  $ownerDoc  CNPJ do dono FORÇADO (override manual). Vazio/null = modo
@@ -128,8 +132,32 @@ class XmlNotaImporter
                 ]));
             }
 
+            // Se a nota traz inscrição municipal (emit_im/dest_im), grava no perfil das partes
+            // (participante e/ou cliente) — alimenta o CND Municipal sem reconsulta. É a
+            // resolução única do NÚMERO da IM; não sobrescreve IM já salva (manual vence).
+            $this->persistirImDaNota($emitPart, $emitCliente, $h['emit_im'] ?? null);
+            $this->persistirImDaNota($destPart, $destCliente, $h['dest_im'] ?? null);
+
             return $donoAusente ? 'sem_dono' : 'novo';
         });
+    }
+
+    /**
+     * Grava a IM da nota no perfil das partes que existem (participante e/ou cliente).
+     * Delega ao resolver (whereNull → nunca sobrescreve IM já informada).
+     */
+    private function persistirImDaNota(?object $emitOuDestParticipante, ?object $emitOuDestCliente, ?string $im): void
+    {
+        $im = trim((string) $im);
+        if ($im === '') {
+            return;
+        }
+        if ($emitOuDestParticipante) {
+            $this->imResolver->persistir('participante', (int) $emitOuDestParticipante->id, $im);
+        }
+        if ($emitOuDestCliente) {
+            $this->imResolver->persistir('cliente', (int) $emitOuDestCliente->id, $im);
+        }
     }
 
     /**

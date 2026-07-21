@@ -8,6 +8,8 @@ use App\Services\Consultas\Contracts\Fonte;
 use App\Services\Consultas\Dto\RespostaProvider;
 use App\Services\Consultas\Dto\ResultadoFonte;
 use App\Services\Consultas\FonteRegistry;
+use App\Services\Consultas\Fontes\CndMunicipalFonte;
+use App\Services\Consultas\InscricaoMunicipalResolver;
 use App\Services\Consultas\Persistencia\PersistenciaCnpj;
 use App\Services\Consultas\Providers\MinhaReceitaProvider;
 use App\Services\Consultas\ThrottleProvider;
@@ -58,6 +60,7 @@ class ProcessarConsultaJob implements ShouldQueue
         ThrottleProvider $throttle,
         PersistenciaCnpj $persistencia,
         ComprovanteArquivador $comprovanteArquivador,
+        InscricaoMunicipalResolver $imResolver,
     ): void {
         $total = count($this->etapas);
         // Etapa inicial: inicializacao. Suprimida quando esta é a 2ª fase de um fluxo maior
@@ -127,8 +130,22 @@ class ProcessarConsultaJob implements ShouldQueue
                 continue;
             }
 
-            // Cobertura do provedor indisponível p/ este alvo (ex: UF/cidade) → pula sem
-            // chamar nem cobrar; persiste como INDISPONIVEL com o MOTIVO (não é falha estornável).
+            // CND Municipal: injeta a inscrição municipal (IM) no alvo ANTES do aplicavelPara.
+            // Prefeituras que exigem IM (ex.: Ribeirão Preto/SP) só consultam com esse número; o
+            // aplicavelPara abaixo usa a IM já resolvida pra decidir se pula (sem IM → INDISPONIVEL,
+            // sem chamar/cobrar o 606 billable). O número é resolvido UMA vez (perfil → cross →
+            // acervo XML) e persistido; próximas consultas vêm do perfil, sem reconsulta — só a
+            // certidão reconsulta. Ver InscricaoMunicipalResolver.
+            if ($fonte instanceof CndMunicipalFonte) {
+                $im = $imResolver->resolver($alvo, $this->alvoTipo, $this->alvoId, $this->userId);
+                if ($im !== null) {
+                    $alvo['inscricao_municipal'] = $im;
+                }
+            }
+
+            // Cobertura do provedor indisponível p/ este alvo (ex: UF/cidade fora do mapa, ou
+            // município que exige IM sem IM no perfil) → pula sem chamar nem cobrar; persiste como
+            // INDISPONIVEL com o MOTIVO (não é falha estornável).
             if (! $fonte->aplicavelPara($alvo)) {
                 $persistencia->gravar($this->loteId, $this->alvoTipo, $this->alvoId, new ResultadoFonte(
                     $fonte->chave(),
@@ -140,6 +157,17 @@ class ProcessarConsultaJob implements ShouldQueue
             }
 
             $resultado = $this->consultarFonte($fonte, $alvo, $throttle, $persistencia, $comprovanteArquivador);
+
+            // Colheita grátis: a resposta da CND Municipal traz a inscrição municipal do
+            // contribuinte. Grava no perfil (resolve o NÚMERO 1x) pra reusar via cross-cadastro
+            // e nas prefeituras que EXIGEM IM de entrada. Sem chamada extra — vem da CND que já
+            // rodou. `persistir` não sobrescreve IM já salva.
+            if ($fonte instanceof CndMunicipalFonte && $resultado?->status === 'sucesso') {
+                $imColhida = trim((string) ($resultado->dados['cnd_municipal']['inscricao_municipal'] ?? ''));
+                if ($imColhida !== '') {
+                    $imResolver->persistir($this->alvoTipo, $this->alvoId, $imColhida);
+                }
+            }
 
             if ($resultado?->ehFalhaEstornavel()) {
                 $creditosFalhos += $resultado->custoCreditos;

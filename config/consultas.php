@@ -101,6 +101,20 @@ return [
     // explícito. Cidade do alvo vem do cadastro (minhareceita). Cidade fora do mapa → INDISPONÍVEL.
     // Inicial = cidades com slug /cnd explícito no catálogo do repo; COMPLETAR/validar via InfoSimples.
     'cnd_municipal' => [
+        // Municípios cujo endpoint InfoSimples EXIGE `inscricao_municipal` de entrada (não basta
+        // CNPJ). Chave "{uf}:{cidade-normalizada}", mesmas chaves de `slugs`. Consequências:
+        //   · só ESTES recebem o param `inscricao_municipal` no request (os demais rodam por CNPJ;
+        //     mandar IM neles arriscaria 607/param inválido);
+        //   · sem IM no perfil, a consulta é PULADA (INDISPONIVEL, sem chamar) — evita o 606
+        //     billable que o InfoSimples cobra por consulta fadada.
+        // Fonte: doc InfoSimples do serviço (input `cnpj, cpf, inscricao_municipal`). Confirmado:
+        // Ribeirão Preto/SP. ADICIONAR aqui ao descobrir outros (via 606 recorrente). Override:
+        // CONSULTA_CND_MUNICIPAL_REQUER_IM (CSV de chaves).
+        'requer_im' => array_values(array_filter(array_map('trim', explode(',', (string) env(
+            'CONSULTA_CND_MUNICIPAL_REQUER_IM',
+            'sp:ribeirao-preto'
+        ))))),
+
         // Mapa completo extraído da doc oficial InfoSimples (docs/infosimples.md). Chave =
         // "{uf}:{cidade-normalizada}". Aliases adicionais cobrem nomes oficiais cujo slug difere
         // (ex: rio-de-janeiro→rio-janeiro), pra casar com o município que a minhareceita retorna.

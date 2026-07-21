@@ -27,6 +27,8 @@ return new class extends Migration
             $table->string('numero', 10)->nullable();
             $table->string('complemento', 60)->nullable();
             $table->string('inscricao_estadual', 20)->nullable();
+            // IM: número estável, resolvido 1× e persistido; nunca reconsultado (só a CND municipal).
+            $table->string('inscricao_municipal', 30)->nullable();
             $table->string('suframa', 9)->nullable();
             $table->timestamps();
 

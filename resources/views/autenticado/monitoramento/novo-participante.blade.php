@@ -158,6 +158,21 @@
                                 >
                             </div>
 
+                            {{-- Inscricao Municipal (PJ only) — necessária p/ CND de prefeituras que exigem IM --}}
+                            <div id="np_campo_im">
+                                <label for="np_inscricao_municipal" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Inscrição Municipal
+                                </label>
+                                <input
+                                    type="text"
+                                    id="np_inscricao_municipal"
+                                    name="inscricao_municipal"
+                                    value="{{ old('inscricao_municipal', $isEditing ? $participante->inscricao_municipal : '') }}"
+                                    placeholder="Inscrição municipal (p/ CND municipal)"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                                >
+                            </div>
+
                             {{-- CRT + Telefone --}}
                             <div id="np_grid_crt_tel" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div id="np_campo_crt">
@@ -598,6 +613,7 @@
         // Show/hide PJ-only fields
         document.getElementById('np_campo_razao_social').style.display = isPF ? 'none' : '';
         document.getElementById('np_campo_ie').style.display = isPF ? 'none' : '';
+        document.getElementById('np_campo_im').style.display = isPF ? 'none' : '';
         document.getElementById('np_campo_crt').style.display = isPF ? 'none' : '';
 
         // Adjust telefone grid: if PF, telefone goes full width

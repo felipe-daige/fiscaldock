@@ -134,6 +134,15 @@
                                 placeholder="Inscrição estadual"
                                 maxlength="20">
                         </div>
+                        {{-- Inscricao Municipal (PJ only) — necessária p/ CND de prefeituras que exigem IM --}}
+                        <div id="field-im" class="{{ $tipoPessoa === 'PF' ? 'hidden' : '' }}">
+                            <label for="inscricao_municipal" class="block text-sm font-medium text-gray-700 mb-1">Inscrição Municipal</label>
+                            <input type="text" id="inscricao_municipal"
+                                value="{{ $isEditing ? $cliente->inscricao_municipal : '' }}"
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                                placeholder="Inscrição municipal (p/ CND municipal)"
+                                maxlength="30">
+                        </div>
                     </div>
 
                     {{-- CRT (PJ only) + Telefone --}}
@@ -546,7 +555,7 @@
     const clienteId = {{ $isEditing ? $cliente->id : 'null' }};
 
     // PJ-only field containers
-    const pjOnlyFields = ['field-razao', 'field-ie', 'field-crt', 'card-dados-rf', 'preview-crt-wrap', 'preview-situacao-wrap'];
+    const pjOnlyFields = ['field-razao', 'field-ie', 'field-im', 'field-crt', 'card-dados-rf', 'preview-crt-wrap', 'preview-situacao-wrap'];
 
     window.setTipoPessoa = function(tipo) {
         if (isEditing) return;
@@ -758,6 +767,7 @@
             razao_social: isPJ ? (document.getElementById('razao_social').value || null) : null,
             nome_fantasia: document.getElementById('nome').value || null,
             inscricao_estadual: isPJ ? (document.getElementById('inscricao_estadual').value || null) : null,
+            inscricao_municipal: isPJ ? (document.getElementById('inscricao_municipal').value || null) : null,
             crt: isPJ ? (document.getElementById('crt').value || null) : null,
             email: document.getElementById('email').value || null,
             telefone: document.getElementById('telefone').value || null,

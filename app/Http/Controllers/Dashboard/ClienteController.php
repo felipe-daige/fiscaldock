@@ -114,6 +114,7 @@ class ClienteController extends Controller
                 'codigo_municipal' => 'nullable|string|max:10',
                 // Campos PJ-only
                 'inscricao_estadual' => 'nullable|string|max:20',
+                'inscricao_municipal' => 'nullable|string|max:30',
                 'crt' => 'nullable|in:1,2,3',
                 'regime_tributario' => 'nullable|string|max:50',
                 'cnpj_matriz' => 'nullable|string|max:14',
@@ -182,6 +183,7 @@ class ClienteController extends Controller
                 'razao_social' => $validated['razao_social'] ?? null,
                 'nome_fantasia' => $validated['nome_fantasia'] ?? null,
                 'inscricao_estadual' => $isPJ ? ($validated['inscricao_estadual'] ?? null) : null,
+                'inscricao_municipal' => $isPJ ? ($validated['inscricao_municipal'] ?? null) : null,
                 'crt' => $isPJ ? ($validated['crt'] ?? null) : null,
                 'telefone' => $validated['telefone'] ?? null,
                 'email' => $validated['email'] ?? null,
@@ -327,6 +329,7 @@ class ClienteController extends Controller
                 'codigo_municipal' => 'nullable|string|max:10',
                 // Campos PJ-only
                 'inscricao_estadual' => 'nullable|string|max:20',
+                'inscricao_municipal' => 'nullable|string|max:30',
                 'crt' => 'nullable|in:1,2,3',
                 'regime_tributario' => 'nullable|string|max:50',
                 'cnpj_matriz' => 'nullable|string|max:14',
@@ -357,6 +360,7 @@ class ClienteController extends Controller
                 'razao_social' => $validated['razao_social'] ?? null,
                 'nome_fantasia' => $validated['nome_fantasia'] ?? null,
                 'inscricao_estadual' => $isPJ ? ($validated['inscricao_estadual'] ?? null) : null,
+                'inscricao_municipal' => $isPJ ? ($validated['inscricao_municipal'] ?? null) : null,
                 'crt' => $isPJ ? ($validated['crt'] ?? null) : null,
                 'telefone' => $validated['telefone'] ?? null,
                 'email' => $validated['email'] ?? null,

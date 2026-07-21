@@ -20,6 +20,7 @@ class Cliente extends Model
         'razao_social',
         'nome_fantasia',
         'inscricao_estadual',
+        'inscricao_municipal',
         'crt',
         'telefone',
         'email',
