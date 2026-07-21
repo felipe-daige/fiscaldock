@@ -26,6 +26,19 @@ class AppServiceProvider extends ServiceProvider
             new \App\Services\Consultas\Fontes\CndEstadualFonte,
             new \App\Services\Consultas\Fontes\SintegraFonte,
             new \App\Services\Consultas\Fontes\CndMunicipalFonte,
+            // Vertical advocacia (consulta à la carte) — docs/advocacia/consultas-certidoes.md.
+            // Fora de consultas_incluidas de qualquer plano: só entram em lote via seleção avulsa.
+            new \App\Services\Consultas\Fontes\Advocacia\CertidaoStjFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\CertidaoTrfFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\CeatTrtFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\CertidaoMptFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\CertidaoMpfFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\CertidaoTcuFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\ProtestosFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\FalenciasFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\ImprobidadeFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\CeisFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\CnepFonte,
         ]));
 
         $this->app->bind(

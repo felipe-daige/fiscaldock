@@ -364,7 +364,7 @@
                                 <button type="button" onclick="document.getElementById('modal-retry-{{ $lote->id }}').classList.add('hidden')" class="text-gray-400 text-xl leading-none">&times;</button>
                             </div>
                             <form id="form-retry-{{ $lote->id }}" class="p-4 space-y-3">
-                                <p class="text-[11px] text-gray-500">Reconsulta os CNPJs com fontes que falharam por instabilidade, no plano <strong>{{ $lote->plano->nome }}</strong> com {{ $retryPendentes['desconto_pct_efetivo'] ?? 50 }}% de desconto. Reconsultamos apenas as fontes que falharam de cada CNPJ.</p>
+                                <p class="text-[11px] text-gray-500">Reconsulta os CNPJs com fontes que falharam por instabilidade, no plano <strong>{{ $lote->plano?->nome ?? 'da consulta' }}</strong> com {{ $retryPendentes['desconto_pct_efetivo'] ?? 50 }}% de desconto. Reconsultamos apenas as fontes que falharam de cada CNPJ.</p>
                                 @foreach($retryPendentes['alvos'] ?? [] as $a)
                                     <div class="flex items-start justify-between gap-2 text-xs border border-gray-100 rounded p-2">
                                         <div class="text-gray-700">

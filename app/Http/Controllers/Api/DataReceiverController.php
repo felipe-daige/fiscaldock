@@ -7,6 +7,7 @@ use App\Models\Cliente;
 use App\Models\EfdDivergencia;
 use App\Models\EfdImportacao;
 use App\Models\Participante;
+use App\Services\EfdAuditoriaService;
 use App\Services\EfdResumoBuilder;
 use App\Services\SaldoService;
 use App\Support\SystemCriticalError;
@@ -279,7 +280,7 @@ class DataReceiverController extends Controller
      * Headers: X-API-Token
      * Body: { user_id, tab_id, importacao_id, tipo_efd? }
      */
-    public function finalizarImportacaoEfd(Request $request, EfdResumoBuilder $builder): JsonResponse
+    public function finalizarImportacaoEfd(Request $request, EfdResumoBuilder $builder, EfdAuditoriaService $auditoria): JsonResponse
     {
         if (! $this->isTokenValid($request)) {
             return response()->json(['error' => 'Unauthorized', 'message' => 'Token inválido'], 401);
@@ -322,6 +323,23 @@ class DataReceiverController extends Controller
         $tempoSegundos = $imp->iniciado_em
             ? (int) $imp->iniciado_em->diffInSeconds(now())
             : null;
+
+        // Guardrail universal: toda importação se autoverifica contra o SPED bruto. Se o
+        // pipeline dropou notas (ex.: Merge C100↔0150 soltando NFC-e — bug UTIDA), a
+        // importação NÃO fica "concluído" mudo: grava o veredito em resumo_final.integridade
+        // e loga. Barato (só conta chaves), degrada seguro sem arquivo retido.
+        $integridade = $auditoria->integridade($imp);
+        $resumo['integridade'] = $integridade;
+        if (! $integridade['ok']) {
+            Log::warning('EFD import: notas do SPED ausentes no banco (pipeline dropou)', [
+                'importacao_id' => $imp->id,
+                'user_id' => $imp->user_id,
+                'tipo_efd' => $imp->tipo_efd,
+                'esperadas' => $integridade['esperadas'],
+                'faltando' => $integridade['faltando'],
+                'amostra' => $integridade['amostra_faltando'],
+            ]);
+        }
 
         $est = $resumo['estatisticas'] ?? [];
         $imp->update([

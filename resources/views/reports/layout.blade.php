@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>@yield('titulo', 'Relatório FiscalDock')</title>
     <style>
-        @page { size: A4 portrait; margin: 88px 32px 52px 32px; }
+        @page { size: A4 portrait; margin: 96px 32px 52px 32px; }
         /* dompdf 3.x: resetar margin/padding em `*` OU em html/body ZERA a margem do @page
            (conteúdo full-bleed colide com o header fixo). Resetar só tags internas — nunca html/body. */
         * { box-sizing:border-box; }

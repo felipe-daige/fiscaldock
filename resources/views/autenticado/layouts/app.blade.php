@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @include('partials.tracking-base')
     <title>Reforma Tributária 2026 | Soluções Inteligentes</title>
     <meta name="description" content="Prepare sua empresa para a Reforma Tributária de 2026 com soluções inteligentes. Otimize créditos, automatize processos e garanta conformidade fiscal.">
     
@@ -79,5 +80,6 @@
     <script src="{{ asset('js/error-inline.js') }}?v={{ filemtime(public_path('js/error-inline.js')) }}"></script>
     <script src="{{ asset('js/nota-catalogo.js') }}?v={{ filemtime(public_path('js/nota-catalogo.js')) }}"></script>
     <script src="{{ asset('js/mobile-filters.js') }}?v={{ is_file(public_path('js/mobile-filters.js')) ? filemtime(public_path('js/mobile-filters.js')) : 1 }}"></script>
+    @include('partials.tracking-events')
 </body>
 </html>

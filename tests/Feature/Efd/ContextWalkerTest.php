@@ -1,0 +1,87 @@
+<?php
+
+use App\Services\Efd\Sped\ContextWalker;
+use App\Services\Efd\Sped\SpedParser;
+
+/** @return array<int, array{0: string, 1: ?\App\Services\Efd\Sped\Contexto}> */
+if (! function_exists('spedWalk')) {
+    function spedWalk(string $conteudo): array
+    {
+        $out = [];
+        foreach ((new ContextWalker)->walk((new SpedParser)->stream($conteudo)) as [$rec, $pai]) {
+            $out[] = [$rec->reg, $pai];
+        }
+
+        return $out;
+    }
+}
+
+it('C100 vira pai dos filhos; bloco 0/E encerra o contexto', function () {
+    $conteudo = implode("\n", [
+        '|0150|FOR1|Fornecedor||11222333000181|',
+        '|C100|0|1|FOR1|55|00|1|123|CHAVE_A|31012026|31012026|10,00|',
+        '|C190|00|5102|18|100|',
+        '|C170|1|COD|desc|',
+        '|C100|1|0||65|00|2|456|CHAVE_B|08012026|08012026|50,00|', // NFC-e sem COD_PART
+        '|C190|00|5405|0|50|',
+        '|E100|01012026|31012026|',
+        '|E110|100|0|',
+    ]);
+
+    $resumo = array_map(fn ($p) => [$p[0], $p[1]?->chave], spedWalk($conteudo));
+
+    expect($resumo)->toBe([
+        ['0150', null],
+        ['C100', null],        // o próprio documento não tem pai
+        ['C190', 'CHAVE_A'],
+        ['C170', 'CHAVE_A'],
+        ['C100', null],
+        ['C190', 'CHAVE_B'],   // herda do 2º C100, não do 1º
+        ['E100', null],        // bloco E encerrou o contexto
+        ['E110', null],
+    ]);
+});
+
+it('monta o Contexto do C100 com os índices SPED corretos', function () {
+    $conteudo = "|C100|0|1|FOR1|55|00|3|123|CHAVE_A|31012026|31012026|7,20|\n|C190|00|5102|18|100|";
+
+    $pai = null;
+    foreach (spedWalk($conteudo) as [$reg, $ctx]) {
+        if ($reg === 'C190') {
+            $pai = $ctx;
+        }
+    }
+
+    expect($pai->reg)->toBe('C100')
+        ->and($pai->tipoOperacao)->toBe('0') // $p[2] IND_OPER
+        ->and($pai->modelo)->toBe('55')       // $p[5] COD_MOD
+        ->and($pai->serie)->toBe('3')         // $p[7] SER
+        ->and($pai->numero)->toBe('123')      // $p[8] NUM_DOC
+        ->and($pai->chave)->toBe('CHAVE_A');  // $p[9] CHV_NFE
+});
+
+it('monta o Contexto do D100 (CT-e) com CHV_CTE em $p[10]', function () {
+    // D100 $p[2]=IND_OPER, [5]=COD_MOD, [7]=SER, [9]=NUM_DOC, [10]=CHV_CTE
+    $conteudo = "|D100|0|1|TR1|57|00|1|0|999|CHAVE_CTE|01022026|01022026|200,00|\n|D190|00|5353|12|100|";
+
+    $pai = null;
+    foreach (spedWalk($conteudo) as [$reg, $ctx]) {
+        if ($reg === 'D190') {
+            $pai = $ctx;
+        }
+    }
+
+    expect($pai->reg)->toBe('D100')
+        ->and($pai->modelo)->toBe('57')
+        ->and($pai->serie)->toBe('1')
+        ->and($pai->numero)->toBe('999')
+        ->and($pai->chave)->toBe('CHAVE_CTE');
+});
+
+it('filho órfão (SPED malformado) sai com contexto null, sem quebrar', function () {
+    $pares = spedWalk('|C190|00|5102|18|100|'); // C190 sem C100 antes
+
+    expect($pares)->toHaveCount(1)
+        ->and($pares[0][0])->toBe('C190')
+        ->and($pares[0][1])->toBeNull();
+});

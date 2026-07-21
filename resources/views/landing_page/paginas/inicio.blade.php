@@ -2500,7 +2500,7 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
                             <span class="hero-fact-label">já entram na sua conta ao se cadastrar — sem pagar nada, válidos por {{ config('trial.validade_dias') }} dias</span>
                         </div>
                         <div class="hero-fact">
-                            <span class="hero-fact-num">9 fontes</span>
+                            <span class="hero-fact-num">{{ $fontesConsultadas }} fontes</span>
                             <span class="hero-fact-label">oficiais consultadas — nada estimado ou inferido</span>
                         </div>
                         <div class="hero-fact">
@@ -2527,7 +2527,7 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
                         <div class="hb-head">
                             <div>
                                 <div class="hb-title">Radar de riscos — EFD mar/2026</div>
-                                <div class="hb-sub">142 participantes cruzados com 9 fontes oficiais</div>
+                                <div class="hb-sub">142 participantes cruzados com {{ $fontesConsultadas }} fontes oficiais</div>
                             </div>
                             <span class="hb-swap" style="--hb-delay: 2.7s;">
                                 <span class="hb-pill hb-pending">Cruzando fontes…</span>

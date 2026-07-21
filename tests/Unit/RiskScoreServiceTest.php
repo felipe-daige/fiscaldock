@@ -87,13 +87,15 @@ it('categoriaLabels cobre exatamente as chaves de getPesos', function () {
     expect($labels['cnd_federal'])->toBe('CND Federal');
 });
 
-it('hexSubscore mapeia faixas (replica closure do risk/show)', function () {
+it('hexSubscore respeita exatamente as bordas das faixas de classificação', function () {
     expect(\App\Services\RiskScoreService::hexSubscore(null))->toBe('#9ca3af');
     expect(\App\Services\RiskScoreService::hexSubscore(0))->toBe('#047857');
-    expect(\App\Services\RiskScoreService::hexSubscore(19))->toBe('#047857');
-    expect(\App\Services\RiskScoreService::hexSubscore(20))->toBe('#b45309');
-    expect(\App\Services\RiskScoreService::hexSubscore(50))->toBe('#ea580c');
-    expect(\App\Services\RiskScoreService::hexSubscore(80))->toBe('#b91c1c');
+    expect(\App\Services\RiskScoreService::hexSubscore(20))->toBe('#047857');
+    expect(\App\Services\RiskScoreService::hexSubscore(21))->toBe('#b45309');
+    expect(\App\Services\RiskScoreService::hexSubscore(50))->toBe('#b45309');
+    expect(\App\Services\RiskScoreService::hexSubscore(51))->toBe('#dc2626');
+    expect(\App\Services\RiskScoreService::hexSubscore(80))->toBe('#dc2626');
+    expect(\App\Services\RiskScoreService::hexSubscore(81))->toBe('#b91c1c');
     expect(\App\Services\RiskScoreService::hexSubscore(100))->toBe('#b91c1c');
 });
 
@@ -107,9 +109,11 @@ it('detalhar produz linha por categoria com label, peso_pct, score, avaliado e h
     expect(array_keys($det))->toBe(array_keys($this->svc->getPesos()));
     expect($det['cadastral'])->toMatchArray([
         'label' => 'Situação Cadastral', 'peso_pct' => 15, 'score' => 0, 'avaliado' => true, 'hex' => '#047857',
+        'peso_base_pct' => 15.0, 'peso_efetivo_pct' => 42.9, 'contribuicao_pontos' => 0.0,
     ]);
     expect($det['cnd_federal'])->toMatchArray([
-        'label' => 'CND Federal', 'peso_pct' => 20, 'score' => 70, 'avaliado' => true, 'hex' => '#ea580c',
+        'label' => 'CND Federal', 'peso_pct' => 20, 'score' => 70, 'avaliado' => true, 'hex' => '#dc2626',
+        'peso_base_pct' => 20.0, 'peso_efetivo_pct' => 57.1, 'contribuicao_pontos' => 40.0,
     ]);
     // categorias não consultadas => null, não avaliado, hex neutro
     expect($det['fgts'])->toMatchArray(['score' => null, 'avaliado' => false, 'hex' => '#9ca3af']);
@@ -123,4 +127,19 @@ it('detalhar com scores vazio => 5 categorias todas não avaliadas', function ()
         expect($linha['score'])->toBeNull();
         expect($linha['hex'])->toBe('#9ca3af');
     }
+});
+
+it('pesos efetivos exibidos compensam arredondamento e fecham em 100 por cento', function () {
+    $det = $this->svc->detalhar([
+        'cadastral' => 0,
+        'cnd_federal' => 0,
+        'cnd_estadual' => null,
+        'fgts' => 0,
+        'trabalhista' => null,
+    ]);
+
+    expect(round((float) collect($det)->sum('peso_efetivo_pct'), 1))->toBe(100.0)
+        ->and($det['cadastral']['peso_efetivo_pct'])->toBe(33.3)
+        ->and($det['cnd_federal']['peso_efetivo_pct'])->toBe(44.4)
+        ->and($det['fgts']['peso_efetivo_pct'])->toBe(22.3);
 });

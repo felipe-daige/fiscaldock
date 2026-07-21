@@ -9,10 +9,12 @@ $cfopsDevolucao = array_values(array_filter(array_map('intval', explode(',', (st
     '1201,1202,1410,1411,2201,2202,2410,2411,5201,5202,5210,5410,5411,6201,6202,6210,6410,6411'
 )))));
 
-// Conserto/uso-consumo (não-receita, sem devolução — devolução entra via merge).
+// Conserto/industrialização (não-receita, sem devolução — devolução entra via merge).
+// 1407/2556 (compra p/ uso e consumo) SAÍRAM da lista em 2026-07-21: passam a compor
+// a base comercial (aquisição) por decisão do contador.
 $cfopsNaoReceita = array_values(array_filter(array_map('intval', explode(',', (string) env(
     'EFD_CFOPS_FORA_FATURAMENTO',
-    '1407,1915,1916,2556,5916,6915,6916'
+    '1915,1916,5916,6915,6916'
 )))));
 
 return [

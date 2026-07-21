@@ -36,5 +36,8 @@ class DatabaseSeeder extends Seeder
 
         // Catálogo de status das integrações
         $this->call(IntegracaoStatusSeeder::class);
+
+        // Kits da consulta avulsa por fontes (vertical advocacia)
+        $this->call(ConsultaKitSeeder::class);
     }
 }

@@ -37,9 +37,9 @@ it('perfil do participante mostra detalhamento do score quando há consulta', fu
 
     $resp = $this->actingAs($user)->get("/app/participante/{$part->id}");
     $resp->assertOk();
-    $resp->assertSee('Detalhamento do Score');
+    $resp->assertSee('Score de Risco');
     $resp->assertSee('Situação Cadastral');
-    $resp->assertSee('Peso:');
+    $resp->assertSee('Peso efetivo:');
 });
 
 it('perfil do participante sem consulta mostra empty-state do score', function () {
@@ -130,8 +130,7 @@ it('perfil consolida certidões anteriores quando a consulta mais recente é ape
     $this->actingAs($user)
         ->get("/app/participante/{$part->id}")
         ->assertOk()
-        ->assertSee('Dados Consolidados das Consultas')
-        ->assertSee("Último lote #{$loteParcial->id}")
+        ->assertSee('Certidões e Cadastros Fiscais')
         ->assertSee('FED-215')
         ->assertSee('EST-215')
         ->assertSee('FGTS-215')

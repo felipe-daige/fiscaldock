@@ -71,14 +71,15 @@ test('cockpit usa fluxo vertical estavel sem o grid assimetrico anterior', funct
     $response->assertSee('data-cockpit-identidade', false);
     $response->assertSee('data-cockpit-indicadores', false);
     $response->assertSee('data-empresa-indicadores', false);
-    $response->assertSee('data-empresa-alertas', false);
-    $response->assertSee('data-empresa-cadastro', false);
-    $response->assertSee('data-empresa-score', false);
-    $response->assertSee('data-empresa-certidoes', false);
+    $response->assertSee('data-perfil-cnpj-flow', false);
+    $response->assertSee('data-perfil-card="alertas"', false);
+    $response->assertSee('data-perfil-card="cadastro"', false);
+    $response->assertSee('data-perfil-card="score"', false);
+    $response->assertSee('data-perfil-card="certidoes"', false);
     $response->assertSee('data-empresa-gestao', false);
-    $response->assertSee('Nenhuma atividade informada na última consulta');
-    $response->assertSee('Nenhum integrante informado na última consulta');
-    $response->assertSee('O perfil de risco será exibido após a primeira consulta.');
+    $response->assertSee('Nenhuma atividade informada');
+    $response->assertSee('Nenhum integrante informado');
+    $response->assertSee('Score não calculado');
     $response->assertDontSee('data-empresa-overview-grid', false);
     $response->assertDontSee('xl:col-span-7', false);
 });
@@ -539,7 +540,7 @@ test('score alto usa cor distinta do medio', function () {
 
     $response->assertOk();
     $response->assertSee('ALTO');
-    $response->assertSee('#ea580c', false); // laranja escuro distinto do âmbar #b45309 do médio
+    $response->assertSee('#dc2626', false); // alto é vermelho; médio permanece âmbar
 });
 
 test('certidao positiva pura vira Irregular via CertidaoBadge e expoe comprovante', function () {

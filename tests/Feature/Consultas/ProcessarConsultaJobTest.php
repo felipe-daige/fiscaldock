@@ -308,11 +308,39 @@ it('auto-retry recupera fonte transitória (609→200): blob persistido, marca l
     expect((int) Cache::get("consulta_estorno:{$loteId}:participante:{$participanteId}"))->toBe(0);
 });
 
+it('default = 2 tentativas: 615 origem fora persiste → recupera na 2ª (615→615→200)', function () {
+    // Caso real do smoke (falências 615): origem oficial fora do ar. Com o default novo
+    // (2 tentativas), o job re-bate 2× e pega a origem já no ar na 2ª — sem estornar nem
+    // marcar erro. Cooldown zerado só p/ o teste não dormir (o backoff 15s/30s é do prod).
+    [$loteId, $participanteId, $userId] = montarLoteParticipante();
+    config()->set('consultas.infosimples_ativo', true);
+    config()->set('consultas.providers.infosimples.token', 'tok');
+    config()->set('consultas.retry.auto.cooldown_segundos', 0);
+
+    Http::fake(['api.infosimples.com/*' => Http::sequence()
+        ->push(['code' => 615, 'code_message' => 'origem indisponível'], 200)
+        ->push(['code' => 615, 'code_message' => 'origem indisponível'], 200)
+        ->push(['code' => 200, 'data' => [['tipo' => 'Negativa']]], 200)]);
+
+    ProcessarConsultaJob::dispatchSync(
+        loteId: $loteId, alvoTipo: 'participante', alvoId: $participanteId, userId: $userId, tabId: 'tab-test',
+        consultasIncluidas: ['cnd_federal'], alvo: ['cnpj' => '19131243000197'],
+        etapas: ['Preparando', 'Federais'],
+    );
+
+    Http::assertSentCount(3); // original + 2 auto-retries (default max_tentativas = 2)
+    $r = ConsultaResultado::where('consulta_lote_id', $loteId)->first();
+    expect($r->resultado_dados['cnd_federal']['status'])->toBe('Negativa')
+        ->and($r->resultado_dados['_fontes_erro'] ?? null)->toBeNull();
+    expect((int) Cache::get("consulta_estorno:{$loteId}:participante:{$participanteId}"))->toBe(0);
+});
+
 it('auto-retry re-falha (609→609): 1 marca com tentativas=1 e estorno contado UMA vez', function () {
     [$loteId, $participanteId, $userId] = montarLoteParticipante();
     config()->set('consultas.infosimples_ativo', true);
     config()->set('consultas.providers.infosimples.token', 'tok');
     config()->set('consultas.retry.auto.cooldown_segundos', 0);
+    config()->set('consultas.retry.auto.max_tentativas', 1); // isola a marca/estorno do default
 
     Http::fake(['api.infosimples.com/*' => Http::response(['code' => 609, 'code_message' => 'temporário'], 200)]);
 
@@ -322,7 +350,7 @@ it('auto-retry re-falha (609→609): 1 marca com tentativas=1 e estorno contado 
         etapas: ['Preparando', 'Federais'],
     );
 
-    Http::assertSentCount(2); // original + 1 auto-retry (max_tentativas default 1)
+    Http::assertSentCount(2); // original + 1 auto-retry (max_tentativas fixado em 1 acima)
     $r = ConsultaResultado::where('consulta_lote_id', $loteId)->first();
     expect($r->resultado_dados['_fontes_erro']['cnd_federal'])->toMatchArray([
         'origem' => 'integracao', 'status' => 'retry', 'codigo' => 609, 'tentativas' => 1,

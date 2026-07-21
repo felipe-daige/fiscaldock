@@ -21,13 +21,20 @@ class LandingPageController extends Controller
      */
     protected string $themeClass = 'theme-default';
 
-    public function inicio(Request $request)
+    public function inicio(Request $request, PricingCatalogService $pricingCatalogService)
     {
         return $this->renderLanding($request, 'paginas.inicio', [
             'title' => 'FiscalDock | Radar de Riscos Fiscais',
             'description' => 'Monitore CNPJs, emita CND, CNDT e FGTS numa só consulta e detecte inconsistências no SPED antes da malha fiscal. Saldo pré-pago em reais, sem mensalidade.',
             'canonical' => self::BASE_URL.'/',
             'og_type' => 'website',
+        ], [
+            // Nº de fontes de consulta CNPJ ativas — derivado do catálogo (mesma fonte de verdade
+            // que /precos e /duvidas), pra o número do hero não envelhecer sozinho nem depender do
+            // mapa de labels de progresso SSE.
+            'fontesConsultadas' => collect($pricingCatalogService->getComplianceSources())
+                ->where('status', 'ativo')
+                ->count(),
         ]);
     }
 

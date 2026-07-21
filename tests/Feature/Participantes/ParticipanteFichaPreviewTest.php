@@ -21,6 +21,6 @@ it('ficha mostra bloco de movimentacoes e botao de dossie', function () {
 
     $this->actingAs($user)->get("/app/participante/{$p->id}")
         ->assertOk()
-        ->assertSee('Movimentações', false)
+        ->assertSee('Relacionamento &amp; Movimentação Fiscal', false)
         ->assertSee("/app/participante/{$p->id}/dossie", false);
 });

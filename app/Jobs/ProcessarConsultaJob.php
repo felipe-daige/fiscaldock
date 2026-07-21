@@ -53,6 +53,11 @@ class ProcessarConsultaJob implements ShouldQueue
         // desligado: a etapa 1 já foi cumprida pela fase dos documentos, e reemiti-la faria o strip
         // VOLTAR pra "Preparando consulta" no meio da consulta da contraparte.
         public bool $emitirInicializacao = true,
+        // Lote avulso por fontes (advocacia): PREÇO DE VENDA por chave de fonte, em R$. O estorno
+        // de falha estornável devolve o que foi COBRADO do usuário (ex.: R$ 1,00/fonte), não o
+        // custo interno InfoSimples (consultas.fontes.*). Null = lote de plano (comportamento
+        // original: estorna o custo interno da fonte).
+        public ?array $precosVenda = null,
     ) {}
 
     public function handle(
@@ -170,7 +175,7 @@ class ProcessarConsultaJob implements ShouldQueue
             }
 
             if ($resultado?->ehFalhaEstornavel()) {
-                $creditosFalhos += $resultado->custoCreditos;
+                $creditosFalhos += $this->valorEstornavel($fonte->chave(), $resultado->custoCreditos);
             }
 
             // Falha transitória (classe `retry`) entra na passada de auto-retry ao fim do alvo.
@@ -252,6 +257,11 @@ class ProcessarConsultaJob implements ShouldQueue
                 if (! empty($dados['endereco']['municipio'])) {
                     $alvo['municipio'] = $dados['endereco']['municipio'];
                 }
+                // Razão social oficial (RFB) — exigida como `nome` por fontes de busca nominal
+                // (ex.: CEAT TRT). Sobrescreve a razão vinda do banco no alvo inicial.
+                if (! empty($dados['razao_social'])) {
+                    $alvo['razao_social'] = $dados['razao_social'];
+                }
                 // Indicador oficial (RFB) de matriz/filial, propagado pras fontes seguintes
                 // (ex.: CndFederalFonte::params()) — mais confiável que a ORDEM do CNPJ.
                 if (! empty($dados['matriz_filial'])) {
@@ -294,6 +304,24 @@ class ProcessarConsultaJob implements ShouldQueue
                 $resp->status, $fonte->custoCreditos(), $resp->mensagem,
             );
             $persistencia->gravar($this->loteId, $this->alvoTipo, $this->alvoId, $resultado);
+
+            // Registro canônico de certidão emitida (tabela `certidoes`): alimenta os alertas de
+            // vencimento e aponta o PDF já arquivado. Falha aqui nunca derruba a consulta.
+            if ($resp->status === 'sucesso' && $fonte instanceof \App\Services\Consultas\Fontes\FonteCertidaoInfoSimples) {
+                try {
+                    app(\App\Services\Consultas\CertidaoRegistro::class)->registrar(
+                        $fonte->chave(),
+                        (array) ($dados[$fonte->chave()] ?? []),
+                        $this->userId,
+                        $this->alvoTipo,
+                        $this->alvoId,
+                        (string) ($alvo['cnpj'] ?? ''),
+                        $this->loteId,
+                    );
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
 
             // Fonte pedida que não produziu resultado (retry/fatal/erro_participante → blob
             // vazio, chave ausente) = falha NA INTEGRAÇÃO. Marca a origem p/ a UI distinguir
@@ -347,9 +375,10 @@ class ProcessarConsultaJob implements ShouldQueue
 
     /**
      * Auto-retry das fontes que falharam com classe `retry` (transitória): re-tenta cada uma
-     * até consultas.retry.auto.max_tentativas vezes, respeitando um cooldown contado desde a
-     * falha (o tempo já gasto nas fontes seguintes abate a espera). Ajusta o estorno: fonte
-     * recuperada deixa de ser estornada; re-falha não conta duas vezes.
+     * até consultas.retry.auto.max_tentativas vezes, com BACKOFF crescente por tentativa
+     * (cooldown × nº da tentativa: 15s na 1ª, 30s na 2ª). A espera é contada desde a falha, então
+     * o tempo já gasto nas fontes seguintes abate. Ajusta o estorno: fonte recuperada deixa de
+     * ser estornada; re-falha não conta duas vezes.
      *
      * @param  array<int, array{fonte: Fonte, falhouEm: float}>  $retentaveis
      * @return int unidades internas do valor a estornar
@@ -373,7 +402,9 @@ class ProcessarConsultaJob implements ShouldQueue
                 /** @var Fonte $fonte */
                 $fonte = $r['fonte'];
 
-                $espera = $cooldown - (microtime(true) - $r['falhouEm']);
+                // Backoff crescente: a espera-alvo cresce com o nº da tentativa (15s, 30s, ...);
+                // desconta o tempo já decorrido desde a falha (fontes seguintes já "gastaram" parte).
+                $espera = ($cooldown * $t) - (microtime(true) - $r['falhouEm']);
                 if ($espera > 0) {
                     usleep((int) ($espera * 1_000_000));
                 }
@@ -402,7 +433,7 @@ class ProcessarConsultaJob implements ShouldQueue
                 } elseif ($resultado !== null && ! $resultado->ehFalhaEstornavel()) {
                     // Recuperou (sucesso/nao_encontrado/indeterminado/erro_participante): o dado
                     // foi entregue/cobrado — cancela o estorno contado na 1ª falha.
-                    $creditosFalhos = max(0, $creditosFalhos - $resultado->custoCreditos);
+                    $creditosFalhos = max(0, $creditosFalhos - $this->valorEstornavel($fonte->chave(), $resultado->custoCreditos));
                 }
                 // retry→fatal mantém o estorno já contado; retry→exceção interna (null) idem.
             }
@@ -410,6 +441,19 @@ class ProcessarConsultaJob implements ShouldQueue
         }
 
         return $creditosFalhos;
+    }
+
+    /**
+     * Valor a estornar por falha estornável DESTA fonte: no lote avulso é o preço de venda
+     * cobrado (precosVenda); no lote de plano é o custo interno da fonte (comportamento original).
+     */
+    private function valorEstornavel(string $chaveFonte, float $custoInterno): float
+    {
+        if ($this->precosVenda !== null) {
+            return (float) ($this->precosVenda[$chaveFonte] ?? 0);
+        }
+
+        return $custoInterno;
     }
 
     private function resolverProvider(string $nome)

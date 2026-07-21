@@ -72,6 +72,47 @@ final class ParticipanteMovimentacaoService
         ];
     }
 
+    /**
+     * Entradas/saídas (qtd + valor) e totais de VÁRIOS participantes numa query só —
+     * mesma base e dedup do kpis() individual (fiscal, não canceladas, dedup cross-EFD).
+     * Para o export "todos os participantes" do BI sem cair em N queries. Chave =
+     * participante_id; ids sem nota ficam ausentes (o caller aplica zero).
+     *
+     * @param  array<int, int>  $ids
+     * @return array<int, array{total_notas:int, valor_movimentado:float, entradas_qtd:int, entradas_valor:float, saidas_qtd:int, saidas_valor:float}>
+     */
+    public function kpisEmLote(int $userId, array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        return EfdNota::query()
+            ->where('user_id', $userId)
+            ->whereIn('participante_id', $ids)
+            ->where('cancelada', false)
+            ->whereRaw(\App\Services\BiService::dedupParticipanteSql('efd_notas'))
+            ->groupBy('participante_id')
+            ->selectRaw("
+                participante_id,
+                count(*) filter (where tipo_operacao = 'entrada') as ent_qtd,
+                coalesce(sum(valor_total) filter (where tipo_operacao = 'entrada'), 0) as ent_val,
+                count(*) filter (where tipo_operacao = 'saida') as sai_qtd,
+                coalesce(sum(valor_total) filter (where tipo_operacao = 'saida'), 0) as sai_val
+            ")
+            ->get()
+            ->keyBy('participante_id')
+            ->map(fn ($r) => [
+                'total_notas' => (int) $r->ent_qtd + (int) $r->sai_qtd,
+                'valor_movimentado' => (float) $r->ent_val + (float) $r->sai_val,
+                'entradas_qtd' => (int) $r->ent_qtd,
+                'entradas_valor' => (float) $r->ent_val,
+                'saidas_qtd' => (int) $r->sai_qtd,
+                'saidas_valor' => (float) $r->sai_val,
+            ])
+            ->all();
+    }
+
     public function porCompetencia(Participante $p): array
     {
         $rows = $this->notasQuery($p)

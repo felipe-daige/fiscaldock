@@ -839,7 +839,7 @@ class ConsultaController extends Controller
         $clientes = \App\Models\Cliente::where('user_id', $user->id)
             ->whereIn('id', $clienteIds)
             ->whereRaw("length(regexp_replace(coalesce(documento, ''), '[^0-9]', '', 'g')) = 14")
-            ->get(['id', 'documento', 'razao_social']);
+            ->get(['id', 'documento', 'razao_social', 'uf']);
 
         if ($clientes->count() !== count($clienteIds)) {
             return response()->json([
@@ -861,9 +861,11 @@ class ConsultaController extends Controller
         $alvos = $participantes->map(fn ($p) => [
             'tipo' => 'participante', 'id' => $p->id,
             'cnpj' => preg_replace('/[^0-9]/', '', (string) $p->documento), 'uf' => $p->uf, 'crt' => $p->crt,
+            'razao_social' => $p->razao_social,
         ])->concat($clientes->map(fn ($c) => [
             'tipo' => 'cliente', 'id' => $c->id,
             'cnpj' => preg_replace('/[^0-9]/', '', (string) $c->documento), 'uf' => $c->uf ?? null, 'crt' => null,
+            'razao_social' => $c->razao_social,
         ]))->values();
 
         // Calcular custo
@@ -966,6 +968,9 @@ class ConsultaController extends Controller
                     'cnpj' => $alvo['cnpj'],
                     'uf' => $alvo['uf'],
                     'crt' => $alvo['crt'],
+                    // Fallback pras fontes de busca nominal (CEAT exige `nome`); o cadastro
+                    // sobrescreve com a razão oficial da RFB quando roda.
+                    'razao_social' => $alvo['razao_social'] ?? null,
                 ],
                 etapas: $etapas,
                 alvoIndice: $i + 1,
@@ -1009,6 +1014,290 @@ class ConsultaController extends Controller
                 if (! $plano->is_gratuito && $custoTotal > 0) {
                     $this->saldoService->add($user, $custoTotal);
                 }
+            }
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Erro interno ao processar consulta.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Tela da consulta avulsa por fontes (à la carte, vertical advocacia): checkboxes por
+     * fonte com preço unitário, picker de alvos e preço live. Acessível a qualquer persona
+     * (empacotamento na sidebar, nunca gate duro).
+     */
+    public function fontesIndex(Request $request)
+    {
+        $fontesView = $this->getViewPrefix().'fontes';
+
+        if (! Auth::check()) {
+            return $this->redirectToLogin($request);
+        }
+
+        $user = Auth::user();
+        $catalogo = app(\App\Services\Advocacia\CatalogoFontesAvulsas::class);
+
+        // Prefill de re-emissão (alerta de vencimento → 1 clique): ?fonte=chave&documento=CNPJ
+        // pré-marca a fonte e o alvo correspondente do próprio usuário.
+        $prefill = null;
+        $fontePrefill = trim((string) $request->query('fonte', ''));
+        $docPrefill = preg_replace('/\D/', '', (string) $request->query('documento', ''));
+        if ($fontePrefill !== '' || $docPrefill !== '') {
+            $alvoPrefill = null;
+            if (strlen($docPrefill) === 14) {
+                if ($p = Participante::where('user_id', $user->id)->where('documento', $docPrefill)->first(['id', 'razao_social', 'documento'])) {
+                    $alvoPrefill = ['tipo' => 'participante', 'id' => $p->id, 'label' => ($p->razao_social ?: $p->documento).' · '.\App\Support\Cnpj::formatar($p->documento)];
+                } elseif ($c = \App\Models\Cliente::where('user_id', $user->id)->whereRaw("regexp_replace(coalesce(documento, ''), '[^0-9]', '', 'g') = ?", [$docPrefill])->first(['id', 'nome', 'razao_social', 'documento'])) {
+                    $alvoPrefill = ['tipo' => 'cliente', 'id' => $c->id, 'label' => ($c->razao_social ?: $c->nome ?: $c->documento).' · '.\App\Support\Cnpj::formatar($c->documento)];
+                }
+            }
+            $prefill = [
+                'fontes' => array_values(array_intersect(explode(',', $fontePrefill), $catalogo->chavesDisponiveis())),
+                'alvo' => $alvoPrefill,
+            ];
+        }
+
+        $data = [
+            'gruposFontes' => $catalogo->grupos(),
+            'kits' => $catalogo->kits(),
+            'prefill' => $prefill,
+            'saldoReais' => $this->saldoService->getBalance($user),
+            'totalParticipantes' => Participante::where('user_id', $user->id)->count(),
+        ];
+
+        if ($this->isAjaxRequest($request)) {
+            return response(view($fontesView, $data)->render())->header('Content-Type', 'text/html');
+        }
+
+        return view(self::AUTH_LAYOUT_VIEW, array_merge(['initialView' => $fontesView], $data));
+    }
+
+    /**
+     * Custo (R$) de uma seleção à la carte de fontes — preview de preço da tela avulsa
+     * (vertical advocacia). Espelha o contrato do calcularCusto de plano.
+     */
+    public function calcularCustoFontes(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        $catalogo = app(\App\Services\Advocacia\CatalogoFontesAvulsas::class);
+
+        $validated = $request->validate([
+            'fontes' => 'required|array|min:1',
+            'fontes.*' => 'string|max:40',
+            'quantidade' => 'required|integer|min:1|max:1000',
+        ]);
+
+        $invalidas = array_diff($validated['fontes'], $catalogo->chavesDisponiveis());
+        if ($invalidas !== []) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Fontes indisponíveis: '.implode(', ', $invalidas),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $preco = $catalogo->precificar($validated['fontes']);
+        $custoTotal = round($preco['total'] * $validated['quantidade'], 2);
+
+        return response()->json([
+            'success' => true,
+            'preco_por_alvo_reais' => $preco['total'],
+            'preco_bruto_por_alvo_reais' => $preco['bruto'],
+            'desconto_por_alvo_reais' => $preco['desconto_reais'],
+            'kit' => $preco['kit'],
+            'custo_total_reais' => $custoTotal,
+            'saldo_disponivel_reais' => $this->saldoService->getBalance($user),
+            'saldo_suficiente' => $this->saldoService->hasEnough($user, $custoTotal),
+        ]);
+    }
+
+    /**
+     * Executa lote AVULSO por fontes (à la carte, vertical advocacia): sem plano — a seleção
+     * explícita de fontes define escopo, etapas (dinâmicas por grupo) e preço (R$ por fonte,
+     * CatalogoFontesAvulsas). Reusa o motor inteiro: ProcessarConsultaJob recebe
+     * consultasIncluidas = atributosDe(seleção) e deriva as mesmas fontes de volta; estorno
+     * usa o PREÇO cobrado via precosVenda. Cadastro (grátis) sempre incluído.
+     */
+    public function executarFontes(Request $request): JsonResponse
+    {
+        if (! Auth::check()) {
+            return response()->json(['success' => false, 'error' => 'Usuário não autenticado.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $user = Auth::user();
+        $catalogo = app(\App\Services\Advocacia\CatalogoFontesAvulsas::class);
+
+        $validated = $request->validate([
+            'participante_ids' => 'nullable|array|max:1000',
+            'participante_ids.*' => 'integer|exists:participantes,id',
+            'cliente_ids' => 'nullable|array|max:1000',
+            'cliente_ids.*' => 'integer|exists:clientes,id',
+            'fontes' => 'required|array|min:1|max:40',
+            'fontes.*' => 'string|max:40',
+            'cliente_id' => 'nullable|integer|exists:clientes,id',
+            'tab_id' => 'required|string|max:36',
+        ]);
+
+        $fontesSelecionadas = array_values(array_unique($validated['fontes']));
+        $invalidas = array_diff($fontesSelecionadas, $catalogo->chavesDisponiveis());
+        if ($invalidas !== []) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Fontes indisponíveis para consulta avulsa: '.implode(', ', $invalidas),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $participanteIds = $validated['participante_ids'] ?? [];
+        $clienteIds = $validated['cliente_ids'] ?? [];
+
+        if (empty($participanteIds) && empty($clienteIds)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Selecione ao menos um participante ou cliente para consultar.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        // Ownership + CNPJ válido — mesmas regras do executar por plano.
+        $participantes = Participante::where('user_id', $user->id)
+            ->somenteCnpj()
+            ->whereIn('id', $participanteIds)
+            ->get(['id', 'documento', 'razao_social', 'uf', 'crt']);
+
+        if ($participantes->count() !== count($participanteIds)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Alguns participantes selecionados são inválidos para consulta.',
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        $clientes = \App\Models\Cliente::where('user_id', $user->id)
+            ->whereIn('id', $clienteIds)
+            ->whereRaw("length(regexp_replace(coalesce(documento, ''), '[^0-9]', '', 'g')) = 14")
+            ->get(['id', 'documento', 'razao_social', 'uf']);
+
+        if ($clientes->count() !== count($clienteIds)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Alguns clientes selecionados são inválidos (CNPJ ausente) para consulta.',
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        $alvos = $participantes->map(fn ($p) => [
+            'tipo' => 'participante', 'id' => $p->id,
+            'cnpj' => preg_replace('/[^0-9]/', '', (string) $p->documento), 'uf' => $p->uf, 'crt' => $p->crt,
+            'razao_social' => $p->razao_social,
+        ])->concat($clientes->map(fn ($c) => [
+            'tipo' => 'cliente', 'id' => $c->id,
+            'cnpj' => preg_replace('/[^0-9]/', '', (string) $c->documento), 'uf' => $c->uf ?? null, 'crt' => null,
+            'razao_social' => $c->razao_social,
+        ]))->values();
+
+        $totalAlvos = $alvos->count();
+        // Precificação com kit (desconto aplicado por fonte): o mapa `precos` vira precosVenda —
+        // o estorno devolve exatamente o unitário cobrado, com ou sem desconto.
+        $preco = $catalogo->precificar($fontesSelecionadas);
+        $custoTotal = round($preco['total'] * $totalAlvos, 2);
+
+        if (! $this->saldoService->hasEnough($user, $custoTotal)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Saldo insuficiente.',
+                'valor_necessario_reais' => $custoTotal,
+                'saldo_disponivel_reais' => $this->saldoService->getBalance($user),
+            ], Response::HTTP_PAYMENT_REQUIRED);
+        }
+
+        try {
+            $debitado = $this->saldoService->deduct($user, $custoTotal);
+            if (! $debitado) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Falha ao debitar o saldo. Tente novamente.',
+                ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            $lote = ConsultaLote::create([
+                'user_id' => $user->id,
+                'cliente_id' => $validated['cliente_id'] ?? null,
+                'plano_id' => null,
+                'fontes_selecionadas' => $fontesSelecionadas,
+                'status' => ConsultaLote::STATUS_PROCESSANDO,
+                'total_participantes' => $totalAlvos,
+                'creditos_cobrados' => $custoTotal,
+                'tab_id' => $validated['tab_id'],
+            ]);
+
+            if (! empty($participanteIds)) {
+                $lote->participantes()->attach($participanteIds);
+            }
+
+            Log::info('Consulta avulsa por fontes: lote criado', [
+                'consulta_lote_id' => $lote->id,
+                'user_id' => $user->id,
+                'fontes' => $fontesSelecionadas,
+                'kit' => $preco['kit']['nome'] ?? null,
+                'total_alvos' => $totalAlvos,
+                'creditos_cobrados' => $custoTotal,
+            ]);
+
+            $consultasIncluidas = $catalogo->atributosDe($fontesSelecionadas);
+            $etapas = $catalogo->etapasDe($fontesSelecionadas);
+            $precosVenda = $preco['precos'];
+
+            $jobs = $alvos->values()->map(fn ($alvo, $i) => new \App\Jobs\ProcessarConsultaJob(
+                loteId: $lote->id,
+                alvoTipo: $alvo['tipo'],
+                alvoId: $alvo['id'],
+                userId: $user->id,
+                tabId: $validated['tab_id'],
+                consultasIncluidas: $consultasIncluidas,
+                alvo: [
+                    'cnpj' => $alvo['cnpj'],
+                    'uf' => $alvo['uf'],
+                    'crt' => $alvo['crt'],
+                    // Fallback pras fontes de busca nominal (CEAT exige `nome`); o cadastro
+                    // sobrescreve com a razão oficial da RFB quando roda.
+                    'razao_social' => $alvo['razao_social'] ?? null,
+                ],
+                etapas: $etapas,
+                alvoIndice: $i + 1,
+                totalAlvos: $totalAlvos,
+                precosVenda: $precosVenda,
+            ))->all();
+
+            \Illuminate\Support\Facades\Bus::batch($jobs)
+                ->name("consulta-avulsa-{$lote->id}")
+                ->then(function () use ($lote) {
+                    app(\App\Services\Consultas\FecharLoteService::class)
+                        ->fechar($lote->id, resumo: ['engine' => 'laravel', 'modo' => 'avulsa_fontes']);
+                })
+                ->dispatch();
+
+            return response()->json([
+                'success' => true,
+                'consulta_lote_id' => $lote->id,
+                'redirect_url' => route('app.consulta.lote.show', ['id' => $lote->id]),
+                'message' => 'Consulta iniciada com sucesso.',
+                'valor_cobrado_reais' => $custoTotal,
+                'novo_saldo_reais' => $this->saldoService->getBalance($user),
+                'etapas' => $etapas,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Consulta avulsa por fontes: exceção ao executar', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            if (isset($lote)) {
+                $lote->update([
+                    'status' => ConsultaLote::STATUS_ERRO,
+                    'error_code' => 'INTERNAL_ERROR',
+                    'error_message' => $e->getMessage(),
+                ]);
+            }
+            if (isset($debitado) && $debitado && $custoTotal > 0) {
+                $this->saldoService->add($user, $custoTotal);
             }
 
             return response()->json([
@@ -1692,16 +1981,19 @@ class ConsultaController extends Controller
             abort(404);
         }
 
-        // Lotes de clearance (plano_id null) não pertencem à consulta de CNPJ — o resultado vive
-        // em nfe_consultas/cte_consultas, não em consulta_resultados. Sem isto, esta tela fica
-        // "verificando" pra sempre. Redireciona pra tela de resultado do clearance.
-        if ($lote->plano_id === null) {
+        // Lotes de clearance (plano_id null SEM fontes_selecionadas) não pertencem à consulta de
+        // CNPJ — o resultado vive em nfe_consultas/cte_consultas, não em consulta_resultados. Sem
+        // isto, esta tela fica "verificando" pra sempre. Redireciona pra tela de resultado do
+        // clearance. Lote AVULSO por fontes (advocacia) tem plano_id null mas É desta tela.
+        if ($lote->plano_id === null && ! $lote->ehAvulsoPorFontes()) {
             return redirect()->route('app.clearance.notas.resultado', ['consultaLoteId' => $lote->id]);
         }
 
         $statusLote = ConsultaLote::normalizeStatus($lote->status);
         $statusMeta = $this->getConsultaLoteStatusMeta($statusLote);
-        $etapas = $lote->plano?->resolvedEtapas() ?? [];
+        $etapas = $lote->ehAvulsoPorFontes()
+            ? app(\App\Services\Advocacia\CatalogoFontesAvulsas::class)->etapasDe($lote->fontes_selecionadas)
+            : ($lote->plano?->resolvedEtapas() ?? []);
         $contadores = $lote->getContadoresResultados();
         $perPageResultados = 20;
         $temResultadosNoLote = false;
@@ -1787,7 +2079,10 @@ class ConsultaController extends Controller
             }
         }
 
-        $retryPendentes = $temResultadosNoLote
+        // Lote avulso por fontes fica FORA da reconsulta manual (precifica por plano; o modal
+        // deref $lote->plano->nome — com plano null a página inteira dava 500). Mesma regra dos
+        // endpoints retryPendentes/retryExecutar.
+        $retryPendentes = $temResultadosNoLote && ! $lote->ehAvulsoPorFontes()
             ? app(\App\Services\Consultas\RetryConsultaService::class)->pendentesRetry($lote)
             : ['elegiveis' => [], 'inelegiveis' => [], 'total_preco_creditos' => 0];
         $retryPendentes['valor_total_reais'] = (($retryPendentes['total_preco_creditos'] ?? 0));
@@ -1831,6 +2126,18 @@ class ConsultaController extends Controller
         $user = Auth::user();
         $lote = ConsultaLote::where('id', $id)->where('user_id', $user->id)->firstOrFail();
 
+        // Reconsulta manual precifica por PLANO (desconto sobre o preço do plano) — o lote
+        // avulso por fontes não tem plano. O auto-retry in-job grátis já cobriu o transitório;
+        // reconsulta avulsa com preço por fonte é evolução futura (docs/advocacia).
+        if ($lote->ehAvulsoPorFontes()) {
+            return response()->json([
+                'elegiveis' => [], 'inelegiveis' => [], 'motivos' => [], 'alvos' => [],
+                'persistentes' => [], 'suporte' => [], 'desconto_pct_efetivo' => 0,
+                'total_preco_creditos' => 0,
+                'saldo' => $this->saldoService->getBalance($user),
+            ]);
+        }
+
         $pend = app(\App\Services\Consultas\RetryConsultaService::class)->pendentesRetry($lote);
 
         return response()->json(array_merge($pend, [
@@ -1847,6 +2154,8 @@ class ConsultaController extends Controller
     {
         $user = Auth::user();
         $lote = ConsultaLote::where('id', $id)->where('user_id', $user->id)->firstOrFail();
+
+        abort_if($lote->ehAvulsoPorFontes(), 422, 'Reconsulta manual indisponível para lote avulso por fontes.');
 
         $lock = Cache::lock("consulta_retry_lock:{$user->id}:{$lote->id}", 10);
         abort_unless($lock->get(), 409, 'Reconsulta já em andamento.');
@@ -2065,8 +2374,13 @@ class ConsultaController extends Controller
 
         // Fontes de regularidade que o plano deste lote inclui. Usado p/ marcar como "Falhou"
         // a certidão pedida mas que não retornou (code retry/fatal da InfoSimples → chave ausente)
-        // em vez de exibi-la como "—" (indistinguível de fora do plano).
-        $esperadasCert = $detalhePresenter->esperadasDoPlano($lote->plano?->consultas_incluidas);
+        // em vez de exibi-la como "—" (indistinguível de fora do plano). No lote avulso as
+        // esperadas vêm da seleção à la carte, não de plano.
+        $esperadasCert = $lote->ehAvulsoPorFontes()
+            ? $detalhePresenter->esperadasDoPlano(
+                app(\App\Services\Advocacia\CatalogoFontesAvulsas::class)->atributosDe($lote->fontes_selecionadas)
+            )
+            : $detalhePresenter->esperadasDoPlano($lote->plano?->consultas_incluidas);
 
         return $resultados->map(function (ConsultaResultado $resultado) use ($parecerService, $detalhePresenter, $fiscalResumos, $clienteResumos, $esperadasCert, $lote) {
             $parecerResumo = $resultado->isSucesso()
@@ -2138,8 +2452,8 @@ class ConsultaController extends Controller
                 'score_hex' => match ($score?->classificacao) {
                     'baixo' => '#047857',
                     'medio' => '#ca8a04',
-                    'alto' => '#ea580c',
-                    'critico' => '#dc2626',
+                    'alto' => '#dc2626',
+                    'critico' => '#b91c1c',
                     default => '#9ca3af',
                 },
             ];

@@ -31,6 +31,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'credits',
         'empresa',
         'cargo',
+        'persona',
         'cnpj',
         'faturamento_anual',
         'desafio_principal',
@@ -90,6 +91,14 @@ class User extends Authenticatable implements MustVerifyEmail
             'ultimo_resumo_em' => 'datetime',
             'dashboard_prefs' => 'array',
         ];
+    }
+
+    /** Verticais de conta — dirigem empacotamento (sidebar/planos/labels), nunca gate de compra. */
+    public const PERSONAS = ['empresa', 'contador', 'advogado'];
+
+    public function isAdvogado(): bool
+    {
+        return $this->persona === 'advogado';
     }
 
     public const DASHBOARD_PREFS_DEFAULT = [

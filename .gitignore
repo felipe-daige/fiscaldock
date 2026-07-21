@@ -64,3 +64,7 @@ docker-stack-resolved.yml
 npm-debug.log*
 yarn-error.log
 .superpowers/
+
+# Massa de teste EFD = dado fiscal real de cliente (nao commitar).
+# O golden test do motor L1 pula sozinho quando o arquivo esta ausente.
+/tests/Fixtures/sped/

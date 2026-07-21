@@ -21,6 +21,9 @@ return new class extends Migration
             $table->decimal('creditos_cobrados', 12, 2)->default(0);
             $table->string('tab_id', 36)->nullable();
             $table->jsonb('resultado_resumo')->nullable();
+            // Lote avulso por fontes (vertical advocacia): chaves selecionadas à la carte.
+            // NULL = lote de plano (plano_id set) ou de clearance (plano_id null + fontes null).
+            $table->jsonb('fontes_selecionadas')->nullable();
             $table->string('error_code', 50)->nullable();
             $table->text('error_message')->nullable();
             $table->timestamp('processado_em')->nullable();
@@ -37,6 +40,21 @@ return new class extends Migration
 
             $table->primary(['consulta_lote_id', 'participante_id']);
         });
+
+        // Kits da consulta avulsa por fontes (vertical advocacia, fase 3): preset NOMEADO de
+        // seleção com desconto — dado editável no admin, NÃO é plano/entidade de billing. O
+        // desconto só se aplica quando a seleção do usuário bate exatamente com as fontes do kit.
+        Schema::create('consulta_kits', function (Blueprint $table) {
+            $table->id();
+            $table->string('nome', 120);
+            $table->string('slug', 60)->unique();
+            $table->string('descricao', 255)->nullable();
+            $table->jsonb('fontes'); // chaves de fonte (mesmo vocabulário do FonteRegistry)
+            $table->decimal('desconto_percentual', 5, 2)->default(0);
+            $table->boolean('ativo')->default(true);
+            $table->integer('ordem')->default(0);
+            $table->timestamps();
+        });
     }
 
     /**
@@ -44,6 +62,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('consulta_kits');
         Schema::dropIfExists('consulta_lote_participantes');
         Schema::dropIfExists('consulta_lotes');
     }

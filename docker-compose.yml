@@ -177,7 +177,7 @@ services:
       - worker
 
   mailpit:
-    image: axllent/mailpit:latest
+    image: axllent/mailpit:v1.30.3
     restart: unless-stopped
     environment:
       TZ: America/Sao_Paulo

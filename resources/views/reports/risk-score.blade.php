@@ -30,13 +30,16 @@
 <style>
     .risk-table { table-layout:fixed; }
     .risk-table th, .risk-table td { font-size:6.8px; padding:3px; }
-    .risk-table .alvo { width:26%; }
-    .risk-table .tipo { width:10%; }
-    .risk-table .score { width:6%; }
-    .risk-table .classif { width:11%; }
-    .risk-table .fontes { width:21%; }
+    .risk-table .alvo { width:21%; }
+    .risk-table .tipo { width:8%; }
+    .risk-table .score { width:5%; }
+    .risk-table .classif { width:10%; }
+    .risk-table .motivo { width:18%; }
+    .risk-table .fontes { width:16%; }
     .risk-table .credito { width:8%; }
-    .risk-table .consulta { width:11%; }
+    .risk-table .consulta { width:9%; }
+    /* Motivo da conclusão: texto miúdo que pode quebrar em várias linhas na coluna. */
+    .risk-table .motivo-txt { font-size:6px; line-height:1.2; white-space:normal; }
     /* Badge da classificação: pode quebrar em 2 linhas dentro da coluna (nunca vaza pro vizinho). */
     .risk-table .badge { display:inline-block; white-space:normal; font-size:6px; padding:1px 4px; line-height:1.2; }
 </style>
@@ -80,6 +83,7 @@
                             <th class="tipo">Tipo / papel</th>
                             <th class="right score">Score</th>
                             <th class="classif">Classificação</th>
+                            <th class="motivo">Motivo da conclusão</th>
                             <th class="fontes">Subscores (0–100)</th>
                             <th class="credito">Crédito IBS/CBS</th>
                             <th class="consulta">Última consulta</th>
@@ -98,6 +102,9 @@
                                     <span class="badge" style="background-color:{{ Builder::corClassificacao($registro['classificacao_codigo']) }}">
                                         {{ $labelCurto[$registro['classificacao_codigo']] ?? 'Não avaliado' }}
                                     </span>
+                                </td>
+                                <td class="motivo">
+                                    <span class="motivo-txt">{{ $registro['motivo'] ?? '—' }}</span>
                                 </td>
                                 <td class="mono">
                                     Cad {{ $inteiro($registro['score_cadastral']) }} ·

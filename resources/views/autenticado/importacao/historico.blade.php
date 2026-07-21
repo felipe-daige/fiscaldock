@@ -67,9 +67,9 @@
                         <colgroup>
                             <col style="width: 10%">
                             <col style="width: 12%">
-                            <col style="width: 35%">
+                            <col style="width: 32%">
                             <col style="width: 11%">
-                            <col style="width: 7%">
+                            <col style="width: 10%">
                             <col style="width: 10%">
                             <col style="width: 9%">
                             <col style="width: 8%">
@@ -80,7 +80,7 @@
                                 <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Arquivo / Lote</th>
                                 <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Cliente</th>
                                 <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Data</th>
-                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Duração</th>
+                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Competência</th>
                                 <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Volume</th>
                                 <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Status</th>
                                 <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Ação</th>
@@ -104,22 +104,6 @@
                                         $mesesPt = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
                                         $pi = \Carbon\Carbon::parse($imp['periodo_inicio']);
                                         $competencia = $mesesPt[$pi->month - 1] . '/' . $pi->year;
-                                    }
-
-                                    $tempoProc = '—';
-                                    if (!empty($imp['iniciado_em']) && !empty($imp['concluido_em'])) {
-                                        $inicio = \Carbon\Carbon::parse($imp['iniciado_em']);
-                                        $fim = \Carbon\Carbon::parse($imp['concluido_em']);
-                                        $diff = $inicio->diff($fim);
-                                        if ($diff->h > 0) {
-                                            $tempoProc = $diff->h . 'h ' . $diff->i . 'm';
-                                        } elseif ($diff->i > 0) {
-                                            $tempoProc = $diff->i . 'm ' . $diff->s . 's';
-                                        } elseif ($diff->s > 0) {
-                                            $tempoProc = $diff->s . 's';
-                                        } else {
-                                            $tempoProc = '< 1s';
-                                        }
                                     }
 
                                     $origemDetalhe = null;
@@ -147,7 +131,7 @@
                                         default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
                                     };
                                 @endphp
-                                <tr class="hist-row hover:bg-gray-50/50 transition-colors" data-tipo="{{ $tipo }}">
+                                <tr class="hist-row cursor-pointer hover:bg-gray-50/50 transition-colors" data-tipo="{{ $tipo }}">
                                     <td class="pl-3 pr-4 py-3">
                                         <div class="flex items-center gap-2 whitespace-nowrap">
                                             <span class="inline-block whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemBadge['hex'] }}">{{ $origemBadge['label'] }}</span>
@@ -158,9 +142,6 @@
                                     </td>
                                     <td class="pl-4 pr-2 py-3 text-sm text-gray-700 max-w-0">
                                         <a href="{{ $href }}" data-link class="block truncate text-gray-900 hover:text-gray-600 hover:underline" title="{{ $filename }}">{{ $filename }}</a>
-                                        @if($competencia)
-                                            <span class="block text-[11px] text-gray-500 mt-0.5">{{ $competencia }}</span>
-                                        @endif
                                     </td>
                                     <td class="px-2 py-3 text-sm text-gray-700 max-w-0">
                                         @if($clienteId)
@@ -170,7 +151,13 @@
                                         @endif
                                     </td>
                                     <td class="px-2 py-3 text-sm text-gray-700 whitespace-nowrap">{{ $dataFormatada }}</td>
-                                    <td class="px-2 py-3 text-sm text-gray-700 whitespace-nowrap">{{ $tempoProc }}</td>
+                                    <td class="px-2 py-3 whitespace-nowrap">
+                                        @if($competencia)
+                                            <span class="inline-block px-2 py-0.5 rounded text-[11px] font-bold text-gray-800" style="background-color: #f3f4f6">{{ $competencia }}</span>
+                                        @else
+                                            <span class="text-sm text-gray-400">—</span>
+                                        @endif
+                                    </td>
                                     <td class="pl-2 pr-3 py-3 text-sm text-gray-700 leading-tight" title="{{ $volume }}">{{ $volume }}</td>
                                     <td class="px-1 py-3 whitespace-nowrap">
                                         <span class="whitespace-nowrap inline-block max-w-full truncate px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white align-middle" style="background-color: {{ $statusBadge['hex'] }}">{{ $statusBadge['label'] }}</span>
@@ -212,22 +199,6 @@
                                 $competencia = $mesesPt[$pi->month - 1] . '/' . $pi->year;
                             }
 
-                            $tempoProc = '—';
-                            if (!empty($imp['iniciado_em']) && !empty($imp['concluido_em'])) {
-                                $inicio = \Carbon\Carbon::parse($imp['iniciado_em']);
-                                $fim = \Carbon\Carbon::parse($imp['concluido_em']);
-                                $diff = $inicio->diff($fim);
-                                if ($diff->h > 0) {
-                                    $tempoProc = $diff->h . 'h ' . $diff->i . 'm';
-                                } elseif ($diff->i > 0) {
-                                    $tempoProc = $diff->i . 'm ' . $diff->s . 's';
-                                } elseif ($diff->s > 0) {
-                                    $tempoProc = $diff->s . 's';
-                                } else {
-                                    $tempoProc = '< 1s';
-                                }
-                            }
-
                             $origemDetalhe = null;
 
                             if ($tipo === 'efd') {
@@ -253,7 +224,7 @@
                                 default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
                             };
                         @endphp
-                        <div class="hist-card px-4 py-3" data-tipo="{{ $tipo }}" data-importacao-card="{{ $id }}">
+                        <div class="hist-card cursor-pointer hover:bg-gray-50/50 transition-colors px-4 py-3" data-tipo="{{ $tipo }}" data-importacao-card="{{ $id }}">
                             <div class="flex items-center gap-2 flex-wrap mb-2">
                                 <span class="inline-block whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemBadge['hex'] }}">{{ $origemBadge['label'] }}</span>
                                 @if($origemDetalhe)
@@ -263,7 +234,7 @@
                             </div>
                             <a href="{{ $href }}" data-link class="block text-sm text-gray-900 hover:text-gray-600 hover:underline">{{ $filename }}</a>
                             @if($competencia)
-                                <span class="block text-[11px] text-gray-500 mt-0.5">{{ $competencia }}</span>
+                                <span class="inline-block mt-1 px-2 py-0.5 rounded text-[11px] font-bold text-gray-800" style="background-color: #f3f4f6">Competência {{ $competencia }}</span>
                             @endif
                             @php $procMob = in_array($imp['status'] ?? '', ['processando', 'pendente'], true); @endphp
                             <div class="mt-2">
@@ -288,10 +259,6 @@
                                 <div>
                                     <p class="text-[10px] text-gray-400 uppercase">Data</p>
                                     <p class="text-xs text-gray-700">{{ $dataFormatada }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] text-gray-400 uppercase">Duração</p>
-                                    <p class="text-xs text-gray-700">{{ $tempoProc }}</p>
                                 </div>
                                 <div>
                                     <p class="text-[10px] text-gray-400 uppercase">Volume</p>
@@ -356,6 +323,22 @@
 
             if (zeroFiltro) zeroFiltro.classList.toggle('hidden', visiveis > 0);
         });
+    });
+})();
+</script>
+
+<script>
+(function () {
+    if (window._histCardClickInit) return;
+    window._histCardClickInit = true;
+
+    document.addEventListener('click', function (e) {
+        var host = e.target.closest('.hist-row, .hist-card');
+        if (!host) return;
+        // Deixa os elementos interativos (links, botões, menu de ações) agirem sozinhos.
+        if (e.target.closest('a, button, input, label, select, [data-acoes-menu], [data-excluir-importacao], [data-excluir-xml]')) return;
+        var link = host.querySelector('a[data-link]');
+        if (link) link.click();
     });
 })();
 </script>

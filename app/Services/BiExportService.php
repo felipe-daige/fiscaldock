@@ -82,10 +82,11 @@ class BiExportService
      * consumida pelo PDF executivo e pelo XLSX. Reusa dataset() e os getters do BI.
      * Mode-aware: $cli === null ⇒ portfólio (inclui riscos + score); else ⇒ cliente.
      *
-     * @param  int|null  $dossiesTop  Quando não-nulo, anexa a seção 'dossie-participantes'
-     *                                (top N por volume EFD, mesma seleção do anexo do PDF).
+     * A seção 'dossie-participantes' entra SEMPRE com TODOS os participantes (1 linha
+     * por CNPJ, entradas × saídas). O cap `dossies=N` governa só os anexos de dossiê
+     * individual do PDF (BiDossieAnexoService), não esta lista.
      */
-    public function relatorioCompleto(int $userId, ?string $ini, ?string $fim, ?int $cli, ?int $dossiesTop = null): array
+    public function relatorioCompleto(int $userId, ?string $ini, ?string $fim, ?int $cli): array
     {
         $resumo = $this->bi->getResumoGeral($userId, $cli, $ini, $fim);
         $modo = $cli === null ? 'portfolio' : 'cliente';
@@ -111,11 +112,10 @@ class BiExportService
 
         $ordem = ['faturamento', 'tributos', 'apuracao-notas', 'contrapartes', 'cfop', 'top-notas', 'catalogo', 'uf', 'devolucoes'];
 
-        if ($dossiesTop !== null) {
-            $secoes['dossie-participantes'] = $this->datasetDossieParticipantes($userId, $cli, $dossiesTop);
-            // Logo após contrapartes: mesmo assunto (quem são os participantes), detalha o resumo.
-            array_splice($ordem, (int) array_search('contrapartes', $ordem, true) + 1, 0, 'dossie-participantes');
-        }
+        // Todos os participantes (entradas × saídas por CNPJ) — sempre presente, sem cap.
+        // Logo após contrapartes: mesmo assunto (quem são os participantes), detalha o resumo.
+        $secoes['dossie-participantes'] = $this->datasetTodosParticipantes($userId, $cli);
+        array_splice($ordem, (int) array_search('contrapartes', $ordem, true) + 1, 0, 'dossie-participantes');
 
         $scoreCarteira = null;
 
@@ -236,58 +236,59 @@ class BiExportService
     }
 
     /**
-     * Dossiê achatado dos top N participantes por volume EFD — 1 linha por
-     * participante com os indicadores do Resumo do dossiê (mesma seleção do
-     * anexo de dossiês do PDF: participantesPorVolume, histórico completo,
-     * sem recorte de período). Quem precisa das abas detalhadas usa o export
-     * do dossiê individual. Score/classificação vêm de participante_scores
-     * em lote (mesma fonte das contrapartes); KPIs/impostos custam 3 queries
-     * por participante (N ≤ 50, aceitável no export síncrono).
+     * TODOS os participantes com movimentação EFD — 1 linha por CNPJ, entradas ×
+     * saídas (qtd + valor) + score. Ordenado por volume desc. Sem cap: consumido por
+     * CSV, XLSX e PDF do BI. Custo O(1) em queries: participantes por volume (1) +
+     * scores em lote (1) + KPIs de entrada/saída em lote (1, kpisEmLote) — as 3
+     * queries por participante do antigo top-N viravam N queries e travavam o "todos".
+     * Impostos por participante ficam no dossiê individual (anexo do PDF) e na ficha.
      * 'classificacoes' devolve o risco cru por linha para a cor do badge no XLSX.
      */
-    private function datasetDossieParticipantes(int $userId, ?int $cli, int $top): array
+    private function datasetTodosParticipantes(int $userId, ?int $cli): array
     {
         $colunas = [
-            'Razão social', 'CNPJ/CPF', 'Situação cadastral', 'UF', 'Score', 'Classificação',
+            'Razão social', 'CNPJ/CPF', 'UF',
             'Total notas', 'Valor movimentado', 'Entradas qtd', 'Entradas valor',
-            'Saídas qtd', 'Saídas valor', 'Período', 'ICMS (EFD)', 'PIS (EFD)', 'COFINS (EFD)',
-            'Alíq. ICMS média %',
+            'Saídas qtd', 'Saídas valor',
+            'Situação cadastral', 'Score', 'Classificação',
         ];
 
-        $participantes = $this->bi->participantesPorVolume($userId, $cli, $top);
-        $scores = $this->bi->scoresPorParticipante($userId, $participantes->pluck('id')->all());
+        $participantes = $this->bi->participantesPorVolume($userId, $cli, null);
+        $ids = $participantes->pluck('id')->all();
+        $scores = $this->bi->scoresPorParticipante($userId, $ids);
+        $kpis = $this->movParticipante->kpisEmLote($userId, $ids);
+
+        $zero = [
+            'total_notas' => 0, 'valor_movimentado' => 0.0,
+            'entradas_qtd' => 0, 'entradas_valor' => 0.0,
+            'saidas_qtd' => 0, 'saidas_valor' => 0.0,
+        ];
 
         $linhas = [];
         $classificacoes = [];
         foreach ($participantes as $p) {
-            $k = $this->movParticipante->kpis($p);
-            $imp = $this->movParticipante->impostos($p);
+            $k = $kpis[$p->id] ?? $zero;
             $classificacao = $scores[$p->id]['classificacao'] ?? null;
             $classificacoes[] = $classificacao;
 
             $linhas[] = [
                 $p->razao_social ?: '—',
                 (string) $p->documento,
-                $p->situacao_cadastral ?? '—',
                 $p->uf ?: '—',
-                $scores[$p->id]['score_total'] ?? '—',
-                $classificacao ? ($classificacao === 'inconclusivo' ? 'não conclusivo' : $classificacao) : \App\Support\Documento::rotuloSemConsulta((string) $p->documento, 'nunca consultado'),
                 (int) $k['total_notas'],
                 $this->brl((float) $k['valor_movimentado']),
                 (int) $k['entradas_qtd'],
                 $this->brl((float) $k['entradas_valor']),
                 (int) $k['saidas_qtd'],
                 $this->brl((float) $k['saidas_valor']),
-                ($k['periodo_inicio'] ?? '—').' a '.($k['periodo_fim'] ?? '—'),
-                $this->brl((float) $imp['icms']),
-                $this->brl((float) $imp['pis']),
-                $this->brl((float) $imp['cofins']),
-                (float) $imp['aliquota_icms_media'],
+                $p->situacao_cadastral ?? '—',
+                $scores[$p->id]['score_total'] ?? '—',
+                $classificacao ? ($classificacao === 'inconclusivo' ? 'não conclusivo' : $classificacao) : \App\Support\Documento::rotuloSemConsulta((string) $p->documento, 'nunca consultado'),
             ];
         }
 
         return [
-            'titulo' => 'Dossiê dos participantes — top '.$top.' por volume',
+            'titulo' => 'Participantes — entradas × saídas (todos)',
             'colunas' => $colunas,
             'linhas' => $linhas,
             'classificacoes' => $classificacoes,
@@ -312,15 +313,16 @@ class BiExportService
     {
         $colunas = ['Cód item', 'Descrição', 'NCM', 'Valor movimentado', 'Qtd'];
 
+        // null = todos os itens (sem cap) — lista completa do catálogo no export.
         $itens = $cli === null
-            ? $this->topMov->produtosPorUsuario($userId, 15)
-            : ($this->topMov->produtos($userId, 'cliente_id', [$cli], 15)[$cli] ?? []);
+            ? $this->topMov->produtosPorUsuario($userId, null)
+            : ($this->topMov->produtos($userId, 'cliente_id', [$cli], null)[$cli] ?? []);
 
         $linhas = array_map(fn ($r) => [
             $r['cod_item'], $r['descricao'], $r['ncm'] ?: '—', $this->brl($r['valor']), $r['qtd'],
         ], $itens);
 
-        return ['titulo' => 'Top itens do catálogo (acumulado)', 'colunas' => $colunas, 'linhas' => $linhas];
+        return ['titulo' => 'Itens do catálogo (acumulado) — todos', 'colunas' => $colunas, 'linhas' => $linhas];
     }
 
     private function datasetUf(int $userId, ?string $ini, ?string $fim, ?int $cli): array

@@ -34,6 +34,7 @@ class ConsultaLote extends Model
         'creditos_cobrados',
         'tab_id',
         'resultado_resumo',
+        'fontes_selecionadas',
         'error_code',
         'error_message',
         'processado_em',
@@ -43,8 +44,19 @@ class ConsultaLote extends Model
         'total_participantes' => 'integer',
         'creditos_cobrados' => 'float',
         'resultado_resumo' => 'array',
+        'fontes_selecionadas' => 'array',
         'processado_em' => 'datetime',
     ];
+
+    /**
+     * Lote avulso por fontes (à la carte, vertical advocacia). Discriminador entre os três
+     * tipos de lote: plano (plano_id set), clearance (plano_id null + fontes null) e
+     * avulso (plano_id null + fontes_selecionadas set).
+     */
+    public function ehAvulsoPorFontes(): bool
+    {
+        return $this->plano_id === null && $this->fontes_selecionadas !== null;
+    }
 
     /**
      * Usuário dono do lote.

@@ -1,6 +1,6 @@
 {{-- Card modular de Notas Fiscais (EFD + XML unificadas) --}}
 {{-- Variáveis: $notas (paginator), $totalNotas (int), $ajaxUrl (string), $contexto ('participante'|'cliente'), $entityId (int) --}}
-<div class="bg-white rounded border border-gray-300 overflow-hidden" id="notas-fiscais-card">
+<div class="bg-white rounded border border-gray-300 overflow-hidden" id="notas-fiscais-card" data-perfil-card="notas" data-notas-por-pagina="{{ $notas->perPage() }}">
     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
         <div class="flex items-center justify-between gap-3">
             <div>

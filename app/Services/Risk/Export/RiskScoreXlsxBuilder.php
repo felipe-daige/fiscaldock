@@ -40,8 +40,8 @@ class RiskScoreXlsxBuilder
         $xlsx->linhaKV('Avaliados', (int) $kpis['avaliados'], XlsxReport::FMT_INT);
         $xlsx->linhaKV('Baixo risco', (int) $kpis['baixo'], XlsxReport::FMT_INT, ReportTheme::OK);
         $xlsx->linhaKV('Médio risco', (int) $kpis['medio'], XlsxReport::FMT_INT, ReportTheme::ALERTA);
-        $xlsx->linhaKV('Alto risco', (int) $kpis['alto'], XlsxReport::FMT_INT, '#ea580c');
-        $xlsx->linhaKV('Risco crítico', (int) $kpis['critico'], XlsxReport::FMT_INT, ReportTheme::IRREGULAR);
+        $xlsx->linhaKV('Alto risco', (int) $kpis['alto'], XlsxReport::FMT_INT, ReportTheme::riscoHex('alto'));
+        $xlsx->linhaKV('Risco crítico', (int) $kpis['critico'], XlsxReport::FMT_INT, ReportTheme::riscoHex('critico'));
         $xlsx->linhaKV('Risco não conclusivo', (int) $kpis['inconclusivo'], XlsxReport::FMT_INT, ReportTheme::NEUTRO);
         $xlsx->linhaKV('Não consultados', (int) $kpis['nao_consultados'], XlsxReport::FMT_INT);
 

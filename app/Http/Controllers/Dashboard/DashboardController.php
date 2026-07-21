@@ -12,7 +12,6 @@ use App\Models\EfdImportacao;
 use App\Models\Participante;
 use App\Models\SaldoTransacao;
 use App\Services\AlertaCentralService;
-use App\Services\Consultas\Fiscal\TopMovimentacaoQuery;
 use App\Services\Consultas\PerfilConsultaHistoricoService;
 use App\Services\Consultas\ResultadoDetalhePresenter;
 use App\Services\Dashboard\DashboardDataService;
@@ -578,7 +577,7 @@ class DashboardController extends Controller
         $notasFiscais = $this->notaFiscalService->listarUnificadas(
             (int) Auth::id(),
             ['cliente_id' => $cliente->id],
-            5,
+            10,
             1,
             "/app/cliente/{$id}/notas"
         );
@@ -599,25 +598,83 @@ class DashboardController extends Controller
             'historicoConsultasPerfil' => $this->perfilConsultaHistorico->paraCliente($cliente),
         ];
 
-        $topMov = app(TopMovimentacaoQuery::class);
-        $viewData['top_produtos'] = $topMov->produtos((int) Auth::id(), 'cliente_id', [$cliente->id], 10)[$cliente->id] ?? [];
-        $viewData['top_cfops'] = $topMov->cfops((int) Auth::id(), 'cliente_id', [$cliente->id], 10)[$cliente->id] ?? [];
-
-        // Movimentação & análise fiscal do cliente (empresa gerida do contador).
-        $movSvc = app(\App\Services\Clientes\ClienteMovimentacaoService::class);
-        $viewData['movimentacao'] = $movSvc->kpisEResumoParaPreview($cliente);
-
         $viewData['planos'] = \App\Models\MonitoramentoPlano::ativos();
 
-        $ultimaConsultaCliente = \App\Models\ConsultaResultado::where('cliente_id', $cliente->id)
-            ->where('status', \App\Models\ConsultaResultado::STATUS_SUCESSO)
-            ->orderByDesc('consultado_em')
-            ->first();
-        $scoreCliente = $ultimaConsultaCliente?->calcularScore();
+        $snapshot = app(\App\Services\Perfis\PerfilCnpjSnapshotService::class)
+            ->resolver((int) Auth::id(), (string) $cliente->documento);
+        $ultimaConsultaCliente = $snapshot['ultima_consulta'];
+        $dadosConsultaCliente = $snapshot['dados'];
+        $scorePersistidoCliente = $snapshot['score'];
+        $scoreCliente = $scorePersistidoCliente
+            ? [
+                'score_total' => $scorePersistidoCliente->score_total,
+                'classificacao' => $scorePersistidoCliente->classificacao,
+                'scores' => [
+                    'cadastral' => $scorePersistidoCliente->score_cadastral,
+                    'cnd_federal' => $scorePersistidoCliente->score_cnd_federal,
+                    'cnd_estadual' => $scorePersistidoCliente->score_cnd_estadual,
+                    'fgts' => $scorePersistidoCliente->score_fgts,
+                    'trabalhista' => $scorePersistidoCliente->score_trabalhista,
+                ],
+            ]
+            : $ultimaConsultaCliente?->calcularScore();
         $viewData['score'] = $scoreCliente;
         $viewData['score_detalhamento'] = $scoreCliente
             ? app(\App\Services\RiskScoreService::class)->detalhar($scoreCliente['scores'])
             : [];
+
+        $fontesConsulta = $ultimaConsultaCliente
+            ? array_values(array_filter(
+                $this->detalhePresenter->blocos($ultimaConsultaCliente),
+                fn (array $bloco) => ($bloco['chave'] ?? null) !== 'cadastro'
+            ))
+            : [];
+        $certidoesConsulta = $ultimaConsultaCliente
+            ? $this->detalhePresenter->certidoes($ultimaConsultaCliente)
+            : [];
+        $fiscalResumo = app(\App\Services\Consultas\ClienteFiscalResumoService::class)
+            ->paraClientes((int) Auth::id(), [$cliente->id], true)[$cliente->id] ?? null;
+        $alertasPerfil = Alerta::doUsuario((int) Auth::id())
+            ->ativos()
+            ->where('cliente_id', $cliente->id)
+            ->orderByDesc('prioridade')
+            ->limit(10)
+            ->get()
+            ->map(fn (Alerta $alerta) => [
+                'severidade' => $alerta->severidade,
+                'titulo' => $alerta->titulo,
+                'descricao' => $alerta->descricao,
+            ])
+            ->all();
+
+        if ($alertasPerfil === [] && $ultimaConsultaCliente) {
+            $alertasPerfil = app(\App\Services\ParecerFiscalService::class)
+                ->gerar($ultimaConsultaCliente->getParecerFiscalPayload());
+        }
+
+        $viewData['perfilCnpj'] = [
+            'is_cpf' => $cliente->isPessoaFisica(),
+            'alertas' => $alertasPerfil,
+            'cadastro' => app(\App\Services\Perfis\PerfilCnpjViewData::class)
+                ->cadastro($cliente, $dadosConsultaCliente, $ultimaConsultaCliente?->consultado_em),
+            'score_detalhamento' => $viewData['score_detalhamento'],
+            'score_total' => $scoreCliente['score_total'] ?? null,
+            'score_classificacao' => $scoreCliente['classificacao'] ?? 'nao_avaliado',
+            'score_atualizado_em' => $scorePersistidoCliente?->ultima_consulta_em ?? $ultimaConsultaCliente?->consultado_em,
+            'fontes_consulta' => $fontesConsulta,
+            'certidoes_consulta' => $certidoesConsulta,
+            'ultima_consulta' => $ultimaConsultaCliente,
+            'fiscal' => $fiscalResumo,
+            'produtos' => $fiscalResumo['top_produtos'] ?? [],
+            'cfops' => $fiscalResumo['top_cfops'] ?? [],
+            'notas' => $notasFiscais,
+            'total_notas' => $totalNotas,
+            'notas_ajax_url' => "/app/cliente/{$id}/notas",
+            'notas_contexto' => 'cliente',
+            'entity_id' => $cliente->id,
+            'historico' => $viewData['historicoConsultasPerfil'],
+            'documento' => $cliente->documento,
+        ];
 
         if ($this->isAjaxRequest($request)) {
             // Modal requests send Accept: application/json — return JSON for the modal to populate
@@ -682,20 +739,29 @@ class DashboardController extends Controller
             ini_set('memory_limit', '1024M');
             set_time_limit(240);
 
-            return \App\Support\PdfReport::render('reports.dossie.lote', $dados, 'portrait')
-                ->download($arquivo);
+            return $this->comTokenDownload(
+                \App\Support\PdfReport::render('reports.dossie.lote', $dados, 'portrait')
+                    ->download($arquivo),
+                $request
+            );
         }
 
         $dados = app(\App\Services\Clientes\DossieClienteBuilder::class)->montar($cliente);
 
         // ?formato=xlsx → planilha no modelo de design aprovado (mesma fonte do PDF)
         if ($request->query('formato') === 'xlsx') {
-            return app(\App\Services\Dossie\DossieXlsxBuilder::class)
-                ->download($dados, $cliente, str_replace('.pdf', '.xlsx', $arquivo));
+            return $this->comTokenDownload(
+                app(\App\Services\Dossie\DossieXlsxBuilder::class)
+                    ->download($dados, $cliente, str_replace('.pdf', '.xlsx', $arquivo)),
+                $request
+            );
         }
 
-        return \App\Support\PdfReport::render('reports.dossie.cliente', $dados, 'portrait')
-            ->download($arquivo);
+        return $this->comTokenDownload(
+            \App\Support\PdfReport::render('reports.dossie.cliente', $dados, 'portrait')
+                ->download($arquivo),
+            $request
+        );
     }
 
     /**
@@ -716,7 +782,7 @@ class DashboardController extends Controller
         $notas = $this->notaFiscalService->listarUnificadas(
             $userId,
             ['cliente_id' => $cliente->id],
-            5,
+            10,
             $page,
             "/app/cliente/{$id}/notas"
         );

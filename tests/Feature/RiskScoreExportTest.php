@@ -180,6 +180,40 @@ it('PDF do score traz a seção de metodologia (view renderizada)', function () 
         ->and($html)->toContain('Cobertura mínima');
 });
 
+it('PDF traz o motivo da conclusão por CNPJ, cobrindo risco, baixo e não consultado', function () {
+    $relatorio = app(RiskScoreReportBuilder::class)->montar($this->user->id, []);
+    $html = view('reports.risk-score', ['relatorio' => $relatorio])->render();
+
+    expect($html)->toContain('Motivo da conclusão')                 // cabeçalho da coluna
+        ->and($html)->toContain('CND Federal positiva')             // alto → driver do subscore
+        ->and($html)->toContain('Sem pendências nas fontes consultadas') // baixo
+        ->and($html)->toContain('CNPJ ainda não consultado');       // pendente
+});
+
+it('motivo_conclusao explica cada classificação a partir dos subscores', function () {
+    // Inconclusivo: só cadastral consultada, sem CND Federal + 2 certidões.
+    $p = Participante::create([
+        'user_id' => $this->user->id,
+        'cliente_id' => $this->clienteB->id,
+        'documento' => '66777888000136',
+        'razao_social' => 'FORNECEDOR INCONCLUSIVO',
+    ]);
+    $inconclusivo = ParticipanteScore::create([
+        'user_id' => $this->user->id,
+        'participante_id' => $p->id,
+        'score_total' => 0,
+        'score_cadastral' => 0,
+        'classificacao' => 'inconclusivo',
+    ]);
+
+    $altoScore = ParticipanteScore::where('participante_id', $this->alto->id)->first();
+    $baixoScore = ParticipanteScore::where('participante_id', $this->baixo->id)->first();
+
+    expect($altoScore->motivo_conclusao)->toBe('CND Federal positiva')
+        ->and($baixoScore->motivo_conclusao)->toBe('Sem pendências nas fontes consultadas')
+        ->and($inconclusivo->motivo_conclusao)->toContain('cadastral');
+});
+
 it('baixa PDF A4 retrato com os dados do recorte', function () {
     $response = actingAs($this->user)->get('/app/score-fiscal/exportar-pdf?cliente_id='.$this->clienteA->id);
 

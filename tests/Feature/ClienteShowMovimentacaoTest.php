@@ -31,9 +31,9 @@ it('perfil do cliente mostra detalhamento do score quando há consulta', functio
 
     $resp = $this->actingAs($user)->get("/app/cliente/{$cliente->id}");
     $resp->assertOk();
-    $resp->assertSee('Detalhamento do Score');
+    $resp->assertSee('Score de Risco');
     $resp->assertSee('Situação Cadastral');
-    $resp->assertSee('Peso:');
+    $resp->assertSee('Peso efetivo:');
 });
 
 it('view do cliente lista produtos e CFOPs', function () {
@@ -139,7 +139,7 @@ it('view do cliente lista produtos e CFOPs', function () {
         ->get('/app/cliente/'.$clienteId);
 
     $response->assertOk()
-        ->assertSee('Principais produtos')
+        ->assertSee('Principais Produtos')
         ->assertSee('PRODUTO PRINCIPAL')
         ->assertSee('1102');
 });

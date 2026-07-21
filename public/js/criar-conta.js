@@ -256,9 +256,9 @@ function initCriarConta() {
     });
 }
 
-// Persona da conta (orientação no signup): "minha própria empresa" x "contador/escritório".
-// Apenas relabela campos e mostra ajuda — o backend segue usando empresa/cargo/documento.
-// Objetivo: evitar que um contador cadastre um CLIENTE como se fosse a própria empresa.
+// Persona da conta (empresa | contador | advogado): relabela campos e mostra ajuda, e o
+// backend persiste o valor em users.persona (dirige sidebar/planos/labels da área logada).
+// Objetivo original mantido: evitar que um contador cadastre um CLIENTE como própria empresa.
 function setupPersonaToggle(form) {
     const radios = form.querySelectorAll('input[name="perfil_conta"]');
     if (!radios.length) {
@@ -284,6 +284,12 @@ function setupPersonaToggle(form) {
             persona: 'Cadastre o seu escritório. Cada empresa que você atende é adicionada depois em Cadastros › Clientes — não use os dados do cliente aqui.',
             documento: 'CPF ou CNPJ do escritório — não o do cliente.',
         },
+        advogado: {
+            empresaLabel: 'Escritório de advocacia',
+            empresaPlaceholder: 'Razão social do seu escritório',
+            persona: 'Cadastre o seu escritório. Clientes e partes que você consulta são adicionados depois em Cadastros › Clientes — não use os dados deles aqui.',
+            documento: 'CPF ou CNPJ do escritório — não o do cliente.',
+        },
     };
 
     function aplicar(valor) {
@@ -303,9 +309,10 @@ function setupPersonaToggle(form) {
             opt.classList.toggle('border-gray-300', !checked);
         });
 
-        // Conveniência: contador quase sempre tem cargo "Contador". Só preenche se vazio.
-        if (valor === 'contador' && cargoInput && !cargoInput.value.trim()) {
-            cargoInput.value = 'Contador';
+        // Conveniência: cargo óbvio da persona. Só preenche se vazio.
+        const cargoDefault = { contador: 'Contador', advogado: 'Advogado(a)' }[valor];
+        if (cargoDefault && cargoInput && !cargoInput.value.trim()) {
+            cargoInput.value = cargoDefault;
         }
     }
 

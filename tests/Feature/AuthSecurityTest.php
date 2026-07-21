@@ -136,6 +136,62 @@ test('signup salva desafio secundario opcional', function () {
     expect(User::where('email', 'ana@example.com')->value('desafio_secundario'))->toBe('falta_visao');
 });
 
+test('signup persiste persona do perfil_conta e usa default empresa', function () {
+    $payload = [
+        'nome' => 'Ana',
+        'sobrenome' => 'Lima',
+        'email' => 'advogada@example.com',
+        'telefone' => '67911110000',
+        'senha' => 'Xk9382mZqp01',
+        'senha_confirmation' => 'Xk9382mZqp01',
+        'empresa' => 'Lima Advogados',
+        'cargo' => 'Advogada',
+        'documento' => '11144477735',
+        'faturamento' => 'ate-360k',
+        'desafio_principal' => 'documentos_espalhados',
+        'terms_aceitos' => true,
+        'perfil_conta' => 'advogado',
+    ];
+
+    $this->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
+        ->postJson('/criar-conta', $payload)
+        ->assertStatus(200);
+    $advogada = User::where('email', 'advogada@example.com')->first();
+    expect($advogada->persona)->toBe('advogado')
+        ->and($advogada->isAdvogado())->toBeTrue();
+
+    // Sem perfil_conta (form antigo/legado) cai no default 'empresa'.
+    $this->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
+        ->postJson('/criar-conta', array_merge($payload, [
+            'email' => 'legado@example.com',
+            'telefone' => '67911110001',
+            'documento' => '52998224725',
+            'perfil_conta' => null,
+        ]))
+        ->assertStatus(200);
+    expect(User::where('email', 'legado@example.com')->value('persona'))->toBe('empresa');
+});
+
+test('signup rejeita persona desconhecida', function () {
+    $response = $this->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->postJson('/criar-conta', [
+        'nome' => 'Ana',
+        'sobrenome' => 'Lima',
+        'email' => 'x@example.com',
+        'telefone' => '67911110000',
+        'senha' => 'Xk9382mZqp01',
+        'senha_confirmation' => 'Xk9382mZqp01',
+        'empresa' => 'Empresa X',
+        'cargo' => 'Outro',
+        'documento' => '11144477735',
+        'faturamento' => 'ate-360k',
+        'desafio_principal' => 'documentos_espalhados',
+        'terms_aceitos' => true,
+        'perfil_conta' => 'hacker',
+    ]);
+
+    $response->assertStatus(422)->assertJsonValidationErrors(['perfil_conta']);
+});
+
 test('signup rejeita desafio secundario igual ao principal', function () {
     $response = $this->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->postJson('/criar-conta', [
         'nome' => 'Ana',

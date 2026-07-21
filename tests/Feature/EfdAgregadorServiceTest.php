@@ -167,6 +167,32 @@ it('Q-CARGA débito-saída: ICMS/ST/IPI do C190 saída; PIS/COFINS dos itens con
     expect($c['total'])->toBe(242.0);
 });
 
+it('Q-CARGA: ISS só de NFS-e saída não-cancelada (metadados vl_iss), entra no total', function () {
+    // NFS-e (modelo 00, contribuicoes, saída) carrega VL_ISS no cabeçalho A100.
+    DB::table('efd_notas')->where('id', $this->cNfse->id)
+        ->update(['metadados' => json_encode(['vl_iss' => '41.50'])]);
+    // Ruído que NÃO soma: ISS numa NF-e modelo 55 (não é serviço).
+    DB::table('efd_notas')->where('id', $this->cDup->id)
+        ->update(['metadados' => json_encode(['vl_iss' => '999'])]);
+    // Ruído que NÃO soma: NFS-e cancelada.
+    EfdNota::create([
+        'user_id' => $this->user->id, 'cliente_id' => $this->cliente,
+        'importacao_id' => $this->impContrib->id, 'numero' => 424242, 'serie' => '1',
+        'data_emissao' => '2024-01-20', 'valor_desconto' => 0, 'cancelada' => true,
+        'chave_acesso' => null, 'modelo' => '00', 'tipo_operacao' => 'saida',
+        'origem_arquivo' => 'contribuicoes', 'valor_total' => 500,
+        'metadados' => json_encode(['vl_iss' => '888']),
+    ]);
+
+    $c = $this->svc->cargaTributariaDebitoSaida($this->user->id);
+    expect($c['iss'])->toBe(41.5);
+    expect($c['total'])->toBe(283.5); // 242 (demais) + 41,50 ISS
+
+    $rows = $this->svc->cargaTributariaDebitoSaidaMensal($this->user->id);
+    expect($rows[0]['iss'])->toBe(41.5);
+    expect($rows[0]['total'])->toBe(283.5);
+});
+
 it('Q-CARGA débito-saída mensal: agrupa por mês de emissão', function () {
     // todas as notas-saída do cenário são 2024-01 → um único mês com os mesmos totais
     $rows = $this->svc->cargaTributariaDebitoSaidaMensal($this->user->id);

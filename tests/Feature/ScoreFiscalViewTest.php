@@ -470,7 +470,7 @@ it('dashboard colore o score pela classificação persistida e não só pela fai
         ->assertOk()
         ->getContent();
 
-    expect($html)->toContain('style="color: #ea580c">15</span>')
+    expect($html)->toContain('style="color: #dc2626">15</span>')
         ->not->toContain('style="color: #047857">15</span>');
 });
 

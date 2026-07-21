@@ -48,7 +48,7 @@
                                     $scoreHex = match($scoreData['classificacao']) {
                                         'baixo' => '#047857',
                                         'medio' => '#b45309',
-                                        'alto' => '#ea580c',
+                                        'alto' => '#dc2626',
                                         'critico' => '#b91c1c',
                                         default => '#9ca3af'
                                     };

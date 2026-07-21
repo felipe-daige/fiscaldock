@@ -377,13 +377,13 @@ class RiskScoreService
     public function getCorClassificacao(string $classificacao): string
     {
         // Hexes da paleta do design system (espelham ReportTheme::riscoHex) — não palavras CSS
-        // cruas: 'yellow' (#ffff00) ficava claro demais com texto branco, e 'green'/'orange'/'red'
+        // cruas: 'yellow' (#ffff00) ficava claro demais com texto branco, e nomes de cor
         // destoavam do restante dos relatórios/telas. Usado como cor inline em risk/show + metodologia.
         return match ($classificacao) {
             'baixo' => '#047857',
             'medio' => '#b45309',
-            'alto' => '#ea580c',
-            'critico' => '#dc2626',
+            'alto' => '#dc2626',
+            'critico' => '#b91c1c',
             default => '#9ca3af', // inconclusivo, nao_avaliado e desconhecidos
         };
     }
@@ -523,7 +523,7 @@ class RiskScoreService
 
     /**
      * Cor (hex) do subscore por faixa de risco. null = não avaliado (neutro).
-     * Replica a closure histórica de risk/show.blade.php — usa `>=` (não `<=`).
+     * Espelha exatamente as faixas de classificar(): 0–20, 21–50, 51–80 e 81–100.
      */
     public static function hexSubscore(?int $score): string
     {
@@ -532,37 +532,100 @@ class RiskScoreService
         }
 
         return match (true) {
-            $score >= 80 => '#b91c1c',
-            $score >= 50 => '#ea580c',
-            $score >= 20 => '#b45309',
+            $score >= 81 => '#b91c1c',
+            $score >= 51 => '#dc2626',
+            $score >= 21 => '#b45309',
             default => '#047857',
         };
     }
 
     /**
      * Decompõe os subscores em linhas prontas pra exibição (perfil web + PDF).
-     * Fonte única de label + peso + cor por categoria. Ordem fixa = ordem de $this->pesos.
+     * Fonte única de label, pesos, contribuição e cor por categoria.
+     *
+     * `peso_pct` é mantido como alias retrocompatível do peso-base. O peso realmente aplicado
+     * na consulta é `peso_efetivo_pct`: os pesos-base das fontes avaliadas são renormalizados
+     * para 100%, exatamente como em calcularScoreTotal().
      *
      * @param  array<string,int|null>  $scores  saída de calcularScores()
-     * @return array<string, array{label:string, peso_pct:int, score:int|null, avaliado:bool, hex:string}>
+     * @return array<string, array{label:string, peso_pct:int, peso_base_pct:float, peso_efetivo_pct:?float, contribuicao_pontos:?float, score:int|null, avaliado:bool, classificacao:string, hex:string}>
      */
     public function detalhar(array $scores): array
     {
         $labels = self::categoriaLabels();
         $out = [];
+        $somaPesosAvaliados = 0.0;
+        $pesosEfetivosPct = [];
+
+        foreach ($this->pesos as $categoria => $peso) {
+            if (($scores[$categoria] ?? null) !== null) {
+                $somaPesosAvaliados += $peso;
+            }
+        }
+
+        if ($somaPesosAvaliados > 0) {
+            foreach ($this->pesos as $categoria => $peso) {
+                if (($scores[$categoria] ?? null) !== null) {
+                    $pesosEfetivosPct[$categoria] = round(($peso / $somaPesosAvaliados) * 100, 1);
+                }
+            }
+
+            // Compensa somente o resíduo visual do arredondamento (ex.: 33,3 + 44,4 + 22,2
+            // = 99,9), para os pesos efetivos exibidos sempre fecharem exatamente em 100%.
+            $ultimaCategoriaAvaliada = array_key_last($pesosEfetivosPct);
+            $residuoPct = round(100 - array_sum($pesosEfetivosPct), 1);
+            if ($ultimaCategoriaAvaliada !== null && $residuoPct !== 0.0) {
+                $pesosEfetivosPct[$ultimaCategoriaAvaliada] = round(
+                    $pesosEfetivosPct[$ultimaCategoriaAvaliada] + $residuoPct,
+                    1
+                );
+            }
+        }
 
         foreach ($this->pesos as $categoria => $peso) {
             $valor = $scores[$categoria] ?? null;
+            $avaliado = $valor !== null;
+            $pesoEfetivo = $avaliado && $somaPesosAvaliados > 0
+                ? $peso / $somaPesosAvaliados
+                : null;
+            $classificacao = $this->classificarCategoria($categoria, $valor);
+
             $out[$categoria] = [
                 'label' => $labels[$categoria] ?? $categoria,
                 'peso_pct' => (int) round($peso * 100),
+                'peso_base_pct' => round($peso * 100, 1),
+                'peso_efetivo_pct' => $pesosEfetivosPct[$categoria] ?? null,
+                'contribuicao_pontos' => $pesoEfetivo !== null ? round($valor * $pesoEfetivo, 1) : null,
                 'score' => $valor,
-                'avaliado' => $valor !== null,
-                'hex' => self::hexSubscore($valor),
+                'avaliado' => $avaliado,
+                'classificacao' => $classificacao,
+                'hex' => $this->getCorClassificacao($classificacao),
             ];
         }
 
         return $out;
+    }
+
+    /** Classificação visual da categoria, incluindo o piso específico da fonte irregular. */
+    private function classificarCategoria(string $categoria, ?int $score): string
+    {
+        if ($score === null) {
+            return 'nao_avaliado';
+        }
+
+        if ($score === 0) {
+            return 'baixo';
+        }
+
+        if ($categoria === 'cadastral') {
+            return $score >= 100 ? 'critico' : ($score >= 50 ? 'alto' : $this->classificar($score));
+        }
+
+        if (isset(self::GRAVIDADE_CERTIDAO[$categoria])) {
+            return self::GRAVIDADE_CERTIDAO[$categoria]['piso'];
+        }
+
+        return $this->classificar($score);
     }
 
     /**

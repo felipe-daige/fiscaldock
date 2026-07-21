@@ -11,8 +11,6 @@ use App\Services\Consultas\ResultadoDetalhePresenter;
 use App\Services\RiskScoreService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class MinhaEmpresaController extends Controller
@@ -54,37 +52,16 @@ class MinhaEmpresaController extends Controller
             ]
         );
 
-        // Buscar score de risco. Pós-cutover a consulta grava o score no alvo:
-        // consulta de cliente → participante_scores.cliente_id; de participante → participante_id.
-        // A empresa própria pode ter sido consultada pelos dois caminhos — considerar ambos.
-        $score = collect([$participante->score, $empresa->score])
-            ->filter()
-            ->sortByDesc('ultima_consulta_em')
-            ->first();
-
-        // Buscar ultima consulta RAF — mesmo racional: resultado pode estar
-        // ligado ao participante espelho OU ao cliente (empresa própria).
-        $ultimaConsulta = ConsultaResultado::where(function ($query) use ($participante, $empresa) {
-            $query->where('participante_id', $participante->id)
-                ->orWhere('cliente_id', $empresa->id);
-        })
-            ->where('status', 'sucesso')
-            ->latest('consultado_em')
-            ->first();
-
-        // Dados da ultima consulta para exibicao nos cards
-        $dadosConsulta = $ultimaConsulta?->resultado_dados ?? [];
+        // Consulta e score podem estar ligados ao cliente OU ao participante espelho. O perfil
+        // usa uma projeção única por CNPJ para cadastro, score e certidões não divergirem.
+        $snapshot = app(\App\Services\Perfis\PerfilCnpjSnapshotService::class)
+            ->resolver((int) $user->id, (string) $empresa->documento);
+        $score = $snapshot['score'];
+        $ultimaConsulta = $snapshot['ultima_consulta'];
+        $dadosConsulta = $snapshot['dados'];
 
         // CNDs e certidoes
         $certidoes = $this->extrairCertidoes($dadosConsulta);
-
-        // Geocodifica o participante espelho (uma vez, cacheado no DB) p/ o mapa de localização,
-        // a partir do endereço da última consulta. Falha de rede nunca quebra a página.
-        $enderecoConsulta = $dadosConsulta['endereco'] ?? [];
-        $this->geocodificarSeNecessario(
-            $participante,
-            is_array($enderecoConsulta) ? $enderecoConsulta : []
-        );
 
         // Alertas recentes. `_fontes_erro` = fontes pedidas pelo plano que não voltaram
         // (ex.: CND Federal com código de retry esgotado) — o usuário pagou, precisa saber.
@@ -103,7 +80,7 @@ class MinhaEmpresaController extends Controller
 
         // Notas recentes (base unificada XML+EFD) vinculadas ao CNPJ próprio, paginação AJAX.
         $notasFiscais = app(\App\Services\NotaFiscalService::class)
-            ->listarUnificadas((int) $user->id, ['cliente_id' => $empresa->id], 5, 1, '/app/cliente/'.$empresa->id.'/notas');
+            ->listarUnificadas((int) $user->id, ['cliente_id' => $empresa->id], 10, 1, '/app/cliente/'.$empresa->id.'/notas');
 
         // Assinatura de monitoramento contínuo da empresa própria (alvo cliente OU participante).
         $monitoramento = \App\Models\MonitoramentoAssinatura::where('user_id', $user->id)
@@ -154,6 +131,29 @@ class MinhaEmpresaController extends Controller
             'notasAjaxUrl' => '/app/cliente/'.$empresa->id.'/notas',
             'monitoramento' => $monitoramento,
             'certificado' => app(CertificadoDigitalService::class)->status($empresa),
+        ];
+
+        $data['perfilCnpj'] = [
+            'is_cpf' => false,
+            'alertas' => $alertas,
+            'cadastro' => app(\App\Services\Perfis\PerfilCnpjViewData::class)
+                ->cadastro($empresa, $dadosConsulta, $ultimaConsulta?->consultado_em),
+            'score_detalhamento' => $scoreDetalhamento,
+            'score_total' => $score?->score_total,
+            'score_classificacao' => $score?->classificacao ?? 'nao_avaliado',
+            'score_atualizado_em' => $score?->ultima_consulta_em ?? $ultimaConsulta?->consultado_em,
+            'fontes_consulta' => $data['fontesConsulta'],
+            'certidoes_consulta' => $data['certidoesConsulta'],
+            'ultima_consulta' => $ultimaConsulta,
+            'fiscal' => $fiscalResumo,
+            'notas' => $notasFiscais,
+            'total_notas' => $notasFiscais->total(),
+            'notas_ajax_url' => '/app/cliente/'.$empresa->id.'/notas',
+            'notas_contexto' => 'cliente',
+            'entity_id' => $empresa->id,
+            'historico' => app(\App\Services\Consultas\PerfilConsultaHistoricoService::class)
+                ->paraCliente($empresa),
+            'documento' => $empresa->documento,
         ];
 
         return $this->render($request, 'index', $data);
@@ -273,57 +273,6 @@ class MinhaEmpresaController extends Controller
             } catch (\Throwable) {
                 return null;
             }
-        }
-    }
-
-    /**
-     * Geocodifica o participante espelho (lat/lng) a partir do endereço da última consulta,
-     * cacheando no DB — mesma estratégia do ParticipanteController (CEP via BrasilAPI, fallback
-     * município/UF via Nominatim). Só roda quando ainda não há coordenadas. Nunca lança: falha
-     * de rede apenas deixa o mapa oculto.
-     *
-     * @param  array<string, mixed>  $endereco  bloco `endereco` de resultado_dados
-     */
-    private function geocodificarSeNecessario(Participante $participante, array $endereco): void
-    {
-        if (! is_null($participante->latitude) && ! is_null($participante->longitude)) {
-            return;
-        }
-
-        $cep = preg_replace('/\D/', '', (string) ($endereco['cep'] ?? $participante->cep ?? ''));
-        $municipio = $endereco['municipio'] ?? $participante->municipio ?? null;
-        $uf = $endereco['uf'] ?? $participante->uf ?? null;
-
-        try {
-            $lat = null;
-            $lng = null;
-
-            // Tentativa 1: BrasilAPI via CEP (coordenadas do logradouro quando disponíveis).
-            if ($cep !== '' && strlen($cep) === 8) {
-                $resp = Http::timeout(5)->get("https://brasilapi.com.br/api/cep/v2/{$cep}");
-                if ($resp->successful()) {
-                    $lat = $resp->json('location.coordinates.latitude');
-                    $lng = $resp->json('location.coordinates.longitude');
-                }
-            }
-
-            // Tentativa 2: Nominatim via município/UF (centro da cidade).
-            if ((! $lat || ! $lng) && $municipio && $uf) {
-                $query = urlencode("{$municipio},{$uf},Brasil");
-                $resp = Http::timeout(5)
-                    ->withHeaders(['User-Agent' => 'FiscalDock/1.0'])
-                    ->get("https://nominatim.openstreetmap.org/search?q={$query}&format=json&limit=1");
-                if ($resp->successful()) {
-                    $lat = $resp->json('0.lat');
-                    $lng = $resp->json('0.lon');
-                }
-            }
-
-            if ($lat && $lng) {
-                $participante->update(['latitude' => $lat, 'longitude' => $lng]);
-            }
-        } catch (\Throwable $e) {
-            Log::warning('Falha ao geocodificar empresa própria', ['participante_id' => $participante->id, 'erro' => $e->getMessage()]);
         }
     }
 

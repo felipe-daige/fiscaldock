@@ -1651,10 +1651,19 @@
             html += '<p class="text-xs text-gray-500 mt-0.5">CNPJ: ' + formatCnpj(detalhes.documento) + '</p>';
         }
         html += '</div>';
+        var acoesAlvo = '';
+        if (detalhes.reemitir_url) {
+            // Re-emissão em 1 clique (registro de certidões): abre a Consulta por Fontes com
+            // fonte + CNPJ pré-marcados.
+            acoesAlvo += '<a href="' + detalhes.reemitir_url + '" data-link class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-gray-800 rounded hover:bg-gray-700 transition-colors flex-shrink-0">Re-emitir certidão</a>';
+        }
         if (alvoUrl) {
-            html += '<a href="' + alvoUrl + '" data-link class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors flex-shrink-0">';
-            html += '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
-            html += alvoLabel + '</a>';
+            acoesAlvo += '<a href="' + alvoUrl + '" data-link class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors flex-shrink-0">';
+            acoesAlvo += '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
+            acoesAlvo += alvoLabel + '</a>';
+        }
+        if (acoesAlvo) {
+            html += '<div class="flex items-center gap-2 flex-shrink-0">' + acoesAlvo + '</div>';
         }
         html += '</div>';
 

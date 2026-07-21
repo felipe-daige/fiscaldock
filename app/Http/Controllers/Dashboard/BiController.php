@@ -328,9 +328,7 @@ class BiController extends Controller
         }
 
         [$ini, $fim] = $this->resolverPeriodo($request);
-        $rel = $this->biExport->relatorioCompleto(
-            Auth::id(), $ini, $fim, $request->get('cliente_id'), $this->resolverDossiesTop($request)
-        );
+        $rel = $this->biExport->relatorioCompleto(Auth::id(), $ini, $fim, $request->get('cliente_id'));
         $filename = 'bi-fiscal-'.now()->format('Ymd').'.xlsx';
 
         return $this->comTokenDownload(app(\App\Services\Bi\Export\BiXlsxBuilder::class)->download($rel, $filename), $request);
@@ -341,6 +339,11 @@ class BiController extends Controller
         if (! Auth::check()) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
+
+        // Baseline: o relatório sempre traz TODOS os participantes (1 linha/CNPJ) — carteiras
+        // grandes rendem muitas páginas no dompdf. Os dossiês individuais (abaixo) sobem mais.
+        ini_set('memory_limit', '512M');
+        set_time_limit(120);
 
         [$ini, $fim] = $this->resolverPeriodo($request);
         $clienteIdRaw = $request->get('cliente_id');
@@ -381,9 +384,7 @@ class BiController extends Controller
         }
 
         [$ini, $fim] = $this->resolverPeriodo($request);
-        $rel = $this->biExport->relatorioCompleto(
-            Auth::id(), $ini, $fim, $request->get('cliente_id'), $this->resolverDossiesTop($request)
-        );
+        $rel = $this->biExport->relatorioCompleto(Auth::id(), $ini, $fim, $request->get('cliente_id'));
 
         $filename = 'bi-fiscal-'.now()->format('Ymd').'.csv.zip';
 
@@ -391,21 +392,6 @@ class BiController extends Controller
             app(\App\Services\Bi\Export\BiCsvZipBuilder::class)->download($rel, $filename),
             $request
         );
-    }
-
-    /**
-     * Top N da seção "Dossiê Participantes" nos exports de planilha (XLSX/CSV zip).
-     * Mesmo param `dossies` do PDF (10/20/50); ausente/inválido ⇒ sem a seção
-     * (links antigos sem o param seguem gerando o relatório de sempre).
-     */
-    private function resolverDossiesTop(Request $request): ?int
-    {
-        return match ((string) $request->get('dossies', '')) {
-            '10' => 10,
-            '20' => 20,
-            '50' => 50,
-            default => null,
-        };
     }
 
     /**

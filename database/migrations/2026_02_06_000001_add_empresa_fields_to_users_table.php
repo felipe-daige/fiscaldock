@@ -19,6 +19,11 @@ return new class extends Migration
             if (! Schema::hasColumn('users', 'cnpj')) {
                 $table->string('cnpj', 18)->nullable()->after('cargo');
             }
+            if (! Schema::hasColumn('users', 'persona')) {
+                // Vertical do usuário (empresa | contador | advogado) — dirige empacotamento
+                // (sidebar, planos exibidos, labels), nunca gate duro de compra.
+                $table->string('persona', 20)->nullable()->after('cargo');
+            }
             if (! Schema::hasColumn('users', 'faturamento_anual')) {
                 $table->string('faturamento_anual', 50)->nullable()->after('cnpj');
             }
@@ -47,7 +52,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['empresa', 'cargo', 'cnpj', 'faturamento_anual', 'desafio_principal', 'desafio_secundario']);
+            $table->dropColumn(['empresa', 'cargo', 'persona', 'cnpj', 'faturamento_anual', 'desafio_principal', 'desafio_secundario']);
         });
     }
 };

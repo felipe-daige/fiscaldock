@@ -24,11 +24,13 @@
         $svc = app(\App\Services\BiExportService::class);
         // Seções que ganham barras CSS (idxLabel, idxValorBrl, hex) — casados às colunas atuais
         $barras = [
-            'faturamento' => [0, 1, '#2563eb'],
-            'tributos' => [0, 5, '#b45309'],
             'cfop' => [0, 2, '#7c3aed'],
+        ];
+        // Parse de BRL "1.234,56" → float, reusado pelos gráficos das seções.
+        $parseBrl = fn ($brl) => (float) str_replace(',', '.', str_replace('.', '', (string) $brl));
+        // UF e Devoluções têm layout próprio (tabela única com barra inline) — ver branch abaixo.
+        $barrasInline = [
             'uf' => [0, 1, '#0891b2'],
-            'catalogo' => [1, 3, '#0d9488'],
             'devolucoes' => [0, 1, '#be185d'],
         ];
     @endphp
@@ -133,6 +135,165 @@
                                         </td>
                                         <td class="right">{{ $it['notas'] }}</td>
                                         <td class="small">{{ count($it['cfops']) ? implode(' · ', $it['cfops']) : '—' }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
+        @elseif ($chave === 'faturamento')
+            @php $sec = $relatorio['secoes']['faturamento'] ?? null; @endphp
+            @if ($sec && ! empty($sec['linhas']))
+                @php
+                    // colunas: 0 Mês, 1 Faturamento, 2 Qtd Notas
+                    $colsChart = array_map(fn ($l) => [
+                        'label' => $l[0],
+                        'series' => [['valor' => $parseBrl($l[1]), 'hex' => '#2563eb']],
+                    ], $sec['linhas']);
+                @endphp
+                <div class="secao">
+                    <div class="secao-header">{{ $sec['titulo'] }} <span class="meta">evolução mensal</span></div>
+                    <div class="secao-body">
+                        @include('reports.partials._column-chart', ['colunas' => $colsChart, 'legenda' => [['label' => 'Faturamento', 'hex' => '#2563eb']], 'altura' => 80])
+                        <div style="height:8px;"></div>
+                        @include('reports.bi-executivo-tabela', ['sec' => $sec])
+                    </div>
+                </div>
+            @endif
+        @elseif ($chave === 'tributos')
+            @php $sec = $relatorio['secoes']['tributos'] ?? null; @endphp
+            @if ($sec && ! empty($sec['linhas']))
+                @php
+                    // colunas: 0 Mês, 1 Faturamento, 2 ICMS, 3 PIS, 4 COFINS, 5 Total Tributos, 6 Alíq%
+                    $icms = array_sum(array_map(fn ($l) => $parseBrl($l[2]), $sec['linhas']));
+                    $pis = array_sum(array_map(fn ($l) => $parseBrl($l[3]), $sec['linhas']));
+                    $cofins = array_sum(array_map(fn ($l) => $parseBrl($l[4]), $sec['linhas']));
+                    $tot = max(0.0001, $icms + $pis + $cofins);
+                    $fmt = fn ($v) => 'R$ '.number_format($v, 2, ',', '.');
+                    $mix = [
+                        ['label' => 'ICMS', 'pct' => round($icms / $tot * 100, 1), 'valor' => $fmt($icms), 'hex' => '#b45309'],
+                        ['label' => 'PIS', 'pct' => round($pis / $tot * 100, 1), 'valor' => $fmt($pis), 'hex' => '#0891b2'],
+                        ['label' => 'COFINS', 'pct' => round($cofins / $tot * 100, 1), 'valor' => $fmt($cofins), 'hex' => '#7c3aed'],
+                    ];
+                    $colsChart = array_map(fn ($l) => [
+                        'label' => $l[0],
+                        'series' => [['valor' => $parseBrl($l[5]), 'hex' => '#b45309']],
+                    ], $sec['linhas']);
+                @endphp
+                <div class="secao">
+                    <div class="secao-header">{{ $sec['titulo'] }} <span class="meta">evolução + composição</span></div>
+                    <div class="secao-body">
+                        @include('reports.partials._column-chart', ['colunas' => $colsChart, 'legenda' => [['label' => 'Total tributos', 'hex' => '#b45309']], 'altura' => 70])
+                        <div style="font-weight:bold;font-size:8px;color:#374151;margin:10px 0 4px;">Composição dos tributos (acumulado)</div>
+                        @include('reports.partials._stacked-bar', ['itens' => $mix])
+                        <div style="height:8px;"></div>
+                        @include('reports.bi-executivo-tabela', ['sec' => $sec])
+                    </div>
+                </div>
+            @endif
+        @elseif (isset($barrasInline[$chave]))
+            @php
+                $sec = $relatorio['secoes'][$chave] ?? null;
+                [$iLabel, $iVal, $hex] = $barrasInline[$chave];
+                $cc = $relatorio['cobertura_consulta'] ?? ['sem_uf' => 0];
+                // Largura da barra: parse do BRL "1.234,56" → float, relativo ao máximo da série.
+                $parse = fn ($brl) => (float) str_replace(',', '.', str_replace('.', '', (string) $brl));
+                $maxVal = ! empty($sec['linhas']) ? collect($sec['linhas'])->max(fn ($l) => $parse($l[$iVal])) : 0;
+            @endphp
+            @if ($sec && ! empty($sec['linhas']))
+                <div class="secao">
+                    <div class="secao-header">{{ $sec['titulo'] }}</div>
+                    <div class="secao-body">
+                        @if ($chave === 'uf' && $modo === 'portfolio' && ($cc['sem_uf'] ?? 0) > 0)
+                            <div style="background-color:#fffbeb;border:1px solid #fde68a;padding:6px;font-size:9px;color:#92400e;margin-bottom:6px;">
+                                &#9888; {{ $cc['sem_uf'] }} participantes sem UF ({{ $cc['sem_uf_cnpj'] ?? 0 }} CNPJ, {{ $cc['sem_uf_cpf'] ?? 0 }} CPF) — distribuição geográfica incompleta. CPF não tem UF de estabelecimento (esperado); consulte os {{ $cc['sem_uf_cnpj'] ?? 0 }} CNPJ para enriquecer.
+                            </div>
+                        @endif
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>{{ $sec['colunas'][$iLabel] }}</th>
+                                    <th class="right" style="width:50%;">{{ $sec['colunas'][$iVal] }}</th>
+                                    <th class="right" style="width:14%;">{{ $sec['colunas'][2] ?? 'Qtd' }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($sec['linhas'] as $l)
+                                    @php $w = $maxVal > 0 ? (int) round($parse($l[$iVal]) / $maxVal * 100) : 0; @endphp
+                                    <tr>
+                                        <td>{{ $l[$iLabel] }}</td>
+                                        <td class="right">
+                                            <div style="font-weight:bold;">R$&nbsp;{{ $l[$iVal] }}</div>
+                                            <div style="background:#f3f4f6;height:5px;width:100%;">
+                                                <div style="background-color:{{ $hex }};height:5px;width:{{ $w }}%;"></div>
+                                            </div>
+                                        </td>
+                                        <td class="right">{{ $l[2] ?? '—' }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
+        @elseif ($chave === 'catalogo')
+            @php
+                $sec = $relatorio['secoes']['catalogo'] ?? null;
+                // O catálogo completo pode ter milhares de itens (planilhas levam tudo);
+                // no PDF executivo cortamos no topo por valor pra não estourar páginas/memória.
+                $capPdf = 100;
+                $total = $sec ? count($sec['linhas']) : 0;
+                $visiveis = $total > $capPdf ? array_slice($sec['linhas'], 0, $capPdf) : ($sec['linhas'] ?? []);
+            @endphp
+            @if ($sec)
+                <div class="secao">
+                    <div class="secao-header">{{ $sec['titulo'] }}
+                        @if ($total > $capPdf)<span class="meta">{{ $capPdf }} de {{ $total }} — planilhas trazem tudo</span>@endif
+                    </div>
+                    <div class="secao-body">
+                        @include('reports.bi-executivo-tabela', ['sec' => ['colunas' => $sec['colunas'], 'linhas' => $visiveis]])
+                    </div>
+                </div>
+            @endif
+        @elseif ($chave === 'dossie-participantes')
+            @php $sec = $relatorio['secoes']['dossie-participantes'] ?? null; @endphp
+            @if ($sec && ! empty($sec['linhas']))
+                <div class="secao">
+                    <div class="secao-header">{{ $sec['titulo'] }} <span class="meta">{{ count($sec['linhas']) }} participantes</span></div>
+                    <div class="secao-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th style="white-space:nowrap;">CNPJ/CPF</th>
+                                    <th>Razão social</th>
+                                    <th class="center">UF</th>
+                                    <th class="right">Notas</th>
+                                    <th class="right" style="white-space:nowrap;">Entradas (qtd · R$)</th>
+                                    <th class="right" style="white-space:nowrap;">Saídas (qtd · R$)</th>
+                                    <th class="right">Movimentado</th>
+                                    <th class="center">Risco</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($sec['linhas'] as $i => $l)
+                                    @php
+                                        $cls = $sec['classificacoes'][$i] ?? null;
+                                        $hex = \App\Support\Reports\ReportTheme::riscoHex($cls);
+                                        // Score só faz sentido em risco real; inconclusivo/nunca consultado ficam sem número.
+                                        $comScore = $cls && $cls !== 'inconclusivo' && $l[10] !== '—';
+                                    @endphp
+                                    <tr>
+                                        <td class="mono">{{ $l[1] }}</td>
+                                        <td>{{ $l[0] }}</td>
+                                        <td class="center">{{ $l[2] }}</td>
+                                        <td class="right">{{ $l[3] }}</td>
+                                        <td class="right">{{ $l[5] }} · {{ $l[6] }}</td>
+                                        <td class="right">{{ $l[7] }} · {{ $l[8] }}</td>
+                                        <td class="right">R$&nbsp;{{ $l[4] }}</td>
+                                        <td class="center">
+                                            <span class="badge" style="background-color:{{ $hex }}">{{ $l[11] }}{{ $comScore ? ' '.$l[10] : '' }}</span>
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>

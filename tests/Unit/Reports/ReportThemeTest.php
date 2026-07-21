@@ -22,8 +22,8 @@ it('delega status desconhecidos ao CertidaoBadge', function () {
 it('colore a classificacao de risco', function () {
     expect(ReportTheme::riscoHex('baixo'))->toBe('#047857');
     expect(ReportTheme::riscoHex('medio'))->toBe('#b45309');
-    expect(ReportTheme::riscoHex('alto'))->toBe('#ea580c');
-    expect(ReportTheme::riscoHex('critico'))->toBe('#dc2626');
+    expect(ReportTheme::riscoHex('alto'))->toBe('#dc2626');
+    expect(ReportTheme::riscoHex('critico'))->toBe('#b91c1c');
     expect(ReportTheme::riscoHex('qualquer'))->toBe('#9ca3af');
 });
 

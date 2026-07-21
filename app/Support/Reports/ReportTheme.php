@@ -56,8 +56,8 @@ final class ReportTheme
         return match (mb_strtolower(trim((string) $classificacao))) {
             'baixo' => self::OK,
             'medio', 'médio' => self::ALERTA,
-            'alto' => '#ea580c',
-            'critico', 'crítico' => self::IRREGULAR,
+            'alto' => self::IRREGULAR,
+            'critico', 'crítico' => '#b91c1c',
             default => self::NEUTRO,
         };
     }

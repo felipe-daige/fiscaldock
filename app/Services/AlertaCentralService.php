@@ -296,6 +296,20 @@ class AlertaCentralService
             $this->upsertAlerta($userId, $hash, $data)->wasRecentlyCreated ? $novos++ : $atualizados++;
         }
 
+        // 3d. Certidões do REGISTRO canônico (tabela `certidoes` — inclui as judiciais do
+        // vertical advocacia) vencendo em 15/7/1 dias ou vencidas. Hash inclui a FAIXA: ao
+        // cruzar cada faixa nasce alerta novo (novo e-mail via pipeline padrão) e o da faixa
+        // anterior auto-resolve no passo 4 — 3 avisos + vencida, sem spam diário. As 4
+        // certidões fiscais do CERTIDOES_MAP ficam de fora (já cobertas pelo 3c via scores).
+        foreach ($this->detectarCertidoesRegistroVencendo($userId) as $item) {
+            $hash = hash('sha256', "$userId:certidao_registro:{$item['certidao']->id}:{$item['faixa']}");
+            $allHashes[] = $hash;
+
+            $data = $this->buildCertidaoRegistroAlertData($item);
+
+            $this->upsertAlerta($userId, $hash, $data)->wasRecentlyCreated ? $novos++ : $atualizados++;
+        }
+
         $gapImportacoes = $this->detectarGapImportacoes($userId);
         if ($gapImportacoes) {
             $hash = hash('sha256', "$userId:gap_importacao");
@@ -1084,6 +1098,118 @@ class AlertaCentralService
                     'vencida' => $c['vencida'],
                     'dias' => (int) $c['dias'],
                 ], $alvo['certidoes']),
+            ],
+        ];
+    }
+
+    /**
+     * Certidões do registro canônico (tabela `certidoes`) com valida_ate dentro da 1ª faixa de
+     * aviso (default 15 dias) ou vencidas, com a FAIXA atual resolvida (15/7/1/vencida). Exclui
+     * os tipos fiscais já cobertos pelo detector de scores (3c) — nunca 2 alertas pro mesmo
+     * vencimento. Certidão renovada sai da janela e o alerta auto-resolve no passo 4.
+     *
+     * @return array<int, array{certidao: \App\Models\Certidao, faixa: string, dias: int}>
+     */
+    private function detectarCertidoesRegistroVencendo(int $userId): array
+    {
+        $faixas = (array) config('certidoes.alerta_faixas', [15, 7, 1]);
+        rsort($faixas); // maior → menor (15, 7, 1)
+        $janela = (int) ($faixas[0] ?? 15);
+
+        $hoje = now()->startOfDay();
+
+        // Tipos cujo vencimento o 3c já alerta lendo participante_scores (fonte única por feature).
+        $tiposCobertos = ['cnd_federal', 'cnd_estadual', 'crf_fgts', 'fgts', 'cndt'];
+
+        $certidoes = \App\Models\Certidao::where('user_id', $userId)
+            ->whereNotNull('valida_ate')
+            ->whereNotIn('tipo', $tiposCobertos)
+            ->where('valida_ate', '<=', $hoje->copy()->addDays($janela))
+            ->with(['participante:id,razao_social,documento,cliente_id', 'cliente:id,razao_social,nome,documento'])
+            ->get();
+
+        $itens = [];
+        foreach ($certidoes as $certidao) {
+            $dias = (int) $hoje->diffInDays($certidao->valida_ate->startOfDay(), false);
+
+            $faixa = 'vencida';
+            if ($dias >= 0) {
+                foreach ($faixas as $f) {
+                    if ($dias <= (int) $f) {
+                        $faixa = (string) (int) $f;
+                    }
+                }
+            }
+
+            $itens[] = ['certidao' => $certidao, 'faixa' => $faixa, 'dias' => $dias];
+        }
+
+        return $itens;
+    }
+
+    /**
+     * Alerta de vencimento de certidão do registro (1 por certidão × faixa). `detalhes` carrega
+     * a URL de re-emissão em 1 clique (tela Consulta por Fontes com fonte + alvo pré-marcados).
+     *
+     * @param  array{certidao: \App\Models\Certidao, faixa: string, dias: int}  $item
+     * @return array<string, mixed>
+     */
+    private function buildCertidaoRegistroAlertData(array $item): array
+    {
+        $certidao = $item['certidao'];
+        $dias = $item['dias'];
+
+        $nomeFonte = (string) config("consultas.fonte_nome.{$certidao->tipo}", $certidao->tipo);
+        $razao = $certidao->participante?->razao_social
+            ?? $certidao->cliente?->razao_social
+            ?? $certidao->cliente?->nome
+            ?? \App\Support\Cnpj::formatar($certidao->alvo_documento);
+        $venceEm = $certidao->valida_ate;
+
+        if ($item['faixa'] === 'vencida') {
+            $prazoTxt = 'venceu em '.$venceEm->format('d/m/Y');
+        } elseif ($dias === 0) {
+            $prazoTxt = 'vence hoje ('.$venceEm->format('d/m/Y').')';
+        } elseif ($dias === 1) {
+            $prazoTxt = 'vence amanhã — '.$venceEm->format('d/m/Y');
+        } else {
+            $prazoTxt = "vence em {$dias} dias — ".$venceEm->format('d/m/Y');
+        }
+
+        $reemitirUrl = route('app.consulta.fontes', [
+            'fonte' => $certidao->tipo,
+            'documento' => $certidao->alvo_documento,
+        ]);
+
+        return [
+            'tipo' => 'certidao_vencendo',
+            'categoria' => 'compliance',
+            'severidade' => $item['faixa'] === '15' ? 'media' : 'alta',
+            'participante_id' => $certidao->participante_id,
+            'cliente_id' => $certidao->cliente_id,
+            'titulo' => "Certidão {$nomeFonte} {$prazoTxt} — {$razao}",
+            'descricao' => "{$razao} ({$certidao->alvo_documento}): a certidão {$nomeFonte}"
+                .($certidao->orgao ? " ({$certidao->orgao})" : '')
+                ." {$prazoTxt}. Re-emita em 1 clique pela Consulta por Fontes para manter o dossiê válido.",
+            'total_afetados' => 1,
+            'vence_em' => $venceEm->toDateString(),
+            'detalhes' => [
+                'tipo_alvo' => $certidao->alvo_tipo,
+                'razao_social' => $razao,
+                'documento' => $certidao->alvo_documento,
+                'certidao_tipo' => $certidao->tipo,
+                'certidao_status' => $certidao->status,
+                'emitida_em' => $certidao->emitida_em?->format('d/m/Y'),
+                'valida_ate' => $venceEm->format('d/m/Y'),
+                'arquivo_path' => $certidao->arquivo_path,
+                'reemitir_url' => $reemitirUrl,
+                // Mesmo shape do 3c: a central reusa renderCertidaoVencendo sem código novo.
+                'certidoes' => [[
+                    'label' => $nomeFonte,
+                    'validade' => $venceEm->format('d/m/Y'),
+                    'vencida' => $item['faixa'] === 'vencida',
+                    'dias' => $dias,
+                ]],
             ],
         ];
     }

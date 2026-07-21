@@ -106,11 +106,13 @@ it('gera o workbook completo na ordem do relatório com números reais', functio
     expect($resumo[12])->toEqual(['Score da carteira — participantes ativos', 5]);
     expect($resumo[15])->toEqual(['Participantes nunca consultados', 2]);
 
-    // Faturamento: valores numéricos + linha de totais somada
+    // Faturamento: valores numéricos + linha de totais somada + coluna "Gráfico" (barra █)
     $fat = $sheets['Faturamento'];
-    expect($fat[1])->toBe(['Mês', 'Faturamento', 'Qtd Notas']);
-    expect($fat[2])->toEqual(['jan/24', 1000.0, 2]);
-    expect($fat[4])->toEqual(['Total', 1500.0, 3]);
+    expect($fat[1])->toBe(['Mês', 'Faturamento', 'Qtd Notas', 'Gráfico']);
+    expect(array_slice($fat[2], 0, 3))->toEqual(['jan/24', 1000.0, 2]);
+    expect($fat[2][3])->toContain('█');                       // sparkline in-cell
+    expect(array_slice($fat[4], 0, 3))->toEqual(['Total', 1500.0, 3]);
+    expect($fat[4][3])->toBe('—');                            // barra não se aplica ao total
 
     // Seção sem linhas ganha aviso, não aba vazia
     expect($sheets['Tributos'][2][0])->toBe('Sem dados no período.');

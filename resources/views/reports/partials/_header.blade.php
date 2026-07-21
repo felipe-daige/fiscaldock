@@ -1,4 +1,4 @@
-<div style="position:fixed; top:-74px; left:0; width:100%;">
+<div style="position:fixed; top:-90px; left:0; width:100%;">
     <table style="width:100%; border-collapse:collapse;">
         <tr>
             <td style="width:210px; vertical-align:middle; border:none; white-space:nowrap;">
@@ -8,7 +8,7 @@
             <td style="vertical-align:middle; border:none;">
                 <span style="font-size:13px; font-weight:bold; color:#1f2937; text-transform:uppercase; letter-spacing:.04em;">@yield('titulo', 'Relatório')</span>
             </td>
-            <td style="vertical-align:middle; text-align:right; border:none; color:#6b7280; font-size:8px;">
+            <td style="vertical-align:middle; text-align:right; border:none; color:#6b7280; font-size:7px; line-height:1.15;">
                 @if(!empty($pdfExecutivo))
                     <div style="display:inline-block; background:#1e4679; color:#fff; padding:1px 7px; border-radius:3px; font-size:7px; font-weight:bold; text-transform:uppercase; letter-spacing:.1em; margin-bottom:2px;">Relatório Executivo</div>
                 @endif

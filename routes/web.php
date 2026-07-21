@@ -534,6 +534,17 @@ Route::middleware([
             Route::post('/{id}', [\App\Http\Controllers\Dashboard\AdminPlanosController::class, 'update'])->name('update')->where('id', '[0-9]+');
         });
 
+    // Painel admin — CRUD dos kits da consulta avulsa por fontes (consulta_kits, vertical advocacia)
+    Route::prefix('app/admin/kits')->name('app.admin.kits.')
+        ->middleware(\App\Http\Middleware\EnsureAdmin::class)->group(function () {
+            Route::get('/', [\App\Http\Controllers\Dashboard\AdminKitsController::class, 'index'])->name('index');
+            Route::get('/novo', [\App\Http\Controllers\Dashboard\AdminKitsController::class, 'edit'])->name('novo');
+            Route::post('/', [\App\Http\Controllers\Dashboard\AdminKitsController::class, 'save'])->name('store');
+            Route::get('/{id}/editar', [\App\Http\Controllers\Dashboard\AdminKitsController::class, 'edit'])->name('edit')->where('id', '[0-9]+');
+            Route::post('/{id}', [\App\Http\Controllers\Dashboard\AdminKitsController::class, 'save'])->name('update')->where('id', '[0-9]+');
+            Route::post('/{id}/excluir', [\App\Http\Controllers\Dashboard\AdminKitsController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
+        });
+
     // Impersonação — sair (fora do EnsureAdmin: sessão vira do alvo não-admin durante impersonação)
     Route::post('/app/admin/impersonar/sair', [\App\Http\Controllers\Dashboard\AdminUsuarioAcaoController::class, 'impersonarSair'])->name('app.admin.impersonar.sair');
 
@@ -571,6 +582,10 @@ Route::middleware([
         Route::get('/nova/participantes/grupo/{id}', [ConsultaController::class, 'getParticipantesGrupo'])->name('nova.participantes.grupo');
         Route::post('/nova/calcular-custo', [ConsultaController::class, 'calcularCusto'])->name('nova.calcular-custo');
         Route::post('/nova/executar', [ConsultaController::class, 'executar'])->name('nova.executar');
+        // Lote avulso por fontes (à la carte, vertical advocacia) — docs/advocacia/consultas-certidoes.md
+        Route::get('/fontes', [ConsultaController::class, 'fontesIndex'])->name('fontes');
+        Route::post('/nova/fontes/calcular-custo', [ConsultaController::class, 'calcularCustoFontes'])->name('nova.fontes.calcular-custo');
+        Route::post('/nova/fontes/executar', [ConsultaController::class, 'executarFontes'])->name('nova.fontes.executar');
         Route::post('/nova/adicionar-cnpj', [ConsultaController::class, 'adicionarCnpj'])->name('nova.adicionar-cnpj');
         Route::get('/nova/progresso/stream', [ConsultaController::class, 'streamProgresso'])->name('nova.progresso.stream');
         Route::get('/progresso/stream', [ConsultaController::class, 'streamProgresso'])->name('progresso.stream');

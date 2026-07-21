@@ -30,8 +30,8 @@ class DashboardDataService
     private const RISCO_HEX = [
         'baixo' => '#047857',
         'medio' => '#b45309',
-        'alto' => '#ea580c',
-        'critico' => '#dc2626',
+        'alto' => '#dc2626',
+        'critico' => '#b91c1c',
     ];
 
     private const RISCO_LABEL = [

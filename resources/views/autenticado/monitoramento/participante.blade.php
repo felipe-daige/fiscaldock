@@ -15,9 +15,6 @@
     $regimeLabel = $regimeLabel !== '' && $regimeLabel !== '—' ? $regimeLabel : 'Não consultado';
     $regimeBadge = ['label' => mb_strtoupper($regimeLabel), 'hex' => \App\Support\Reports\ReportTheme::regimeHex($regimeLabel)];
     $returnToUrl = $returnToUrl ?? '/app/dashboard';
-    $returnToLabel = str_starts_with($returnToUrl, '/app/participantes')
-        ? 'Voltar para participantes'
-        : 'Voltar para o dashboard';
     $resumoParticipante = [
         [
             'label' => 'Origem',
@@ -48,27 +45,6 @@
             'sub' => 'Documentos vinculados',
         ],
     ];
-    $dadosCadastraisParticipante = [
-        ['label' => $participante->is_cpf ? 'CPF' : 'CNPJ', 'valor' => $participante->cnpj_formatado, 'mono' => true],
-        ['label' => $participante->is_cpf ? 'Nome' : 'Razão Social', 'valor' => $participante->razao_social ?? '-', 'destaque' => true],
-        [
-            'label' => $participante->is_cpf ? 'Tipo de pessoa' : 'Situação Cadastral',
-            'badge' => $participante->is_cpf ? ['label' => 'Pessoa física', 'hex' => '#374151'] : $situacaoBadge,
-        ],
-        [
-            'label' => $participante->is_cpf ? 'Avaliação de crédito' : 'Regime Tributário',
-            'badge' => $participante->is_cpf ? ['label' => 'Não avaliada', 'hex' => '#6b7280'] : $regimeBadge,
-        ],
-        ['label' => 'Município / UF', 'valor' => implode(' / ', array_filter([$participante->municipio, $participante->uf])) ?: 'Não informado'],
-        ['label' => 'Porte', 'valor' => $participante->porte ?? 'Não informado'],
-        ['label' => 'Cadastrado em', 'valor' => $participante->created_at?->format('d/m/Y H:i') ?? 'Não informado'],
-    ];
-    $indicadoresMovimentacao = [
-        ['label' => 'Total de Notas', 'valor' => number_format($movimentacao['kpis']['total_notas'] ?? 0, 0, ',', '.')],
-        ['label' => 'Valor Movimentado', 'valor' => \App\Support\Dinheiro::brl($movimentacao['kpis']['valor_movimentado'] ?? 0)],
-        ['label' => 'Entradas', 'valor' => number_format($movimentacao['kpis']['entradas_qtd'] ?? 0, 0, ',', '.')],
-        ['label' => 'Saídas', 'valor' => number_format($movimentacao['kpis']['saidas_qtd'] ?? 0, 0, ',', '.')],
-    ];
 @endphp
 <x-cockpit.layout
     container-id="monitoramento-participante-container"
@@ -76,6 +52,7 @@
     :subtitulo="$participante->cnpj_formatado"
     eyebrow="Participante"
     resumo-titulo="Resumo Operacional"
+    data-assinatura-ativa="{{ $assinaturaAtiva ? 'true' : 'false' }}"
 >
     <x-slot:badges>
         <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $situacaoBadge['hex'] }}">
@@ -87,619 +64,71 @@
     </x-slot:badges>
 
     <x-slot:principal>
-        @unless($participante->is_cpf)
-            <a href="/app/consulta/nova?participantes={{ $participante->id }}" data-link class="auth-control inline-flex items-center justify-center rounded bg-gray-800 px-4 text-sm font-semibold text-white hover:bg-gray-700">
-                Nova consulta
+        <div class="flex max-w-3xl flex-wrap justify-start gap-2 lg:justify-end" data-perfil-acoes-superiores>
+            <a href="{{ $returnToUrl }}" data-link class="auth-control inline-flex items-center rounded border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                Voltar
             </a>
-        @else
+            @unless($participante->is_cpf)
+                <a href="/app/consulta/nova?participantes={{ $participante->id }}" data-link class="auth-control inline-flex items-center justify-center rounded bg-gray-800 px-4 text-sm font-semibold text-white hover:bg-gray-700">
+                    Nova consulta
+                </a>
+            @endunless
             <a href="/app/participante/{{ $participante->id }}/editar" data-link class="auth-control inline-flex items-center justify-center rounded bg-gray-800 px-4 text-sm font-semibold text-white hover:bg-gray-700">
                 Editar cadastro
             </a>
-        @endunless
+            {{-- Botão único Exportar → modal de formato (design system). --}}
+            <x-export-menu id="modal-exportar-participante" label="Exportar"
+                           titulo="Exportar dossiê" class="px-3 text-sm font-medium"
+                           descricao="Dossiê de {{ $participante->razao_social ?? $participante->cnpj_formatado }}. Escolha o formato.">
+                <x-export-grupo label="Documento" />
+                <x-export-option format="pdf" modal-id="modal-exportar-participante"
+                                 overlay="download-overlay-participante-show"
+                                 path="/app/participante/{{ $participante->id }}/dossie"
+                                 descricao="Dossiê completo (cadastro, movimentação, certidões e score)." />
+                <x-export-grupo label="Planilha" />
+                <x-export-option format="xlsx" modal-id="modal-exportar-participante"
+                                 overlay="download-overlay-participante-show"
+                                 path="/app/participante/{{ $participante->id }}/dossie" query="formato=xlsx"
+                                 descricao="Mesmos dados do PDF em planilha." />
+            </x-export-menu>
+            <x-download-overlay id="download-overlay-participante-show" texto="Gerando arquivo…" />
+            @if(!$assinaturaAtiva && ! $participante->is_cpf)
+                <button type="button" id="btn-criar-assinatura" class="auth-control rounded border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    Criar assinatura
+                </button>
+            @endif
+        </div>
     </x-slot:principal>
-
-    <x-slot:acoes>
-        <a href="{{ $returnToUrl }}" data-link class="auth-control inline-flex items-center rounded border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
-            {{ $returnToLabel }}
-        </a>
-        @unless($participante->is_cpf)
-            <a href="/app/participante/{{ $participante->id }}/editar" data-link class="auth-control inline-flex items-center rounded border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                Editar cadastro
-            </a>
-        @endunless
-        @if(!$assinaturaAtiva && ! $participante->is_cpf)
-            <button type="button" id="btn-criar-assinatura" class="auth-control px-3 text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded">
-                Criar assinatura
-            </button>
-        @endif
-    </x-slot:acoes>
 
     <x-slot:resumo>
         <x-cockpit.indicadores :itens="$resumoParticipante" />
     </x-slot:resumo>
 
-    <div class="space-y-4 sm:space-y-6 min-w-0" data-cockpit-profile-flow data-assinatura-ativa="{{ $assinaturaAtiva ? 'true' : 'false' }}">
-        <div class="space-y-4 sm:space-y-6 min-w-0">
-            <x-cockpit.secao
-                titulo="Dados Cadastrais"
-                subtitulo="Identificação, localização e enquadramento do participante."
-                body-class="p-0"
-            >
-                <x-slot:acao>
-                    <span class="whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $participante->is_cpf ? '#374151' : $situacaoBadge['hex'] }}">
-                        {{ $participante->is_cpf ? 'Pessoa física' : $situacaoBadge['label'] }}
-                    </span>
-                </x-slot:acao>
-                <x-cockpit.dados :itens="$dadosCadastraisParticipante" />
-            </x-cockpit.secao>
-
-                {{-- Snapshot consolidado: dado mais recente disponível por fonte. --}}
-                @if($ultimaConsulta && $ultimaConsulta->resultado_dados)
-                    @php
-                        $dados = $ultimaConsulta->resultado_dados;
-                        $consultasRealizadas = $dados['consultas_realizadas'] ?? [];
-                        $mensagemUltimaConsulta = $ultimaConsulta->getMensagemExibivel();
-                    @endphp
-                    <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Dados Consolidados das Consultas</span>
-                                    <p class="text-xs text-gray-500 mt-1">
-                                        Fontes mais recentes disponíveis · última consulta em {{ $ultimaConsulta->consultado_em?->format('d/m/Y H:i') }}
-                                        @if($ultimaConsulta->lote)
-                                        <span class="mx-1">|</span>
-                                        <a href="/app/consulta/historico?lote={{ $ultimaConsulta->lote->id }}"
-                                           class="text-gray-600 hover:text-gray-900 hover:underline"
-                                           data-link>
-                                            Último lote #{{ $ultimaConsulta->lote->id }}
-                                        </a>
-                                        @endif
-                                    </p>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    @if($ultimaConsulta->lote?->plano)
-                                    @php
-                                        $planoBadgeColors = [
-                                            'gratuito' => '#6b7280',
-                                            'validacao' => '#4338ca',
-                                            'licitacao' => '#7c3aed',
-                                            'compliance' => '#b45309',
-                                            'due_diligence' => '#be123c',
-                                            'enterprise' => '#1f2937',
-                                        ];
-                                        $badgeColor = $planoBadgeColors[$ultimaConsulta->lote->plano->codigo] ?? '#6b7280';
-                                    @endphp
-                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $badgeColor }}">
-                                        {{ $ultimaConsulta->lote->plano->nome }}
-                                    </span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                        <div class="p-4 sm:p-6 space-y-6">
-                            @if($mensagemUltimaConsulta)
-                                <div class="bg-white rounded border border-gray-300 p-4">
-                                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Mensagem da Consulta</p>
-                                    <p class="mt-2 text-sm text-gray-700">{{ $mensagemUltimaConsulta }}</p>
-                                </div>
-                            @endif
-
-                            {{-- Parecer Fiscal Automático (planos pagos) --}}
-                            @if(!empty($parecerFiscal ?? []))
-                                @php
-                                    $severidadeLabels = [
-                                        'alta' => 'Crítico',
-                                        'media' => 'Atenção',
-                                        'baixa' => 'Informativo',
-                                        'info' => 'Contexto',
-                                    ];
-                                @endphp
-                                <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-300 flex items-center justify-between">
-                                        <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Parecer Fiscal Automático</span>
-                                        <span class="text-[10px] text-gray-500">{{ count($parecerFiscal) }} {{ count($parecerFiscal) === 1 ? 'sinalização' : 'sinalizações' }}</span>
-                                    </div>
-                                    <ul class="divide-y divide-gray-200">
-                                        @foreach($parecerFiscal as $item)
-                                            <li class="flex gap-3 px-4 py-3">
-                                                <span class="shrink-0 w-1 rounded-sm" style="background-color: {{ $item['hex'] }}"></span>
-                                                <div class="flex-1 min-w-0">
-                                                    <div class="flex items-center gap-2 flex-wrap">
-                                                        <span class="text-sm font-semibold text-gray-900">{{ $item['titulo'] }}</span>
-                                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $item['hex'] }}">
-                                                            {{ $severidadeLabels[$item['severidade']] ?? $item['severidade'] }}
-                                                        </span>
-                                                    </div>
-                                                    <p class="mt-1 text-xs text-gray-600 leading-relaxed">{{ $item['descricao'] }}</p>
-                                                </div>
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            @endif
-
-                            {{-- Situação Cadastral e Regime Tributário — DANFE Modernizado --}}
-                            @php
-                                $situacao = strtoupper(trim((string) ($dados['situacao_cadastral'] ?? '')));
-                                if ($situacao === 'ATIVA') {
-                                    $sitLabel = 'Ativa';                  $sitHex = '#047857';
-                                } elseif (in_array($situacao, ['SUSPENSA', 'INAPTA'], true)) {
-                                    $sitLabel = ucfirst(mb_strtolower($situacao)); $sitHex = '#b45309';
-                                } elseif (in_array($situacao, ['BAIXADA', 'NULA'], true)) {
-                                    $sitLabel = ucfirst(mb_strtolower($situacao)); $sitHex = '#dc2626';
-                                } elseif ($situacao !== '' && $situacao !== 'DESCONHECIDA') {
-                                    $sitLabel = ucfirst(mb_strtolower($situacao)); $sitHex = '#374151';
-                                } else {
-                                    $sitLabel = 'Não informada';          $sitHex = '#9ca3af';
-                                }
-
-                                $regimeRaw = trim((string) ($dados['regime_tributario'] ?? ''));
-                                $regimeUp  = strtoupper($regimeRaw);
-                                $isSimples = ($dados['simples_nacional'] ?? false) === true;
-                                $isMei     = ($dados['mei'] ?? false) === true;
-
-                                if ($isMei) {
-                                    $regLabel = 'MEI';                    $regHex = \App\Support\Reports\ReportTheme::regimeHex($regLabel);
-                                } elseif ($isSimples || str_contains($regimeUp, 'SIMPLES')) {
-                                    $regLabel = 'Simples Nacional';       $regHex = \App\Support\Reports\ReportTheme::regimeHex($regLabel);
-                                } elseif (str_contains($regimeUp, 'PRESUMIDO')) {
-                                    $regLabel = 'Lucro Presumido';        $regHex = \App\Support\Reports\ReportTheme::regimeHex($regLabel);
-                                } elseif (str_contains($regimeUp, 'REAL')) {
-                                    $regLabel = 'Lucro Real';             $regHex = \App\Support\Reports\ReportTheme::regimeHex($regLabel);
-                                } elseif ($regimeRaw !== '') {
-                                    $regLabel = $regimeRaw;               $regHex = \App\Support\Reports\ReportTheme::regimeHex($regLabel);
-                                } else {
-                                    $regLabel = 'Não consultado';         $regHex = \App\Support\Reports\ReportTheme::regimeHex($regLabel);
-                                }
-
-                                $inicioFmt = null;
-                                if (! empty($dados['data_inicio_atividade'])) {
-                                    try { $inicioFmt = \Carbon\Carbon::parse($dados['data_inicio_atividade'])->format('d/m/Y'); }
-                                    catch (\Exception $e) { $inicioFmt = (string) $dados['data_inicio_atividade']; }
-                                }
-                                $dtOpcao = null;
-                                if (! empty($dados['data_opcao_simples'])) {
-                                    try { $dtOpcao = \Carbon\Carbon::parse($dados['data_opcao_simples'])->format('d/m/Y'); }
-                                    catch (\Exception $e) { $dtOpcao = (string) $dados['data_opcao_simples']; }
-                                }
-                                $dtExclusao = null;
-                                if (! empty($dados['data_exclusao_simples'])) {
-                                    try { $dtExclusao = \Carbon\Carbon::parse($dados['data_exclusao_simples'])->format('d/m/Y'); }
-                                    catch (\Exception $e) { $dtExclusao = (string) $dados['data_exclusao_simples']; }
-                                }
-
-                                $temSituacao = isset($dados['situacao_cadastral']);
-                                $temRegime   = isset($dados['regime_tributario']) || isset($dados['simples_nacional']) || isset($dados['mei']);
-                            @endphp
-
-                            @if($temSituacao || $temRegime)
-                            @php
-                                $crtVal = $participante->crt ?? null;
-                                $crtLabel = '—';
-                                if ($crtVal === 1) $crtLabel = '1 — Simples Nacional';
-                                elseif ($crtVal === 2) $crtLabel = '2 — Simples excesso subl.';
-                                elseif ($crtVal === 3) $crtLabel = '3 — Regime Normal';
-                                elseif ($crtVal === 4) $crtLabel = '4 — MEI';
-                            @endphp
-                            <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                                <div class="bg-gray-50 px-4 py-2 border-b border-gray-300">
-                                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Situação Fiscal</span>
-                                </div>
-
-                                <div class="grid grid-cols-2 sm:grid-cols-4 divide-x divide-gray-200">
-                                    <div class="px-3 py-2.5">
-                                        <p class="flex items-center gap-1.5 text-[9px] font-semibold text-gray-400 uppercase tracking-wider leading-none">
-                                            <span class="inline-block w-2 h-2" style="background-color: {{ $regHex }}"></span>
-                                            Regime Tributário
-                                        </p>
-                                        <p class="mt-1.5">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $regHex }}">{{ $regLabel }}</span>
-                                        </p>
-                                        @if(! empty($dados['regime_tributario_ano']))
-                                        <p class="text-[11px] text-gray-500 leading-tight mt-0.5">Ano-base {{ $dados['regime_tributario_ano'] }}</p>
-                                        @endif
-                                    </div>
-                                    @if($temRegime)
-                                    <div class="px-3 py-2.5">
-                                        <p class="text-[9px] font-semibold text-gray-400 uppercase tracking-wider leading-none">Simples Nacional</p>
-                                        <p class="mt-1.5 text-sm text-gray-900 font-semibold leading-tight">{{ $isSimples ? 'Optante' : 'Não optante' }}</p>
-                                        @if($dtOpcao)
-                                        <p class="text-[11px] text-gray-500 leading-tight mt-0.5">Opção {{ $dtOpcao }}</p>
-                                        @endif
-                                        @if($dtExclusao)
-                                        <p class="text-[11px] leading-tight mt-0.5" style="color:#dc2626">Exclusão {{ $dtExclusao }}</p>
-                                        @endif
-                                    </div>
-                                    <div class="px-3 py-2.5">
-                                        <p class="text-[9px] font-semibold text-gray-400 uppercase tracking-wider leading-none">MEI</p>
-                                        <p class="mt-1.5 text-sm text-gray-900 font-semibold leading-tight">{{ $isMei ? 'Sim' : 'Não' }}</p>
-                                    </div>
-                                    <div class="px-3 py-2.5">
-                                        <p class="text-[9px] font-semibold text-gray-400 uppercase tracking-wider leading-none">CRT</p>
-                                        <p class="mt-1.5 text-sm text-gray-900 font-mono leading-tight">{{ $crtLabel }}</p>
-                                    </div>
-                                    @endif
-                                </div>
-
-                                @if($temSituacao)
-                                <div class="grid grid-cols-2 sm:grid-cols-4 divide-x divide-gray-200 border-t border-gray-200">
-                                    <div class="px-3 py-2.5">
-                                        <p class="flex items-center gap-1.5 text-[9px] font-semibold text-gray-400 uppercase tracking-wider leading-none">
-                                            <span class="inline-block w-2 h-2" style="background-color: {{ $sitHex }}"></span>
-                                            Situação Cadastral
-                                        </p>
-                                        <p class="mt-1.5 text-sm text-gray-900 font-semibold leading-tight inline-block border-b-2 pb-0.5" style="border-bottom-color: {{ $sitHex }}">{{ $sitLabel }}</p>
-                                    </div>
-                                    <div class="px-3 py-2.5">
-                                        <p class="text-[9px] font-semibold text-gray-400 uppercase tracking-wider leading-none">Início Atividade</p>
-                                        <p class="mt-1.5 text-sm text-gray-900 font-semibold leading-tight">{{ $inicioFmt ?? '—' }}</p>
-                                    </div>
-                                    <div class="px-3 py-2.5">
-                                        <p class="text-[9px] font-semibold text-gray-400 uppercase tracking-wider leading-none">Tipo</p>
-                                        <p class="mt-1.5 text-sm text-gray-900 font-semibold leading-tight">{{ $dados['matriz_filial'] ?? '—' }}</p>
-                                    </div>
-                                    <div class="px-3 py-2.5">
-                                        <p class="text-[9px] font-semibold text-gray-400 uppercase tracking-wider leading-none">Motivo</p>
-                                        <p class="mt-1.5 text-sm text-gray-700 leading-tight">{{ $dados['motivo_situacao_cadastral'] ?? '—' }}</p>
-                                    </div>
-                                </div>
-                                @endif
-                            </div>
-                            @endif
-
-                            {{-- Fontes fiscais: certidões + cadastro estadual no presenter canônico. --}}
-                            @if(!empty($fontesConsulta ?? []))
-                                <div class="bg-white rounded border border-gray-300 overflow-hidden" data-fontes-fiscais>
-                                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-300 flex items-center justify-between gap-3">
-                                        <div>
-                                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Certidões e Cadastros Fiscais</span>
-                                            <p class="mt-0.5 text-[11px] text-gray-500">Regularidade fiscal e situação estadual consolidadas por fonte.</p>
-                                        </div>
-                                        <span class="text-[10px] font-semibold text-gray-400 whitespace-nowrap">{{ count($fontesConsulta) }} fontes</span>
-                                    </div>
-                                    <div class="p-3 sm:p-4" style="background-color: #f9fafb">
-                                        @include('autenticado.consulta.partials.detalhe-blocos', [
-                                            'blocos' => $fontesConsulta,
-                                            'certidoes' => $certidoesConsulta ?? [],
-                                            'resumo' => null,
-                                            'cabecalho' => [],
-                                        ])
-                                    </div>
-                                </div>
-                            @endif
-
-                            {{-- Dados Cadastrais Completos --}}
-                            @if(isset($dados['razao_social']) || isset($dados['natureza_juridica']) || isset($dados['capital_social']))
-                            <div class="border-t border-gray-200 pt-4">
-                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Dados Cadastrais</h3>
-                                <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    @if(isset($dados['razao_social']))
-                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
-                                        <dt class="text-xs text-gray-500">Razão Social</dt>
-                                        <dd class="mt-1 text-sm text-gray-900">{{ $dados['razao_social'] }}</dd>
-                                    </div>
-                                    @endif
-                                    @if(isset($dados['nome_fantasia']) && $dados['nome_fantasia'])
-                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
-                                        <dt class="text-xs text-gray-500">Nome Fantasia</dt>
-                                        <dd class="mt-1 text-sm text-gray-900">{{ $dados['nome_fantasia'] }}</dd>
-                                    </div>
-                                    @endif
-                                    @if(isset($dados['natureza_juridica']))
-                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
-                                        <dt class="text-xs text-gray-500">Natureza Jurídica</dt>
-                                        <dd class="mt-1 text-sm text-gray-900">{{ $dados['natureza_juridica'] }}</dd>
-                                    </div>
-                                    @endif
-                                    @if(isset($dados['capital_social']))
-                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
-                                        <dt class="text-xs text-gray-500">Capital Social</dt>
-                                        <dd class="mt-1 text-sm font-semibold text-gray-900">R$&nbsp;{{ number_format($dados['capital_social'], 2, ',', '.') }}</dd>
-                                    </div>
-                                    @endif
-                                    @if(isset($dados['data_inicio_atividade']))
-                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
-                                        <dt class="text-xs text-gray-500">Início Atividade</dt>
-                                        <dd class="mt-1 text-sm text-gray-900">{{ \Carbon\Carbon::parse($dados['data_inicio_atividade'])->format('d/m/Y') }}</dd>
-                                    </div>
-                                    @endif
-                                </dl>
-                            </div>
-                            @endif
-
-                            {{-- Endereço --}}
-                            @if(isset($dados['endereco']) && is_array($dados['endereco']))
-                            <div class="border-t border-gray-200 pt-4">
-                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Endereço</h3>
-                                @php $end = $dados['endereco']; @endphp
-                                <div class="bg-gray-50 rounded border border-gray-200 p-4">
-                                    <p class="text-sm text-gray-900">
-                                        {{ $end['logradouro'] ?? '' }}{{ isset($end['numero']) ? ', ' . $end['numero'] : '' }}
-                                        @if(isset($end['complemento']) && $end['complemento'])
-                                        - {{ $end['complemento'] }}
-                                        @endif
-                                    </p>
-                                    <p class="text-sm text-gray-600 mt-1">
-                                        {{ $end['bairro'] ?? '' }} - {{ $end['municipio'] ?? '' }}/{{ $end['uf'] ?? '' }}
-                                    </p>
-                                    @if(isset($end['cep']))
-                                    <p class="text-sm text-gray-500 mt-1 font-mono">CEP: {{ preg_replace('/(\d{5})(\d{3})/', '$1-$2', $end['cep']) }}</p>
-                                    @endif
-                                </div>
-                                {{-- Telefones empilhados com icone --}}
-                                @if((isset($dados['telefone_1']) && $dados['telefone_1']) || (isset($dados['telefone_2']) && $dados['telefone_2']))
-                                <div class="mt-3">
-                                    <div class="bg-gray-50 rounded border border-gray-200 p-3">
-                                        <dt class="text-xs text-gray-500 mb-2">Telefones</dt>
-                                        <dd class="space-y-2">
-                                            @php
-                                                // Funcao para formatar telefone
-                                                $formatarTelefone = function($tel) {
-                                                    $tel = preg_replace('/\D/', '', $tel);
-                                                    if (strlen($tel) === 11) {
-                                                        return '(' . substr($tel, 0, 2) . ') ' . substr($tel, 2, 5) . '-' . substr($tel, 7);
-                                                    } elseif (strlen($tel) === 10) {
-                                                        return '(' . substr($tel, 0, 2) . ') ' . substr($tel, 2, 4) . '-' . substr($tel, 6);
-                                                    }
-                                                    return $tel;
-                                                };
-                                            @endphp
-                                            @if(isset($dados['telefone_1']) && $dados['telefone_1'])
-                                            <div class="flex items-center gap-2">
-                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                                                </svg>
-                                                <span class="text-sm font-mono text-gray-900">{{ $formatarTelefone($dados['telefone_1']) }}</span>
-                                            </div>
-                                            @endif
-                                            @if(isset($dados['telefone_2']) && $dados['telefone_2'])
-                                            <div class="flex items-center gap-2">
-                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                                                </svg>
-                                                <span class="text-sm font-mono text-gray-900">{{ $formatarTelefone($dados['telefone_2']) }}</span>
-                                            </div>
-                                            @endif
-                                        </dd>
-                                    </div>
-                                </div>
-                                @endif
-
-                            </div>
-                            @endif
-
-                            {{-- Mapa de Localizacao --}}
-                            @if($participante->latitude && $participante->longitude)
-                            <div class="border-t border-gray-200 pt-4">
-                                <div id="participante-mapa-container">
-                                    <div id="participante-mapa"
-                                         class="h-48 rounded border border-gray-200 bg-gray-100"
-                                         data-lat="{{ $participante->latitude }}"
-                                         data-lng="{{ $participante->longitude }}">
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
-
-                            {{-- CNAEs --}}
-                            @if(isset($dados['cnaes']) && is_array($dados['cnaes']))
-                            <div class="border-t border-gray-200 pt-4">
-                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Atividades Econômicas (CNAEs)</h3>
-                                @if(isset($dados['cnaes']['principal']))
-                                <div class="bg-gray-50 border border-gray-200 rounded p-3 mb-3">
-                                    <dt class="text-xs text-gray-500 font-semibold uppercase tracking-wide">CNAE Principal</dt>
-                                    <dd class="mt-1 text-sm text-gray-900">
-                                        <span class="font-mono text-gray-700">{{ $dados['cnaes']['principal']['codigo'] ?? '' }}</span>
-                                        - {{ $dados['cnaes']['principal']['descricao'] ?? '' }}
-                                    </dd>
-                                </div>
-                                @endif
-                                @php
-                                    $cnaesSecundariosValidos = isset($dados['cnaes']['secundarios'])
-                                        ? array_filter($dados['cnaes']['secundarios'], fn($c) => !empty($c['codigo']) || !empty($c['descricao']))
-                                        : [];
-                                @endphp
-                                @if(count($cnaesSecundariosValidos) > 0)
-                                <div class="bg-gray-50 rounded border border-gray-200 p-3">
-                                    <dt class="text-xs text-gray-500 font-semibold mb-2">CNAEs Secundários ({{ count($cnaesSecundariosValidos) }})</dt>
-                                    <dd class="space-y-1 max-h-40 overflow-y-auto">
-                                        @foreach(array_slice($cnaesSecundariosValidos, 0, 10) as $cnae)
-                                        <div class="text-xs text-gray-700">
-                                            <span class="font-mono text-gray-500">{{ $cnae['codigo'] ?? '' }}</span>
-                                            - {{ Str::limit($cnae['descricao'] ?? '', 60) }}
-                                        </div>
-                                        @endforeach
-                                        @if(count($cnaesSecundariosValidos) > 10)
-                                        <p class="text-xs text-gray-400 mt-2">... e mais {{ count($cnaesSecundariosValidos) - 10 }} CNAEs</p>
-                                        @endif
-                                    </dd>
-                                </div>
-                                @endif
-                            </div>
-                            @endif
+    @include('autenticado.perfis._fluxo-cnpj', ['perfilCnpj' => $perfilCnpj])
 
 
-
-                            {{-- QSA (Socios) --}}
-                            @if(in_array('qsa', $consultasRealizadas) && !empty($dados['qsa']))
-                            <div class="border-t border-gray-200 pt-4">
-                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Quadro Societario (QSA)</h3>
-                                <div class="overflow-x-auto">
-                                    <table class="min-w-full text-sm tabela-cards">
-                                        <thead class="bg-gray-50">
-                                            <tr>
-                                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
-                                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">CPF/CNPJ</th>
-                                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Qualificação</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="divide-y divide-gray-100">
-                                            @foreach($dados['qsa'] as $socio)
-                                            <tr>
-                                                <td class="px-3 py-2 text-gray-900">{{ $socio['nome'] ?? '-' }}</td>
-                                                <td class="px-3 py-2 text-gray-600 font-mono" data-label="CPF/CNPJ">{{ $socio['cpf_cnpj'] ?? '-' }}</td>
-                                                <td class="px-3 py-2 text-gray-600" data-label="Qualificação">{{ $socio['qualificacao'] ?? '-' }}</td>
-                                            </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            @endif
-
-                        </div>
-                    </div>
+    @if($assinaturaAtiva)
+        <x-cockpit.secao titulo="Gestão do Monitoramento" subtitulo="Configuração operacional deste participante.">
+            <x-slot:acao>
+                <span class="whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">Assinatura Ativa</span>
+            </x-slot:acao>
+            <x-cockpit.dados :itens="[
+                ['label' => 'Plano', 'valor' => $assinaturaAtiva->plano->nome ?? '—'],
+                ['label' => 'Frequência', 'valor' => ucfirst((string) $assinaturaAtiva->frequencia)],
+                ['label' => 'Próxima Execução', 'valor' => $assinaturaAtiva->proxima_execucao_em?->format('d/m/Y H:i') ?? '—'],
+                ['label' => 'Última Execução', 'valor' => $assinaturaAtiva->ultima_execucao_em?->format('d/m/Y H:i') ?? 'Nunca'],
+                ['label' => 'Custo por Execução', 'valor' => \App\Support\Dinheiro::brl($assinaturaAtiva->plano->custo_creditos ?? 0), 'mono' => true],
+            ]" />
+            <div class="mt-4 flex flex-wrap gap-2 border-t border-gray-200 pt-4">
+                @if($assinaturaAtiva->status === 'ativo')
+                    <button type="button" class="btn-pausar-assinatura auth-control rounded border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-600 hover:bg-gray-50" data-assinatura-id="{{ $assinaturaAtiva->id }}">Pausar</button>
                 @else
-                    {{-- Estado vazio - nenhuma consulta realizada --}}
-                    <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Dados da Última Consulta</span>
-                        </div>
-                        <div class="p-4 sm:p-6 text-center">
-                            <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                            </svg>
-                            <p class="mt-2 text-sm text-gray-500">{{ $participante->is_cpf ? 'Risco de crédito ainda não avaliado para este CPF' : 'Nenhuma consulta realizada para este participante' }}</p>
-                            <p class="mt-1 text-xs text-gray-400">{{ $participante->is_cpf ? 'Consulta de CNPJ e certidões fiscais não se aplicam a pessoa física' : 'Clique em "Consulta Avulsa" para obter dados atualizados' }}</p>
-                        </div>
-                    </div>
+                    <button type="button" class="btn-reativar-assinatura auth-control rounded border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-600 hover:bg-gray-50" data-assinatura-id="{{ $assinaturaAtiva->id }}">Reativar</button>
                 @endif
-
-                {{-- Notas Fiscais (EFD + XML unificadas) --}}
-                <div id="notas-fiscais">
-                    @include('autenticado.partials.notas-fiscais-card', [
-                        'notas' => $notasFiscais,
-                        'totalNotas' => $totalNotasFiscais,
-                        'ajaxUrl' => $notasAjaxUrl,
-                        'contexto' => $notasContexto,
-                        'entityId' => $notasEntityId,
-                    ])
-                </div>
-
-                {{-- Detalhamento do Score --}}
-                <x-cockpit.secao :titulo="$participante->is_cpf ? 'Risco de Crédito' : 'Detalhamento do Score'">
-                    @include('autenticado.partials._score-detalhamento', [
-                        'detalhamento' => $score_detalhamento ?? [],
-                        'scoreTotal' => $score['score_total'] ?? null,
-                        'classificacao' => $score['classificacao'] ?? 'nao_avaliado',
-                        'comHeadline' => true,
-                        'isCpf' => $participante->is_cpf,
-                        'mensagemCpf' => $score['mensagem'] ?? null,
-                    ])
-                </x-cockpit.secao>
-
-                {{-- Preview de Movimentações --}}
-                <x-cockpit.secao titulo="Movimentações" body-class="p-0">
-                    <x-slot:acao>
-                        <div class="flex items-center gap-2">
-                            <a href="/app/participante/{{ $participante->id }}/dossie" target="_blank" rel="noopener"
-                               class="text-[11px] font-bold text-white rounded px-3 py-1.5" style="background-color: #1f2937">Baixar dossiê (PDF)</a>
-                            <a href="/app/participante/{{ $participante->id }}/dossie?formato=xlsx" target="_blank" rel="noopener"
-                               class="text-[11px] font-bold text-white rounded px-3 py-1.5" style="background-color: #047857">Planilha (XLSX)</a>
-                        </div>
-                    </x-slot:acao>
-                    <x-cockpit.indicadores :itens="$indicadoresMovimentacao" class="border-b border-gray-200" />
-                    <div class="p-4 sm:p-5">
-                        <div id="chart-mov-competencia" style="min-height:220px;"></div>
-                        @include('autenticado.monitoramento._movimentacao-listas', ['top_produtos' => $top_produtos ?? [], 'top_cfops' => $top_cfops ?? []])
-                    </div>
-                </x-cockpit.secao>
-
+                <button type="button" class="btn-cancelar-assinatura auth-control rounded border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-600 hover:bg-gray-50" data-assinatura-id="{{ $assinaturaAtiva->id }}">Cancelar</button>
             </div>
-
-            @if($assinaturaAtiva)
-                {{-- A assinatura participa do mesmo fluxo vertical do perfil. --}}
-                <div class="space-y-4 sm:space-y-6 min-w-0">
-                    <x-cockpit.secao titulo="Assinatura Ativa">
-                        <x-slot:acao>
-                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #047857">
-                                ATIVA
-                            </span>
-                        </x-slot:acao>
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between gap-3">
-                                <span class="text-sm text-gray-600">Plano</span>
-                                <span class="text-sm font-semibold text-gray-900">{{ $assinaturaAtiva->plano->nome ?? '-' }}</span>
-                            </div>
-                            <div class="flex items-center justify-between gap-3">
-                                <span class="text-sm text-gray-600">Frequência</span>
-                                <span class="text-sm font-semibold text-gray-900">
-                                    @php
-                                        $frequencias = [
-                                            'diario' => 'Diaria',
-                                            'semanal' => 'Semanal',
-                                            'quinzenal' => 'Quinzenal',
-                                            'mensal' => 'Mensal',
-                                        ];
-                                    @endphp
-                                    {{ $frequencias[$assinaturaAtiva->frequencia] ?? ucfirst($assinaturaAtiva->frequencia) }}
-                                </span>
-                            </div>
-                            <div class="flex items-center justify-between gap-3">
-                                <span class="text-sm text-gray-600">Próxima Execução</span>
-                                <span class="text-sm font-semibold text-gray-900">
-                                    {{ $assinaturaAtiva->proxima_execucao_em ? $assinaturaAtiva->proxima_execucao_em->format('d/m/Y H:i') : '-' }}
-                                </span>
-                            </div>
-                            <div class="flex items-center justify-between gap-3">
-                                <span class="text-sm text-gray-600">Última Execução</span>
-                                <span class="text-sm font-semibold text-gray-900">
-                                    {{ $assinaturaAtiva->ultima_execucao_em ? $assinaturaAtiva->ultima_execucao_em->format('d/m/Y H:i') : 'Nunca' }}
-                                </span>
-                            </div>
-                            <div class="flex items-center justify-between gap-3">
-                                <span class="text-sm text-gray-600">Custo/Execução</span>
-                                <span class="text-sm font-semibold text-gray-900">@brl((($assinaturaAtiva->plano->custo_creditos ?? 0)))</span>
-                            </div>
-                            <div class="pt-3 border-t border-gray-200 flex gap-2">
-                                @if($assinaturaAtiva->status === 'ativo')
-                                    <button
-                                        type="button"
-                                        class="btn-pausar-assinatura flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded border border-gray-300 bg-white text-gray-600 text-sm font-semibold transition hover:bg-gray-50"
-                                        data-assinatura-id="{{ $assinaturaAtiva->id }}"
-                                    >
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                        Pausar
-                                    </button>
-                                @else
-                                    <button
-                                        type="button"
-                                        class="btn-reativar-assinatura flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded border border-gray-300 bg-white text-gray-600 text-sm font-semibold transition hover:bg-gray-50"
-                                        data-assinatura-id="{{ $assinaturaAtiva->id }}"
-                                    >
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                        Reativar
-                                    </button>
-                                @endif
-                                <button
-                                    type="button"
-                                    class="btn-cancelar-assinatura inline-flex items-center justify-center gap-2 px-3 py-2 rounded border border-gray-300 bg-white text-gray-600 text-sm font-semibold transition hover:bg-gray-50"
-                                    data-assinatura-id="{{ $assinaturaAtiva->id }}"
-                                >
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                    Cancelar
-                                </button>
-                            </div>
-                        </div>
-                    </x-cockpit.secao>
-                </div>
-            @endif
-        </div>
-
-        <div>
-            @include('autenticado.partials._historico-consultas-perfil', [
-                'historicoConsultasPerfil' => $historicoConsultasPerfil ?? collect(),
-                'documentoPerfil' => $participante->documento,
-            ])
-        </div>
+        </x-cockpit.secao>
+    @endif
 </x-cockpit.layout>
 
 {{-- Modal Criar Assinatura --}}
@@ -758,7 +187,6 @@
     </div>
 </div>
 
-<script src="/js/apexcharts.min.js"></script>
 <script>
 (function() {
     'use strict';
@@ -778,7 +206,7 @@
         // Elementos
         const btnCriarAssinatura = document.getElementById('btn-criar-assinatura');
         const modalCriarAssinatura = document.getElementById('modal-criar-assinatura');
-const formCriarAssinatura = document.getElementById('form-criar-assinatura');
+        const formCriarAssinatura = document.getElementById('form-criar-assinatura');
 
         // Abrir modal criar assinatura
         if (btnCriarAssinatura) {
@@ -1004,69 +432,7 @@ const formCriarAssinatura = document.getElementById('form-criar-assinatura');
             }
         });
 
-        // Inicializar mapa de localizacao via Leaflet
-        var mapContainer = document.getElementById('participante-mapa');
-        if (mapContainer) {
-            var lat = parseFloat(mapContainer.dataset.lat);
-            var lng = parseFloat(mapContainer.dataset.lng);
-            if (lat && lng) {
-                var map = L.map('participante-mapa').setView([lat, lng], 16);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors'
-                }).addTo(map);
-                L.marker([lat, lng]).addTo(map);
-            } else {
-                var cont = mapContainer.closest('#participante-mapa-container');
-                if (cont) cont.classList.add('hidden');
-            }
-        }
-
-        // Renderizar gráfico de movimentações inline (re-executa em cada swap SPA)
-        renderMovimentacaoChart();
-
         console.log('[Monitoramento Participante] Inicialização concluída');
-    }
-
-    function renderMovimentacaoChart(tentativas) {
-        const el = document.getElementById('chart-mov-competencia');
-        const data = @json($movimentacao ?? null);
-        if (!el || !data) { return; }
-
-        // SPA: apexcharts.min.js pode ainda estar carregando. Espera e re-tenta em vez de deixar a div 220px vazia.
-        if (typeof ApexCharts === 'undefined') {
-            tentativas = tentativas || 0;
-            if (tentativas < 50) { setTimeout(() => renderMovimentacaoChart(tentativas + 1), 100); }
-            return;
-        }
-
-        window._chartMovParticipante && window._chartMovParticipante.destroy();
-
-        const comp = data.por_competencia || [];
-
-        // Sem competências (participante sem notas EFD) → mensagem em vez de gráfico vazio.
-        if (comp.length === 0) {
-            el.style.minHeight = '';
-            el.innerHTML = '<div class="flex items-center justify-center h-32 text-gray-400 text-sm">Sem movimentações registradas para este participante.</div>';
-            return;
-        }
-
-        const chart = new ApexCharts(el, {
-            chart: { type: 'bar', height: 220, toolbar: { show: false } },
-            series: [
-                { name: 'Entrada', data: comp.map((c) => Number(c.entrada)) },
-                { name: 'Saída', data: comp.map((c) => Number(c.saida)) },
-            ],
-            xaxis: { categories: comp.map((c) => c.competencia) },
-            colors: ['#047857', '#dc2626'],
-            plotOptions: { bar: { columnWidth: '55%' } },
-            dataLabels: { enabled: false },
-            legend: { position: 'top' },
-        });
-        chart.render();
-        window._chartMovParticipante = chart;
-
-        window._cleanupFunctions = window._cleanupFunctions || {};
-        window._cleanupFunctions.participanteMovimentacao = () => { chart.destroy(); window._chartMovParticipante = null; };
     }
 
     // Expor globalmente para SPA

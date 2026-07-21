@@ -18,27 +18,24 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class BiXlsxBuilder
 {
     /**
-     * Espec por seção: nome da aba, tipos por coluna, larguras, linha de totais.
+     * Espec por seção: nome da aba, tipos por coluna, linha de totais.
      * Tipos: t=texto, m=moeda (BRL string→float), i=inteiro, p=percentual, n=número.
      * 'cor' = [índice da coluna => resolvedor ReportTheme] para badge colorido.
      * Totais só em séries completas (mensal/UF/CFOP) — nunca em top-N.
-     */
-    /**
-     * Larguras justas ao conteúdo (número alinha à direita — coluna folgada
-     * demais deixa um vão vazio à esquerda da célula que parece coluna vazia).
-     * Referência: "R$ 1.842.310,45" ≈ 15 chars; header conta também.
+     * Larguras NÃO são fixas: autoLarguras() dimensiona cada coluna pelo maior
+     * conteúdo (header + células), pra abrir sem precisar arrastar a coluna.
      */
     private const SPECS = [
-        'faturamento' => ['aba' => 'Faturamento', 'tipos' => 'tmi', 'larguras' => [10, 16, 10], 'totais' => true],
-        'tributos' => ['aba' => 'Tributos', 'tipos' => 'tmmmmmp', 'larguras' => [10, 15, 13, 12, 13, 15, 13], 'totais' => true],
-        'apuracao-notas' => ['aba' => 'Declarado x Computado', 'tipos' => 'tmmmmmm', 'larguras' => [10, 15, 15, 14, 14, 16, 16], 'totais' => true],
-        'cfop' => ['aba' => 'CFOP', 'tipos' => 'ttmimp', 'larguras' => [44, 9, 15, 10, 14, 9], 'totais' => true],
-        'top-notas' => ['aba' => 'Top Notas', 'tipos' => 'ttttm', 'larguras' => [11, 45, 42, 8, 14], 'totais' => false],
-        'catalogo' => ['aba' => 'Catálogo', 'tipos' => 'tttmn', 'larguras' => [10, 40, 11, 17, 9], 'totais' => false],
-        'uf' => ['aba' => 'UF', 'tipos' => 'tmi', 'larguras' => [5, 16, 10], 'totais' => true],
-        'devolucoes' => ['aba' => 'Devoluções', 'tipos' => 'tmi', 'larguras' => [10, 17, 6], 'totais' => true],
-        'riscos-notas' => ['aba' => 'Riscos - Notas', 'tipos' => 'tttttm', 'larguras' => [11, 19, 36, 13, 9, 13], 'totais' => false, 'cor' => 3],
-        'riscos-fornecedores' => ['aba' => 'Riscos - Fornecedores', 'tipos' => 'tttim', 'larguras' => [19, 36, 13, 10, 14], 'totais' => false, 'cor' => 2],
+        'faturamento' => ['aba' => 'Faturamento', 'tipos' => 'tmi', 'totais' => true, 'bar' => 1],
+        'tributos' => ['aba' => 'Tributos', 'tipos' => 'tmmmmmp', 'totais' => true, 'bar' => 5],
+        'apuracao-notas' => ['aba' => 'Declarado x Computado', 'tipos' => 'tmmmmmm', 'totais' => true],
+        'cfop' => ['aba' => 'CFOP', 'tipos' => 'ttmimp', 'totais' => true],
+        'top-notas' => ['aba' => 'Top Notas', 'tipos' => 'ttttm', 'totais' => false],
+        'catalogo' => ['aba' => 'Catálogo', 'tipos' => 'tttmn', 'totais' => false, 'bar' => 3],
+        'uf' => ['aba' => 'UF', 'tipos' => 'tmi', 'totais' => true, 'bar' => 1],
+        'devolucoes' => ['aba' => 'Devoluções', 'tipos' => 'tmi', 'totais' => true, 'bar' => 1],
+        'riscos-notas' => ['aba' => 'Riscos - Notas', 'tipos' => 'tttttm', 'totais' => false, 'cor' => 3],
+        'riscos-fornecedores' => ['aba' => 'Riscos - Fornecedores', 'tipos' => 'tttim', 'totais' => false, 'cor' => 2],
     ];
 
     private const FMT = [
@@ -178,10 +175,9 @@ class BiXlsxBuilder
         // Colunas variam por modo (ver contrapartesTabela): cliente tem Papel; portfólio tem Ticket.
         $tipos = $modoCliente ? 'ttttimit' : 'tttimimt';
         $idxClassificacao = $modoCliente ? 3 : 2;
-        $larguras = $modoCliente ? [11, 19, 36, 15, 7, 15, 9, 20] : [19, 36, 15, 7, 15, 9, 13, 20];
 
         $xlsx->addSheet('Contrapartes')
-            ->larguras(...$larguras)
+            ->larguras(...$this->autoLarguras($tab['colunas'], $tab['linhas'], $tipos))
             ->tituloMarca($sec['titulo'] ?? 'Principais contrapartes', count($tab['colunas']))
             ->header($tab['colunas']);
 
@@ -198,7 +194,7 @@ class BiXlsxBuilder
         }
     }
 
-    // ── Dossiê dos participantes (top N, badge de risco colorido) ─────
+    // ── Participantes: todos, entradas × saídas (badge de risco colorido) ─────
 
     private function sheetDossieParticipantes(XlsxReport $xlsx, array $relatorio): void
     {
@@ -207,11 +203,12 @@ class BiXlsxBuilder
             return;
         }
 
-        // Colunas do Resumo do dossiê individual, achatadas (ver datasetDossieParticipantes).
-        $tipos = 'ttttitimimimtmmmp';
+        // 12 colunas de datasetTodosParticipantes: razão, cnpj, uf (t), notas (i), valor mov (m),
+        // ent qtd (i), ent val (m), sai qtd (i), sai val (m), situação (t), score (i), classificação (t).
+        $tipos = 'tttimimimtit';
 
-        $xlsx->addSheet('Dossiê Participantes')
-            ->larguras(36, 19, 14, 5, 7, 15, 10, 16, 9, 15, 9, 15, 18, 13, 12, 13, 9)
+        $xlsx->addSheet('Participantes')
+            ->larguras(...$this->autoLarguras($sec['colunas'], $sec['linhas'], $tipos))
             ->tituloMarca($sec['titulo'], count($sec['colunas']))
             ->header($sec['colunas']);
 
@@ -223,7 +220,8 @@ class BiXlsxBuilder
 
         foreach ($sec['linhas'] as $i => $linha) {
             [$valores, $formatos] = $this->converter(array_values($linha), $tipos);
-            $xlsx->linha($valores, [5 => ReportTheme::riscoHex($sec['classificacoes'][$i] ?? null)], $formatos);
+            // Classificação é a última coluna (índice 11) — badge de risco colorido.
+            $xlsx->linha($valores, [11 => ReportTheme::riscoHex($sec['classificacoes'][$i] ?? null)], $formatos);
         }
     }
 
@@ -237,20 +235,37 @@ class BiXlsxBuilder
             return;
         }
 
-        $xlsx->addSheet($spec['aba'])
-            ->larguras(...$spec['larguras'])
-            ->tituloMarca($sec['titulo'], count($sec['colunas']))
-            ->header($sec['colunas']);
+        // Coluna "Gráfico" (barra █ proporcional) nas abas de série — sparkline in-cell,
+        // já que o OpenSpout não desenha gráfico. Baseada na coluna de valor $spec['bar'].
+        $barIdx = $spec['bar'] ?? null;
+        $colunas = $sec['colunas'];
+        $linhas = $sec['linhas'];
+        $maxBar = 0.0;
+        if ($barIdx !== null) {
+            $colunas = [...$colunas, 'Gráfico'];
+            foreach ($linhas as $l) {
+                $maxBar = max($maxBar, $this->parseBrl($l[$barIdx] ?? 0));
+            }
+        }
 
-        if (empty($sec['linhas'])) {
+        $xlsx->addSheet($spec['aba'])
+            ->larguras(...$this->autoLarguras($colunas, $linhas, $spec['tipos']))
+            ->tituloMarca($sec['titulo'], count($colunas))
+            ->header($colunas);
+
+        if (empty($linhas)) {
             $xlsx->vazio();
 
             return;
         }
 
         $somas = [];
-        foreach ($sec['linhas'] as $linha) {
+        foreach ($linhas as $linha) {
             [$valores, $formatos] = $this->converter(array_values($linha), $spec['tipos']);
+            if ($barIdx !== null) {
+                $frac = $maxBar > 0 ? $this->parseBrl($linha[$barIdx] ?? 0) / $maxBar : 0.0;
+                $valores[] = $this->barraTexto($frac);
+            }
 
             $cores = [];
             if (isset($spec['cor'])) {
@@ -280,8 +295,60 @@ class BiXlsxBuilder
                     $formatosTotais[$i] = self::FMT[$t];
                 }
             }
+            if ($barIdx !== null) {
+                $totais[] = '—'; // barra não se aplica ao total
+            }
             $xlsx->totais($totais, $formatosTotais);
         }
+    }
+
+    /** BRL "1.234,56" → 1234.56. */
+    private function parseBrl(mixed $brl): float
+    {
+        return (float) str_replace(',', '.', str_replace('.', '', (string) $brl));
+    }
+
+    /** Barra proporcional em blocos (0..1 → "████████░░░░"), 20 segmentos. */
+    private function barraTexto(float $frac, int $segmentos = 20): string
+    {
+        $frac = max(0.0, min(1.0, $frac));
+        $cheios = (int) round($frac * $segmentos);
+
+        return str_repeat('█', $cheios).str_repeat('░', $segmentos - $cheios);
+    }
+
+    /**
+     * Largura de cada coluna (em "caracteres" do Excel) dimensionada pelo maior
+     * conteúdo: header + todas as células (as linhas trazem os valores já
+     * formatados — "1.234,56", "SP", CNPJ, razão social). Colunas de moeda/percentual
+     * ganham folga pro prefixo "R$ "/sufixo "%" que o formato numérico adiciona no
+     * display. Sem auto-fit nativo no OpenSpout (writer streaming), então medimos aqui.
+     * Padding de +2 e clamp [6, 60] evitam coluna colada e largura absurda.
+     *
+     * @param  array<int, string>  $colunas
+     * @param  array<int, array<int, mixed>>  $linhas
+     * @return array<int, float>
+     */
+    private function autoLarguras(array $colunas, array $linhas, string $tipos = ''): array
+    {
+        $larguras = [];
+        foreach (array_values($colunas) as $i => $cabecalho) {
+            $max = mb_strlen((string) $cabecalho);
+            $t = $tipos[$i] ?? 't';
+            $folgaFormato = $t === 'm' ? 3 : ($t === 'p' ? 1 : 0); // "R$ " / "%"
+
+            foreach ($linhas as $linha) {
+                $valor = array_values($linha)[$i] ?? '';
+                $len = mb_strlen((string) $valor) + ($valor === '' || $valor === '—' ? 0 : $folgaFormato);
+                if ($len > $max) {
+                    $max = $len;
+                }
+            }
+
+            $larguras[$i] = (float) max(6, min(60, $max + 2));
+        }
+
+        return $larguras;
     }
 
     /**

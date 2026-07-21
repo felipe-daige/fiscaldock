@@ -49,6 +49,54 @@ it('relatorioCompleto traz kpis, cobertura e as 4 secoes', function () {
     }
 });
 
+it('dossie-participantes lista TODOS os participantes com entradas e saídas por CNPJ', function () {
+    $user = User::factory()->trialAtivo()->create();
+    $cli = DB::table('clientes')->insertGetId([
+        'user_id' => $user->id, 'documento' => '00000000000191', 'razao_social' => 'Empresa Teste',
+        'is_empresa_propria' => true, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $imp = EfdImportacao::create([
+        'user_id' => $user->id, 'cliente_id' => $cli, 'tipo_efd' => 'EFD ICMS/IPI',
+        'filename' => 'x.txt', 'status' => 'concluido', 'iniciado_em' => now()->subMinutes(2),
+    ]);
+    $mkPart = fn (string $doc, string $razao) => DB::table('participantes')->insertGetId([
+        'user_id' => $user->id, 'cliente_id' => $cli, 'documento' => $doc, 'razao_social' => $razao,
+        'origem_tipo' => 'MANUAL', 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $p1 = $mkPart('11222333000181', 'FORN ALFA');
+    $p2 = $mkPart('44555666000114', 'FORN BETA');
+
+    $mk = fn (array $a) => EfdNota::create(array_merge([
+        'user_id' => $user->id, 'cliente_id' => $cli, 'importacao_id' => $imp->id,
+        'numero' => random_int(1, 99999), 'serie' => '1', 'modelo' => '55',
+        'valor_desconto' => 0, 'cancelada' => false, 'origem_arquivo' => 'fiscal',
+    ], $a));
+    // p1: 2 entradas (300+200) + 1 saída (1000); p2: 1 saída (500)
+    $mk(['participante_id' => $p1, 'chave_acesso' => str_pad('1', 44, '0'), 'tipo_operacao' => 'entrada', 'data_emissao' => '2024-01-05', 'valor_total' => 300]);
+    $mk(['participante_id' => $p1, 'chave_acesso' => str_pad('2', 44, '0'), 'tipo_operacao' => 'entrada', 'data_emissao' => '2024-02-05', 'valor_total' => 200]);
+    $mk(['participante_id' => $p1, 'chave_acesso' => str_pad('3', 44, '0'), 'tipo_operacao' => 'saida', 'data_emissao' => '2024-01-06', 'valor_total' => 1000]);
+    $mk(['participante_id' => $p2, 'chave_acesso' => str_pad('4', 44, '0'), 'tipo_operacao' => 'saida', 'data_emissao' => '2024-03-01', 'valor_total' => 500]);
+
+    // Sem param de "top": a seção sai sempre e completa.
+    $rel = app(BiExportService::class)->relatorioCompleto($user->id, null, null, null);
+
+    expect($rel['ordem_secoes'])->toContain('dossie-participantes');
+    $sec = $rel['secoes']['dossie-participantes'];
+    expect($sec['colunas'])->toContain('Entradas qtd', 'Entradas valor', 'Saídas qtd', 'Saídas valor')
+        ->and($sec['linhas'])->toHaveCount(2);
+
+    // Ordem das colunas: identidade + movimentação, e situação/score/classificação por último.
+    expect(array_slice($sec['colunas'], -3))->toBe(['Situação cadastral', 'Score', 'Classificação']);
+
+    $porCnpj = collect($sec['linhas'])->keyBy(fn ($l) => $l[1]);
+    $alfa = $porCnpj['11222333000181'];
+    expect($alfa[5])->toBe(2)             // entradas qtd
+        ->and($alfa[6])->toBe('500,00')      // entradas valor
+        ->and($alfa[7])->toBe(1)             // saídas qtd
+        ->and($alfa[8])->toBe('1.000,00')    // saídas valor
+        ->and($porCnpj['44555666000114'][7])->toBe(1); // beta: 1 saída
+});
+
 it('barChartItens calcula pct relativo ao maximo da serie', function () {
     $svc = app(BiExportService::class);
     $linhas = [['jan/24', '1.000,00'], ['fev/24', '500,00']];

@@ -177,6 +177,12 @@ class EfdAgregadorService
             ->selectRaw('SUM(COALESCE(i.valor_pis,0)) pis, SUM(COALESCE(i.valor_cofins,0)) cofins')
             ->first();
 
+        // ISS: só NFS-e (A100, modelo '00', origem contribuicoes). Vem no cabeçalho
+        // via metadados->>'vl_iss' (n8n Set A100). C100/55/57 não têm a chave → 0.
+        $valISS = (float) $this->issSaidaQuery($userId, $dataInicio, $dataFim, $clienteId)
+            ->selectRaw("SUM(COALESCE(NULLIF(n.metadados->>'vl_iss','')::numeric,0)) iss")
+            ->value('iss');
+
         $valICMS = (float) ($icms->icms ?? 0);
         $valST = (float) ($icms->st ?? 0);
         $valIPI = (float) ($icms->ipi ?? 0);
@@ -189,12 +195,32 @@ class EfdAgregadorService
             'ipi' => $valIPI,
             'pis' => $valPIS,
             'cofins' => $valCOFINS,
-            'total' => $valICMS + $valST + $valIPI + $valPIS + $valCOFINS,
+            'iss' => $valISS,
+            'total' => $valICMS + $valST + $valIPI + $valPIS + $valCOFINS + $valISS,
         ];
     }
 
     /**
-     * Q-CARGA (débito-saída) por mês de emissão [{mes(date), icms, icms_st, ipi, pis, cofins, total}].
+     * Base compartilhada da soma de ISS das saídas (NFS-e, A100). ISS é imposto de
+     * serviço — vive só no cabeçalho da NFS-e (modelo '00', origem contribuicoes),
+     * nunca no item (A170 é PIS/COFINS). O valor bruto é string BR já normalizada
+     * (',' → '.') pelo Set A100 do n8n; a soma trata null/'' como 0.
+     */
+    private function issSaidaQuery(int $userId, ?string $dataInicio, ?string $dataFim, ?int $clienteId)
+    {
+        return DB::table('efd_notas as n')
+            ->where('n.user_id', $userId)
+            ->where('n.origem_arquivo', 'contribuicoes')
+            ->where('n.modelo', '00')
+            ->where('n.tipo_operacao', 'saida')
+            ->where('n.cancelada', false)
+            ->when($clienteId, fn ($q) => $q->where('n.cliente_id', $clienteId))
+            ->when($dataInicio, fn ($q) => $q->where('n.data_emissao', '>=', $dataInicio))
+            ->when($dataFim, fn ($q) => $q->where('n.data_emissao', '<=', $dataFim));
+    }
+
+    /**
+     * Q-CARGA (débito-saída) por mês de emissão [{mes(date), icms, icms_st, ipi, pis, cofins, iss, total}].
      * Mesma fonte do total (C190 + itens contribuicoes), agrupada por DATE_TRUNC('month').
      */
     public function cargaTributariaDebitoSaidaMensal(int $userId, ?string $dataInicio = null, ?string $dataFim = null, ?int $clienteId = null): array
@@ -224,9 +250,14 @@ class EfdAgregadorService
             ->groupBy(DB::raw("DATE_TRUNC('month', n.data_emissao)"))
             ->get()->keyBy('mes');
 
-        $meses = $icms->keys()->merge($pc->keys())->unique()->sort()->values();
+        $iss = $this->issSaidaQuery($userId, $dataInicio, $dataFim, $clienteId)
+            ->selectRaw("DATE_TRUNC('month', n.data_emissao) mes, SUM(COALESCE(NULLIF(n.metadados->>'vl_iss','')::numeric,0)) iss")
+            ->groupBy(DB::raw("DATE_TRUNC('month', n.data_emissao)"))
+            ->get()->keyBy('mes');
 
-        return $meses->map(function ($mes) use ($icms, $pc) {
+        $meses = $icms->keys()->merge($pc->keys())->merge($iss->keys())->unique()->sort()->values();
+
+        return $meses->map(function ($mes) use ($icms, $pc, $iss) {
             $i = $icms->get($mes);
             $p = $pc->get($mes);
             $valICMS = (float) ($i->icms ?? 0);
@@ -234,12 +265,13 @@ class EfdAgregadorService
             $valIPI = (float) ($i->ipi ?? 0);
             $valPIS = (float) ($p->pis ?? 0);
             $valCOFINS = (float) ($p->cofins ?? 0);
+            $valISS = (float) (optional($iss->get($mes))->iss ?? 0);
 
             return [
                 'mes' => $mes,
                 'icms' => $valICMS, 'icms_st' => $valST, 'ipi' => $valIPI,
-                'pis' => $valPIS, 'cofins' => $valCOFINS,
-                'total' => $valICMS + $valST + $valIPI + $valPIS + $valCOFINS,
+                'pis' => $valPIS, 'cofins' => $valCOFINS, 'iss' => $valISS,
+                'total' => $valICMS + $valST + $valIPI + $valPIS + $valCOFINS + $valISS,
             ];
         })->toArray();
     }

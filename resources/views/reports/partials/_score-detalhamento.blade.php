@@ -8,15 +8,26 @@
         <thead>
             <tr>
                 <th>Categoria</th>
-                <th class="right" style="width:48px;">Peso</th>
+                <th class="right" style="width:64px;">Peso efetivo</th>
                 <th style="width:46%;">Subscore</th>
             </tr>
         </thead>
         <tbody>
             @foreach($detalhamento as $linha)
+                @php
+                    $pesoEfetivo = $linha['peso_efetivo_pct'] ?? (($linha['avaliado'] ?? false) ? ($linha['peso_pct'] ?? null) : null);
+                    $pesoBase = $linha['peso_base_pct'] ?? $linha['peso_pct'] ?? null;
+                @endphp
                 <tr>
                     <td>{{ $linha['label'] }}</td>
-                    <td class="right" style="white-space:nowrap;">{{ $linha['peso_pct'] }}%</td>
+                    <td class="right" style="white-space:nowrap;">
+                        @if($pesoEfetivo !== null)
+                            {{ number_format((float) $pesoEfetivo, 1, ',', '.') }}%
+                            <div class="muted" style="font-size:6.5px;">base {{ number_format((float) $pesoBase, 1, ',', '.') }}%</div>
+                        @else
+                            <span class="muted small">fora</span>
+                        @endif
+                    </td>
                     <td>
                         @if($linha['avaliado'])
                             <table style="width:100%;"><tr>

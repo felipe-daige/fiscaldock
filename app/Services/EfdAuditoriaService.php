@@ -163,6 +163,73 @@ class EfdAuditoriaService
     }
 
     /**
+     * Check LEVE de integridade pra rodar no finalize de TODA importação: conta as
+     * chaves de nota fiscal válidas do SPED bruto (C100 NF-e/NFC-e + D100 CT-e, fora
+     * as COD_SIT descartáveis) e compara com o que entrou em efd_notas. Se o pipeline
+     * (n8n) dropou notas — como o Merge C100↔0150 dropando NFC-e sem COD_PART, bug
+     * UTIDA 2026-07-21 — `faltando > 0` e `ok = false`, e o finalize marca a importação
+     * como suspeita em vez de "concluído" mudo. Não gera divergências (isso é o
+     * `auditar()` completo); é só a contagem, barata o suficiente pro caminho quente.
+     *
+     * Degrada seguro: sem arquivo_base64 retido → esperadas=0 → ok=true (sem alarme falso).
+     *
+     * @return array{esperadas:int,no_banco:int,faltando:int,ok:bool,amostra_faltando:array<int,string>}
+     */
+    public function integridade(EfdImportacao $imp): array
+    {
+        $sped = $this->lerSpedBruto($imp);
+
+        // COD_SIT que o pipeline legitimamente NÃO persiste como nota válida por chave:
+        // 02/03 cancelada, 04 denegada, 05 inutilizada, 06 complementar, 08 regularização.
+        $descartaveis = ['02', '03', '04', '05', '06', '08'];
+
+        $chavesEsperadas = [];
+        foreach (preg_split('/\r\n|\r|\n/', $sped) as $linha) {
+            if ($linha === '' || $linha[0] !== '|') {
+                continue;
+            }
+            $c = explode('|', $linha);
+            $reg = $c[1] ?? null;
+            if ($reg !== 'C100' && $reg !== 'D100') {
+                continue;
+            }
+            if (in_array($c[6] ?? '00', $descartaveis, true)) {
+                continue;
+            }
+            // CHV_NFE = campo 9 no C100; CHV_CTE = campo 10 no D100.
+            $chave = trim((string) ($reg === 'C100' ? ($c[9] ?? '') : ($c[10] ?? '')));
+            if ($chave !== '') {
+                $chavesEsperadas[$chave] = true;
+            }
+        }
+
+        $chavesBanco = DB::table('efd_notas')
+            ->where('user_id', $imp->user_id)
+            ->where('importacao_id', $imp->id)
+            ->whereNotNull('chave_acesso')
+            ->pluck('chave_acesso')
+            ->flip();
+
+        $faltando = [];
+        foreach (array_keys($chavesEsperadas) as $chave) {
+            if (! $chavesBanco->has($chave)) {
+                $faltando[] = $chave;
+            }
+        }
+
+        $esperadas = count($chavesEsperadas);
+        $qtdFaltando = count($faltando);
+
+        return [
+            'esperadas' => $esperadas,
+            'no_banco' => $esperadas - $qtdFaltando,
+            'faltando' => $qtdFaltando,
+            'ok' => $qtdFaltando === 0,
+            'amostra_faltando' => array_slice($faltando, 0, 20),
+        ];
+    }
+
+    /**
      * Lê o conteúdo bruto do SPED a partir de efd_importacoes.arquivo_base64.
      * Apesar do nome, o campo armazena uma string JSON-encoded com o texto SPED.
      */

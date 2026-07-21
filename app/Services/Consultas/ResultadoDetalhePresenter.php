@@ -31,6 +31,18 @@ class ResultadoDetalhePresenter
         'crf_fgts',
         'cndt',
         'sintegra',
+        // Vertical advocacia (lote avulso) — shape de certidão/lista normalizado p/ o mesmo pipeline.
+        'certidao_stj',
+        'certidao_trf',
+        'ceat_trt',
+        'certidao_mpt',
+        'certidao_mpf',
+        'certidao_tcu',
+        'improbidade',
+        'ceis',
+        'cnep',
+        'protestos',
+        'falencias',
     ];
 
     /** Fontes de regularidade exibidas no strip agrupado da tabela (sigla compacta). */
@@ -41,17 +53,40 @@ class ResultadoDetalhePresenter
         'crf_fgts' => 'FGTS',
         'cndt' => 'CNDT',
         'sintegra' => 'SINT',
+        'certidao_stj' => 'STJ',
+        'certidao_trf' => 'TRF',
+        'ceat_trt' => 'CEAT',
+        'certidao_mpt' => 'MPT',
+        'certidao_mpf' => 'MPF',
+        'certidao_tcu' => 'TCU',
+        'improbidade' => 'IMPR',
+        'ceis' => 'CEIS',
+        'cnep' => 'CNEP',
+        'protestos' => 'PROT',
+        'falencias' => 'FALÊN',
     ];
 
     // Órgão oficial dono de cada fonte — nomeado na mensagem de falha p/ deixar claro que a
-    // indisponibilidade é na ORIGEM (governo/Caixa/etc.), não no FiscalDock.
-    private const ORGAO = [
+    // indisponibilidade é na ORIGEM (governo/Caixa/etc.), não no FiscalDock. Público: fonte
+    // única também do campo `orgao` do registro de certidões (CertidaoRegistro).
+    public const ORGAO = [
         'cnd_federal' => 'A Receita Federal/PGFN',
         'cnd_estadual' => 'A Secretaria da Fazenda Estadual (SEFAZ)',
         'cnd_municipal' => 'A Prefeitura',
         'cndt' => 'O Tribunal Superior do Trabalho (TST)',
         'crf_fgts' => 'A Caixa Econômica Federal',
         'sintegra' => 'O SINTEGRA (SEFAZ)',
+        'certidao_stj' => 'O Superior Tribunal de Justiça (STJ)',
+        'certidao_trf' => 'A Justiça Federal (TRFs)',
+        'ceat_trt' => 'O Tribunal Regional do Trabalho da região',
+        'certidao_mpt' => 'O Ministério Público do Trabalho (MPT)',
+        'certidao_mpf' => 'O Ministério Público Federal (MPF)',
+        'certidao_tcu' => 'O Tribunal de Contas da União (TCU)',
+        'improbidade' => 'O Conselho Nacional de Justiça (CNJ)',
+        'ceis' => 'O Portal da Transparência (CGU)',
+        'cnep' => 'O Portal da Transparência (CGU)',
+        'protestos' => 'O IEPTB (cartórios de protesto)',
+        'falencias' => 'O Tribunal Superior do Trabalho (TST)',
     ];
 
     /**

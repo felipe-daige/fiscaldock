@@ -55,7 +55,11 @@
 
     var ok = document.getElementById('cookie-consent-accept');
     var no = document.getElementById('cookie-consent-reject');
-    if (ok) ok.addEventListener('click', function () { registrar('accepted'); });
+    if (ok) ok.addEventListener('click', function () {
+        registrar('accepted');
+        // Libera o carregamento do tracking na hora (partials/tracking-base escuta este evento).
+        try { window.dispatchEvent(new Event('fd:cookie-consent-accepted')); } catch (e) {}
+    });
     if (no) no.addEventListener('click', function () { registrar('rejected'); });
 })();
 </script>

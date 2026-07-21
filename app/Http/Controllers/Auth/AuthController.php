@@ -276,6 +276,7 @@ class AuthController extends Controller
                 'email' => 'required|email|max:255',
                 'telefone' => 'required|string|max:20',
                 'senha' => ['required', 'confirmed', Password::min(8)->letters()->numbers()->uncompromised()],
+                'perfil_conta' => 'nullable|string|in:'.implode(',', User::PERSONAS),
                 'empresa' => 'required|string|max:255',
                 'cargo' => 'required|string|max:255',
                 'documento' => 'required|string|max:18',
@@ -361,6 +362,7 @@ class AuthController extends Controller
                 'password' => Hash::make($validated['senha']),
                 'empresa' => $validated['empresa'],
                 'cargo' => $validated['cargo'],
+                'persona' => $validated['perfil_conta'] ?? 'empresa',
                 'cnpj' => $validated['documento'],
                 'faturamento_anual' => $validated['faturamento'],
                 'desafio_principal' => $validated['desafio_principal'],
@@ -427,6 +429,14 @@ class AuthController extends Controller
                     'message' => $e->getMessage(),
                 ]);
             }
+
+            // Conversão de tráfego pago: início do trial. Indicador antecedente do
+            // pagante (que vem até 60 dias depois). Flash sobrevive ao redirect —
+            // inclusive no caminho AJAX, cujo JS faz window.location pro /app/dashboard
+            // (nova request GET na mesma sessão). Disparo real em partials/tracking-events.
+            session()->flash('tracking_events', [
+                ['name' => 'trial_start'],
+            ]);
 
             if ($request->ajax()) {
                 return response()->json([

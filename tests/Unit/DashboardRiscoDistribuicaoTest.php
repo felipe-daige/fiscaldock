@@ -39,7 +39,7 @@ it('agrupa participantes por classificacao na ordem canonica', function () {
         ->and($dist[0]['valor'])->toBe(1)
         ->and($dist[1]['label'])->toBe('Alto')
         ->and($dist[1]['valor'])->toBe(2)
-        ->and($dist[1]['hex'])->toBe('#ea580c');
+        ->and($dist[1]['hex'])->toBe('#dc2626');
 });
 
 it('nao vaza risco de outro usuario', function () {

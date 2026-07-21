@@ -19,7 +19,7 @@ class TopMovimentacaoQuery
      * @param  array<int, int>  $ids
      * @return array<int, array<int, array{cod_item:string, descricao:string, ncm:?string, valor:float, qtd:int}>>
      */
-    public function produtos(int $userId, string $coluna, array $ids, int $limite = 10): array
+    public function produtos(int $userId, string $coluna, array $ids, ?int $limite = 10): array
     {
         $this->assertColuna($coluna);
         $ids = array_values(array_unique(array_filter($ids)));
@@ -51,14 +51,20 @@ class TopMovimentacaoQuery
 
         return $linhas
             ->groupBy('escopo_id')
-            ->map(fn ($g) => $g->sortByDesc('valor')->take($limite)
-                ->map(fn ($r) => [
+            ->map(function ($g) use ($limite) {
+                $ordenado = $g->sortByDesc('valor');
+                if ($limite !== null) {
+                    $ordenado = $ordenado->take($limite);
+                }
+
+                return $ordenado->map(fn ($r) => [
                     'cod_item' => (string) $r->cod_item,
                     'descricao' => (string) ($r->descr_item ?: $r->descricao_item ?: $r->cod_item),
                     'ncm' => $r->cod_ncm !== null && $r->cod_ncm !== '' ? (string) $r->cod_ncm : null,
                     'valor' => round((float) $r->valor, 2),
                     'qtd' => (int) $r->qtd,
-                ])->values()->all())
+                ])->values()->all();
+            })
             ->all();
     }
 
@@ -69,7 +75,7 @@ class TopMovimentacaoQuery
      *
      * @return array<int, array{cod_item:string, descricao:string, ncm:?string, valor:float, qtd:int}>
      */
-    public function produtosPorUsuario(int $userId, int $limite = 15): array
+    public function produtosPorUsuario(int $userId, ?int $limite = 15): array
     {
         $linhas = DB::table('efd_notas_itens as i')
             ->join('efd_notas as n', 'n.id', '=', 'i.efd_nota_id')
@@ -88,7 +94,7 @@ class TopMovimentacaoQuery
                 MAX(i.descricao) as descricao_item,
                 COUNT(*) as qtd, COALESCE(SUM(i.valor_total), 0) as valor')
             ->orderByDesc('valor')
-            ->limit($limite)
+            ->when($limite !== null, fn ($q) => $q->limit($limite))
             ->get();
 
         return $linhas->map(fn ($r) => [

@@ -287,8 +287,27 @@ class EfdImportacaoController extends Controller
             ]);
         });
 
+        // Ordem: XML primeiro, depois EFD PIS/COFINS, depois EFD ICMS/IPI.
+        // Dentro de cada grupo, do mais recente para o mais antigo.
+        $grupo = function (array $imp): int {
+            if (($imp['_tipo'] ?? '') === 'xml') {
+                return 0;
+            }
+
+            return ($imp['tipo_efd'] ?? '') === 'EFD PIS/COFINS' ? 1 : 2;
+        };
+
         $importacoes = $efdImportacoes->concat($xmlImportacoes)
-            ->sortByDesc('created_at')
+            ->sort(function (array $a, array $b) use ($grupo) {
+                $ga = $grupo($a);
+                $gb = $grupo($b);
+
+                if ($ga !== $gb) {
+                    return $ga <=> $gb;
+                }
+
+                return strtotime($b['created_at'] ?? '') <=> strtotime($a['created_at'] ?? '');
+            })
             ->values();
 
         $data = ['importacoes' => $importacoes];

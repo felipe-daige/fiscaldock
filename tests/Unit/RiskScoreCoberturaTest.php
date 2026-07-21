@@ -59,6 +59,15 @@ it('CND Estadual positiva isolada: score ponderado baixo (15) mas piso força al
     expect($this->svc->calcularScoreTotal($scores))->toBe(15)
         ->and($this->svc->pisoPorCertidoes($scores))->toBe('alto')
         ->and($this->svc->classificarComCobertura($scores))->toBe('alto');
+
+    $detalhamento = $this->svc->detalhar($scores);
+
+    expect(collect($detalhamento)->sum('peso_efetivo_pct'))->toBe(100.0)
+        ->and($detalhamento['cnd_estadual']['peso_base_pct'])->toBe(15.0)
+        ->and($detalhamento['cnd_estadual']['peso_efetivo_pct'])->toBe(21.4)
+        ->and($detalhamento['cnd_estadual']['contribuicao_pontos'])->toBe(15.0)
+        ->and($detalhamento['cnd_estadual']['classificacao'])->toBe('alto')
+        ->and($detalhamento['cnd_estadual']['hex'])->toBe('#dc2626');
 });
 
 it('CND Federal positiva isolada: piso alto (não fica baixo)', function () {

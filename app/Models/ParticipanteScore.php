@@ -230,6 +230,32 @@ class ParticipanteScore extends Model
     }
 
     /**
+     * Motivo legível da conclusão do score — cobre TODAS as classificações, não só as
+     * irregulares. Fonte única: reusa motivos_risco (drivers de médio/alto/crítico) e,
+     * quando não há irregularidade, explica baixo/inconclusivo/não avaliado.
+     */
+    public function getMotivoConclusaoAttribute(): string
+    {
+        $motivos = $this->motivos_risco;
+        if ($motivos !== []) {
+            return implode(' · ', $motivos);
+        }
+
+        return match ($this->classificacao) {
+            'baixo' => 'Sem pendências nas fontes consultadas',
+            'inconclusivo' => app(\App\Services\RiskScoreService::class)->resumoCobertura([
+                'cadastral' => $this->score_cadastral,
+                'cnd_federal' => $this->score_cnd_federal,
+                'cnd_estadual' => $this->score_cnd_estadual,
+                'fgts' => $this->score_fgts,
+                'trabalhista' => $this->score_trabalhista,
+            ]),
+            'nao_avaliado' => 'CNPJ ainda não consultado',
+            default => '—',
+        };
+    }
+
+    /**
      * Verifica se o score esta desatualizado (mais de 30 dias).
      */
     public function isDesatualizado(): bool

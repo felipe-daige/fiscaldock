@@ -85,13 +85,13 @@
                             <div class="border-t border-gray-200 pt-5">
                                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-3">Dados da empresa</p>
 
-                                {{-- Persona da conta: distingue "minha própria empresa" de "contador/escritório".
-                                     Só orienta o preenchimento (relabela campos via criar-conta.js); o backend
-                                     continua usando empresa/cargo/documento. Evita o caso do contador cadastrar
-                                     um CLIENTE como se fosse a própria empresa (is_empresa_propria). --}}
+                                {{-- Persona da conta (empresa | contador | advogado): relabela campos via
+                                     criar-conta.js E persiste em users.persona — dirige o empacotamento da área
+                                     autenticada (sidebar/planos/labels), nunca gate duro. Evita também o caso do
+                                     contador cadastrar um CLIENTE como se fosse a própria empresa (is_empresa_propria). --}}
                                 <div class="mb-4">
                                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Você está cadastrando…</p>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" role="radiogroup" aria-label="Tipo de conta">
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2" role="radiogroup" aria-label="Tipo de conta">
                                         <label class="persona-opt cursor-pointer rounded border border-gray-800 ring-1 ring-gray-800 px-3 py-2.5 flex flex-col gap-0.5 transition-colors">
                                             <span class="flex items-center gap-2">
                                                 <input type="radio" name="perfil_conta" value="empresa" checked class="h-3.5 w-3.5 text-gray-800 focus:ring-gray-500">
@@ -105,6 +105,13 @@
                                                 <span class="text-[13px] font-semibold text-gray-900">Sou contador / escritório</span>
                                             </span>
                                             <span class="text-[11px] text-gray-500 pl-[22px]">Atendo várias empresas (clientes)</span>
+                                        </label>
+                                        <label class="persona-opt cursor-pointer rounded border border-gray-300 px-3 py-2.5 flex flex-col gap-0.5 transition-colors">
+                                            <span class="flex items-center gap-2">
+                                                <input type="radio" name="perfil_conta" value="advogado" class="h-3.5 w-3.5 text-gray-800 focus:ring-gray-500">
+                                                <span class="text-[13px] font-semibold text-gray-900">Sou advogado(a) / escritório</span>
+                                            </span>
+                                            <span class="text-[11px] text-gray-500 pl-[22px]">Atendo clientes e partes em processos</span>
                                         </label>
                                     </div>
                                     <p id="persona-ajuda" class="mt-2 text-[11px] text-gray-500">Cadastre os dados da sua própria empresa — é ela que você vai monitorar.</p>

@@ -14,7 +14,6 @@ use App\Models\MonitoramentoAssinatura;
 use App\Models\MonitoramentoConsulta;
 use App\Models\MonitoramentoPlano;
 use App\Models\Participante;
-use App\Models\ParticipanteScore;
 use App\Models\XmlNota;
 use App\Services\Consultas\PerfilConsultaHistoricoService;
 use App\Services\Consultas\ResultadoDetalhePresenter;
@@ -28,7 +27,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -830,7 +828,7 @@ class ParticipanteController extends Controller
         $notasFiscais = $this->notaFiscalService->listarUnificadas(
             $userId,
             ['participante_id' => $participante->id],
-            5,
+            10,
             1,
             "/app/participante/{$id}/notas"
         );
@@ -875,40 +873,11 @@ class ParticipanteController extends Controller
             'valor_utilizado_reais' => ($monitoramentoSaldoUnidades + $loteSaldoUnidades),
         ];
 
-        // Buscar última consulta com sucesso para o participante (sistema de consultas em lote)
-        $ultimaConsulta = ConsultaResultado::where('participante_id', $participante->id)
-            ->where('status', ConsultaResultado::STATUS_SUCESSO)
-            ->with(['lote:id,plano_id,created_at', 'lote.plano:id,nome,codigo'])
-            ->orderBy('consultado_em', 'desc')
-            ->first();
-
-        // A consulta mais recente pode ser de um plano parcial (ex.: Gratuito, só cadastro).
-        // A ficha deve mostrar o snapshot mais recente POR FONTE, já consolidado na projeção
-        // canônica do score, sem esconder certidões trazidas por um lote anterior mais amplo.
-        // A mutação é apenas em memória; o resultado bruto e seu vínculo com o lote permanecem
-        // intactos no histórico.
-        $dadosConsolidados = ParticipanteScore::where('user_id', $userId)
-            ->where('participante_id', $participante->id)
-            ->first(['dados_consultados'])
-            ?->dados_consultados;
-
-        if ($ultimaConsulta && is_array($dadosConsolidados) && $dadosConsolidados !== []) {
-            $dadosAtuais = (array) $ultimaConsulta->resultado_dados;
-            $consultasRealizadas = array_values(array_unique(array_merge(
-                (array) ($dadosConsolidados['consultas_realizadas'] ?? []),
-                (array) ($dadosAtuais['consultas_realizadas'] ?? []),
-                array_values(array_intersect(
-                    ['cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts', 'cndt', 'sintegra', 'qsa'],
-                    array_keys($dadosConsolidados)
-                )),
-            )));
-
-            $dadosMesclados = array_merge($dadosConsolidados, $dadosAtuais);
-            if ($consultasRealizadas !== []) {
-                $dadosMesclados['consultas_realizadas'] = $consultasRealizadas;
-            }
-            $ultimaConsulta->resultado_dados = $dadosMesclados;
-        }
+        $snapshot = app(\App\Services\Perfis\PerfilCnpjSnapshotService::class)
+            ->resolver($userId, (string) $participante->documento);
+        $ultimaConsulta = $snapshot['ultima_consulta'];
+        $dadosConsulta = $snapshot['dados'];
+        $scorePersistido = $snapshot['score'];
 
         // Reusa o presenter canônico das Consultas para exibir todas as seis fontes no mesmo
         // padrão visual: cinco certidões + SINTEGRA, incluindo mensagem e comprovante.
@@ -921,53 +890,6 @@ class ParticipanteController extends Controller
         $certidoesConsulta = $ultimaConsulta
             ? $this->detalhePresenter->certidoes($ultimaConsulta)
             : [];
-
-        // Se participante nao tem CEP salvo, tentar pegar da ultima consulta
-        if (empty($participante->cep) && $ultimaConsulta) {
-            $cepDados = $ultimaConsulta->resultado_dados['endereco']['cep'] ?? null;
-            if ($cepDados) {
-                $participante->update(['cep' => preg_replace('/\D/', '', $cepDados)]);
-            }
-        }
-
-        // Geocoding (salva no DB para evitar chamadas repetidas)
-        if (is_null($participante->latitude)) {
-            $lat = null;
-            $lng = null;
-
-            // Tentativa 1: Brasil API via CEP
-            if (! empty($participante->cep)) {
-                $cep = preg_replace('/\D/', '', $participante->cep);
-                $response = Http::timeout(5)
-                    ->get("https://brasilapi.com.br/api/cep/v2/{$cep}");
-                if ($response->successful()) {
-                    $data = $response->json();
-                    $lat = $data['location']['coordinates']['latitude'] ?? null;
-                    $lng = $data['location']['coordinates']['longitude'] ?? null;
-                }
-            }
-
-            // Tentativa 2: Nominatim via municipio/UF (quando Brasil API nao tem coordenadas)
-            if (! $lat || ! $lng) {
-                $municipio = $ultimaConsulta->resultado_dados['endereco']['municipio'] ?? ($participante->municipio ?? null);
-                $uf = $ultimaConsulta->resultado_dados['endereco']['uf'] ?? ($participante->uf ?? null);
-                if ($municipio && $uf) {
-                    $query = urlencode("{$municipio},{$uf},Brasil");
-                    $response = Http::timeout(5)
-                        ->withHeaders(['User-Agent' => 'FiscalDock/1.0'])
-                        ->get("https://nominatim.openstreetmap.org/search?q={$query}&format=json&limit=1");
-                    if ($response->successful()) {
-                        $results = $response->json();
-                        $lat = $results[0]['lat'] ?? null;
-                        $lng = $results[0]['lon'] ?? null;
-                    }
-                }
-            }
-
-            if ($lat && $lng) {
-                $participante->update(['latitude' => $lat, 'longitude' => $lng]);
-            }
-        }
 
         $returnToUrl = $this->resolveReturnToUrl($request, (string) $request->query('return_to', ''));
 
@@ -994,16 +916,16 @@ class ParticipanteController extends Controller
         ];
 
         $movimentacao = app(\App\Services\Participantes\ParticipanteMovimentacaoService::class)->kpisEResumoParaPreview($participante);
-        $data['movimentacao'] = $movimentacao;
-
-        $topMov = app(\App\Services\Consultas\Fiscal\TopMovimentacaoQuery::class);
-        $data['top_produtos'] = $topMov->produtos($participante->user_id, 'participante_id', [$participante->id], 10)[$participante->id] ?? [];
-        $data['top_cfops'] = $topMov->cfops($participante->user_id, 'participante_id', [$participante->id], 10)[$participante->id] ?? [];
 
         $resumoFiscal = app(\App\Services\Consultas\ParticipanteFiscalResumoService::class)
-            ->paraParticipantes($participante->user_id, [$participante->id], comCfops: true);
-        $data['negociantes'] = $resumoFiscal[$participante->id]['relacionamentos'] ?? [];
-        $data['negociantesModo'] = 'participante';
+            ->paraParticipantes(
+                $participante->user_id,
+                [$participante->id],
+                comCfops: true,
+                comProdutos: true,
+                comNotas: true,
+            );
+        $data['fiscalResumo'] = $resumoFiscal[$participante->id] ?? null;
 
         $scoreCalc = $ultimaConsulta?->calcularScore();
         $data['score'] = $participante->is_cpf
@@ -1013,6 +935,48 @@ class ParticipanteController extends Controller
             && ! $participante->is_cpf
             ? app(\App\Services\RiskScoreService::class)->detalhar($scoreCalc['scores'])
             : [];
+
+        $alertasPerfil = \App\Models\Alerta::doUsuario($userId)
+            ->ativos()
+            ->where('participante_id', $participante->id)
+            ->orderByDesc('prioridade')
+            ->limit(10)
+            ->get()
+            ->map(fn (\App\Models\Alerta $alerta) => [
+                'severidade' => $alerta->severidade,
+                'titulo' => $alerta->titulo,
+                'descricao' => $alerta->descricao,
+            ])
+            ->all();
+
+        if ($alertasPerfil === []) {
+            $alertasPerfil = $data['parecerFiscal'];
+        }
+
+        $data['perfilCnpj'] = [
+            'is_cpf' => $participante->is_cpf,
+            'alertas' => $alertasPerfil,
+            'cadastro' => app(\App\Services\Perfis\PerfilCnpjViewData::class)
+                ->cadastro($participante, $dadosConsulta, $ultimaConsulta?->consultado_em),
+            'score_detalhamento' => $data['score_detalhamento'],
+            'score_total' => $data['score']['score_total'] ?? null,
+            'score_classificacao' => $data['score']['classificacao'] ?? 'nao_avaliado',
+            'score_atualizado_em' => $scorePersistido?->ultima_consulta_em ?? $ultimaConsulta?->consultado_em,
+            'mensagem_cpf' => $data['score']['mensagem'] ?? null,
+            'fontes_consulta' => $fontesConsulta,
+            'certidoes_consulta' => $certidoesConsulta,
+            'ultima_consulta' => $ultimaConsulta,
+            'fiscal' => $data['fiscalResumo'],
+            'produtos' => $data['fiscalResumo']['top_produtos'] ?? [],
+            'cfops' => $data['fiscalResumo']['top_cfops'] ?? [],
+            'notas' => $notasFiscais,
+            'total_notas' => $totalNotasFiscais,
+            'notas_ajax_url' => "/app/participante/{$id}/notas",
+            'notas_contexto' => 'participante',
+            'entity_id' => $participante->id,
+            'historico' => $data['historicoConsultasPerfil'],
+            'documento' => $participante->documento,
+        ];
 
         if ($this->isAjaxRequest($request)) {
             $renderedView = view($participanteView, $data)->render();
@@ -1043,7 +1007,7 @@ class ParticipanteController extends Controller
         $notas = $this->notaFiscalService->listarUnificadas(
             $userId,
             ['participante_id' => $participante->id],
-            5,
+            10,
             $page,
             "/app/participante/{$id}/notas"
         );
@@ -1411,12 +1375,18 @@ class ParticipanteController extends Controller
 
         // ?formato=xlsx → planilha no modelo de design aprovado (mesma fonte do PDF)
         if ($request->query('formato') === 'xlsx') {
-            return app(\App\Services\Dossie\DossieXlsxBuilder::class)
-                ->download($dados, $participante, $arquivo.'.xlsx');
+            return $this->comTokenDownload(
+                app(\App\Services\Dossie\DossieXlsxBuilder::class)
+                    ->download($dados, $participante, $arquivo.'.xlsx'),
+                $request
+            );
         }
 
-        return \App\Support\PdfReport::render('reports.dossie.participante', $dados, 'portrait')
-            ->download($arquivo.'.pdf');
+        return $this->comTokenDownload(
+            \App\Support\PdfReport::render('reports.dossie.participante', $dados, 'portrait')
+                ->download($arquivo.'.pdf'),
+            $request
+        );
     }
 
     /**

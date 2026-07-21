@@ -87,7 +87,7 @@ it('remove a lateral do cliente e mostra as consultas CNPJ e clearance no card f
         ->get('/app/cliente/'.$cliente->id);
 
     $response->assertOk()
-        ->assertSee('Identificação, contato, localização e enquadramento fiscal.')
+        ->assertSee('Identificação, registro e composição do cadastro.')
         ->assertSee('Últimas Consultas deste CNPJ')
         ->assertSeeInOrder(['Clearance NF-e', 'Consulta CNPJ'])
         ->assertSee('NF-e nº 9876')
@@ -218,7 +218,7 @@ it('clearance completo alimenta o histórico e os cards fiscais do participante'
         ->get('/app/participante/'.$participante->id);
 
     $response->assertOk()
-        ->assertSee('Identificação, localização e enquadramento do participante.')
+        ->assertSee('Identificação, registro e composição do cadastro.')
         ->assertSee('Últimas Consultas deste CNPJ')
         ->assertSee('Clearance NF-e')
         ->assertSee('NF-e nº 4455')

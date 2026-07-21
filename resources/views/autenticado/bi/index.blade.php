@@ -45,11 +45,11 @@
                                          diferenca="Relatório executivo para ler, imprimir e enviar ao cliente." />
                         <x-export-grupo label="Planilhas" />
                         <x-export-option format="xlsx" modal-id="modal-exportar-bi" overlay="download-overlay-bi"
-                                         path="/app/bi/exportar-xlsx" query="dossies=20"
-                                         descricao="Uma aba por seção + dossiê dos top 20 participantes." />
+                                         path="/app/bi/exportar-xlsx"
+                                         descricao="Uma aba por seção + todos os participantes (entradas × saídas por CNPJ)." />
                         {{-- CSV do BI é ZIP (N seções), então a frase padrão "uma tabela só" não vale. --}}
                         <x-export-option format="csv" modal-id="modal-exportar-bi" overlay="download-overlay-bi"
-                                         path="/app/bi/exportar-csv-zip" query="dossies=20"
+                                         path="/app/bi/exportar-csv-zip"
                                          descricao="Um arquivo .csv por seção, empacotados num .zip."
                                          diferenca="Texto puro, sem formatação nem abas. Universal: abre em qualquer sistema." />
                     </x-export-menu>
@@ -650,11 +650,22 @@
         <div id="tab-cfop" class="bi-tab-content hidden">
             @php
                 $cfopLabels = [
-                    1407 => 'Compra p/ uso/consumo c/ ST', 1915 => 'Entrada remetida p/ industrialização/conserto',
-                    1916 => 'Retorno remetido p/ industrialização/conserto', 2202 => 'Devolução de compra p/ comercialização',
-                    2556 => 'Compra de material p/ uso/consumo', 5411 => 'Devolução de compra c/ ST',
-                    5916 => 'Retorno recebido p/ industrialização/conserto', 6915 => 'Remessa p/ conserto/reparo',
-                    6916 => 'Retorno recebido p/ conserto',
+                    // Devolução de venda (entram como aquisição/entrada)
+                    1201 => 'Devolução de venda (produção própria)', 1202 => 'Devolução de venda (merc. de terceiros)',
+                    1410 => 'Devolução de venda c/ ST (produção própria)', 1411 => 'Devolução de venda c/ ST (merc. de terceiros)',
+                    2201 => 'Devolução de venda (produção própria)', 2202 => 'Devolução de venda (merc. de terceiros)',
+                    2410 => 'Devolução de venda c/ ST (produção própria)', 2411 => 'Devolução de venda c/ ST (merc. de terceiros)',
+                    // Devolução de compra (saem como saída/faturamento)
+                    5201 => 'Devolução de compra p/ industrialização', 5202 => 'Devolução de compra p/ comercialização',
+                    5210 => 'Devolução de compra p/ prestação de serviço', 5410 => 'Devolução de compra p/ industrialização c/ ST',
+                    5411 => 'Devolução de compra p/ comercialização c/ ST',
+                    6201 => 'Devolução de compra p/ industrialização', 6202 => 'Devolução de compra p/ comercialização',
+                    6210 => 'Devolução de compra p/ prestação de serviço', 6410 => 'Devolução de compra p/ industrialização c/ ST',
+                    6411 => 'Devolução de compra p/ comercialização c/ ST',
+                    // Conserto / industrialização (não-receita)
+                    1915 => 'Entrada recebida p/ industrialização/conserto', 1916 => 'Retorno remetido p/ industrialização/conserto',
+                    5916 => 'Retorno recebido p/ industrialização/conserto', 6915 => 'Remessa p/ industrialização/conserto',
+                    6916 => 'Retorno recebido p/ industrialização/conserto',
                 ];
                 $cfopsForaFaturamento = config('efd.cfops_fora_faturamento', []);
             @endphp

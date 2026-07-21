@@ -86,7 +86,7 @@ it('CND Estadual positiva puxa o ícone para alto risco mesmo com federal negati
 
     expect($linha['alerta_nivel'])->toBe('alto')
         ->and($linha['alerta_motivo_curto'])->toContain('CND Estadual positiva')
-        ->and($linha['alerta_hex'])->toBe('#ea580c');
+        ->and($linha['alerta_hex'])->toBe('#dc2626');
 });
 
 it('situação BAIXADA classifica crítico com o motivo visível', function () {
@@ -101,7 +101,7 @@ it('situação BAIXADA classifica crítico com o motivo visível', function () {
     expect($linha['alerta_nivel'])->toBe('critico')
         ->and($linha['alerta_label'])->toBe('Risco Crítico')
         ->and($linha['alerta_motivo_curto'])->toContain('BAIXADA')
-        ->and($linha['alerta_hex'])->toBe('#dc2626');
+        ->and($linha['alerta_hex'])->toBe('#b91c1c');
 });
 
 it('data_validade d/m/Y futura não marca CND como vencida (regressão Carbon m/d/Y)', function () {

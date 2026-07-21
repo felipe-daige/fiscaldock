@@ -127,6 +127,22 @@
         </x-sidebar.item>
     </x-sidebar.section>
 
+    {{-- CONTENCIOSO — vertical advocacia (persona advogado). Empacotamento por persona:
+         a seção só aparece pro advogado, mas as rotas são acessíveis a todos (nunca gate
+         duro de compra). docs/advocacia/consultas-certidoes.md --}}
+    @if(auth()->user()?->persona === 'advogado')
+        <x-sidebar.section title="CONTENCIOSO">
+            <x-sidebar.item href="/app/consulta/fontes">
+                <x-slot:icon>
+                    <svg class="sidebar__item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6M9 8h6M5 4h14v16H5V4zm4 16v-3h6v3"></path>
+                    </svg>
+                </x-slot:icon>
+                Consulta por Fontes
+            </x-sidebar.item>
+        </x-sidebar.section>
+    @endif
+
     {{-- CONSULTAS --}}
     <x-sidebar.section title="CONSULTAS">
         {{-- Link direto (sem submenu): Histórico e Planos são alcançados pelos botões

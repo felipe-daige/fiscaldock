@@ -598,11 +598,13 @@ class BiService
             DB::raw('SUM(COALESCE(icms_st_valor, 0)) as icms_st'),
             DB::raw('SUM(COALESCE(pis_valor, 0)) as pis'),
             DB::raw('SUM(COALESCE(cofins_valor, 0)) as cofins'),
-            DB::raw('SUM(COALESCE(ipi_valor, 0)) as ipi')
+            DB::raw('SUM(COALESCE(ipi_valor, 0)) as ipi'),
+            DB::raw('SUM(COALESCE(iss_valor, 0)) as iss')
         )->first();
 
         // EFD canônico: débito-saída (ICMS via C190; ST/IPI via C190; PIS/COFINS
-        // via itens contribuicoes). Sem mistura de origem/crédito (P1/P2). Ver F1.
+        // via itens contribuicoes; ISS via cabeçalho A100/NFS-e). Sem mistura de
+        // origem/crédito (P1/P2). Ver F1.
         $efd = $this->efd->cargaTributariaDebitoSaida($userId, $dataInicio, $dataFim, $clienteId);
 
         return [
@@ -611,6 +613,7 @@ class BiService
             ['tipo' => 'PIS', 'valor' => (float) ($xmlTotais->pis ?? 0) + $efd['pis']],
             ['tipo' => 'COFINS', 'valor' => (float) ($xmlTotais->cofins ?? 0) + $efd['cofins']],
             ['tipo' => 'IPI', 'valor' => (float) ($xmlTotais->ipi ?? 0) + $efd['ipi']],
+            ['tipo' => 'ISS', 'valor' => (float) ($xmlTotais->iss ?? 0) + $efd['iss']],
         ];
     }
 

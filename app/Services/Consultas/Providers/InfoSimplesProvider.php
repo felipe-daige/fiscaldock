@@ -51,6 +51,10 @@ class InfoSimplesProvider implements ConsultaProvider
             'status' => $status,
             'billable' => $body['header']['billable'] ?? null,
             'price' => $body['header']['price'] ?? null,
+            // Em falha, errors[] nomeia a causa exata (ex.: qual parâmetro falta no 606) —
+            // sem isso o diagnóstico de fonte nova exige re-consulta paga só pra ler o erro.
+            'errors' => $code !== 200 ? ($body['errors'] ?? null) : null,
+            'code_message' => $code !== 200 ? ($body['code_message'] ?? null) : null,
         ]);
 
         $mensagem = $body['code_message'] ?? null;

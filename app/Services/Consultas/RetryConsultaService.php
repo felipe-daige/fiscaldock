@@ -288,12 +288,12 @@ class RetryConsultaService
         if ($tipo === 'cliente') {
             $c = Cliente::find($id);
 
-            return ['cnpj' => preg_replace('/[^0-9]/', '', (string) $c?->documento), 'uf' => $c?->uf, 'crt' => null, 'matriz_filial' => $matrizFilial];
+            return ['cnpj' => preg_replace('/[^0-9]/', '', (string) $c?->documento), 'uf' => $c?->uf, 'crt' => null, 'matriz_filial' => $matrizFilial, 'razao_social' => $c?->razao_social];
         }
 
         $p = Participante::find($id);
 
-        return ['cnpj' => preg_replace('/[^0-9]/', '', (string) $p?->documento), 'uf' => $p?->uf, 'crt' => $p?->crt, 'matriz_filial' => $matrizFilial];
+        return ['cnpj' => preg_replace('/[^0-9]/', '', (string) $p?->documento), 'uf' => $p?->uf, 'crt' => $p?->crt, 'matriz_filial' => $matrizFilial, 'razao_social' => $p?->razao_social];
     }
 
     /**

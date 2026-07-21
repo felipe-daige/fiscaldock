@@ -3,7 +3,7 @@
     $classBadge = [
         'baixo' => ['label' => 'BAIXO', 'hex' => '#047857'],
         'medio' => ['label' => 'MÉDIO', 'hex' => '#b45309'],
-        'alto' => ['label' => 'ALTO', 'hex' => '#ea580c'],
+        'alto' => ['label' => 'ALTO', 'hex' => '#dc2626'],
         'critico' => ['label' => 'CRÍTICO', 'hex' => '#b91c1c'],
         'inconclusivo' => ['label' => 'INCONCLUSIVO', 'hex' => '#9ca3af'],
     ];
@@ -91,7 +91,7 @@
                     <div class="flex flex-wrap gap-3 text-xs">
                         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #047857"></span><span class="text-gray-600">0–20 Baixo</span></span>
                         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #b45309"></span><span class="text-gray-600">21–50 Médio</span></span>
-                        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #ea580c"></span><span class="text-gray-600">51–80 Alto</span></span>
+                        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #dc2626"></span><span class="text-gray-600">51–80 Alto</span></span>
                         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #b91c1c"></span><span class="text-gray-600">81–100 Crítico</span></span>
                         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="background-color: #9ca3af"></span><span class="text-gray-600">Risco Não Conclusivo (cobertura insuficiente)</span></span>
                     </div>
@@ -256,7 +256,7 @@
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Alto Risco</p>
                     <p class="text-lg font-bold text-gray-900 font-mono">{{ $estatisticas['alto_risco'] ?? 0 }}</p>
-                    <span class="whitespace-nowrap inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #ea580c">ALTO</span>
+                    <span class="whitespace-nowrap inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #dc2626">ALTO</span>
                 </div>
                 <div class="p-4 sm:p-6">
                     <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Crítico</p>

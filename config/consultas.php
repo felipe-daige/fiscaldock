@@ -46,6 +46,18 @@ return [
         'cnd_estadual' => 'certidoes_estaduais',
         'cnd_municipal' => 'certidoes_estaduais',
         'sintegra' => 'certidoes_estaduais',
+        // Vertical advocacia (grupos novos do strip — só aparecem em lote avulso).
+        'certidao_stj' => 'certidoes_judiciais',
+        'certidao_trf' => 'certidoes_judiciais',
+        'ceat_trt' => 'certidoes_judiciais',
+        'certidao_mpt' => 'certidoes_judiciais',
+        'certidao_mpf' => 'certidoes_judiciais',
+        'certidao_tcu' => 'integridade',
+        'improbidade' => 'integridade',
+        'ceis' => 'integridade',
+        'cnep' => 'integridade',
+        'protestos' => 'passivo',
+        'falencias' => 'passivo',
     ],
 
     // Nome amigável de cada fonte, usado na mensagem de progresso ("Consultando {nome} (i de N)").
@@ -59,6 +71,17 @@ return [
         'cnd_estadual' => 'CND Estadual (SEFAZ)',
         'cnd_municipal' => 'CND Municipal',
         'sintegra' => 'SINTEGRA',
+        'certidao_stj' => 'Certidão STJ',
+        'certidao_trf' => 'Certidão Justiça Federal (TRFs)',
+        'ceat_trt' => 'CEAT — Ações Trabalhistas (TRT da sede)',
+        'certidao_mpt' => 'Certidão MPT (feitos trabalhistas)',
+        'certidao_mpf' => 'Certidão MPF',
+        'certidao_tcu' => 'TCU — Consolidada (inidôneos/inabilitados)',
+        'improbidade' => 'CNJ — Improbidade Administrativa',
+        'ceis' => 'CEIS (inidôneas e suspensas)',
+        'cnep' => 'CNEP (Lei Anticorrupção)',
+        'protestos' => 'Protestos em Cartório (IEPTB)',
+        'falencias' => 'Falências e Recuperações (TST)',
     ],
 
     // Atributos de consultas_incluidas que NÃO são fontes — renderizados inline a partir dos
@@ -216,6 +239,20 @@ return [
         // SINTEGRA: R$ 1,00 por CNPJ.
         'sintegra' => (float) env('CONSULTA_CREDITOS_SINTEGRA', 1.00),
         'cnd_municipal' => (float) env('CONSULTA_CREDITOS_CND_MUNICIPAL', 0.40),
+        // Vertical advocacia: custo interno DEFAULT = preço de venda (R$ 1,00) até o
+        // header.price real ser observado no smoke — essas fontes só rodam em lote avulso,
+        // cujo estorno usa precosVenda (não este valor); aqui é fallback/consistência.
+        'certidao_stj' => (float) env('CONSULTA_CREDITOS_CERTIDAO_STJ', 1.00),
+        'certidao_trf' => (float) env('CONSULTA_CREDITOS_CERTIDAO_TRF', 1.00),
+        'ceat_trt' => (float) env('CONSULTA_CREDITOS_CEAT_TRT', 1.00),
+        'certidao_mpt' => (float) env('CONSULTA_CREDITOS_CERTIDAO_MPT', 1.00),
+        'certidao_mpf' => (float) env('CONSULTA_CREDITOS_CERTIDAO_MPF', 1.00),
+        'certidao_tcu' => (float) env('CONSULTA_CREDITOS_CERTIDAO_TCU', 1.00),
+        'improbidade' => (float) env('CONSULTA_CREDITOS_IMPROBIDADE', 1.00),
+        'ceis' => (float) env('CONSULTA_CREDITOS_CEIS', 1.00),
+        'cnep' => (float) env('CONSULTA_CREDITOS_CNEP', 1.00),
+        'protestos' => (float) env('CONSULTA_CREDITOS_PROTESTOS', 1.00),
+        'falencias' => (float) env('CONSULTA_CREDITOS_FALENCIAS', 1.00),
     ],
 
     // Reconsulta de fontes com falha transitória (classe `retry`, ex. código 600).
@@ -227,12 +264,15 @@ return [
         'desconto_pct' => (int) env('CONSULTAS_RETRY_DESCONTO_PCT', 50),
 
         // Auto-retry DENTRO do job: fonte que falha com classe `retry` (transitória, não
-        // cobrada) é retentada ao fim do alvo, após um cooldown contado desde a falha.
-        // `erro_participante`/`fatal` não entram (re-falha determinística / problema de conta).
-        // 0 tentativas desliga. Recuperar a fonte cancela o estorno dela no fechamento.
+        // cobrada — ex.: 615 origem oficial fora do ar) é retentada ao fim do alvo. O cooldown
+        // é o da 1ª tentativa e CRESCE por tentativa (backoff linear): 15s, depois 30s. A espera
+        // é contada desde a falha, então o tempo já gasto nas fontes seguintes abate.
+        // `erro_participante`/`fatal`/`indeterminado`(611) não entram (re-falha determinística —
+        // reconsultar dá o mesmo resultado e/ou fatura). 0 tentativas desliga. Recuperar a fonte
+        // cancela o estorno dela no fechamento.
         'auto' => [
-            'max_tentativas' => (int) env('CONSULTAS_AUTO_RETRY_TENTATIVAS', 1),
-            'cooldown_segundos' => (int) env('CONSULTAS_AUTO_RETRY_COOLDOWN', 30),
+            'max_tentativas' => (int) env('CONSULTAS_AUTO_RETRY_TENTATIVAS', 2),
+            'cooldown_segundos' => (int) env('CONSULTAS_AUTO_RETRY_COOLDOWN', 15),
         ],
 
         // Códigos InfoSimples das classes reconsultáveis (`retry` + `erro_participante`)
