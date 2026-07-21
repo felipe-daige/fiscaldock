@@ -14,11 +14,11 @@
 
 <p><strong>Como monitorar:</strong> consulta ao SINTEGRA por estado. O FiscalDock integra com o SINTEGRA para verificar a situação da IE de cada participante extraído do SPED.</p>
 
-<h2 class="text-2xl font-bold text-gray-900 mt-10 mb-4">3. Fornecedor com débitos fiscais</h2>
+<h2 class="text-2xl font-bold text-gray-900 mt-10 mb-4">3. Fornecedor com débitos fiscais ou trabalhistas</h2>
 
-<p>Um fornecedor com certidão positiva — débitos na Receita Federal/PGFN ou na Fazenda Estadual/Municipal — sinaliza risco de contingência e, em licitações, pode inviabilizar o contrato do seu cliente. É um dos primeiros sinais de que a empresa pode não honrar compromissos.</p>
+<p>Um fornecedor com certidão positiva — débitos na Receita Federal/PGFN, na Fazenda Estadual/Municipal ou débitos trabalhistas (CNDT) — sinaliza risco de contingência e, em licitações, pode inviabilizar o contrato do seu cliente. É um dos primeiros sinais de que a empresa pode não honrar compromissos.</p>
 
-<p><strong>Como monitorar:</strong> consulta às certidões negativas de débito. O FiscalDock verifica automaticamente CND Federal, CND Estadual, CND Municipal e a regularidade do FGTS de cada participante extraído do SPED.</p>
+<p><strong>Como monitorar:</strong> consulta às certidões negativas de débito. O FiscalDock verifica automaticamente CND Federal, CND Estadual, CND Municipal, CNDT (trabalhista) e a regularidade do FGTS de cada participante extraído do SPED.</p>
 
 <h2 class="text-2xl font-bold text-gray-900 mt-10 mb-4">4. Fornecedor optante pelo Simples Nacional</h2>
 

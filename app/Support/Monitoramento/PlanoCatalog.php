@@ -74,6 +74,7 @@ final class PlanoCatalog
                     'regime_tributario',
                     'cnd_federal',
                     'crf_fgts',
+                    'cndt',
                 ],
                 'etapas' => [
                     ['numero' => 1, 'chave' => 'inicializacao', 'label' => 'Preparando consulta'],
@@ -89,7 +90,7 @@ final class PlanoCatalog
             [
                 'codigo' => 'compliance',
                 'nome' => 'Compliance',
-                'descricao' => 'Regularidade fiscal completa',
+                'descricao' => 'Regularidade fiscal e trabalhista completa',
                 'consultas_incluidas' => [
                     'situacao_cadastral',
                     'dados_cadastrais',
@@ -100,6 +101,7 @@ final class PlanoCatalog
                     'sintegra',
                     'cnd_federal',
                     'crf_fgts',
+                    'cndt',
                     'cnd_estadual',
                     'cnd_municipal',
                 ],
@@ -129,6 +131,7 @@ final class PlanoCatalog
                     'sintegra',
                     'cnd_federal',
                     'crf_fgts',
+                    'cndt',
                     'cnd_estadual',
                     'cnd_municipal',
                 ],
@@ -160,6 +163,7 @@ final class PlanoCatalog
                     'crf_fgts',
                     'cnd_estadual',
                     'cnd_municipal',
+                    'cndt',
                 ],
                 'etapas' => [
                     ['numero' => 1, 'chave' => 'inicializacao', 'label' => 'Preparando consulta'],

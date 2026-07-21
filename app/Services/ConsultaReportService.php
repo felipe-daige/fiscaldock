@@ -200,8 +200,10 @@ class ConsultaReportService
                 'cnd_estadual_status' => $this->statusCertidaoExport($dados['cnd_estadual'] ?? null),
                 'cnd_estadual_validade' => $dados['cnd_estadual']['data_validade'] ?? null,
 
-                // FGTS
+                // FGTS/Trabalhista
                 'crf_fgts_status' => $this->statusCertidaoExport($dados['crf_fgts'] ?? null),
+                'cndt_status' => $this->statusCertidaoExport($dados['cndt'] ?? null),
+                'cndt_validade' => $dados['cndt']['data_validade'] ?? null,
 
                 // Score calculado
                 'score_total' => $scoreData['score_total'],
@@ -348,6 +350,11 @@ class ConsultaReportService
             $colunas[] = 'CRF FGTS Status';
         }
 
+        if (in_array('cndt', $consultasIncluidas)) {
+            $colunas[] = 'CNDT Status';
+            $colunas[] = 'CNDT Validade';
+        }
+
         // Sempre incluir score
         $colunas[] = 'Score Risco';
         $colunas[] = 'Classificacao';
@@ -382,6 +389,8 @@ class ConsultaReportService
                 'CND Estadual Status' => $resultado['cnd_estadual_status'],
                 'CND Estadual Validade' => $resultado['cnd_estadual_validade'],
                 'CRF FGTS Status' => $resultado['crf_fgts_status'],
+                'CNDT Status' => $resultado['cndt_status'],
+                'CNDT Validade' => $resultado['cndt_validade'],
                 'Score Risco' => $resultado['score_total'],
                 'Classificacao' => $this->getLabelClassificacao($resultado['classificacao']),
                 default => '',

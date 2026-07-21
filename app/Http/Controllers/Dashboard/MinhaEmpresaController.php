@@ -122,6 +122,7 @@ class MinhaEmpresaController extends Controller
                 'cnd_federal' => $score->score_cnd_federal,
                 'cnd_estadual' => $score->score_cnd_estadual,
                 'fgts' => $score->score_fgts,
+                'trabalhista' => $score->score_trabalhista,
             ])
             : [];
 
@@ -220,6 +221,12 @@ class MinhaEmpresaController extends Controller
                 'validade' => $this->normalizarValidade($dados['crf_fgts'] ?? null),
                 'comprovante' => $this->comprovanteDe($dados['crf_fgts'] ?? null),
                 'consultado' => isset($dados['crf_fgts']),
+            ],
+            'cndt' => [
+                'status' => $dados['cndt']['status'] ?? $dados['cndt'] ?? null,
+                'validade' => $this->normalizarValidade($dados['cndt'] ?? null),
+                'comprovante' => $this->comprovanteDe($dados['cndt'] ?? null),
+                'consultado' => isset($dados['cndt']),
             ],
             'situacao_cadastral' => $dados['situacao_cadastral'] ?? null,
             'simples_nacional' => $dados['simples_nacional'] ?? null,
@@ -341,6 +348,7 @@ class MinhaEmpresaController extends Controller
         $this->addAlertaCnd($alertas, 'CND Federal', $certidoes['cnd_federal']);
         $this->addAlertaCnd($alertas, 'CND Estadual', $certidoes['cnd_estadual']);
         $this->addAlertaCnd($alertas, 'CRF (FGTS)', $certidoes['fgts']);
+        $this->addAlertaCnd($alertas, 'CNDT', $certidoes['cndt']);
 
         // Fontes que o plano pediu mas não retornaram — consulta paga incompleta.
         $this->addAlertasFontesErro($alertas, $fontesErro);
@@ -423,6 +431,7 @@ class MinhaEmpresaController extends Controller
             'cnd_estadual' => 'CND Estadual',
             'cnd_municipal' => 'CND Municipal',
             'crf_fgts' => 'CRF (FGTS)',
+            'cndt' => 'CNDT',
             'sintegra' => 'SINTEGRA',
         ];
 

@@ -259,7 +259,7 @@ function initInicio() {
             { reg: 'C100', desc: 'NF-e 3524…8834 · R$ 4.310,77', status: 'autorizada', tipo: 'ok' },
             { reg: '0150', desc: 'Participante 45.678.912/0001-55', status: 'baixado', tipo: 'alerta' },
             { reg: 'F600', desc: 'Retenção fonte · CSRF', status: 'confere', tipo: 'ok' },
-            { reg: 'CRF FGTS', desc: 'Caixa Econômica Federal', status: 'regular emitido', tipo: 'ok' },
+            { reg: 'CNDT', desc: 'Justiça do Trabalho · TST', status: 'negativa emitida', tipo: 'ok' },
             { reg: 'C100', desc: 'NF-e 3524…1276 · R$ 22.940,00', status: 'divergência de valor', tipo: 'alerta' },
             { reg: 'A100', desc: 'NFS-e 000.412 · serviços', status: 'escriturada', tipo: 'ok' },
             { reg: 'M210', desc: 'COFINS apurada · R$ 41.087,90', status: 'confere', tipo: 'ok' },

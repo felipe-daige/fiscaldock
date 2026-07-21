@@ -247,7 +247,7 @@ it('wrapper do resultado: só exibe as fontes consultadas (sem placeholder de n�
     // Plano pede 3 certidões; o dado só trouxe CND Federal (as outras falharam/não vieram).
     $plano = App\Models\MonitoramentoPlano::create([
         'codigo' => 'teste_grande', 'nome' => 'Teste', 'descricao' => 'Plano de teste', 'custo_creditos' => 10, 'ativo' => true,
-        'consultas_incluidas' => ['situacao_cadastral', 'cnd_federal', 'cnd_estadual', 'crf_fgts'],
+        'consultas_incluidas' => ['situacao_cadastral', 'cnd_federal', 'cnd_estadual', 'cndt'],
     ]);
     $lote = ConsultaLote::create([
         'user_id' => $user->id, 'plano_id' => $plano->id, 'status' => ConsultaLote::STATUS_CONCLUIDO,
@@ -259,7 +259,7 @@ it('wrapper do resultado: só exibe as fontes consultadas (sem placeholder de n�
         'resultado_dados' => [
             'situacao_cadastral' => 'ATIVA',
             'cnd_federal' => ['status' => 'Negativa'],
-            // cnd_estadual e crf_fgts NÃO vieram
+            // cnd_estadual e cndt NÃO vieram
         ],
     ]);
 
@@ -267,7 +267,7 @@ it('wrapper do resultado: só exibe as fontes consultadas (sem placeholder de n�
 
     // Score Fiscal (default): mostra o que o plano pediu e falhou → placeholder.
     $default = collect($presenter->detalheDoParticipante($p)['blocos'])->pluck('chave');
-    expect($default)->toContain('cnd_estadual')->toContain('crf_fgts');
+    expect($default)->toContain('cnd_estadual')->toContain('cndt');
 
     // Clearance: só o que foi consultado de fato E dentro do escopo do produto (3 fontes).
     $detalhe = $presenter->detalheDoParticipante(
@@ -278,11 +278,11 @@ it('wrapper do resultado: só exibe as fontes consultadas (sem placeholder de n�
     expect(collect($detalhe['blocos'])->pluck('chave'))
         ->toContain('cadastro')->toContain('cnd_federal')
         ->not->toContain('cnd_estadual')
-        ->not->toContain('crf_fgts');
+        ->not->toContain('cndt');
 });
 
 // O clearance reusa o cache: a última consulta da contraparte pode ser uma Consulta CNPJ de plano
-// MAIOR, com dado real de EST/MUN/FGTS. O wrapper do clearance não pode exibi-las — ele
+// MAIOR, com dado real de EST/MUN/FGTS/CNDT. O wrapper do clearance não pode exibi-las — ele
 // consultou 3 fontes, não 6. (Reportado por Felipe: "ainda tá exibindo EST? MUN— FGTS?".)
 it('wrapper do clearance não mostra fonte fora do produto, mesmo com dado real dela', function () {
     $user = User::factory()->create();
@@ -291,7 +291,7 @@ it('wrapper do clearance não mostra fonte fora do produto, mesmo com dado real 
     $plano = App\Models\MonitoramentoPlano::create([
         'codigo' => 'compliance_teste', 'nome' => 'Compliance', 'descricao' => 'Plano de teste',
         'custo_creditos' => 25, 'ativo' => true,
-        'consultas_incluidas' => ['situacao_cadastral', 'cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts', 'sintegra'],
+        'consultas_incluidas' => ['situacao_cadastral', 'cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts', 'cndt', 'sintegra'],
     ]);
     $lote = ConsultaLote::create([
         'user_id' => $user->id, 'plano_id' => $plano->id, 'status' => ConsultaLote::STATUS_CONCLUIDO,
@@ -308,6 +308,7 @@ it('wrapper do clearance não mostra fonte fora do produto, mesmo com dado real 
             'cnd_estadual' => ['status' => 'Negativa'],
             'cnd_municipal' => ['status' => 'Negativa'],
             'crf_fgts' => ['status' => 'Regular'],
+            'cndt' => ['status' => 'Negativa'],
         ],
     ]);
 
@@ -320,7 +321,7 @@ it('wrapper do clearance não mostra fonte fora do produto, mesmo com dado real 
 
     expect(collect($doClearance['blocos'])->pluck('chave')->all())
         ->toBe(['cadastro', 'cnd_federal', 'sintegra']);
-    // Os chips (EST, MUN, FGTS) também somem — era exatamente o que aparecia na tela.
+    // Os chips (EST, MUN, FGTS, CNDT) também somem — era exatamente o que aparecia na tela.
     expect(collect($doClearance['certidoes'])->pluck('sigla')->all())
         ->toBe(['FED', 'SINT']);
 });

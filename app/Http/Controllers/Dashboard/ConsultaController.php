@@ -658,6 +658,7 @@ class ConsultaController extends Controller
             'crf_fgts',
             'cnd_estadual',
             'cnd_municipal',
+            'cndt',
         ];
 
         return collect($mapaFallback)
@@ -1997,6 +1998,7 @@ class ConsultaController extends Controller
                     'mei' => $r->getDado('mei'),
                     'cnd_federal' => $this->cndFederalComAnalise($r->getDado('cnd_federal')),
                     'crf_fgts' => $r->getDado('crf_fgts'),
+                    'cndt' => $r->getDado('cndt'),
                     'cnd_estadual' => $r->getDado('cnd_estadual'),
                     'parecer' => $parecerResumo,
                 ];
@@ -2081,6 +2083,7 @@ class ConsultaController extends Controller
             $regimeTributario = $resultado->getRegimeTributarioLabel();
             $cndFederal = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('cnd_federal'), true);
             $fgts = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('crf_fgts'), true);
+            $cndt = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('cndt'), true);
 
             // O alvo pode ser participante OU cliente (escopo "clientes"). O Laravel não
             // atualiza esses cadastros, então caímos no que a própria consulta trouxe
@@ -2123,6 +2126,7 @@ class ConsultaController extends Controller
                 'regime_tributario_nota' => $resultado->getDado('regime_tributario_nota'),
                 'cnd_federal_badge' => $cndFederal,
                 'fgts_badge' => $fgts,
+                'cndt_badge' => $cndt,
                 'certidoes' => $detalhePresenter->certidoes($resultado, $esperadasCert),
                 'parecer' => $parecerResumo,
                 'parecer_count' => count($parecerResumo),

@@ -22,6 +22,7 @@ class RiskScoreService
         'cnd_federal' => 0.20,
         'cnd_estadual' => 0.15,
         'fgts' => 0.10,
+        'trabalhista' => 0.10,
     ];
 
     /**
@@ -32,6 +33,7 @@ class RiskScoreService
         'cnd_federal' => 70,
         'cnd_estadual' => 70,
         'fgts' => 50,
+        'trabalhista' => 40,
     ];
 
     /**
@@ -47,6 +49,7 @@ class RiskScoreService
         'cnd_federal' => ['severidade' => 'alta', 'piso' => 'alto'],
         'cnd_estadual' => ['severidade' => 'alta', 'piso' => 'alto'],
         'fgts' => ['severidade' => 'media', 'piso' => 'medio'],
+        'trabalhista' => ['severidade' => 'media', 'piso' => 'medio'],
     ];
 
     /** Severidade de classificação por ordem crescente — base do "maior vence" no piso. */
@@ -73,6 +76,7 @@ class RiskScoreService
             'cnd_federal' => $this->subscoreCertidao($dados['cnd_federal'] ?? null, $this->penalidadeIrregular['cnd_federal']),
             'cnd_estadual' => $this->subscoreCertidao($dados['cnd_estadual'] ?? null, $this->penalidadeIrregular['cnd_estadual']),
             'fgts' => $this->subscoreCertidao($dados['crf_fgts'] ?? $dados['fgts'] ?? null, $this->penalidadeIrregular['fgts']),
+            'trabalhista' => $this->subscoreCertidao($dados['cndt'] ?? null, $this->penalidadeIrregular['trabalhista']),
         ];
     }
 
@@ -121,7 +125,7 @@ class RiskScoreService
     }
 
     /** Certidões de regularidade que compõem o score (cadastral NÃO é certidão). */
-    private const CERTIDOES_SCORE = ['cnd_federal', 'cnd_estadual', 'fgts'];
+    private const CERTIDOES_SCORE = ['cnd_federal', 'cnd_estadual', 'fgts', 'trabalhista'];
 
     /**
      * Cobertura mínima p/ o score ser conclusivo: CND Federal avaliada + ao menos 2 certidões
@@ -453,7 +457,7 @@ class RiskScoreService
                 'score_cnd_federal' => $scores['cnd_federal'],
                 'score_cnd_estadual' => $scores['cnd_estadual'],
                 'score_fgts' => $scores['fgts'],
-                'score_trabalhista' => null, // legado: CNDT removido do score (2026-07-15); coluna morta.
+                'score_trabalhista' => $scores['trabalhista'],
                 'score_total' => $scoreTotal,
                 'score_credito_reforma' => $this->scoreCreditoReforma($dados, $alvo),
                 'classificacao' => $classificacao,
@@ -513,6 +517,7 @@ class RiskScoreService
             'cnd_federal' => 'CND Federal',
             'cnd_estadual' => 'CND Estadual',
             'fgts' => 'FGTS/CRF',
+            'trabalhista' => 'CNDT (Trabalhista)',
         ];
     }
 
@@ -637,7 +642,7 @@ class RiskScoreService
     }
 
     /**
-     * Certidão (CND/CRF) → subscore, classificada pelo padrão canônico CertidaoBadge.
+     * Certidão (CND/CRF/CNDT) → subscore, classificada pelo padrão canônico CertidaoBadge.
      * Regular → 0; Irregular → penalidade; INDETERMINADA/indisponível/ausente → null.
      */
     private function subscoreCertidao(mixed $valor, int $penalidade): ?int

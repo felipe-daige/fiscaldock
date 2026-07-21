@@ -174,7 +174,7 @@ class RegularidadeContraparteService
                         //
                         // Escopo do CLEARANCE: só as 3 fontes que ele cobre. A última consulta do
                         // participante pode ser de uma Consulta CNPJ de plano maior (o clearance
-                        // reusa o cache), e sem o filtro o wrapper mostrava EST/MUN/FGTS —
+                        // reusa o cache), e sem o filtro o wrapper mostrava EST/MUN/FGTS/CNDT —
                         // certidões que este produto NÃO consultou.
                         'detalhe' => $detalhePresenter->detalheDoParticipante(
                             $p,

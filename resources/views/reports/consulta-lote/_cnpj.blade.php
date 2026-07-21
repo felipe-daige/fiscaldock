@@ -28,7 +28,7 @@
         <div class="secao"><div class="secao-body"><div class="msg">Consulta não concluída: {{ $d['error_message'] ?: 'sem detalhe disponível' }}.</div></div></div>
     @else
         {{-- Certidões & comprovantes (empilhadas full-width; certidão canônica não consultada consta marcada) --}}
-        @php($certCanonicas = ['cnd_federal' => 'CND Federal', 'cnd_estadual' => 'CND Estadual', 'cnd_municipal' => 'CND Municipal', 'crf_fgts' => 'CRF FGTS', 'sintegra' => 'SINTEGRA'])
+        @php($certCanonicas = ['cnd_federal' => 'CND Federal', 'cnd_estadual' => 'CND Estadual', 'cnd_municipal' => 'CND Municipal', 'crf_fgts' => 'CRF FGTS', 'cndt' => 'CNDT', 'sintegra' => 'SINTEGRA'])
         @php($chavesPresentes = collect($d['blocos'] ?? [])->pluck('chave')->filter()->all())
         <div class="secao">
             <div class="secao-header">Certidões &amp; comprovantes</div>

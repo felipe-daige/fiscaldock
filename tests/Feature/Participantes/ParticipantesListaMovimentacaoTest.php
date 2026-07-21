@@ -139,7 +139,7 @@ it('exibe badges de todas as fontes consultadas na ultima consulta', function ()
         'resultado_dados' => [
             'situacao_cadastral' => 'ATIVA',
             'cnd_federal' => ['status' => 'NEGATIVA', 'data_validade' => now()->addMonths(3)->toDateString()],
-            'crf_fgts' => ['status' => 'REGULAR'],
+            'cndt' => ['status' => 'NEGATIVA'],
             'crf_fgts' => ['status' => 'REGULAR'],
         ],
         'consultado_em' => now(),
@@ -148,7 +148,7 @@ it('exibe badges de todas as fontes consultadas na ultima consulta', function ()
     actingAs($user)->get('/app/participantes')
         ->assertOk()
         ->assertSee('Federal')
-        ->assertSee('FGTS')
+        ->assertSee('CNDT')
         ->assertSee('FGTS');
 });
 

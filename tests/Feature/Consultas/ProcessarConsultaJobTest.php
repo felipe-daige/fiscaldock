@@ -158,10 +158,10 @@ it('posta progresso 0..100 e mensagem por fonte (barra avança intra-grupo)', fu
         }
     });
 
-    // 3 fontes: cadastro (gratis) + cnd_federal + crf_fgts (federais, mesmo grupo de etapa)
+    // 3 fontes: cadastro (gratis) + cnd_federal + cndt (federais, mesmo grupo de etapa)
     ProcessarConsultaJob::dispatchSync(
         loteId: $loteId, alvoTipo: 'participante', alvoId: $participanteId, userId: $userId, tabId: 'tab-test',
-        consultasIncluidas: ['situacao_cadastral', 'cnd_federal', 'crf_fgts'], alvo: ['cnpj' => '19131243000197'],
+        consultasIncluidas: ['situacao_cadastral', 'cnd_federal', 'cndt'], alvo: ['cnpj' => '19131243000197'],
         etapas: ['Preparando consulta', 'Dados cadastrais', 'Certidões Federais'],
     );
 
@@ -214,7 +214,7 @@ it('progresso multi-alvo é global e NÃO reseta entre empresas (empresa 2 não 
         }
     });
 
-    $incluidas = ['situacao_cadastral', 'cnd_federal', 'crf_fgts'];
+    $incluidas = ['situacao_cadastral', 'cnd_federal', 'cndt'];
     // Empresa 1 de 2, depois Empresa 2 de 2 — mesmo tabId (como no batch real).
     ProcessarConsultaJob::dispatchSync(
         loteId: $loteId, alvoTipo: 'participante', alvoId: $participanteId, userId: $userId, tabId: 'tab-multi',

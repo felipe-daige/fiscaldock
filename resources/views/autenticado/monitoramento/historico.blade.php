@@ -395,6 +395,7 @@
                 html += cardCertidao('CND Estadual', r.detalhes.cnd_estadual);
                 html += cardCertidao('CND Municipal', r.detalhes.cnd_municipal);
                 html += cardCertidao('CRF FGTS', r.detalhes.fgts || r.detalhes.crf_fgts);
+                html += cardCertidao('CNDT (Trabalhista)', r.detalhes.cndt);
                 html += cardCertidao('SINTEGRA', r.detalhes.sintegra);
 
                 html += '</div>';

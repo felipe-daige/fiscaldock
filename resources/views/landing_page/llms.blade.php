@@ -5,7 +5,7 @@
 ## O que o FiscalDock faz
 
 - **Monitoramento de CNPJs**: situação cadastral, regime tributário, Simples Nacional e sinais de risco de participantes
-- **Consultas de compliance**: CNPJ completo, CND, FGTS e outras fontes fiscais em fluxo consolidado
+- **Consultas de compliance**: CNPJ completo, CND, CNDT, FGTS e outras fontes fiscais em fluxo consolidado
 - **Alertas e inconsistências no SPED**: cruzamentos entre EFD, XML, apurações, participantes e classificações fiscais
 - **Importação EFD ICMS/IPI**: leitura dos blocos C, D, E, H — extração de notas, itens, apuração de ICMS e inventário
 - **Importação EFD Contribuições**: blocos A, M, F — apuração de PIS/COFINS, retenções na fonte e serviços tomados

@@ -146,6 +146,7 @@ it('CSV preenche SINTEGRA IE e validades das CNDs (chaves normalizadas)', functi
             'sintegra' => ['inscricao_estadual' => '111.222.333.444', 'situacao' => 'Habilitado'],
             'cnd_federal' => ['status' => 'Negativa', 'data_validade' => '2026-12-31'],
             'cnd_estadual' => ['status' => 'Negativa', 'data_validade' => '2026-11-30'],
+            'cndt' => ['status' => 'Negativa', 'data_validade' => '2026-10-15'],
         ],
         'consultado_em' => now(),
     ]);
@@ -155,7 +156,7 @@ it('CSV preenche SINTEGRA IE e validades das CNDs (chaves normalizadas)', functi
     expect($body)->toContain('111.222.333.444')   // SINTEGRA IE
         ->toContain('2026-12-31')                  // CND Federal Validade
         ->toContain('2026-11-30')                  // CND Estadual Validade
-        ->not->toContain('CNDT');                  // coluna removida (2026-07-15)
+        ->toContain('2026-10-15');                 // CNDT Validade
 });
 
 it('historico mostra botao Excel e PDF para lote com resultados', function () {

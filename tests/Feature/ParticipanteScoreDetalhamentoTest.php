@@ -81,12 +81,13 @@ it('perfil consolida certidões anteriores quando a consulta mais recente é ape
         'cnd_estadual' => ['status' => 'Positiva', 'certidao_codigo' => 'EST-215', 'conseguiu_emitir' => true],
         'cnd_municipal' => ['status' => 'INDISPONIVEL', 'mensagem' => 'Município sem cobertura online.'],
         'crf_fgts' => ['status' => 'REGULAR', 'certidao_codigo' => 'FGTS-215', 'conseguiu_emitir' => true],
+        'cndt' => ['status' => 'Negativa', 'certidao_codigo' => 'CNDT-215', 'conseguiu_emitir' => true],
         'sintegra' => [
             'situacao' => 'HABILITADO',
             'inscricao_estadual' => '28.736.034-2',
             'comprovante' => 'https://example.com/sintegra-215.pdf',
         ],
-        'consultas_realizadas' => ['situacao_cadastral', 'cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts', 'sintegra'],
+        'consultas_realizadas' => ['situacao_cadastral', 'cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts', 'cndt', 'sintegra'],
     ];
     ConsultaResultado::create([
         'consulta_lote_id' => $loteCompleto->id,
@@ -124,7 +125,7 @@ it('perfil consolida certidões anteriores quando a consulta mais recente é ape
 
     $scorePersistido = \App\Models\ParticipanteScore::where('participante_id', $part->id)->firstOrFail();
     expect($scorePersistido->dados_consultados['consultas_realizadas'])
-        ->toContain('cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts', 'sintegra');
+        ->toContain('cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts', 'cndt', 'sintegra');
 
     $this->actingAs($user)
         ->get("/app/participante/{$part->id}")
@@ -134,10 +135,12 @@ it('perfil consolida certidões anteriores quando a consulta mais recente é ape
         ->assertSee('FED-215')
         ->assertSee('EST-215')
         ->assertSee('FGTS-215')
+        ->assertSee('CNDT-215')
         ->assertSee('CND Federal')
         ->assertSee('CND Estadual')
         ->assertSee('CND Municipal')
         ->assertSee('CRF FGTS (Caixa)')
+        ->assertSee('CNDT (débitos trabalhistas)')
         ->assertSee('Certidões e Cadastros Fiscais')
         ->assertSee('SINTEGRA')
         ->assertSee('28.736.034-2')

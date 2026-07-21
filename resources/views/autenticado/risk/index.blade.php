@@ -106,6 +106,7 @@
                             'cnd_federal' => 'CND Federal (Receita/PGFN)',
                             'cnd_estadual' => 'CND Estadual (SEFAZ)',
                             'fgts' => 'FGTS — CRF (Caixa)',
+                            'trabalhista' => 'CNDT (débitos trabalhistas)',
                         ];
                     @endphp
                     <table class="w-full text-xs">
@@ -129,7 +130,7 @@
                     <p class="text-[11px] leading-relaxed" style="color:#991b1b;">
                         <strong>Piso por certidão positiva:</strong> uma certidão <strong>Positiva</strong> (débito exigível) força uma
                         <strong>classificação mínima</strong>, mesmo que a média ponderada dê baixa — um débito conhecido não é "baixo risco".
-                        CND <strong>Federal ou Estadual</strong> positiva → no mínimo <strong>Alto</strong>; <strong>FGTS</strong> positivo →
+                        CND <strong>Federal ou Estadual</strong> positiva → no mínimo <strong>Alto</strong>; <strong>FGTS ou CNDT</strong> positiva →
                         no mínimo <strong>Médio</strong>; situação <strong>Inapta/Baixada/Nula</strong> → <strong>Crítico</strong>. Por isso um CNPJ pode
                         aparecer como "Alto Risco" com nota numérica baixa: a certidão positiva domina a classificação (o número segue visível para ordenar).
                     </p>
@@ -139,7 +140,7 @@
                     <p class="text-[11px] text-amber-800 leading-relaxed">
                         <strong>Cobertura mínima — por que aparece "Risco Não Conclusivo":</strong> o score só é conclusivo
                         quando a <strong>CND Federal</strong> + pelo menos <strong>2 certidões</strong> de regularidade
-                        (federal/estadual/FGTS) foram consultadas. Uma consulta só cadastral (ex.: Gratuito) confirma
+                        (federal/estadual/FGTS/CNDT) foram consultadas. Uma consulta só cadastral (ex.: Gratuito) confirma
                         que a empresa está ativa, mas <strong>não mede regularidade fiscal</strong> — então aparece como
                         <strong>Risco Não Conclusivo</strong> (cinza), e <strong>não "Baixo"</strong>, pra evitar falso conforto.
                         Para um score real, use um plano que consulta as certidões (Licitação, Compliance ou Due Diligence).

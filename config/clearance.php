@@ -15,7 +15,7 @@ return [
 
         // Sub-atributos de consultas_incluidas → resolvem exatamente {cadastro, sintegra,
         // cnd_federal} via FonteRegistry. Fontes nota-cêntricas (validade/crédito da nota);
-        // FGTS/estadual/municipal ficam no Consulta CNPJ (não duplicar Compliance).
+        // CNDT/FGTS/estadual/municipal ficam no Consulta CNPJ (não duplicar Compliance).
         'consultas_incluidas' => ['situacao_cadastral', 'sintegra', 'cnd_federal'],
 
         // Janela de frescura: participante consultado há menos de N dias reaproveita o

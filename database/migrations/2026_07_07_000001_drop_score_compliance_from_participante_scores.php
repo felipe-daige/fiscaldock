@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Remove a coluna `score_compliance` — as fontes CGU CNC e CNJ Improbidade foram
  * descontinuadas (2026-07-07). O escopo de fontes InfoSimples ficou fixo em 6
- * (CND Federal/Estadual/Municipal, CRF FGTS, SINTEGRA) e o score de risco
+ * (CND Federal/Estadual/Municipal, CRF FGTS, CNDT, SINTEGRA) e o score de risco
  * nunca ponderou essa categoria. Nada mais lê/escreve a coluna.
  */
 return new class extends Migration

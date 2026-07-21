@@ -786,7 +786,7 @@ class ValidacaoContabilService
 
         DB::beginTransaction();
         try {
-            // TODO: Full dispara CND Federal do emitente em plano futuro. Hoje roda so Basico.
+            // TODO: Full dispara CND Federal + CNDT do emitente via n8n em plano futuro. Hoje roda so Basico.
             foreach ($notas as $nota) {
                 $resultado = $this->validarNota($nota, true);
                 $nota->update(['validacao' => $resultado]);

@@ -207,6 +207,13 @@ class PricingCatalogService
                 'descricao_curta' => 'Certidão municipal por cidade do participante.',
             ],
             [
+                'slug' => 'cndt',
+                'nome' => 'CNDT (TST)',
+                'categoria' => 'Trabalhista obrigatória',
+                'status' => 'ativo',
+                'descricao_curta' => 'Certidão Negativa de Débitos Trabalhistas — exigida em licitação.',
+            ],
+            [
                 'slug' => 'crf_fgts',
                 'nome' => 'CRF FGTS (Caixa)',
                 'categoria' => 'FGTS obrigatória',

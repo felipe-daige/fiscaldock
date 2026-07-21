@@ -10,7 +10,7 @@
         <tbody>
             <tr><td><strong>Cadastral</strong></td><td>Situação na Receita, data de abertura, porte, atividade</td></tr>
             <tr><td><strong>Fiscal</strong></td><td>Regime tributário, pendências, CND Federal/Estadual/Municipal</td></tr>
-            <tr><td><strong>FGTS</strong></td><td>Regularidade do FGTS (CRF)</td></tr>
+            <tr><td><strong>Trabalhista</strong></td><td>CNDT (débitos trabalhistas) e regularidade do FGTS</td></tr>
             <tr><td><strong>Inscrição estadual</strong></td><td>SINTEGRA — situação no cadastro de contribuintes</td></tr>
             <tr><td><strong>Comportamental</strong></td><td>Histórico de operações e variações de volume</td></tr>
         </tbody>

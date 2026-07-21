@@ -27,19 +27,19 @@ it('destaca o parecer fiscal automático no plano Validação', function () {
     expect(rotulosDoPlano('validacao'))->toContain('Parecer fiscal automático');
 });
 
-it('no Licitação inclui as 2 certidões federais (CND Federal, FGTS) sem parecer fiscal e sem CNDT', function () {
+it('no Licitação inclui as 3 certidões federais (CND Federal, CNDT, FGTS) sem parecer fiscal', function () {
     $rotulos = rotulosDoPlano('licitacao');
 
     expect($rotulos)->toContain('CND Federal (PGFN/RFB)');
+    expect($rotulos)->toContain('CNDT (débitos trabalhistas)');
     expect($rotulos)->toContain('Regularidade do FGTS (CRF)');
-    expect($rotulos)->not->toContain('CNDT (débitos trabalhistas)');
     expect($rotulos)->not->toContain('Parecer fiscal automático');
 });
 
-it('inclui FGTS e certidões estaduais/municipais a partir do Compliance, sem CNDT', function () {
+it('inclui CNDT, FGTS e certidões estaduais/municipais a partir do Compliance', function () {
     $rotulos = rotulosDoPlano('compliance');
 
-    expect($rotulos)->not->toContain('CNDT (débitos trabalhistas)');
+    expect($rotulos)->toContain('CNDT (débitos trabalhistas)');
     expect($rotulos)->toContain('Regularidade do FGTS (CRF)');
     expect($rotulos)->toContain('CND Estadual');
     expect($rotulos)->toContain('CND Municipal');

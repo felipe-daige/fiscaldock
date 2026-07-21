@@ -107,7 +107,7 @@ it('exibe certidoes e status de consulta feita com escopo cliente (cliente_id di
         'resultado_dados' => [
             'situacao_cadastral' => 'ATIVA',
             'cnd_federal' => ['status' => 'NEGATIVA'],
-            'crf_fgts' => ['status' => 'REGULAR'],
+            'cndt' => ['status' => 'NEGATIVA'],
         ],
         'consultado_em' => now(),
     ]);
@@ -116,7 +116,7 @@ it('exibe certidoes e status de consulta feita com escopo cliente (cliente_id di
         ->assertOk()
         ->assertSee('Consultado recentemente')
         ->assertSee('Federal')
-        ->assertSee('FGTS')
+        ->assertSee('CNDT')
         ->assertDontSee('Sem certidões consultadas');
 });
 

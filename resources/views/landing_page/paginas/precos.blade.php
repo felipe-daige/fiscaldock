@@ -22,7 +22,7 @@
     $productHighlights = [
         'gratuito' => ['Situação cadastral', 'Endereço e dados básicos', "Até {$freeConsultationLimit} CNPJs antes da 1ª recarga"],
         'validacao' => ['Regime tributário e Simples', 'QSA, CNAEs e capital social', 'Parecer fiscal automático'],
-        'licitacao' => ['Tudo da Validação', 'CND Federal', 'Regularidade do FGTS (CRF)'],
+        'licitacao' => ['Tudo da Validação', 'CND Federal', 'CNDT e regularidade do FGTS'],
         'compliance' => ['Tudo da Licitação', 'CND Estadual e Municipal', 'SINTEGRA e visão consolidada'],
     ];
 @endphp
@@ -626,13 +626,13 @@
                 @php
                     $compliancePrice = $products->firstWhere('slug', 'compliance')['price'] ?? null;
                     $sourceGroups = $complianceSources
-                        ->groupBy(fn (array $s) => str_contains($s['categoria'], 'Cadastral') ? 'Cadastrais' : (str_contains($s['categoria'], 'Fiscal') ? 'Fiscais' : 'FGTS'))
+                        ->groupBy(fn (array $s) => str_contains($s['categoria'], 'Cadastral') ? 'Cadastrais' : (str_contains($s['categoria'], 'Fiscal') ? 'Fiscais' : 'Trabalhista e FGTS'))
                         ->map->count();
                 @endphp
                 <div class="pricing-sources">
                     <div class="pricing-sources-intro">
                         <h3>Compliance reúne {{ $complianceSources->count() }} fontes em uma consulta.</h3>
-                        <p>Uma chamada, um custo, um resultado. Cadastro federal, certidões fiscais e FGTS chegam normalizados — com data, origem e status por fonte.</p>
+                        <p>Uma chamada, um custo, um resultado. Cadastro federal, certidões fiscais, trabalhista e FGTS chegam normalizados — com data, origem e status por fonte.</p>
 
                         <div class="pricing-sources-groups">
                             @foreach($sourceGroups as $grupo => $total)

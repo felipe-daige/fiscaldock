@@ -53,10 +53,10 @@ it('label e cor do inconclusivo são explícitos e cinza', function () {
 
 // ---------- Piso de classificação por certidão positiva ----------
 
-it('CND Estadual positiva isolada: score ponderado baixo (18) mas piso força alto', function () {
-    // só estadual irregular; demais regulares → 70×0,15/0,60 = 18 (baixo numérico)
-    $scores = ['cadastral' => 0, 'cnd_federal' => 0, 'cnd_estadual' => 70, 'fgts' => 0];
-    expect($this->svc->calcularScoreTotal($scores))->toBe(18)
+it('CND Estadual positiva isolada: score ponderado baixo (15) mas piso força alto', function () {
+    // só estadual irregular; demais regulares → 70×0,15/0,70 = 15 (baixo numérico)
+    $scores = ['cadastral' => 0, 'cnd_federal' => 0, 'cnd_estadual' => 70, 'fgts' => 0, 'trabalhista' => 0];
+    expect($this->svc->calcularScoreTotal($scores))->toBe(15)
         ->and($this->svc->pisoPorCertidoes($scores))->toBe('alto')
         ->and($this->svc->classificarComCobertura($scores))->toBe('alto');
 });
@@ -68,6 +68,12 @@ it('CND Federal positiva isolada: piso alto (não fica baixo)', function () {
 
 it('FGTS positiva isolada: piso médio', function () {
     $scores = ['cadastral' => 0, 'cnd_federal' => 0, 'cnd_estadual' => 0, 'fgts' => 50, 'trabalhista' => 0];
+    expect($this->svc->pisoPorCertidoes($scores))->toBe('medio')
+        ->and($this->svc->classificarComCobertura($scores))->toBe('medio');
+});
+
+it('CNDT positiva isolada: piso médio', function () {
+    $scores = ['cadastral' => 0, 'cnd_federal' => 0, 'cnd_estadual' => 0, 'fgts' => 0, 'trabalhista' => 40];
     expect($this->svc->pisoPorCertidoes($scores))->toBe('medio')
         ->and($this->svc->classificarComCobertura($scores))->toBe('medio');
 });

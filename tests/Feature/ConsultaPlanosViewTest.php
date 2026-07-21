@@ -20,7 +20,7 @@ it('lista os planos de consulta com a nota do periodo de teste e cobertura atual
     // nota do teto de teste (usuário sem 1ª compra)
     $resp->assertSee('Período de teste');
     // cobertura alinhada (rótulos derivados do catálogo via PlanoConsultaLabels) — Licitação/Compliance
-    $resp->assertSee('CND Estadual')->assertDontSee('CNDT');
+    $resp->assertSee('CND Estadual')->assertSee('CNDT (débitos trabalhistas)');
 });
 
 it('nao mostra a nota de teste apos a primeira compra', function () {

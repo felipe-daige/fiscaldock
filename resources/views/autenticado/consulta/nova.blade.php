@@ -264,7 +264,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div class="border border-gray-300 rounded p-3">
                                 <p class="text-sm font-semibold text-gray-900">Consultas feitas em fontes oficiais</p>
-                                <p class="text-[11px] text-gray-600 leading-relaxed mt-1">Receita Federal/PGFN (situação cadastral, QSA, regime tributário, CND Federal), Caixa (FGTS), SEFAZ (CND Estadual), prefeituras (CND Municipal) e SINTEGRA.</p>
+                                <p class="text-[11px] text-gray-600 leading-relaxed mt-1">Receita Federal/PGFN (situação cadastral, QSA, regime tributário, CND Federal), TST (CNDT), Caixa (FGTS), SEFAZ (CND Estadual), prefeituras (CND Municipal) e SINTEGRA.</p>
                             </div>
                             <div class="border border-gray-300 rounded p-3">
                                 <p class="text-sm font-semibold text-gray-900">Toda consulta no fornecedor é paga</p>

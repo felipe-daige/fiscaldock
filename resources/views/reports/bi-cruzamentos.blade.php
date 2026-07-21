@@ -58,7 +58,7 @@
                 ['label' => 'Fornec. consultados', 'valor' => number_format($relatorio['diagnostico']['fornecedores_consultados_qtd'], 0, ',', '.')],
             ], 'compacto' => true])
             <div class="small muted" style="margin-top:6px;">
-                <b>Irregular</b> = a última consulta do CNPJ apontou certidão positiva (CND Federal ou Estadual com débito)
+                <b>Irregular</b> = a última consulta do CNPJ apontou certidão positiva (CND Federal, Estadual ou CNDT com débito)
                 ou situação cadastral não ativa. Mesma classificação do Score de Risco e da Central de Alertas.
                 <b>Compras</b> = entradas do EFD (sem dupla contagem ICMS/IPI × PIS/COFINS) + entradas de XML importado
                 (exceto devoluções; nota já no EFD não soma de novo). A data de cada consulta é registrada como prova de diligência.
@@ -168,7 +168,7 @@
         <div class="secao-body small muted" style="line-height:1.6;">
             <b>Regularidade dos fornecedores:</b> lida de <span class="mono">participante_scores</span>, a projeção da última
             consulta de CNPJ — a mesma fonte do Score de Risco e da Central de Alertas, por isso os números nunca divergem entre as telas.
-            Um fornecedor é irregular quando a última consulta apontou certidão positiva (CND Federal ou Estadual) ou situação
+            Um fornecedor é irregular quando a última consulta apontou certidão positiva (CND Federal, Estadual ou CNDT) ou situação
             cadastral BAIXADA, INAPTA, SUSPENSA ou NULA.<br>
             <b>Volume de compras:</b> entradas do SPED (EFD), deduplicadas pela regra canônica de movimento por participante
             (a mesma nota escriturada no ICMS/IPI e no PIS/COFINS conta uma vez), somadas às entradas de XML importado cujo emitente

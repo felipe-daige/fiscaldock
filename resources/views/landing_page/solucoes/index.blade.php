@@ -22,7 +22,7 @@
         ['name' => 'Importação EFD e XML', 'description' => 'EFD ICMS/IPI, EFD PIS/COFINS e XML de NF-e com extração e histórico.', 'anchor' => 'documentos'],
         ['name' => 'Acervo e catálogo fiscal', 'description' => 'Notas unificadas, itens, NCM, CFOP, CST e histórico do cadastro 0200.', 'anchor' => 'documentos'],
         ['name' => 'Resumo e BI Fiscal', 'description' => 'Competências, apurações, faturamento, compras, tributos e cruzamentos.', 'anchor' => 'inteligencia'],
-        ['name' => 'Consultas e monitoramento CNPJ', 'description' => 'Regularidade cadastral e fiscal em consultas avulsas ou recorrentes.', 'anchor' => 'risco'],
+        ['name' => 'Consultas e monitoramento CNPJ', 'description' => 'Regularidade cadastral, fiscal e trabalhista em consultas avulsas ou recorrentes.', 'anchor' => 'risco'],
         ['name' => 'Score Fiscal', 'description' => 'Leitura consolidada da regularidade e dos sinais de risco de cada contraparte.', 'anchor' => 'risco'],
         ['name' => 'Reforma Tributária e crédito IBS/CBS', 'description' => 'Estimativa de crédito potencial, aproveitável e em risco por fornecedor.', 'anchor' => 'reforma'],
         ['name' => 'Clearance de NF-e e CT-e', 'description' => 'Confronto entre documento declarado e snapshot oficial por chave.', 'anchor' => 'clearance'],
@@ -768,6 +768,7 @@
                             <div class="sol-cnpj-signal"><span>CND Federal · PGFN</span><strong>Negativa</strong><i>val. 14/09</i></div>
                             <div class="sol-cnpj-signal"><span>CND Estadual</span><strong>Negativa</strong><i>val. 03/10</i></div>
                             <div class="sol-cnpj-signal sol-cnpj-signal--warning"><span>CND Municipal</span><strong>Vence em 12 dias</strong><i>val. 25/07</i></div>
+                            <div class="sol-cnpj-signal"><span>CNDT · TST</span><strong>Nada consta</strong><i>val. 21/11</i></div>
                             <div class="sol-cnpj-signal"><span>CRF FGTS</span><strong>Regular</strong><i>val. 08/08</i></div>
                             <div class="sol-cnpj-signal"><span>SINTEGRA</span><strong>Habilitado</strong><i>IE ativa</i></div>
                         </div>
@@ -789,7 +790,7 @@
                     <div class="sol-cnpj-analysis-head"><h3>Quatro camadas para decidir</h3><p>Cada camada responde uma pergunta diferente antes de contratar, manter, monitorar ou revisar a relação.</p></div>
                     <div class="sol-cnpj-layers">
                         <article class="sol-cnpj-layer" data-layer="1"><small>Identidade</small><h4>Quem é e como opera?</h4><p>Situação cadastral, QSA, CNAEs, endereço, porte, capital e regime tributário.</p><span class="sol-cnpj-layer-meta">Cadastro RFB · regime real ou estimado</span></article>
-                        <article class="sol-cnpj-layer" data-layer="2"><small>Regularidade</small><h4>Está apto para a decisão?</h4><p>CND Federal, Estadual e Municipal, FGTS e inscrição no SINTEGRA.</p><span class="sol-cnpj-layer-meta">5 certidões · validade e origem</span></article>
+                        <article class="sol-cnpj-layer" data-layer="2"><small>Regularidade</small><h4>Está apto para a decisão?</h4><p>CND Federal, Estadual e Municipal, CNDT, FGTS e inscrição no SINTEGRA.</p><span class="sol-cnpj-layer-meta">6 certidões · validade e origem</span></article>
                         <article class="sol-cnpj-layer" data-layer="3"><small>Relevância fiscal</small><h4>Quanto essa relação representa?</h4><p>Compras, vendas, concentração, documentos e período real extraídos da escrituração.</p><span class="sol-cnpj-layer-meta">EFD e XML do seu acervo</span></article>
                         <article class="sol-cnpj-layer" data-layer="4"><small>Evolução</small><h4>O que mudou desde a última leitura?</h4><p>Ciclos de monitoramento, histórico, alerta de vencimento e nova classificação de risco.</p><span class="sol-cnpj-layer-meta">Score recalculado a cada ciclo</span></article>
                     </div>
@@ -804,7 +805,7 @@
                             <em>{{ $activeCnpjSources }} online · 1 cadastral · 5 certidões · 1 inscrição</em>
                         </div>
                         <div class="sol-source-cloud">
-                            @foreach([['Cadastro RFB','rfb'],['CND Federal','pgfn'],['CND Estadual','sefaz'],['CND Municipal','pref'],['CRF FGTS','caixa'],['SINTEGRA','unificada']] as [$source, $origem])
+                            @foreach([['Cadastro RFB','rfb'],['CND Federal','pgfn'],['CND Estadual','sefaz'],['CND Municipal','pref'],['CNDT','tst'],['CRF FGTS','caixa'],['SINTEGRA','unificada']] as [$source, $origem])
                                 <span class="sol-source-chip">{{ $source }}<i>{{ $origem }}</i></span>
                             @endforeach
                         </div>

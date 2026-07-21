@@ -47,7 +47,7 @@
         'name' => 'Soluções FiscalDock',
         'itemListElement' => [
             ['@type' => 'Offer', 'itemOffered' => ['@type' => 'Service', 'name' => 'Monitoramento de CNPJs', 'description' => 'Acompanhamento de situação cadastral, regime tributário e sinais de risco de participantes.']],
-            ['@type' => 'Offer', 'itemOffered' => ['@type' => 'Service', 'name' => 'Consultas de compliance', 'description' => 'Consultas de CNPJ, CND, FGTS e fontes fiscais em fluxo consolidado.']],
+            ['@type' => 'Offer', 'itemOffered' => ['@type' => 'Service', 'name' => 'Consultas de compliance', 'description' => 'Consultas de CNPJ, CND, CNDT, FGTS e fontes fiscais em fluxo consolidado.']],
             ['@type' => 'Offer', 'itemOffered' => ['@type' => 'Service', 'name' => 'Alertas e inconsistências no SPED', 'description' => 'Cruzamentos entre EFD, XML, apurações, participantes e classificações fiscais antes da malha fiscal.']],
             ['@type' => 'Offer', 'itemOffered' => ['@type' => 'Service', 'name' => 'Importação EFD ICMS/IPI', 'description' => 'Leitura e extração de blocos C, D, E e H do SPED Fiscal com apuração de ICMS e inventário.']],
             ['@type' => 'Offer', 'itemOffered' => ['@type' => 'Service', 'name' => 'Importação EFD Contribuições', 'description' => 'Extração dos blocos A, M e F do SPED Contribuições com apuração de PIS/COFINS e retenções na fonte.']],
@@ -2700,7 +2700,7 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
             <div class="gain-row" style="--d: 0.15s;">
                 <span class="gain-rotina">Certidões para licitação</span>
                 <span class="gain-hoje">5 sites, 5 senhas, 5 PDFs</span>
-                <span class="gain-com">CND e FGTS em 1 consulta</span>
+                <span class="gain-com">CND, CNDT e FGTS em 1 consulta</span>
             </div>
             <div class="gain-row" style="--d: 0.25s;">
                 <span class="gain-rotina">Fornecedor que fica inapto</span>
@@ -2997,7 +2997,7 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
                         <div class="fx-glyph mb-5" style="background-color: #eef2f7; border: 1px solid #dce3ed; color: #1e4fa0;">CNPJ</div>
                         <h3 class="text-base font-bold text-gray-900 mb-2">Consulta de CNPJ</h3>
                         <p class="text-sm text-gray-500 leading-relaxed mb-4">
-                            Um CNPJ entra, um dossiê sai: situação cadastral, regime tributário, certidões federais, estaduais e municipais, FGTS e SINTEGRA — fontes oficiais em uma consulta, um a um ou em lote.
+                            Um CNPJ entra, um dossiê sai: situação cadastral, regime tributário, certidões federais, estaduais e municipais, CNDT, FGTS e SINTEGRA — fontes oficiais em uma consulta, um a um ou em lote.
                         </p>
                         <ul class="space-y-2">
                             <li class="flex items-start text-xs text-gray-600">
@@ -3225,7 +3225,7 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
                                 <span class="radar-status radar-status--aviso">R$ 118k</span>
                             </div>
                             <div class="fx-row" style="--d: 0.5s;">
-                                <span class="fx-row-doc">CRF · FGTS</span>
+                                <span class="fx-row-doc">CNDT · FGTS</span>
                                 <span class="radar-status radar-status--ok">regular</span>
                             </div>
                             <div class="fxd-meter"><i style="--w: 58%;"></i></div>
@@ -3445,11 +3445,11 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
             </article>
 
             <article class="scenario-card">
-                <span class="scenario-tag">CND · FGTS</span>
+                <span class="scenario-tag">CND · CNDT · FGTS</span>
                 <h3>Licitação para amanhã</h3>
                 <p class="scenario-hora">O cliente liga às 17h47</p>
                 <p class="scenario-texto">
-                    Ele precisa das certidões para um edital que fecha amanhã. Em vez de abrir cinco sites do governo, <strong>uma consulta emite CND Federal e regularidade do FGTS de uma vez</strong> — com o documento de cada certidão pronto para anexar.
+                    Ele precisa das certidões para um edital que fecha amanhã. Em vez de abrir cinco sites do governo, <strong>uma consulta emite CND Federal, CNDT e regularidade do FGTS de uma vez</strong> — com o documento de cada certidão pronto para anexar.
                 </p>
                 <div class="scenario-outcome">
                     <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
@@ -3680,7 +3680,7 @@ body.lp-reveal-armed .lp-reveal:not(.lp-visible) .gain-row {
                         <span class="faq-icon" aria-hidden="true"></span>
                     </summary>
                     <div class="faq-a">
-                        Receita Federal, SEFAZ (todos os estados), PGFN, Caixa (FGTS), prefeituras (CND Municipal) e SINTEGRA. Todos os dados vêm de fontes oficiais do governo, consultados em tempo real. Nenhuma informação é estimada ou inferida.
+                        Receita Federal, SEFAZ (todos os estados), PGFN, TST (CNDT), Caixa (FGTS), prefeituras (CND Municipal) e SINTEGRA. Todos os dados vêm de fontes oficiais do governo, consultados em tempo real. Nenhuma informação é estimada ou inferida.
                     </div>
                 </details>
 
