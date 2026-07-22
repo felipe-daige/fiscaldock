@@ -181,12 +181,15 @@ it('menu do usuário mostra somente a visão geral no bloco Admin', function () 
         ->not->toContain('Admin — Planos');
 });
 
-it('layout traz o toggle de colapso e o script anti-flash', function () {
+it('mantém a sidebar expandida no desktop e preserva o controle do drawer mobile', function () {
     $user = User::factory()->trialAtivo()->create();
 
     $html = actingAs($user)->get('/app/dashboard')->assertOk()->getContent();
 
     expect($html)
-        ->toContain('id="sidebar-collapse-btn"')
-        ->toContain("localStorage.getItem('sidebar:collapsed')");
+        ->toContain('id="sidebar-close-btn"')
+        ->toContain('id="sidebar-open-btn"')
+        ->not->toContain('id="sidebar-collapse-btn"')
+        ->not->toContain("localStorage.getItem('sidebar:collapsed')")
+        ->not->toContain('sidebar-collapsed');
 });

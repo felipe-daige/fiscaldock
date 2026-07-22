@@ -11,9 +11,6 @@
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('binary_files/logo/Logo FiscalDock.png') }}">
 
-    {{-- Colapso da sidebar: aplicar antes do primeiro paint (zero flash) --}}
-    <script>try{if(localStorage.getItem('sidebar:collapsed')==='1'){document.documentElement.classList.add('sidebar-collapsed');}}catch(e){}</script>
-
     <!-- Open Graph (WhatsApp, Facebook) -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="FiscalDock | Soluções Inteligentes">

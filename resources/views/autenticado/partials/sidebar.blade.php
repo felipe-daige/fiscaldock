@@ -225,11 +225,6 @@
                 $__creditos = (int) $__u->trial_credits_remaining;
             @endphp
             <a href="/app/planos" data-link data-trial-widget class="block mb-3 px-3 py-2.5 rounded border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors">
-                <span class="sidebar__trial-mini" title="Trial — {{ $__dias }} {{ $__dias === 1 ? 'dia restante' : 'dias restantes' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </span>
                 <div class="flex items-center justify-between gap-2">
                     <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Trial</span>
                     <span class="text-[11px] font-semibold text-gray-700">@brl(($__creditos))</span>

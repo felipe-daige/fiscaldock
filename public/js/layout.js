@@ -8,8 +8,6 @@ let _sidebarCloseHandler = null;
 let _sidebarOverlayHandler = null;
 let _sidebarLinkClickHandler = null;
 let _sidebarNavScrollHandler = null;
-let _sidebarCollapseHandler = null;
-let _sidebarCollapsedSummaryHandler = null;
 let _sidebarGroupHandlers = [];
 let _sidebarUserHandler = null;
 let _mobileMenuLinkHandler = null;
@@ -65,7 +63,7 @@ function initLayout() {
         mobileMenu.addEventListener('click', _mobileMenuLinkHandler);
     }
 
-    // Sidebar (authenticated area) - drawer on mobile + collapse/expand on desktop
+    // Sidebar (authenticated area) - drawer on mobile, always expanded on desktop
     const sidebar = document.getElementById('sidebar');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
     const sidebarOpenBtn = document.getElementById('sidebar-open-btn');
@@ -160,47 +158,6 @@ function initLayout() {
         _sidebarNavScrollHandler = atualizarNavFades;
         navScroller.addEventListener('scroll', _sidebarNavScrollHandler, { passive: true });
         atualizarNavFades();
-    }
-
-    // Toggle de colapso (desktop)
-    const collapseBtn = document.getElementById('sidebar-collapse-btn');
-    if (collapseBtn) {
-        if (_sidebarCollapseHandler) {
-            collapseBtn.removeEventListener('click', _sidebarCollapseHandler);
-            _sidebarCollapseHandler = null;
-        }
-        const rotularColapso = function (collapsed) {
-            const rotulo = collapsed ? 'Expandir menu' : 'Recolher menu';
-            collapseBtn.setAttribute('aria-label', rotulo);
-            collapseBtn.setAttribute('title', rotulo);
-        };
-        rotularColapso(document.documentElement.classList.contains('sidebar-collapsed'));
-        _sidebarCollapseHandler = function () {
-            const collapsed = document.documentElement.classList.toggle('sidebar-collapsed');
-            try { localStorage.setItem('sidebar:collapsed', collapsed ? '1' : '0'); } catch (e) { /* modo privado */ }
-            rotularColapso(collapsed);
-        };
-        collapseBtn.addEventListener('click', _sidebarCollapseHandler);
-    }
-
-    // Colapsado: clique em summary (grupo/menu do usuário) expande a sidebar antes de abrir
-    if (sidebar) {
-        if (_sidebarCollapsedSummaryHandler) {
-            sidebar.removeEventListener('click', _sidebarCollapsedSummaryHandler, true);
-            _sidebarCollapsedSummaryHandler = null;
-        }
-        _sidebarCollapsedSummaryHandler = function (e) {
-            if (!document.documentElement.classList.contains('sidebar-collapsed')) return;
-            if (!isDesktop()) return;
-            const summary = e.target && e.target.closest ? e.target.closest('summary') : null;
-            if (!summary) return;
-            e.preventDefault();
-            document.documentElement.classList.remove('sidebar-collapsed');
-            try { localStorage.setItem('sidebar:collapsed', '0'); } catch (err) { /* modo privado */ }
-            const details = summary.closest('details');
-            if (details) details.open = true;
-        };
-        sidebar.addEventListener('click', _sidebarCollapsedSummaryHandler, true);
     }
 
     // Dropdown menu - close on outside click

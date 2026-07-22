@@ -248,10 +248,10 @@
 
     .sidebar {
         @apply fixed inset-y-0 left-0 z-50 flex flex-col bg-white border-r border-gray-300;
-        width: var(--sidebar-w, 256px);
+        width: 256px;
         max-height: 100vh;
         height: 100vh;
-        transition: transform 0.25s ease, width 0.2s ease;
+        transition: transform 0.25s ease;
         transform: translateX(-100%);
     }
 
@@ -298,83 +298,6 @@
         @apply inline-flex md:hidden items-center justify-center w-9 h-9 rounded border border-gray-300
                text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors;
     }
-    .sidebar__collapse-btn {
-        @apply hidden md:inline-flex items-center justify-center w-7 h-7 rounded border border-gray-300
-               text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors shrink-0;
-    }
-
-    /* Colapso: só desktop — no mobile o drawer ignora a classe */
-    @media (min-width: 768px) {
-        .sidebar-collapsed {
-            --sidebar-w: 64px;
-        }
-        .sidebar-collapsed .sidebar__brand-copy,
-        .sidebar-collapsed .sidebar__section-title,
-        .sidebar-collapsed .sidebar__item-label,
-        .sidebar-collapsed .sidebar__group-arrow,
-        .sidebar-collapsed .sidebar__group-menu,
-        .sidebar-collapsed .sidebar__user-name,
-        .sidebar-collapsed .sidebar__user-role,
-        .sidebar-collapsed .sidebar__logout-label {
-            display: none;
-        }
-        .sidebar-collapsed .sidebar__brand {
-            justify-content: center;
-            padding-left: 0.5rem;
-            padding-right: 0.5rem;
-        }
-        .sidebar-collapsed .sidebar__collapse-icon {
-            transform: rotate(180deg);
-        }
-        .sidebar-collapsed .sidebar__item,
-        .sidebar-collapsed .sidebar__group-trigger,
-        .sidebar-collapsed .sidebar__user-trigger {
-            justify-content: center;
-            padding-left: 0.5rem;
-            padding-right: 0.5rem;
-        }
-        .sidebar-collapsed .sidebar__group-trigger > div {
-            justify-content: center;
-        }
-        .sidebar-collapsed .sidebar__user-trigger > .min-w-0 {
-            display: none;
-        }
-
-        /* Badge de contagem vira dot no canto do ícone */
-        .sidebar-collapsed .sidebar__item {
-            position: relative;
-        }
-        .sidebar-collapsed .sidebar__item-badge-count {
-            position: absolute;
-            top: 6px;
-            right: 10px;
-            min-width: 0;
-            width: 8px;
-            height: 8px;
-            padding: 0;
-            font-size: 0;
-            margin-left: 0;
-        }
-
-        /* Widget de trial vira só o ícone (relógio) com tooltip */
-        .sidebar-collapsed [data-trial-widget] > *:not(.sidebar__trial-mini) {
-            display: none;
-        }
-        .sidebar-collapsed [data-trial-widget] {
-            display: flex;
-            justify-content: center;
-            padding: 0.5rem;
-        }
-        .sidebar-collapsed .sidebar__trial-mini {
-            display: inline-flex;
-            color: #4b5563;
-        }
-    }
-
-    .sidebar__trial-mini {
-        display: none;
-    }
-
     .sidebar__nav-wrap {
         @apply relative flex-1 min-h-0 flex flex-col;
     }
@@ -613,10 +536,10 @@
 
     @media (min-width: 768px) {
         .layout-with-sidebar {
-            padding-left: var(--sidebar-w, 256px);
+            padding-left: 256px;
         }
         .layout-sidebar-expanded {
-            padding-left: var(--sidebar-w, 256px);
+            padding-left: 256px;
         }
     }
 }
