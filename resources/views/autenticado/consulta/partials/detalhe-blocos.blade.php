@@ -2,9 +2,9 @@
      Estrutura:
        1. Parecer da análise (faixa com acento slate)
        2. Bloco identidade (Dados cadastrais) — largura total, como a caixa do emitente
-       3. Fontes/certidões — masonry (CSS columns) p/ empacotar cartões de alturas diferentes
-          sem deixar o "um grande, outro pequeno" lado a lado. Cada cartão leva o acento da cor
-          do status na borda esquerda (sinal fiscal de carimbo).
+       3. Fontes/certidões — mosaico em colunas independentes: expandir um cartão move só
+          os cartões abaixo dele na mesma coluna, sem esticar o vizinho lateral.
+          Cada cartão leva o acento da cor do status na borda esquerda (sinal fiscal de carimbo).
      Espera: $blocos (ResultadoDetalhePresenter::blocos), $resumo (texto). --}}
 @php
     $blocos = $blocos ?? [];
@@ -156,105 +156,150 @@
         </x-card-retratil>
     @endif
 
-    {{-- ── Fontes / certidões: masonry (columns) p/ alturas desiguais ──────── --}}
+    {{-- ── Fontes / certidões: mosaico com colunas independentes ───────────── --}}
     @if($fontes->isNotEmpty())
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
-            @foreach($fontes as $bloco)
-                @php
-                    $acento = $bloco['badge']['hex'] ?? '#9ca3af';
-                @endphp
-                {{-- Card retrátil (componente DS): o badge no header preserva o status à vista; o
-                     corpo (mensagem oficial longa, itens, comprovante) só abre sob demanda. --}}
-                <x-card-retratil :titulo="$bloco['titulo']" :acento="$acento">
-                    <x-slot:badges>
-                        @if(!empty($bloco['badge']))
-                            @php
-                                $badgeTooltip = trim(($bloco['titulo'] ?? '').' · '.($bloco['badge']['label'] ?? '').(!empty($bloco['mensagem']) ? "\n".$bloco['mensagem'] : ''));
-                            @endphp
-                            <span class="whitespace-nowrap px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white shrink-0 cursor-help"
-                                  style="background-color: {{ $bloco['badge']['hex'] }}"
-                                  title="{{ $badgeTooltip }}"
-                                  aria-label="{{ $badgeTooltip }}">
-                                {{ $badgeCurto($bloco['badge']['label'] ?? '') }}
-                            </span>
-                        @endif
-                    </x-slot:badges>
-                        @if(!empty($bloco['itens']))
-                            <dl class="grid grid-cols-2 gap-x-4 gap-y-2">
-                                @foreach($bloco['itens'] as $item)
-                                    <div class="min-w-0">
-                                        <dt class="text-[9px] text-gray-400 uppercase tracking-wider">{{ $item['label'] }}</dt>
-                                        <dd @class(['text-[12px] text-gray-800 font-medium break-words mt-0.5', 'font-mono tabular-nums' => in_array($item['label'], $monoLabels, true)])>
-                                            @if(!empty($item['tooltip']))
-                                                <span class="underline decoration-dotted cursor-help" title="{{ $item['tooltip'] }}">{{ $item['valor'] }}</span>
-                                            @else
-                                                {{ $item['valor'] }}
-                                            @endif
-                                        </dd>
-                                    </div>
-                                @endforeach
-                            </dl>
-                        @endif
+        @once
+            <style>
+                .consulta-fontes-mosaic {
+                    display: flex;
+                    flex-direction: column;
+                    gap: .75rem;
+                }
+                .consulta-fontes-mosaic-column {
+                    display: contents;
+                }
+                .consulta-fontes-mosaic-card {
+                    min-width: 0;
+                    order: var(--consulta-mosaic-order, 0);
+                }
+                @media (min-width: 1024px) {
+                    .consulta-fontes-mosaic {
+                        display: grid;
+                        grid-template-columns: repeat(2, minmax(0, 1fr));
+                        align-items: start;
+                        gap: .75rem;
+                    }
+                    .consulta-fontes-mosaic-column {
+                        display: flex;
+                        min-width: 0;
+                        flex-direction: column;
+                        gap: .75rem;
+                    }
+                    .consulta-fontes-mosaic-card {
+                        order: 0;
+                    }
+                }
+            </style>
+        @endonce
+        @php
+            $fontesColunas = [
+                $fontes->filter(fn ($_, $index) => $index % 2 === 0),
+                $fontes->filter(fn ($_, $index) => $index % 2 === 1),
+            ];
+        @endphp
+        <div class="consulta-fontes-mosaic">
+            @foreach($fontesColunas as $coluna)
+                <div class="consulta-fontes-mosaic-column">
+                    @foreach($coluna as $ordem => $bloco)
+                        @php
+                            $acento = $bloco['badge']['hex'] ?? '#9ca3af';
+                        @endphp
+                        <div class="consulta-fontes-mosaic-card" style="--consulta-mosaic-order: {{ $ordem }}">
+                            {{-- Card retrátil (componente DS): o badge no header preserva o status à vista; o
+                                 corpo (mensagem oficial longa, itens, comprovante) só abre sob demanda. --}}
+                            <x-card-retratil :titulo="$bloco['titulo']" :acento="$acento">
+                                <x-slot:badges>
+                                    @if(!empty($bloco['badge']))
+                                        @php
+                                            $badgeTooltip = trim(($bloco['titulo'] ?? '').' · '.($bloco['badge']['label'] ?? '').(!empty($bloco['mensagem']) ? "\n".$bloco['mensagem'] : ''));
+                                        @endphp
+                                        <span class="whitespace-nowrap px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white shrink-0 cursor-help"
+                                              style="background-color: {{ $bloco['badge']['hex'] }}"
+                                              title="{{ $badgeTooltip }}"
+                                              aria-label="{{ $badgeTooltip }}">
+                                            {{ $badgeCurto($bloco['badge']['label'] ?? '') }}
+                                        </span>
+                                    @endif
+                                </x-slot:badges>
+                                    @if(!empty($bloco['itens']))
+                                        <dl class="grid grid-cols-2 gap-x-4 gap-y-2">
+                                            @foreach($bloco['itens'] as $item)
+                                                <div class="min-w-0">
+                                                    <dt class="text-[9px] text-gray-400 uppercase tracking-wider">{{ $item['label'] }}</dt>
+                                                    <dd @class(['text-[12px] text-gray-800 font-medium break-words mt-0.5', 'font-mono tabular-nums' => in_array($item['label'], $monoLabels, true)])>
+                                                        @if(!empty($item['tooltip']))
+                                                            <span class="underline decoration-dotted cursor-help" title="{{ $item['tooltip'] }}">{{ $item['valor'] }}</span>
+                                                        @else
+                                                            {{ $item['valor'] }}
+                                                        @endif
+                                                    </dd>
+                                                </div>
+                                            @endforeach
+                                        </dl>
+                                    @endif
 
-                        @foreach(($bloco['listas'] ?? []) as $lista)
-                            <div>
-                                <p class="text-[9px] text-gray-400 uppercase tracking-wider mb-1">{{ $lista['titulo'] }}</p>
-                                <ul class="space-y-0.5">
-                                    @foreach($lista['linhas'] as $linha)
-                                        <li class="text-[11px] text-gray-700 leading-snug flex gap-1.5">
-                                            <span class="text-gray-300 select-none">▪</span>
-                                            <span>{{ $linha }}</span>
-                                        </li>
+                                    @foreach(($bloco['listas'] ?? []) as $lista)
+                                        <div>
+                                            <p class="text-[9px] text-gray-400 uppercase tracking-wider mb-1">{{ $lista['titulo'] }}</p>
+                                            <ul class="space-y-0.5">
+                                                @foreach($lista['linhas'] as $linha)
+                                                    <li class="text-[11px] text-gray-700 leading-snug flex gap-1.5">
+                                                        <span class="text-gray-300 select-none">▪</span>
+                                                        <span>{{ $linha }}</span>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
                                     @endforeach
-                                </ul>
-                            </div>
-                        @endforeach
 
-                        @if(!empty($bloco['mensagem']))
-                            {{-- overflow-wrap:anywhere — mensagens oficiais trazem URLs longas sem espaço,
-                                 que sem quebra alargam a coluna do grid e cortam o card à direita. --}}
-                            <p class="text-[11px] text-gray-500 italic leading-snug border-l-2 border-gray-200 pl-2" style="overflow-wrap: anywhere">{{ $bloco['mensagem'] }}</p>
-                        @endif
+                                    @if(!empty($bloco['mensagem']))
+                                        {{-- overflow-wrap:anywhere — mensagens oficiais trazem URLs longas sem espaço,
+                                             que sem quebra alargam a coluna do grid e cortam o card à direita. --}}
+                                        <p class="text-[11px] text-gray-500 italic leading-snug border-l-2 border-gray-200 pl-2" style="overflow-wrap: anywhere">{{ $bloco['mensagem'] }}</p>
+                                    @endif
 
-                        @if(!empty($bloco['nota']))
-                            {{-- Nota didática (presenter): traduz a mensagem oficial — o que significa,
-                                 onde o contribuinte verifica e o que a recusa NÃO prova. --}}
-                            <div class="rounded border border-blue-100 px-2.5 py-2" style="background-color: #eff6ff">
-                                <p class="text-[11px] leading-snug" style="color: #1e40af; overflow-wrap: anywhere">{{ $bloco['nota'] }}</p>
-                            </div>
-                        @endif
+                                    @if(!empty($bloco['nota']))
+                                        {{-- Nota didática (presenter): traduz a mensagem oficial — o que significa,
+                                             onde o contribuinte verifica e o que a recusa NÃO prova. --}}
+                                        <div class="rounded border border-blue-100 px-2.5 py-2" style="background-color: #eff6ff">
+                                            <p class="text-[11px] leading-snug" style="color: #1e40af; overflow-wrap: anywhere">{{ $bloco['nota'] }}</p>
+                                        </div>
+                                    @endif
 
-                        @if(!empty($bloco['comprovante_url']))
-                            {{-- Comprovante arquivado localmente (rota app.consulta.comprovante) abre no
-                                 modal de preview (padrão /app/arquivos); URL externa do órgão não é
-                                 embutível em iframe — segue em nova aba. --}}
-                            @php
-                                $comprovanteLocal = str_starts_with($bloco['comprovante_url'], url('/app/consulta/resultado/'));
-                            @endphp
-                            @if($comprovanteLocal)
-                                <button type="button"
-                                        data-preview-url="{{ $bloco['comprovante_url'] }}?preview=1"
-                                        data-download-url="{{ $bloco['comprovante_url'] }}"
-                                        data-preview-nome="{{ $bloco['titulo'] }} — Comprovante"
-                                        onclick="(function(b){var m=document.getElementById('comprovante-preview-modal');if(!m){window.open(b.dataset.downloadUrl,'_blank');return}if(m.parentElement!==document.body)document.body.appendChild(m);document.getElementById('comprovante-preview-titulo').textContent=b.dataset.previewNome;document.getElementById('comprovante-preview-baixar').setAttribute('href',b.dataset.downloadUrl);document.getElementById('comprovante-preview-abrir').setAttribute('href',b.dataset.previewUrl);document.getElementById('comprovante-preview-frame').src=b.dataset.previewUrl;m.classList.remove('hidden');document.body.classList.add('overflow-hidden')})(this)"
-                                        class="inline-flex items-center gap-1 text-[11px] font-medium text-gray-700 hover:text-gray-900 hover:underline">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                    </svg>
-                                    Ver comprovante
-                                </button>
-                            @else
-                                <a href="{{ $bloco['comprovante_url'] }}" target="_blank" rel="noopener noreferrer"
-                                   class="inline-flex items-center gap-1 text-[11px] font-medium text-gray-700 hover:text-gray-900 hover:underline">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                    </svg>
-                                    Ver comprovante
-                                </a>
-                            @endif
-                        @endif
-                </x-card-retratil>
+                                    @if(!empty($bloco['comprovante_url']))
+                                        {{-- Comprovante arquivado localmente (rota app.consulta.comprovante) abre no
+                                             modal de preview (padrão /app/arquivos); URL externa do órgão não é
+                                             embutível em iframe — segue em nova aba. --}}
+                                        @php
+                                            $comprovanteLocal = str_starts_with($bloco['comprovante_url'], url('/app/consulta/resultado/'));
+                                        @endphp
+                                        @if($comprovanteLocal)
+                                            <button type="button"
+                                                    data-preview-url="{{ $bloco['comprovante_url'] }}?preview=1"
+                                                    data-download-url="{{ $bloco['comprovante_url'] }}"
+                                                    data-preview-nome="{{ $bloco['titulo'] }} — Comprovante"
+                                                    onclick="(function(b){var m=document.getElementById('comprovante-preview-modal');if(!m){window.open(b.dataset.downloadUrl,'_blank');return}if(m.parentElement!==document.body)document.body.appendChild(m);document.getElementById('comprovante-preview-titulo').textContent=b.dataset.previewNome;document.getElementById('comprovante-preview-baixar').setAttribute('href',b.dataset.downloadUrl);document.getElementById('comprovante-preview-abrir').setAttribute('href',b.dataset.previewUrl);document.getElementById('comprovante-preview-frame').src=b.dataset.previewUrl;m.classList.remove('hidden');document.body.classList.add('overflow-hidden')})(this)"
+                                                    class="inline-flex items-center gap-1 text-[11px] font-medium text-gray-700 hover:text-gray-900 hover:underline">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                </svg>
+                                                Ver comprovante
+                                            </button>
+                                        @else
+                                            <a href="{{ $bloco['comprovante_url'] }}" target="_blank" rel="noopener noreferrer"
+                                               class="inline-flex items-center gap-1 text-[11px] font-medium text-gray-700 hover:text-gray-900 hover:underline">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                </svg>
+                                                Ver comprovante
+                                            </a>
+                                        @endif
+                                    @endif
+                            </x-card-retratil>
+                        </div>
+                    @endforeach
+                </div>
             @endforeach
         </div>
     @endif
