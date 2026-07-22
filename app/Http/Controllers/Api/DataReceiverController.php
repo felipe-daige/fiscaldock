@@ -7,8 +7,7 @@ use App\Models\Cliente;
 use App\Models\EfdDivergencia;
 use App\Models\EfdImportacao;
 use App\Models\Participante;
-use App\Services\EfdAuditoriaService;
-use App\Services\EfdResumoBuilder;
+use App\Services\Efd\FinalizarImportacaoService;
 use App\Services\SaldoService;
 use App\Support\SystemCriticalError;
 use Illuminate\Http\JsonResponse;
@@ -280,7 +279,7 @@ class DataReceiverController extends Controller
      * Headers: X-API-Token
      * Body: { user_id, tab_id, importacao_id, tipo_efd? }
      */
-    public function finalizarImportacaoEfd(Request $request, EfdResumoBuilder $builder, EfdAuditoriaService $auditoria): JsonResponse
+    public function finalizarImportacaoEfd(Request $request, FinalizarImportacaoService $finalizador): JsonResponse
     {
         if (! $this->isTokenValid($request)) {
             return response()->json(['error' => 'Unauthorized', 'message' => 'Token inválido'], 401);
@@ -304,8 +303,6 @@ class DataReceiverController extends Controller
             ], 404);
         }
 
-        $cacheKey = "progresso:{$data['user_id']}:{$data['tab_id']}";
-
         // Idempotência: já concluída → devolve o resumo persistido, não reconstrói
         if ($imp->status === 'concluido' && ! empty($imp->resumo_final)) {
             return response()->json([
@@ -319,55 +316,10 @@ class DataReceiverController extends Controller
             ]);
         }
 
-        $resumo = $builder->build($imp);
-        $tempoSegundos = $imp->iniciado_em
-            ? (int) $imp->iniciado_em->diffInSeconds(now())
-            : null;
-
-        // Guardrail universal: toda importação se autoverifica contra o SPED bruto. Se o
-        // pipeline dropou notas (ex.: Merge C100↔0150 soltando NFC-e — bug UTIDA), a
-        // importação NÃO fica "concluído" mudo: grava o veredito em resumo_final.integridade
-        // e loga. Barato (só conta chaves), degrada seguro sem arquivo retido.
-        $integridade = $auditoria->integridade($imp);
-        $resumo['integridade'] = $integridade;
-        if (! $integridade['ok']) {
-            Log::warning('EFD import: notas do SPED ausentes no banco (pipeline dropou)', [
-                'importacao_id' => $imp->id,
-                'user_id' => $imp->user_id,
-                'tipo_efd' => $imp->tipo_efd,
-                'esperadas' => $integridade['esperadas'],
-                'faltando' => $integridade['faltando'],
-                'amostra' => $integridade['amostra_faltando'],
-            ]);
-        }
-
-        $est = $resumo['estatisticas'] ?? [];
-        $imp->update([
-            'status' => 'concluido',
-            'resumo_final' => $resumo,
-            'concluido_em' => now(),
-            'tempo_processamento_segundos' => $tempoSegundos,
-            'total_participantes' => $est['total_participantes_processados'] ?? 0,
-            'total_cnpjs_unicos' => $est['total_cnpjs_unicos'] ?? 0,
-            'total_cpfs_unicos' => $est['total_cpfs_unicos'] ?? 0,
-            'novos' => $est['participantes_novos'] ?? 0,
-            'duplicados' => $est['participantes_repetidos'] ?? 0,
-            'total_notas' => $est['total_notas_processadas'] ?? 0,
-            'notas_extraidas' => $est['notas_novas'] ?? 0,
-            'participante_ids' => $resumo['participante_ids'] ?? [],
-        ]);
-
-        $existing = Cache::get($cacheKey, []);
-        Cache::put($cacheKey, array_merge($existing, [
-            'user_id' => $data['user_id'],
-            'tab_id' => $data['tab_id'],
-            'importacao_id' => $imp->id,
-            'status' => 'concluido',
-            'progresso' => 100,
-            'mensagem' => $resumo['mensagem'] ?? 'Importação concluída.',
-            'resumo_final' => $resumo,
-            'updated_at' => now()->toIso8601String(),
-        ]), 600);
+        // Miolo compartilhado com o motor Laravel: constrói resumo do banco, roda o
+        // guardrail de integridade, persiste na importação e fecha o SSE. §L4/§10.6.
+        $resumo = $finalizador->finalizar($imp, (int) $data['user_id'], $data['tab_id']);
+        $tempoSegundos = $imp->tempo_processamento_segundos;
 
         return response()->json([
             'status' => 'ok',

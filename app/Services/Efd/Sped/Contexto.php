@@ -16,5 +16,8 @@ class Contexto
         public readonly ?string $serie,
         public readonly ?string $modelo,
         public readonly ?string $tipoOperacao,
+        // COD_PART do documento-pai — chave de linkagem quando não há chave_acesso
+        // (NFS-e/A100 não tem chave; o filho A170 casa por numero|serie|modelo|cod_part).
+        public readonly ?string $codPart = null,
     ) {}
 }

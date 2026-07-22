@@ -93,25 +93,30 @@ class EfdResumoBuilder
             ->get()
             ->keyBy('modelo');
 
-        $merc = $rows->get('55');
-        $trans = $rows->get('57');
-        $serv = $rows->get('00');
-        $totalCanceladas = (int) $rows->sum('canceladas');
+        // Transporte = CT-e (57/67); serviço = NFS-e (00). Mercadoria = TODO o resto
+        // (NF-e 55, NFC-e 65, avulsa/produtor rural 01/1B/04/59…). Contar mercadoria só
+        // como '55' fazia a NFC-e sumir do resumo — no varejo (UTIDA: 1432 de 1433 são
+        // modelo 65) o total virava 1. Buckets exaustivos: toda nota regular cai em um.
+        $transporte = ['57', '67'];
+        $servico = ['00'];
+        $somar = function ($rows, callable $filtro): array {
+            $total = 0;
+            $valor = 0.0;
+            foreach ($rows as $modelo => $r) {
+                if ($filtro((string) $modelo)) {
+                    $total += (int) $r->regulares;
+                    $valor += (float) $r->valor;
+                }
+            }
+
+            return ['total' => $total, 'valor' => $valor];
+        };
 
         return [
-            'mercadorias' => [
-                'total' => (int) ($merc->regulares ?? 0),
-                'valor' => (float) ($merc->valor ?? 0),
-            ],
-            'transportes' => [
-                'total' => (int) ($trans->regulares ?? 0),
-                'valor' => (float) ($trans->valor ?? 0),
-            ],
-            'servicos' => [
-                'total' => (int) ($serv->regulares ?? 0),
-                'valor' => (float) ($serv->valor ?? 0),
-            ],
-            'canceladas' => $totalCanceladas,
+            'mercadorias' => $somar($rows, fn (string $m): bool => ! in_array($m, [...$transporte, ...$servico], true)),
+            'transportes' => $somar($rows, fn (string $m): bool => in_array($m, $transporte, true)),
+            'servicos' => $somar($rows, fn (string $m): bool => in_array($m, $servico, true)),
+            'canceladas' => (int) $rows->sum('canceladas'),
         ];
     }
 

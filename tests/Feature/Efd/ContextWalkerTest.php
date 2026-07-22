@@ -78,6 +78,25 @@ it('monta o Contexto do D100 (CT-e) com CHV_CTE em $p[10]', function () {
         ->and($pai->chave)->toBe('CHAVE_CTE');
 });
 
+it('A100 (NFS-e sem chave) vira pai do A170 por identidade lógica', function () {
+    // A100 $p[2]=IND_OPER, [4]=COD_PART, [6]=SER, [8]=NUM_DOC, [9]=CHV (vazia). modelo fixo '00'.
+    $conteudo = "|A100|1|0|FOR7|00|1|0|500||01022026|01022026|1000,00|\n|A170|1|SERV|Consultoria|1000,00|";
+
+    $pai = null;
+    foreach (spedWalk($conteudo) as [$reg, $ctx]) {
+        if ($reg === 'A170') {
+            $pai = $ctx;
+        }
+    }
+
+    expect($pai->reg)->toBe('A100')
+        ->and($pai->modelo)->toBe('00')
+        ->and($pai->numero)->toBe('500')
+        ->and($pai->serie)->toBe('1')
+        ->and($pai->codPart)->toBe('FOR7')  // linkagem sem chave usa cod_part
+        ->and($pai->chave)->toBe('');        // NFS-e sem chave de acesso
+});
+
 it('filho órfão (SPED malformado) sai com contexto null, sem quebrar', function () {
     $pares = spedWalk('|C190|00|5102|18|100|'); // C190 sem C100 antes
 

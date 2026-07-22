@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Concerns\RespondeAjax;
 use App\Http\Controllers\Controller;
+use App\Jobs\ProcessarEfdImportacaoJob;
 use App\Models\Cliente;
 use App\Models\EfdImportacao;
 use App\Models\EfdNota;
@@ -365,6 +366,10 @@ class EfdImportacaoController extends Controller
             $tipoEfd = $cabecalho['tipo'];
         }
 
+        // Motor de extração: n8n (legado) ou Laravel (flag EFD_MOTOR / EFD_MOTOR_FISCAL).
+        // Resolvido após o detector fixar o tipo — o gate é por tipo. §10.6.
+        $motorLaravel = $this->motorLaravel($tipoEfd);
+
         // Selecionar webhook baseado no tipo de EFD (extração completa sempre)
         $webhookUrl = $tipoEfd === 'EFD ICMS/IPI'
             ? config('services.webhook.importacao_efd_fiscal_url')
@@ -445,7 +450,8 @@ class EfdImportacaoController extends Controller
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        if (empty($webhookUrl)) {
+        // Motor Laravel não precisa de webhook — o guard de webhook ausente é só do n8n.
+        if (empty($webhookUrl) && ! $motorLaravel) {
             $configKey = $tipoEfd === 'EFD ICMS/IPI'
                 ? 'WEBHOOK_IMPORTACAO_EFD_FISCAL_URL'
                 : 'WEBHOOK_IMPORTACAO_EFD_CONTRIBUICOES_URL';
@@ -488,7 +494,10 @@ class EfdImportacaoController extends Controller
             }
         }
 
-        // Criar registro de importação antes de enviar ao n8n
+        // Criar registro de importação antes de enviar ao n8n.
+        // arquivo_base64 retém o SPED bruto (string JSON-encoded): alimenta o guardrail
+        // de integridade (EfdAuditoriaService), o ParticipanteResolver e o motor Laravel.
+        // Vale pros dois motores — o n8n ignora. §10.8.
         $importacao = EfdImportacao::create([
             'user_id' => $user->id,
             'cliente_id' => $clienteId,
@@ -497,10 +506,24 @@ class EfdImportacaoController extends Controller
             'periodo_inicio' => $cabecalho['periodo_inicio'],
             'periodo_fim' => $cabecalho['periodo_fim'],
             'arquivo_hash' => $arquivoHash,
+            'arquivo_base64' => json_encode($conteudoArquivo),
             'filename' => $arquivo->getClientOriginalName(),
             'status' => 'processando',
             'iniciado_em' => now(),
         ]);
+
+        // Cutover: motor Laravel processa em background (fila database, worker existente),
+        // sem n8n. O pré-voo acima (validação/detector/dedup/quota/cliente/create) é
+        // agnóstico de motor. O Job lê o arquivo_base64 já persistido. §10.6.
+        if ($motorLaravel) {
+            ProcessarEfdImportacaoJob::dispatch($importacao->id, $request->input('tab_id'));
+
+            return response()->json([
+                'success' => true,
+                'importacao_id' => $importacao->id,
+                'motor' => 'laravel',
+            ]);
+        }
 
         try {
             // Enviar arquivo para n8n via multipart
@@ -557,6 +580,22 @@ class EfdImportacaoController extends Controller
                 'error' => 'Erro de conexão com o serviço de importação.',
             ], Response::HTTP_SERVICE_UNAVAILABLE);
         }
+    }
+
+    /**
+     * Este tipo de EFD roteia pro motor Laravel? 'EFD_MOTOR=laravel' liga global;
+     * 'EFD_MOTOR_FISCAL'/'EFD_MOTOR_CONTRIB' ligam por tipo. Default n8n — merge não muda
+     * produção até setar a env. Ambos os tipos têm driver (ICMS/IPI + PIS/COFINS).
+     */
+    private function motorLaravel(string $tipoEfd): bool
+    {
+        $flagTipo = match ($tipoEfd) {
+            'EFD ICMS/IPI' => config('efd.motor_fiscal'),
+            'EFD PIS/COFINS' => config('efd.motor_contrib'),
+            default => null,
+        };
+
+        return config('efd.motor') === 'laravel' || $flagTipo === 'laravel';
     }
 
     /**

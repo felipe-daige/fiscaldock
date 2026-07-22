@@ -18,12 +18,10 @@ namespace App\Services\Efd\Sped;
 class ContextWalker
 {
     /** Registros que abrem um documento fiscal (setam o contexto-pai). */
-    private const ABRE_DOCUMENTO = ['C100', 'D100'];
-    // F5 (PIS/COFINS): incluir 'A100' aqui + o arm correspondente em montarContexto().
+    private const ABRE_DOCUMENTO = ['C100', 'D100', 'A100'];
 
     /** Registros-filho que herdam o contexto do documento-pai corrente. */
-    private const FILHOS = ['C170', 'C190', 'D190'];
-    // F5 (PIS/COFINS): incluir 'A170'.
+    private const FILHOS = ['C170', 'C190', 'D190', 'A170'];
 
     /**
      * @param  iterable<SpedRecord>  $registros
@@ -56,7 +54,7 @@ class ContextWalker
     private function montarContexto(SpedRecord $rec): Contexto
     {
         return match ($rec->reg) {
-            // §10.4: C100 $p[2]=IND_OPER, [5]=COD_MOD, [7]=SER, [8]=NUM_DOC, [9]=CHV_NFE
+            // §10.4: C100 $p[2]=IND_OPER, [4]=COD_PART, [5]=COD_MOD, [7]=SER, [8]=NUM_DOC, [9]=CHV_NFE
             'C100' => new Contexto(
                 reg: 'C100',
                 chave: $rec->campo(9),
@@ -64,8 +62,9 @@ class ContextWalker
                 serie: $rec->campo(7),
                 modelo: $rec->campo(5),
                 tipoOperacao: $rec->campo(2),
+                codPart: $rec->campo(4),
             ),
-            // §10.4: D100 $p[2]=IND_OPER, [5]=COD_MOD, [7]=SER, [9]=NUM_DOC, [10]=CHV_CTE
+            // §10.4: D100 $p[2]=IND_OPER, [4]=COD_PART, [5]=COD_MOD, [7]=SER, [9]=NUM_DOC, [10]=CHV_CTE
             'D100' => new Contexto(
                 reg: 'D100',
                 chave: $rec->campo(10),
@@ -73,6 +72,18 @@ class ContextWalker
                 serie: $rec->campo(7),
                 modelo: $rec->campo(5),
                 tipoOperacao: $rec->campo(2),
+                codPart: $rec->campo(4),
+            ),
+            // A100 (NFS-e): $p[2]=IND_OPER, [4]=COD_PART, [6]=SER, [8]=NUM_DOC, [9]=CHV (quase sempre
+            // vazia). modelo fixo '00'. Sem chave, o filho A170 casa por numero|serie|modelo|cod_part.
+            'A100' => new Contexto(
+                reg: 'A100',
+                chave: $rec->campo(9),
+                numero: $rec->campo(8),
+                serie: $rec->campo(6),
+                modelo: '00',
+                tipoOperacao: $rec->campo(2),
+                codPart: $rec->campo(4),
             ),
         };
     }

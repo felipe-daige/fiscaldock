@@ -24,4 +24,12 @@ return [
     // Não compõem faturamento: não-receita ∪ devolução (decisão nível-nota,
     // contador 2026-06-23 + auditoria 2026-06-29). Exclui a nota INTEIRA.
     'cfops_fora_faturamento' => array_values(array_unique(array_merge($cfopsNaoReceita, $cfopsDevolucao))),
+
+    // Motor de extração EFD: 'n8n' (legado, default) | 'laravel' (motor interno,
+    // app/Services/Efd + ProcessarEfdImportacaoJob). Cutover em EfdImportacaoController::upload.
+    // 'motor' é global; 'motor_fiscal' liga só o EFD ICMS/IPI; 'motor_contrib' só o
+    // EFD PIS/COFINS. Virar pra 'laravel' só após auditar()=0 ERRO em dado real (por tipo).
+    'motor' => env('EFD_MOTOR', 'n8n'),
+    'motor_fiscal' => env('EFD_MOTOR_FISCAL'),
+    'motor_contrib' => env('EFD_MOTOR_CONTRIB'),
 ];
