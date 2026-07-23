@@ -41,6 +41,15 @@
     ])
 
     @include('autenticado.perfis._relacionamento-fiscal', ['fiscalPerfil' => $fiscalPerfil])
+
+    {{-- Consolidado fiscal acumulado (C190/D190 de todas as importações EFD). Vem antes de
+         Principais Produtos: no varejo (NFC-e sem detalhe por item) é a visão tributária
+         que existe. Só renderiza quando a view fornece $consolidadoFiscal. --}}
+    @include('autenticado.partials._consolidado-fiscal', [
+        'tituloConsolidado' => 'Consolidado Fiscal Acumulado (C190/D190)',
+        'subtituloConsolidado' => 'todas as importações EFD · por CFOP · CST · alíquota',
+    ])
+
     @include('autenticado.perfis._principais-produtos', ['produtosPerfil' => $fiscalPerfil['top_produtos'] ?? $perfilCnpj['produtos'] ?? []])
     @include('autenticado.perfis._principais-cfops', ['cfopsPerfil' => $fiscalPerfil['top_cfops'] ?? $perfilCnpj['cfops'] ?? []])
 

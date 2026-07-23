@@ -44,4 +44,31 @@ class Campos
 
         return substr($v, 4, 4).'-'.substr($v, 2, 2).'-'.substr($v, 0, 2);
     }
+
+    /** PJ (14 dígitos) | PF (11) | null. O insert direto da engine pula o hook do Model. */
+    public static function tipoDocumento(?string $documento): ?string
+    {
+        return match (strlen(preg_replace('/\D/', '', (string) $documento))) {
+            14 => 'PJ',
+            11 => 'PF',
+            default => null,
+        };
+    }
+
+    /** Prefixo do código IBGE de município (2 primeiros dígitos) → sigla da UF. */
+    private const UF_POR_CODIGO_IBGE = [
+        '11' => 'RO', '12' => 'AC', '13' => 'AM', '14' => 'RR', '15' => 'PA', '16' => 'AP', '17' => 'TO',
+        '21' => 'MA', '22' => 'PI', '23' => 'CE', '24' => 'RN', '25' => 'PB', '26' => 'PE', '27' => 'AL', '28' => 'SE', '29' => 'BA',
+        '31' => 'MG', '32' => 'ES', '33' => 'RJ', '35' => 'SP',
+        '41' => 'PR', '42' => 'SC', '43' => 'RS',
+        '50' => 'MS', '51' => 'MT', '52' => 'GO', '53' => 'DF',
+    ];
+
+    /** UF a partir do código IBGE de município (0150 não traz UF, mas o COD_MUN a codifica). */
+    public static function ufPorCodigoMunicipio(?string $codMun): ?string
+    {
+        $cod = preg_replace('/\D/', '', (string) $codMun);
+
+        return strlen($cod) >= 2 ? (self::UF_POR_CODIGO_IBGE[substr($cod, 0, 2)] ?? null) : null;
+    }
 }

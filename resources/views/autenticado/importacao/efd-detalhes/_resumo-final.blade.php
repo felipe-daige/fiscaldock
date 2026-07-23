@@ -13,6 +13,7 @@
  $nomesBloco = [
  'notas_servicos' => 'Notas de Servico (PIS/COFINS)',
  'notas_mercadorias' => 'NF-e Mercadorias (ICMS/IPI)',
+ 'notas_consumidor' => 'NFC-e Consumidor Final',
  'notas_transportes' => 'CT-e Transportes',
  'apuracao_icms' => 'Apuracao ICMS/IPI',
  'apuracao_pis_cofins' => 'Apuracao PIS/COFINS',
@@ -67,7 +68,7 @@
  @endif
 
  {{-- Blocos --}}
- @foreach(['notas_servicos', 'notas_mercadorias', 'notas_transportes', 'apuracao_icms', 'apuracao_pis_cofins', 'retencoes_fonte', 'A', 'C', 'D'] as $bloco)
+ @foreach(['notas_servicos', 'notas_mercadorias', 'notas_consumidor', 'notas_transportes', 'apuracao_icms', 'apuracao_pis_cofins', 'retencoes_fonte', 'A', 'C', 'D'] as $bloco)
  @if(isset($rf['blocos'][$bloco]))
  @php
  $bd = $rf['blocos'][$bloco];

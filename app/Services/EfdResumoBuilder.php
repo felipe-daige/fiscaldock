@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\EfdImportacao;
+use App\Support\Efd\ModeloDocumento;
 use Illuminate\Support\Facades\DB;
 
 class EfdResumoBuilder
@@ -21,8 +22,8 @@ class EfdResumoBuilder
         $apuracaoPisCofins = $this->blocoApuracaoPisCofins($impId);
         $retencoes = $this->blocoRetencoes($impId);
 
-        $totalRegulares = $notas['mercadorias']['total'] + $notas['transportes']['total'] + $notas['servicos']['total'];
-        $totalValor = $notas['mercadorias']['valor'] + $notas['transportes']['valor'] + $notas['servicos']['valor'];
+        $totalRegulares = $notas['mercadorias']['total'] + $notas['consumidor']['total'] + $notas['transportes']['total'] + $notas['servicos']['total'];
+        $totalValor = $notas['mercadorias']['valor'] + $notas['consumidor']['valor'] + $notas['transportes']['valor'] + $notas['servicos']['valor'];
         $totalNotas = $totalRegulares + $notas['canceladas'];
 
         $estatisticas = [
@@ -45,6 +46,10 @@ class EfdResumoBuilder
             'notas_mercadorias' => [
                 'total_notas' => $notas['mercadorias']['total'],
                 'valor_total' => $notas['mercadorias']['valor'],
+            ],
+            'notas_consumidor' => [
+                'total_notas' => $notas['consumidor']['total'],
+                'valor_total' => $notas['consumidor']['valor'],
             ],
             'notas_transportes' => [
                 'total_notas' => $notas['transportes']['total'],
@@ -93,29 +98,27 @@ class EfdResumoBuilder
             ->get()
             ->keyBy('modelo');
 
-        // Transporte = CT-e (57/67); serviço = NFS-e (00). Mercadoria = TODO o resto
-        // (NF-e 55, NFC-e 65, avulsa/produtor rural 01/1B/04/59…). Contar mercadoria só
-        // como '55' fazia a NFC-e sumir do resumo — no varejo (UTIDA: 1432 de 1433 são
-        // modelo 65) o total virava 1. Buckets exaustivos: toda nota regular cai em um.
-        $transporte = ['57', '67'];
-        $servico = ['00'];
-        $somar = function ($rows, callable $filtro): array {
-            $total = 0;
-            $valor = 0.0;
-            foreach ($rows as $modelo => $r) {
-                if ($filtro((string) $modelo)) {
-                    $total += (int) $r->regulares;
-                    $valor += (float) $r->valor;
-                }
-            }
-
-            return ['total' => $total, 'valor' => $valor];
-        };
+        // Bucket canônico (ModeloDocumento) de 4 vias: consumidor (NFC-e 65) separado de
+        // mercadoria (NF-e 55 + avulsas), transporte (57/67), serviço (00). NFC-e tem bucket
+        // próprio porque o mix B2B×varejo é informação fiscal (UTIDA fatura R$ 180k em 65 e
+        // R$ 7 em 55 — juntar esconde). Fonte única — o strip de progresso e o BI leem o mesmo.
+        $buckets = [
+            'notas_mercadorias' => ['total' => 0, 'valor' => 0.0],
+            'notas_consumidor' => ['total' => 0, 'valor' => 0.0],
+            'notas_transportes' => ['total' => 0, 'valor' => 0.0],
+            'notas_servicos' => ['total' => 0, 'valor' => 0.0],
+        ];
+        foreach ($rows as $modelo => $r) {
+            $b = ModeloDocumento::bucket((string) $modelo);
+            $buckets[$b]['total'] += (int) $r->regulares;
+            $buckets[$b]['valor'] += (float) $r->valor;
+        }
 
         return [
-            'mercadorias' => $somar($rows, fn (string $m): bool => ! in_array($m, [...$transporte, ...$servico], true)),
-            'transportes' => $somar($rows, fn (string $m): bool => in_array($m, $transporte, true)),
-            'servicos' => $somar($rows, fn (string $m): bool => in_array($m, $servico, true)),
+            'mercadorias' => $buckets['notas_mercadorias'],
+            'consumidor' => $buckets['notas_consumidor'],
+            'transportes' => $buckets['notas_transportes'],
+            'servicos' => $buckets['notas_servicos'],
             'canceladas' => (int) $rows->sum('canceladas'),
         ];
     }
@@ -215,6 +218,9 @@ class EfdResumoBuilder
         }
         if ($notas['mercadorias']['total'] > 0) {
             $parts[] = $notas['mercadorias']['total'].' NF-e';
+        }
+        if ($notas['consumidor']['total'] > 0) {
+            $parts[] = $notas['consumidor']['total'].' NFC-e';
         }
         if ($notas['transportes']['total'] > 0) {
             $parts[] = $notas['transportes']['total'].' CT-e';

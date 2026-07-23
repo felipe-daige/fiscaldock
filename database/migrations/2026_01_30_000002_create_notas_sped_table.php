@@ -33,6 +33,9 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['cliente_id', 'data_emissao', 'tipo_operacao'], 'efd_notas_cliente_data_tipo_idx');
+            // FK importacao_id não é auto-indexada pelo Postgres — e várias queries quentes
+            // filtram por ela (resumo, consolidado por importação, mapa de linkagem, progresso).
+            $table->index('importacao_id', 'efd_notas_importacao_id_idx');
         });
 
         // Índice único parcial: NULL em chave_acesso = NFS-e sem chave (não conta para unicidade).

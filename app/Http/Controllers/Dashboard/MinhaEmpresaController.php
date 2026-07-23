@@ -23,7 +23,8 @@ class MinhaEmpresaController extends Controller
 
     public function __construct(
         protected RiskScoreService $riskScoreService,
-        protected ResultadoDetalhePresenter $detalhePresenter
+        protected ResultadoDetalhePresenter $detalhePresenter,
+        protected \App\Services\Efd\ConsolidadoFiscalService $consolidadoFiscal,
     ) {}
 
     /**
@@ -105,6 +106,9 @@ class MinhaEmpresaController extends Controller
 
         $data = [
             'empresa' => $empresa,
+            // Consolidado fiscal acumulado (C190/D190 de todas as importações EFD da empresa).
+            'consolidadoFiscal' => $this->consolidadoFiscal
+                ->porCliente((int) $empresa->id, (int) $user->id),
             'participante' => $participante,
             'score' => $score,
             'scoreDetalhamento' => $scoreDetalhamento,

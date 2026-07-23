@@ -35,18 +35,6 @@ return [
         ],
     ],
 
-    'webhook' => [
-        // Único uso restante do n8n: extração completa de documentos EFD por tipo.
-        // Cutover 2026-06-07: consultas de CNPJ migraram 100% pro Laravel
-        // (app/Services/Consultas). Clearance de notas e importação XML foram
-        // desligados junto com a remoção dos webhooks n8n correspondentes.
-        'importacao_efd_contribuicoes_url' => env('WEBHOOK_IMPORTACAO_EFD_CONTRIBUICOES_URL'),
-        'importacao_efd_fiscal_url' => env('WEBHOOK_IMPORTACAO_EFD_FISCAL_URL'),
-    ],
-
-    'api' => [
-        'token' => env('API_TOKEN', ''),
-    ],
 
     'receitaws' => [
         'url' => env('RECEITAWS_API_URL', 'https://www.receitaws.com.br/v1'),

@@ -1,26 +1,21 @@
 <?php
 
+use App\Jobs\ProcessarEfdImportacaoJob;
 use App\Models\EfdImportacao;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    config([
-        'services.webhook.importacao_efd_fiscal_url' => 'https://n8n.example.com/icms',
-        'services.webhook.importacao_efd_contribuicoes_url' => 'https://n8n.example.com/contrib',
-    ]);
-
     $this->user = User::factory()->create();
     $this->actingAs($this->user);
 
-    Http::fake([
-        '*' => Http::response(['ok' => true], 200),
-    ]);
+    // A extração roda 100% no motor Laravel — o upload despacha o Job (sem n8n).
+    Bus::fake();
 });
 
 function spedPisCofins(): string
@@ -77,7 +72,7 @@ it('rejeita arquivo nao-SPED com 422', function () {
     expect($response->json('success'))->toBeFalse();
     expect($response->json('error'))->toContain('SPED');
     expect(EfdImportacao::count())->toBe(0);
-    Http::assertNothingSent();
+    Bus::assertNotDispatched(ProcessarEfdImportacaoJob::class);
 });
 
 it('corrige tipo_efd silenciosamente quando arquivo divergir', function () {
@@ -95,9 +90,11 @@ it('corrige tipo_efd silenciosamente quando arquivo divergir', function () {
     $importacao = EfdImportacao::first();
     expect($importacao->tipo_efd)->toBe('EFD PIS/COFINS'); // sobrescrito pelo detectado
 
-    // webhook correto disparado (contrib, nao fiscal)
-    Http::assertSent(fn ($req) => str_contains($req->url(), 'contrib'));
-    Http::assertNotSent(fn ($req) => str_contains($req->url(), 'icms'));
+    // Job despachado para ESTA importação (o driver correto é escolhido no Job pelo tipo).
+    Bus::assertDispatched(
+        ProcessarEfdImportacaoJob::class,
+        fn (ProcessarEfdImportacaoJob $job) => $job->importacaoId === $importacao->id
+    );
 
     // log de divergencia registrado
     Log::shouldHaveReceived('info')->withArgs(fn ($msg) => str_contains($msg, 'tipo_efd corrigido'))->atLeast()->once();
@@ -113,7 +110,7 @@ it('aceita upload quando tipo_efd bate com arquivo', function () {
 
     $response->assertOk();
     expect(EfdImportacao::first()->tipo_efd)->toBe('EFD ICMS/IPI');
-    Http::assertSent(fn ($req) => str_contains($req->url(), 'icms'));
+    Bus::assertDispatched(ProcessarEfdImportacaoJob::class);
 });
 
 it('aceita SPED de tipo desconhecido sem sobrescrever', function () {

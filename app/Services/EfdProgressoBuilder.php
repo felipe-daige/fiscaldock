@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\EfdImportacao;
+use App\Support\Efd\ModeloDocumento;
 use Illuminate\Support\Facades\DB;
 
 class EfdProgressoBuilder
@@ -76,12 +77,20 @@ class EfdProgressoBuilder
             ->groupBy('modelo')
             ->pluck('qtd', 'modelo');
 
+        // Classifica cada modelo pelo bucket canônico (strip de 3 blocos: a NFC-e/65 conta
+        // em mercadorias, CT-e OS/67 em transportes). Contar mercadoria só como '55' fazia
+        // a barra reportar "0 notas" num varejo puro (UTIDA: 1432 de 1433 são modelo 65).
+        $strip = ['notas_servicos' => 0, 'notas_mercadorias' => 0, 'notas_transportes' => 0];
+        foreach ($notasPorModelo as $modelo => $qtd) {
+            $strip[ModeloDocumento::bucketAgrupado((string) $modelo)] += (int) $qtd;
+        }
+
         return [
             'participantes' => (int) DB::table('participantes')->where('importacao_efd_id', $impId)->count(),
             'catalogo' => (int) DB::table('efd_catalogo_itens')->where('importacao_id', $impId)->count(),
-            'notas_servicos' => (int) ($notasPorModelo['00'] ?? 0),
-            'notas_mercadorias' => (int) ($notasPorModelo['55'] ?? 0),
-            'notas_transportes' => (int) ($notasPorModelo['57'] ?? 0),
+            'notas_servicos' => $strip['notas_servicos'],
+            'notas_mercadorias' => $strip['notas_mercadorias'],
+            'notas_transportes' => $strip['notas_transportes'],
             'apuracao_pis_cofins' => (int) DB::table('efd_apuracoes_contribuicoes')->where('importacao_id', $impId)->count(),
             'apuracao_icms' => (int) DB::table('efd_apuracoes_icms')->where('importacao_id', $impId)->count(),
             'retencoes_fonte' => (int) DB::table('efd_retencoes_fonte')->where('importacao_id', $impId)->count(),

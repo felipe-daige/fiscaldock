@@ -111,6 +111,8 @@
             @include('autenticado.importacao.efd-detalhes._cliente')
             @include('autenticado.importacao.efd-detalhes._participantes')
             @include('autenticado.importacao.efd-detalhes._resumo-final')
+
+            @include('autenticado.partials._consolidado-fiscal')
             @include('autenticado.importacao.efd-detalhes._catalogo')
             @include('autenticado.importacao.efd-detalhes._apuracao-icms')
             @include('autenticado.importacao.efd-detalhes._retencoes')

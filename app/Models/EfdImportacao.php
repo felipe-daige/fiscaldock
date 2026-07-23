@@ -58,6 +58,48 @@ class EfdImportacao extends Model
         ];
     }
 
+    // SPED bruto retido
+
+    /**
+     * Codifica o SPED bruto para persistir em `arquivo_base64`. base64 é UTF-8-safe
+     * (o EFD é tipicamente ISO-8859-1, e `json_encode` retorna false em byte não-UTF-8),
+     * casa com o nome da coluna, com o `base64_decode` do download e com o cálculo de
+     * quota `LENGTH*3/4`. Fonte única de escrita — use nos dois motores.
+     */
+    public static function encodeConteudoSped(string $conteudo): string
+    {
+        return base64_encode($conteudo);
+    }
+
+    /**
+     * SPED bruto decodificado de `arquivo_base64`. Fonte única de LEITURA (Job, resolver,
+     * auditoria). Tolera três formas históricas: base64 (canônico), string JSON-encoded
+     * (imports da transição) e texto cru (fixtures). '' quando ausente.
+     */
+    public function conteudoSped(): string
+    {
+        $raw = $this->arquivo_base64;
+        if (! $raw) {
+            return '';
+        }
+
+        // Canônico: base64. O SPED sempre começa com '|0000'; '|' não é alfabeto base64,
+        // então um texto cru ou JSON falha o decode estrito e cai nos ramos legados.
+        $b64 = base64_decode($raw, true);
+        if ($b64 !== false && str_starts_with(ltrim($b64), '|')) {
+            return $b64;
+        }
+
+        // Transição: json_encode(string).
+        $json = json_decode($raw, true);
+        if (is_string($json)) {
+            return $json;
+        }
+
+        // Legado cru.
+        return (string) $raw;
+    }
+
     // Acessores
 
     /**

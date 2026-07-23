@@ -18,7 +18,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -35,6 +34,7 @@ class EfdImportacaoController extends Controller
         protected SpedDetectorService $spedDetector,
         protected \App\Services\Efd\EfdImportacaoDuplicidadeService $duplicidade,
         protected \App\Services\Efd\ExcluirImportacaoService $excluir,
+        protected \App\Services\Efd\ConsolidadoFiscalService $consolidadoFiscal = new \App\Services\Efd\ConsolidadoFiscalService,
         protected EntitlementService $entitlements = new EntitlementService,
         protected \App\Services\Efd\EfdPlanilhaExportService $planilhaExport = new \App\Services\Efd\EfdPlanilhaExportService,
     ) {}
@@ -140,6 +140,10 @@ class EfdImportacaoController extends Controller
         $data['apuracaoContribuicao'] = $importacao->apuracaoContribuicao;
         $data['apuracaoIcms'] = $importacao->apuracaoIcms;
         $data['retencoesFonte'] = $importacao->retencoesFonte ?? collect();
+        // Consolidado fiscal agregado do mês (C190/D190) — resumo tributário por
+        // CFOP/CST/alíquota, útil no varejo (NFC-e) onde não há detalhe por item.
+        $data['consolidadoFiscal'] = $this->consolidadoFiscal
+            ->porImportacao($importacao->id, $userId);
 
         if ($this->isAjaxRequest($request)) {
             return response(view($view, $data)->render())->header('Content-Type', 'text/html');
@@ -366,15 +370,6 @@ class EfdImportacaoController extends Controller
             $tipoEfd = $cabecalho['tipo'];
         }
 
-        // Motor de extração: n8n (legado) ou Laravel (flag EFD_MOTOR / EFD_MOTOR_FISCAL).
-        // Resolvido após o detector fixar o tipo — o gate é por tipo. §10.6.
-        $motorLaravel = $this->motorLaravel($tipoEfd);
-
-        // Selecionar webhook baseado no tipo de EFD (extração completa sempre)
-        $webhookUrl = $tipoEfd === 'EFD ICMS/IPI'
-            ? config('services.webhook.importacao_efd_fiscal_url')
-            : config('services.webhook.importacao_efd_contribuicoes_url');
-
         // Validar que o cliente pertence ao usuário (se fornecido)
         $clienteId = $request->input('cliente_id');
         if ($clienteId) {
@@ -450,20 +445,6 @@ class EfdImportacaoController extends Controller
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        // Motor Laravel não precisa de webhook — o guard de webhook ausente é só do n8n.
-        if (empty($webhookUrl) && ! $motorLaravel) {
-            $configKey = $tipoEfd === 'EFD ICMS/IPI'
-                ? 'WEBHOOK_IMPORTACAO_EFD_FISCAL_URL'
-                : 'WEBHOOK_IMPORTACAO_EFD_CONTRIBUICOES_URL';
-            Log::error("Webhook URL para importação .txt não configurada ({$configKey})", [
-                'tipo_efd' => $tipoEfd,
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'error' => 'Serviço de importação não configurado. Verifique as variáveis de ambiente.',
-            ], Response::HTTP_SERVICE_UNAVAILABLE);
-        }
 
         // EFD sem cliente vinculado: o CNPJ do arquivo É a empresa-sujeito. Resolvido
         // APÓS o dedup (que escopa pelo cliente_id do request) pra não mudar o contrato
@@ -474,8 +455,33 @@ class EfdImportacaoController extends Controller
                 ->where('documento', $cabecalho['cnpj'])
                 ->first();
 
+            // Identificação que o registro 0000 do SPED traz (o front nunca fornece). IE e
+            // inscrição municipal só existem no 0000 fiscal; contribuições traz o resto.
+            // Endereço/CNAE/regime/situação NÃO vêm do SPED — são de consulta CNPJ (produto
+            // à parte), fonte mais forte que não deve ser sobrescrita por este backfill.
+            $identidadeSped = array_filter([
+                'razao_social' => $cabecalho['razao_social'],
+                'uf' => $cabecalho['uf'],
+                'inscricao_estadual' => $cabecalho['inscricao_estadual'],
+                'codigo_municipal' => $cabecalho['codigo_municipal'],
+                'inscricao_municipal' => $cabecalho['inscricao_municipal'],
+                'suframa' => $cabecalho['suframa'],
+            ], fn ($v) => $v !== null && $v !== '');
+
             if ($existente) {
                 $clienteId = $existente->id;
+                // Backfill defensivo: cliente auto-criado por upload anterior pode estar só
+                // com o documento. Preenche APENAS as colunas ainda vazias — nunca sobrescreve
+                // dado existente (consulta CNPJ vence o NOME digitado no SPED).
+                $preencher = [];
+                foreach ($identidadeSped as $col => $val) {
+                    if (blank($existente->{$col})) {
+                        $preencher[$col] = $val;
+                    }
+                }
+                if ($preencher !== []) {
+                    Cliente::whereKey($existente->id)->update($preencher);
+                }
             } elseif (! $this->entitlements->podeAdicionarCliente($user)) {
                 $limite = $this->entitlements->limiteClientes($user);
 
@@ -484,20 +490,19 @@ class EfdImportacaoController extends Controller
                     'error' => "Seu plano permite até {$limite} cliente(s) além da sua empresa. Este SPED é de um CNPJ ainda não cadastrado — faça upgrade para importá-lo.",
                 ], Response::HTTP_FORBIDDEN);
             } else {
+                // Empresa-sujeito nova: nasce identificada com tudo que o 0000 do SPED trouxe.
                 $clienteId = Cliente::create([
                     'user_id' => $user->id,
                     'tipo_pessoa' => 'PJ',
                     'documento' => $cabecalho['cnpj'],
                     'is_empresa_propria' => false,
                     'ativo' => true,
+                    ...$identidadeSped,
                 ])->id;
             }
         }
 
-        // Criar registro de importação antes de enviar ao n8n.
-        // arquivo_base64 retém o SPED bruto (string JSON-encoded): alimenta o guardrail
-        // de integridade (EfdAuditoriaService), o ParticipanteResolver e o motor Laravel.
-        // Vale pros dois motores — o n8n ignora. §10.8.
+        // Cria a importação; o SPED bruto vai em arquivo_base64 (base64) — o motor lê dali.
         $importacao = EfdImportacao::create([
             'user_id' => $user->id,
             'cliente_id' => $clienteId,
@@ -506,96 +511,21 @@ class EfdImportacaoController extends Controller
             'periodo_inicio' => $cabecalho['periodo_inicio'],
             'periodo_fim' => $cabecalho['periodo_fim'],
             'arquivo_hash' => $arquivoHash,
-            'arquivo_base64' => json_encode($conteudoArquivo),
+            'arquivo_base64' => EfdImportacao::encodeConteudoSped($conteudoArquivo),
             'filename' => $arquivo->getClientOriginalName(),
             'status' => 'processando',
             'iniciado_em' => now(),
         ]);
 
-        // Cutover: motor Laravel processa em background (fila database, worker existente),
-        // sem n8n. O pré-voo acima (validação/detector/dedup/quota/cliente/create) é
-        // agnóstico de motor. O Job lê o arquivo_base64 já persistido. §10.6.
-        if ($motorLaravel) {
-            ProcessarEfdImportacaoJob::dispatch($importacao->id, $request->input('tab_id'));
+        // Motor de extração 100% Laravel (fila database, worker existente). O pré-voo acima
+        // (validação/detector/dedup/quota/cliente/create) fica intacto; o Job lê o
+        // arquivo_base64 já persistido, parseia e persiste em processo.
+        ProcessarEfdImportacaoJob::dispatch($importacao->id, $request->input('tab_id'));
 
-            return response()->json([
-                'success' => true,
-                'importacao_id' => $importacao->id,
-                'motor' => 'laravel',
-            ]);
-        }
-
-        try {
-            // Enviar arquivo para n8n via multipart
-            $response = Http::timeout(30)
-                ->attach('file', $conteudoArquivo, $arquivo->getClientOriginalName())
-                ->post($webhookUrl, [
-                    'user_id' => $user->id,
-                    'importacao_id' => $importacao->id,
-                    'cliente_id' => $clienteId,
-                    'tipo_efd' => $tipoEfd,
-                    'filename' => $arquivo->getClientOriginalName(),
-                    'progress_url' => url('/api/importacao/efd/progresso'),
-                    'tab_id' => $request->input('tab_id'),
-                ]);
-
-            if (! $response->successful()) {
-                Log::error('Erro ao enviar arquivo para n8n', [
-                    'user_id' => $user->id,
-                    'importacao_id' => $importacao->id,
-                    'status' => $response->status(),
-                    'response' => $response->body(),
-                ]);
-
-                $importacao->update(['status' => 'erro']);
-
-                return response()->json([
-                    'success' => false,
-                    'error' => $response->json('error') ?? 'Erro ao processar arquivo.',
-                ], Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
-
-            Log::info('Arquivo .txt enviado para n8n', [
-                'user_id' => $user->id,
-                'filename' => $arquivo->getClientOriginalName(),
-                'importacao_id' => $importacao->id,
-                'tab_id' => $request->input('tab_id'),
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'importacao_id' => $importacao->id,
-            ]);
-        } catch (\Exception $e) {
-            $importacao->update(['status' => 'erro']);
-
-            Log::error('Exceção ao enviar arquivo para n8n', [
-                'user_id' => $user->id,
-                'importacao_id' => $importacao->id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'error' => 'Erro de conexão com o serviço de importação.',
-            ], Response::HTTP_SERVICE_UNAVAILABLE);
-        }
-    }
-
-    /**
-     * Este tipo de EFD roteia pro motor Laravel? 'EFD_MOTOR=laravel' liga global;
-     * 'EFD_MOTOR_FISCAL'/'EFD_MOTOR_CONTRIB' ligam por tipo. Default n8n — merge não muda
-     * produção até setar a env. Ambos os tipos têm driver (ICMS/IPI + PIS/COFINS).
-     */
-    private function motorLaravel(string $tipoEfd): bool
-    {
-        $flagTipo = match ($tipoEfd) {
-            'EFD ICMS/IPI' => config('efd.motor_fiscal'),
-            'EFD PIS/COFINS' => config('efd.motor_contrib'),
-            default => null,
-        };
-
-        return config('efd.motor') === 'laravel' || $flagTipo === 'laravel';
+        return response()->json([
+            'success' => true,
+            'importacao_id' => $importacao->id,
+        ]);
     }
 
     /**

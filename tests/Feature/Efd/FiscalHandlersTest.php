@@ -35,8 +35,22 @@ it('Handler0150 mapeia participante (CNPJ em $p[5], não $p[4])', function () {
         ->and($row['razao_social'])->toBe('getnet adquirencia e servicos para meios de pagamento s.a.')
         ->and($row['inscricao_estadual'])->toBe('131042249116')
         ->and($row['codigo_municipal'])->toBe('3550308')
+        ->and($row['tipo_documento'])->toBe('PJ')               // derivado (insert pula o Model hook)
+        ->and($row['uf'])->toBe('SP')                            // do prefixo IBGE 35 do COD_MUN
         ->and($row['bairro'])->toBe('vila nova conceicao')
         ->and($row['origem_tipo'])->toBe('SPED_EFD_FISCAL');
+});
+
+it('Handler0150 deriva PF e UF de CPF/município (participante pessoa física em MS)', function () {
+    // CPF em $p[6] (COD_PAIS/CNPJ vazios); COD_MUN 5003702 (Dourados-MS) → prefixo 50 = MS.
+    $linha = '|0150|CLI001|Fulano de Tal|||11122233344||5003702||rua a|10||centro|';
+
+    $row = (new Handler0150)->mapear(spedRec($linha), null);
+
+    expect($row['documento'])->toBe('11122233344')
+        ->and($row['tipo_documento'])->toBe('PF')
+        ->and($row['codigo_municipal'])->toBe('5003702')
+        ->and($row['uf'])->toBe('MS');
 });
 
 it('Handler0150 usa CPF quando não há CNPJ, e pula sem documento', function () {

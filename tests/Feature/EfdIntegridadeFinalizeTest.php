@@ -24,7 +24,7 @@ function c100(string $chave, string $codSit = '00', string $codPart = '019075128
     return "|C100|1|0|{$codPart}|{$mod}|{$codSit}|1|123|{$chave}|15012026|15012026|1000,00|";
 }
 
-function novaImportacao(User $u, string $sped): EfdImportacao
+function novaImportacaoIntegridade(User $u, string $sped): EfdImportacao
 {
     return EfdImportacao::create([
         'user_id' => $u->id, 'tipo_efd' => 'EFD ICMS/IPI', 'status' => 'processando',
@@ -62,7 +62,7 @@ it('detecta notas dropadas: SPED tem 3 válidas, banco só 2 → faltando 1, ok=
         c100($c, '00', '', '65'),        // NFC-e sem COD_PART: é o caso UTIDA, TEM que entrar
         c100($cancel, '02'),             // cancelada: descartável, não conta
     ]);
-    $imp = novaImportacao($this->user, $sped);
+    $imp = novaImportacaoIntegridade($this->user, $sped);
     inserirNotaBanco($this->user, $this->cliente, $imp, $a);
     inserirNotaBanco($this->user, $this->cliente, $imp, $c, '65');
     // $b ausente de propósito (drop do Merge)
@@ -80,7 +80,7 @@ it('import íntegro: todas as chaves válidas no banco → ok=true', function ()
     $a = str_pad('A', 44, '0');
     $c = str_pad('C', 44, '0');
     $sped = spedComC100([c100($a), c100($c, '00', '', '65')]);
-    $imp = novaImportacao($this->user, $sped);
+    $imp = novaImportacaoIntegridade($this->user, $sped);
     inserirNotaBanco($this->user, $this->cliente, $imp, $a);
     inserirNotaBanco($this->user, $this->cliente, $imp, $c, '65');
 

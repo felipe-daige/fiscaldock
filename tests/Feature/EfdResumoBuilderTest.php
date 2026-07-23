@@ -102,6 +102,39 @@ it('conta NF-e e CT-e com somas por modelo', function () {
     expect($resumo['totais']['valor'])->toBe(7250.0);
 });
 
+it('separa NFC-e (modelo 65) de NF-e (modelo 55) em blocos distintos', function () {
+    // 1 NF-e (55) B2B R$ 7,20
+    EfdNota::create([
+        'user_id' => $this->user->id, 'cliente_id' => $this->cliente, 'importacao_id' => $this->imp->id,
+        'chave_acesso' => str_pad('55', 44, '0', STR_PAD_LEFT),
+        'modelo' => '55', 'numero' => 1, 'serie' => '1', 'data_emissao' => '2024-01-01',
+        'tipo_operacao' => 'saida', 'valor_total' => 7.20, 'cancelada' => false,
+    ]);
+    // 3 NFC-e (65) consumidor final R$ 100 cada
+    foreach ([1, 2, 3] as $n) {
+        EfdNota::create([
+            'user_id' => $this->user->id, 'cliente_id' => $this->cliente, 'importacao_id' => $this->imp->id,
+            'chave_acesso' => str_pad('65'.$n, 44, '0', STR_PAD_LEFT),
+            'modelo' => '65', 'numero' => 100 + $n, 'serie' => '1', 'data_emissao' => '2024-01-0'.$n,
+            'tipo_operacao' => 'saida', 'valor_total' => 100, 'cancelada' => false,
+        ]);
+    }
+
+    $resumo = (new EfdResumoBuilder)->build($this->imp);
+
+    // NF-e e NFC-e em buckets próprios, disjuntos.
+    expect($resumo['blocos']['notas_mercadorias']['total_notas'])->toBe(1);
+    expect($resumo['blocos']['notas_mercadorias']['valor_total'])->toBe(7.20);
+    expect($resumo['blocos']['notas_consumidor']['total_notas'])->toBe(3);
+    expect($resumo['blocos']['notas_consumidor']['valor_total'])->toBe(300.0);
+    // Total soma os dois.
+    expect($resumo['estatisticas']['total_notas_processadas'])->toBe(4);
+    expect($resumo['totais']['valor'])->toBe(307.20);
+    // Mensagem cita ambos.
+    expect($resumo['mensagem'])->toContain('1 NF-e');
+    expect($resumo['mensagem'])->toContain('3 NFC-e');
+});
+
 it('separa canceladas em estatistica dedicada', function () {
     EfdNota::create([
         'user_id' => $this->user->id, 'cliente_id' => $this->cliente, 'importacao_id' => $this->imp->id,

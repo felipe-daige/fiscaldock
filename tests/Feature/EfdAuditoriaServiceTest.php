@@ -126,3 +126,35 @@ it('retorna sumario com contagens', function () {
     expect($resultado['c100_banco'])->toBe(2);
     expect($resultado['canceladas'])->toBe(1);
 });
+
+it('detecta A100 (NFS-e) do SPED ausente no banco — oráculo cobre contribuições', function () {
+    // SPED PIS/COFINS: 2 A100 com chave (código de verificação). Só 1 no banco.
+    $sped = spedFixture([
+        'A100|1|0|FOR7|00|1|0|500|COD9CHK01|01022026|01022026|1000,00|',
+        'A170|1|SERV01|Consultoria|1000,00|',
+        'A100|1|0|FOR7|00|1|0|501|COD9CHK02|05022026|05022026|2000,00|', // esta some do banco
+    ]);
+    $imp = EfdImportacao::create([
+        'user_id' => $this->user->id, 'cliente_id' => $this->cliente, 'tipo_efd' => 'EFD PIS/COFINS',
+        'filename' => 'contrib.txt', 'status' => 'concluido',
+        'arquivo_base64' => EfdImportacao::encodeConteudoSped($sped),
+    ]);
+    // Banco: só a 1ª NFS-e (com 1 item).
+    $nfse = EfdNota::create([
+        'user_id' => $this->user->id, 'cliente_id' => $this->cliente, 'importacao_id' => $imp->id,
+        'chave_acesso' => 'COD9CHK01', 'modelo' => '00', 'numero' => 500, 'serie' => '1',
+        'data_emissao' => '2026-02-01', 'tipo_operacao' => 'saida', 'origem_arquivo' => 'contribuicoes', 'valor_total' => 1000,
+    ]);
+    \DB::table('efd_notas_itens')->insert([
+        'efd_nota_id' => $nfse->id, 'user_id' => $this->user->id, 'numero_item' => 1,
+        'codigo_item' => 'SERV01', 'valor_total' => 1000, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    app(EfdAuditoriaService::class)->auditar($imp);
+
+    // A 2ª A100 (COD9CHK02) faltando → ERRO com bloco A100.
+    $erro = EfdDivergencia::where('importacao_id', $imp->id)->where('bloco', 'A100')
+        ->where('severidade', 'erro')->get();
+    expect($erro)->toHaveCount(1);
+    expect($erro->first()->chave_acesso)->toBe('COD9CHK02');
+});

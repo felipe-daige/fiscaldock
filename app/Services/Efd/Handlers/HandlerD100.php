@@ -33,7 +33,7 @@ class HandlerD100 implements SpedRegistroHandler
             'chave_acesso' => Campos::texto($rec->campo(10)),
             'modelo' => Campos::texto($rec->campo(5)) ?? '57',
             'numero' => Campos::inteiro($rec->campo(9)) ?? 0,
-            'serie' => Campos::texto($rec->campo(7)),
+            'serie' => Campos::texto($rec->campo(7)) ?? '', // '' (não null): dedup compara serie com '='
             'data_emissao' => Campos::dataIso($rec->campo(11)),
             'tipo_operacao' => $rec->campo(2) === '1' ? 'saida' : 'entrada',
             'valor_total' => Campos::dec($rec->campo(15)),

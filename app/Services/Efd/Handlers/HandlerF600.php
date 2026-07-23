@@ -28,16 +28,18 @@ class HandlerF600 implements SpedRegistroHandler
     public function mapear(SpedRecord $rec, ?Contexto $pai): ?array
     {
         return [
-            'natureza' => Campos::texto($rec->campo(2)),
+            // natureza/cod_receita/natureza_receita/cnpj/ind_declarante são NOT NULL:
+            // coalesce (retenção por órgão federal traz CNPJ vazio, legítimo) p/ não abortar.
+            'natureza' => Campos::texto($rec->campo(2)) ?? '',
             'data_retencao' => Campos::dataIso($rec->campo(3)),
             'base_calculo' => Campos::dec($rec->campo(4)),
             'valor_total' => Campos::dec($rec->campo(5)),
-            'cod_receita' => Campos::texto($rec->campo(6)),
-            'natureza_receita' => Campos::texto($rec->campo(7)),
-            'cnpj' => preg_replace('/\D/', '', (string) $rec->campo(8)) ?: null,
+            'cod_receita' => Campos::texto($rec->campo(6)) ?? '',
+            'natureza_receita' => Campos::texto($rec->campo(7)) ?? '',
+            'cnpj' => preg_replace('/\D/', '', (string) $rec->campo(8)),
             'valor_pis' => Campos::dec($rec->campo(9)),
             'valor_cofins' => Campos::dec($rec->campo(10)),
-            'ind_declarante' => Campos::texto($rec->campo(11)),
+            'ind_declarante' => Campos::texto($rec->campo(11)) ?? '0',
             'dados_brutos' => [
                 'REG' => 'F600',
                 'RETENCAO_NATUREZA' => $rec->campo(2),

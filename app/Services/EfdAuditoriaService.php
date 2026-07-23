@@ -87,8 +87,56 @@ class EfdAuditoriaService
             }
         }
 
-        // --- C170: agrupar por C100 pai (via numero|serie|modelo do pai atual) ---
-        // Reconstroi pai-filho percorrendo SPED ordenado: cada C100 vira contexto.
+        // --- D100 (CT-e) e A100 (NFS-e): presença do documento por chave ---
+        // Sem isto o oráculo era cego a TODO o bloco de contribuições (A100). $c100Banco
+        // já contém TODAS as notas da importação (qualquer modelo), então serve de acervo.
+        foreach (['D100' => $registros['D100'] ?? [], 'A100' => $registros['A100'] ?? []] as $bloco => $lista) {
+            foreach ($lista as $doc) {
+                $codSit = $doc['COD_SIT'] ?? '00';
+                $chave = $doc['CHV'] ?? null;
+                $numero = isset($doc['NUM_DOC']) ? (int) $doc['NUM_DOC'] : null;
+
+                $motivo = match ($codSit) {
+                    '02' => EfdDivergencia::MOTIVO_CANCELADA_DESCARTADA,
+                    '06' => EfdDivergencia::MOTIVO_COMPLEMENTAR_DESCARTADA,
+                    '08' => EfdDivergencia::MOTIVO_REGULARIZACAO_DESCARTADA,
+                    default => null,
+                };
+
+                if ($motivo) {
+                    $this->registrar($imp, [
+                        'bloco' => $bloco,
+                        'motivo' => $motivo,
+                        'severidade' => EfdDivergencia::SEVERIDADE_INFO,
+                        'chave_acesso' => $chave,
+                        'numero_documento' => $numero,
+                        'payload_descartado' => $doc,
+                        'mensagem' => "{$bloco} COD_SIT={$codSit} descartado pelo pipeline",
+                    ]);
+                    $resultado['canceladas']++;
+                    $resultado['divergencias_geradas']++;
+
+                    continue;
+                }
+
+                // Documento normal mas ausente no banco (por chave, quando há chave).
+                if ($chave && ! $c100BancoPorChave->has($chave)) {
+                    $this->registrar($imp, [
+                        'bloco' => $bloco,
+                        'motivo' => EfdDivergencia::MOTIVO_DUPLICADA_PROCESSAMENTO,
+                        'severidade' => EfdDivergencia::SEVERIDADE_ERRO,
+                        'chave_acesso' => $chave,
+                        'numero_documento' => $numero,
+                        'payload_descartado' => $doc,
+                        'mensagem' => "{$bloco} presente no SPED mas ausente no banco",
+                    ]);
+                    $resultado['divergencias_geradas']++;
+                }
+            }
+        }
+
+        // --- C170/A170: agrupar itens por documento pai e comparar com o banco ---
+        // Reconstroi pai-filho percorrendo SPED ordenado: cada C100/A100 vira contexto.
         $itensSpedPorChave = $this->agruparItensPorPai($sped);
 
         $c170Banco = DB::table('efd_notas_itens')
@@ -113,6 +161,12 @@ class EfdAuditoriaService
 
         // Itens do SPED ausentes no banco (pipeline perdeu)
         foreach ($todasChaves as $chave) {
+            // NFS-e sem chave (código de verificação vazio) não é auditável por chave: os
+            // itens de várias notas colapsariam sob a chave vazia e cruzariam errado. Pula —
+            // a presença da nota já é coberta por integridade()/pelo loop de pais.
+            if ($chave === '' || $chave === null) {
+                continue;
+            }
             $itens = $itensSpedPorChave[$chave] ?? [];
             if (! $c100BancoPorChave->has($chave)) {
                 continue;
@@ -124,15 +178,16 @@ class EfdAuditoriaService
 
                 if (! isset($itensBancoPorChave[$chave][$numItem])) {
                     $numeroDoc = $c100BancoPorChave->get($chave)?->numero;
+                    $blocoItem = $item['REG'] ?? 'C170';
                     $this->registrar($imp, [
-                        'bloco' => 'C170',
+                        'bloco' => $blocoItem,
                         'motivo' => EfdDivergencia::MOTIVO_DUPLICADA_PROCESSAMENTO,
                         'severidade' => EfdDivergencia::SEVERIDADE_AVISO,
                         'chave_acesso' => $chave,
                         'numero_documento' => $numeroDoc,
                         'numero_item' => $numItem,
                         'payload_descartado' => $item,
-                        'mensagem' => "C170 num_item={$numItem} presente no SPED mas ausente no banco",
+                        'mensagem' => "{$blocoItem} num_item={$numItem} presente no SPED mas ausente no banco",
                     ]);
                     $resultado['divergencias_geradas']++;
                 }
@@ -190,22 +245,38 @@ class EfdAuditoriaService
             }
             $c = explode('|', $linha);
             $reg = $c[1] ?? null;
-            if ($reg !== 'C100' && $reg !== 'D100') {
+            // Índice do COD_SIT e da chave por registro. A100 (NFS-e) entra também — sem ele
+            // o guardrail era cego a TODO o bloco de contribuições (drop de NFS-e passava
+            // 'concluído' com selo verde). A100: COD_SIT=$c[5], chave (cód. verificação)=$c[9].
+            [$idxSit, $idxChave] = match ($reg) {
+                'C100' => [6, 9],   // CHV_NFE
+                'D100' => [6, 10],  // CHV_CTE
+                'A100' => [5, 9],   // chave/cód. verificação da NFS-e
+                default => [null, null],
+            };
+            if ($idxSit === null) {
                 continue;
             }
-            if (in_array($c[6] ?? '00', $descartaveis, true)) {
+            if (in_array($c[$idxSit] ?? '00', $descartaveis, true)) {
                 continue;
             }
-            // CHV_NFE = campo 9 no C100; CHV_CTE = campo 10 no D100.
-            $chave = trim((string) ($reg === 'C100' ? ($c[9] ?? '') : ($c[10] ?? '')));
+            $chave = trim((string) ($c[$idxChave] ?? ''));
             if ($chave !== '') {
                 $chavesEsperadas[$chave] = true;
             }
         }
 
+        // Escopo por CLIENTE (não importação): uma nota escriturada extemporaneamente e
+        // deduplicada numa importação anterior existe no acervo do cliente — não é
+        // "faltando" (alinha com PersistenciaEngine::mapaLinkagem). Sem cliente_id, cai
+        // no escopo da própria importação.
         $chavesBanco = DB::table('efd_notas')
             ->where('user_id', $imp->user_id)
-            ->where('importacao_id', $imp->id)
+            ->when(
+                $imp->cliente_id,
+                fn ($q) => $q->where('cliente_id', $imp->cliente_id),
+                fn ($q) => $q->where('importacao_id', $imp->id),
+            )
             ->whereNotNull('chave_acesso')
             ->pluck('chave_acesso')
             ->flip();
@@ -229,19 +300,10 @@ class EfdAuditoriaService
         ];
     }
 
-    /**
-     * Lê o conteúdo bruto do SPED a partir de efd_importacoes.arquivo_base64.
-     * Apesar do nome, o campo armazena uma string JSON-encoded com o texto SPED.
-     */
+    /** Lê o SPED bruto (fonte única: EfdImportacao::conteudoSped). */
     private function lerSpedBruto(EfdImportacao $imp): string
     {
-        $raw = $imp->arquivo_base64;
-        if (! $raw) {
-            return '';
-        }
-        $decoded = json_decode($raw, true);
-
-        return is_string($decoded) ? $decoded : (string) $raw;
+        return $imp->conteudoSped();
     }
 
     /**
@@ -301,14 +363,41 @@ class EfdAuditoriaService
                 'VL_ITEM' => $campos[7] ?? null,
             ];
         }
+        // D100 (CT-e): COD_SIT=$c[6], NUM_DOC=$c[9], CHV_CTE=$c[10].
+        if ($reg === 'D100') {
+            return [
+                'REG' => $reg,
+                'COD_SIT' => $campos[6] ?? null,
+                'NUM_DOC' => $campos[9] ?? null,
+                'CHV' => $campos[10] ?? null,
+            ];
+        }
+        // A100 (NFS-e): COD_SIT=$c[5], NUM_DOC=$c[8], chave/cód. verificação=$c[9].
+        if ($reg === 'A100') {
+            return [
+                'REG' => $reg,
+                'COD_SIT' => $campos[5] ?? null,
+                'NUM_DOC' => $campos[8] ?? null,
+                'CHV' => $campos[9] ?? null,
+            ];
+        }
+        // A170 (item de NFS-e): NUM_ITEM=$c[2], COD_ITEM=$c[3].
+        if ($reg === 'A170') {
+            return [
+                'REG' => $reg,
+                'NUM_ITEM' => $campos[2] ?? null,
+                'COD_ITEM' => $campos[3] ?? null,
+            ];
+        }
 
         // fallback: devolve cru
         return ['REG' => $reg, 'raw' => $campos];
     }
 
     /**
-     * Percorre o SPED de cima pra baixo associando C170 ao C100 imediatamente anterior.
-     * Retorna [chave_acesso => [C170, C170, ...]].
+     * Percorre o SPED de cima pra baixo associando itens ao documento-pai imediatamente
+     * anterior. Cobre C170→C100 (chave $c[9]) e A170→A100 (chave $c[9]). Retorna
+     * [chave_acesso => [item, ...]] (cada item traz REG p/ o bloco da divergência).
      */
     private function agruparItensPorPai(string $sped): array
     {
@@ -321,10 +410,10 @@ class EfdAuditoriaService
             }
             $campos = explode('|', $linha);
             $reg = $campos[1] ?? null;
-            if ($reg === 'C100') {
-                $chaveAtual = $campos[9] ?? null;
-            } elseif ($reg === 'C170' && $chaveAtual) {
-                $out[$chaveAtual][] = $this->mapearCampos('C170', $campos);
+            if ($reg === 'C100' || $reg === 'A100') {
+                $chaveAtual = $campos[9] ?? null; // ambos têm a chave em $c[9]
+            } elseif (($reg === 'C170' || $reg === 'A170') && $chaveAtual) {
+                $out[$chaveAtual][] = $this->mapearCampos($reg, $campos);
             }
         }
 

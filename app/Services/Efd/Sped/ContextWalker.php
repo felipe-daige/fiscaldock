@@ -45,10 +45,22 @@ class ContextWalker
                 continue;
             }
 
-            // Registro fora de qualquer subárvore de documento: encerra o pai.
-            $pai = null;
+            // Registros intermediários do MESMO documento (C110/C113/C140/C177, D110…) não
+            // são persistidos mas NÃO encerram o pai — senão os C170/C190 que aparecem
+            // DEPOIS deles orfanariam e seriam descartados (drop silencioso classe-UTIDA:
+            // toda NF-e com infCpl emite C110 entre C100 e C170). Só um registro de fronteira
+            // de bloco (abertura/fechamento: *001 / *990 / 9999) encerra o contexto-pai.
+            if ($this->fechaContexto($rec->reg)) {
+                $pai = null;
+            }
             yield [$rec, null];
         }
+    }
+
+    /** Registro de abertura/fechamento de bloco — encerra o documento-pai corrente. */
+    private function fechaContexto(string $reg): bool
+    {
+        return $reg === '9999' || preg_match('/(001|990)$/', $reg) === 1;
     }
 
     private function montarContexto(SpedRecord $rec): Contexto

@@ -46,10 +46,19 @@ class EfdMotorShadow extends Command
             return self::FAILURE;
         }
 
-        $clienteId = $this->option('cliente') !== null
-            ? (int) $this->option('cliente')
-            : (int) DB::table('clientes')->where('user_id', $userId)
+        if ($this->option('cliente') !== null) {
+            $clienteId = (int) $this->option('cliente');
+            // NUNCA confiar no --cliente sem validar o dono: um id de outro tenant gravaria
+            // (com --commit) notas/catálogo no acervo dele e dispararia a trigger de histórico.
+            if (! DB::table('clientes')->where('id', $clienteId)->where('user_id', $userId)->exists()) {
+                $this->error("Cliente {$clienteId} não pertence ao user {$userId}.");
+
+                return self::FAILURE;
+            }
+        } else {
+            $clienteId = (int) DB::table('clientes')->where('user_id', $userId)
                 ->orderByDesc('is_empresa_propria')->orderBy('id')->value('id');
+        }
 
         if (! $clienteId) {
             $this->error("Nenhum cliente para user {$userId} — passe --cliente=<id>.");
@@ -70,7 +79,7 @@ class EfdMotorShadow extends Command
                 'cliente_id' => $clienteId,
                 'tipo_efd' => (string) $this->option('tipo'),
                 'filename' => basename($arquivo),
-                'arquivo_base64' => json_encode($conteudo),
+                'arquivo_base64' => EfdImportacao::encodeConteudoSped($conteudo),
                 'status' => 'processando',
                 'iniciado_em' => now(),
             ]);
@@ -113,6 +122,15 @@ class EfdMotorShadow extends Command
     /**
      * @param  array{esperadas:int,no_banco:int,faltando:int,ok:bool,amostra_faltando:array<int,string>}  $integridade
      */
+    /** Conta linhas-filho (itens/consolidados) DESTA importação via join em efd_notas. */
+    private function contarFilhos(string $tabela, EfdImportacao $imp): int
+    {
+        return (int) DB::table($tabela)
+            ->join('efd_notas', 'efd_notas.id', '=', "{$tabela}.efd_nota_id")
+            ->where('efd_notas.importacao_id', $imp->id)
+            ->count();
+    }
+
     private function relatar(EfdImportacao $imp, array $integridade, int $errosAuditor): void
     {
         $notas = DB::table('efd_notas')->where('importacao_id', $imp->id);
@@ -122,8 +140,10 @@ class EfdMotorShadow extends Command
             ['status', $imp->status],
             ['notas (efd_notas)', (clone $notas)->count()],
             ['— canceladas', (clone $notas)->where('cancelada', true)->count()],
-            ['consolidados (C190/D190)', DB::table('efd_notas_consolidados')->where('user_id', $imp->user_id)->count()],
-            ['itens (C170)', DB::table('efd_notas_itens')->where('user_id', $imp->user_id)->count()],
+            // Contar por importacao_id (via join): por user_id inflava com imports anteriores
+            // e o operador não conseguia ver o que ESTE arquivo extraiu.
+            ['consolidados (C190/D190)', $this->contarFilhos('efd_notas_consolidados', $imp)],
+            ['itens (C170/A170)', $this->contarFilhos('efd_notas_itens', $imp)],
             ['participantes (0150)', DB::table('participantes')->where('importacao_efd_id', $imp->id)->count()],
             ['catálogo (0200)', DB::table('efd_catalogo_itens')->where('importacao_id', $imp->id)->count()],
             ['apuração ICMS (bloco E)', DB::table('efd_apuracoes_icms')->where('importacao_id', $imp->id)->count()],

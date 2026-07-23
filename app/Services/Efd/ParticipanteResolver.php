@@ -18,7 +18,7 @@ class ParticipanteResolver
 {
     public function resolver(EfdImportacao $imp): int
     {
-        $sped = $this->lerSpedBruto($imp);
+        $sped = $imp->conteudoSped();
         if ($sped === '') {
             return 0;
         }
@@ -30,7 +30,11 @@ class ParticipanteResolver
 
         $docParaId = $this->documentoParaParticipante((int) $imp->user_id);
 
-        $atualizadas = 0;
+        // Coleta id→participante em memória com chunkById (cursor por id, não OFFSET:
+        // `chunk` paginaria por OFFSET enquanto o UPDATE remove linhas do próprio filtro
+        // `whereNull('participante_id')`, pulando ~30% das notas). Depois agrupa por pid e
+        // faz UM update por participante (evita 1 UPDATE por nota — N+1).
+        $notaIdsPorPid = [];
         DB::table('efd_notas')
             ->where('user_id', $imp->user_id)
             ->where('importacao_id', $imp->id)
@@ -38,7 +42,7 @@ class ParticipanteResolver
             ->whereNotNull('chave_acesso')
             ->select('id', 'chave_acesso')
             ->orderBy('id')
-            ->chunk(1000, function ($notas) use ($chaveParaDoc, $docParaId, &$atualizadas) {
+            ->chunkById(1000, function ($notas) use ($chaveParaDoc, $docParaId, &$notaIdsPorPid) {
                 foreach ($notas as $nota) {
                     $doc = $chaveParaDoc[$nota->chave_acesso] ?? null;
                     if ($doc === null) {
@@ -48,10 +52,16 @@ class ParticipanteResolver
                     if ($pid === null) {
                         continue; // documento sem participante cadastrado
                     }
-                    DB::table('efd_notas')->where('id', $nota->id)->update(['participante_id' => $pid]);
-                    $atualizadas++;
+                    $notaIdsPorPid[$pid][] = $nota->id;
                 }
             });
+
+        $atualizadas = 0;
+        foreach ($notaIdsPorPid as $pid => $ids) {
+            foreach (array_chunk($ids, 1000) as $lote) {
+                $atualizadas += DB::table('efd_notas')->whereIn('id', $lote)->update(['participante_id' => $pid]);
+            }
+        }
 
         return $atualizadas;
     }
@@ -129,17 +139,5 @@ class ParticipanteResolver
         }
 
         return $map;
-    }
-
-    /** Lê o SPED de `arquivo_base64` (string JSON-encoded — mesmo contrato do auditar). */
-    private function lerSpedBruto(EfdImportacao $imp): string
-    {
-        $raw = $imp->arquivo_base64;
-        if (! $raw) {
-            return '';
-        }
-        $decoded = json_decode($raw, true);
-
-        return is_string($decoded) ? $decoded : (string) $raw;
     }
 }

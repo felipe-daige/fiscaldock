@@ -44,11 +44,20 @@ class Handler0150 implements SpedRegistroHandler
             return null;
         }
 
+        $codMun = Campos::texto($rec->campo(8));
+
         return [
             'documento' => $documento,
+            // O engine insere direto (DB::table), sem passar pelo hook `saving` do Model
+            // que derivaria isto — então o handler seta explicitamente. tipo_documento
+            // (PJ/PF) e UF (do prefixo IBGE do COD_MUN) sem nenhuma chamada externa.
+            // `?? 'PJ'` casa com o DEFAULT da coluna (NOT NULL): um documento malformado
+            // (nº de dígitos ≠ 11/14) não pode injetar NULL e derrubar a transação inteira.
+            'tipo_documento' => Campos::tipoDocumento($documento) ?? 'PJ',
             'razao_social' => Campos::texto($rec->campo(3)),
             'inscricao_estadual' => Campos::texto($rec->campo(7)),
-            'codigo_municipal' => Campos::texto($rec->campo(8)),
+            'codigo_municipal' => $codMun,
+            'uf' => Campos::ufPorCodigoMunicipio($codMun),
             'suframa' => Campos::texto($rec->campo(9)),
             'endereco' => Campos::texto($rec->campo(10)),
             'numero' => Campos::texto($rec->campo(11)),

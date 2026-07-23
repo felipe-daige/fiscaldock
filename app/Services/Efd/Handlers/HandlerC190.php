@@ -27,8 +27,10 @@ class HandlerC190 implements SpedRegistroHandler
     public function mapear(SpedRecord $rec, ?Contexto $pai): ?array
     {
         return [
-            'cst_icms' => Campos::texto($rec->campo(2)),
-            'cfop' => Campos::inteiro($rec->campo(3)),
+            // cst_icms/cfop são NOT NULL: coalesce a sentinela p/ uma linha C190 truncada
+            // não abortar o import inteiro (o valor é preservado, sinalizado por cfop 0).
+            'cst_icms' => Campos::texto($rec->campo(2)) ?? '',
+            'cfop' => Campos::inteiro($rec->campo(3)) ?? 0,
             'aliquota_icms' => Campos::dec($rec->campo(4)),
             'valor_operacao' => Campos::dec($rec->campo(5)),
             'valor_bc_icms' => Campos::dec($rec->campo(6)),

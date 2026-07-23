@@ -5,9 +5,8 @@ namespace App\Services\Efd;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * Escreve o progresso da importação DIRETO no cache do SSE — mesmo contrato que o
- * n8n emitia via HTTP (`DataReceiverController::receiveNotasEfdProgress`), só que
- * em processo. O frontend (`renderEtapasStrip`) não muda. §10.7.
+ * Escreve o progresso da importação DIRETO no cache do SSE, em processo (o motor Laravel
+ * não faz callback HTTP). O frontend (`renderEtapasStrip`) lê o mesmo contrato. §10.7.
  *
  * Chaves: `efd_notas_progress:{user}:{tab}:{bloco}` (strip por bloco) + o principal
  * `progresso:{user}:{tab}` (lido pelo SSE). No-op quando não há tab_id (cutover em

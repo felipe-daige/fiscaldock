@@ -101,8 +101,11 @@ it('marca a importação concluída com integridade verde', function () {
     expect($resumo['integridade']['ok'])->toBeTrue();
     expect($resumo['integridade']['esperadas'])->toBe(1433);
     expect($resumo['integridade']['faltando'])->toBe(0);
-    // Resumo bate com o persistido.
-    expect($resumo['blocos']['notas_mercadorias']['total_notas'])->toBe(1433);
+    // Resumo bate com o persistido, com NF-e e NFC-e em blocos distintos (UTIDA = varejo:
+    // 1 NF-e modelo 55 + 1432 NFC-e modelo 65).
+    expect($resumo['blocos']['notas_mercadorias']['total_notas'])->toBe(1);
+    expect($resumo['blocos']['notas_consumidor']['total_notas'])->toBe(1432);
+    expect($resumo['estatisticas']['total_notas_processadas'])->toBe(1433);
 });
 
 it('emite progresso por bloco no cache do SSE', function () {

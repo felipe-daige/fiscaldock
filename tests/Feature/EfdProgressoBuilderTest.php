@@ -20,7 +20,7 @@ beforeEach(function () {
     ]);
 });
 
-function novaImportacao(int $userId, int $clienteId, string $tipo = 'EFD PIS/COFINS', string $status = 'processando'): EfdImportacao
+function novaImportacaoProgresso(int $userId, int $clienteId, string $tipo = 'EFD PIS/COFINS', string $status = 'processando'): EfdImportacao
 {
     return EfdImportacao::create([
         'user_id' => $userId,
@@ -33,7 +33,7 @@ function novaImportacao(int $userId, int $clienteId, string $tipo = 'EFD PIS/COF
 }
 
 it('retorna status processando e notas_blocos vazio quando importacao acabou de comecar', function () {
-    $imp = novaImportacao($this->user->id, $this->cliente);
+    $imp = novaImportacaoProgresso($this->user->id, $this->cliente);
 
     $p = (new EfdProgressoBuilder)->build($imp);
 
@@ -43,8 +43,27 @@ it('retorna status processando e notas_blocos vazio quando importacao acabou de 
     expect($p['resumo_final'])->toBeNull();
 });
 
+it('conta NFC-e (modelo 65) em notas_mercadorias no strip ao vivo (varejo puro)', function () {
+    // Bug fechado: contava só modelo 55 → barra reportava "0 notas" num varejo (UTIDA:
+    // 1432 de 1433 são modelo 65). O strip de 3 blocos dobra consumidor em mercadorias.
+    $imp = novaImportacaoProgresso($this->user->id, $this->cliente, 'EFD ICMS/IPI');
+    foreach ([1, 2, 3] as $n) {
+        EfdNota::create([
+            'user_id' => $this->user->id, 'cliente_id' => $this->cliente, 'importacao_id' => $imp->id,
+            'chave_acesso' => str_pad('65'.$n, 44, '0', STR_PAD_LEFT),
+            'modelo' => '65', 'numero' => $n, 'serie' => '1', 'data_emissao' => '2026-01-0'.$n,
+            'tipo_operacao' => 'saida', 'valor_total' => 100, 'cancelada' => false,
+        ]);
+    }
+
+    $p = (new EfdProgressoBuilder)->build($imp);
+
+    expect($p['notas_blocos']['notas_mercadorias']['count'])->toBe(3); // NFC-e conta, não zero
+    expect($p['mensagem'])->toContain('3 notas');
+});
+
 it('marca bloco participantes como processando quando ja tem participantes inseridos', function () {
-    $imp = novaImportacao($this->user->id, $this->cliente);
+    $imp = novaImportacaoProgresso($this->user->id, $this->cliente);
 
     \DB::table('participantes')->insert([
         'user_id' => $this->user->id, 'cliente_id' => $this->cliente,
@@ -60,7 +79,7 @@ it('marca bloco participantes como processando quando ja tem participantes inser
 });
 
 it('marca todos os blocos com count>0 como concluido quando importacao esta concluido', function () {
-    $imp = novaImportacao($this->user->id, $this->cliente, 'EFD PIS/COFINS', 'concluido');
+    $imp = novaImportacaoProgresso($this->user->id, $this->cliente, 'EFD PIS/COFINS', 'concluido');
 
     EfdNota::create([
         'user_id' => $this->user->id, 'cliente_id' => $this->cliente, 'importacao_id' => $imp->id,
@@ -84,7 +103,7 @@ it('marca todos os blocos com count>0 como concluido quando importacao esta conc
 });
 
 it('reflete status erro do banco', function () {
-    $imp = novaImportacao($this->user->id, $this->cliente, 'EFD PIS/COFINS', 'erro');
+    $imp = novaImportacaoProgresso($this->user->id, $this->cliente, 'EFD PIS/COFINS', 'erro');
 
     $p = (new EfdProgressoBuilder)->build($imp);
 
@@ -93,7 +112,7 @@ it('reflete status erro do banco', function () {
 });
 
 it('separa blocos por tipo (PIS/COFINS nao expoe apuracao_icms)', function () {
-    $imp = novaImportacao($this->user->id, $this->cliente, 'EFD PIS/COFINS', 'concluido');
+    $imp = novaImportacaoProgresso($this->user->id, $this->cliente, 'EFD PIS/COFINS', 'concluido');
 
     $p = (new EfdProgressoBuilder)->build($imp);
 
@@ -105,7 +124,7 @@ it('separa blocos por tipo (PIS/COFINS nao expoe apuracao_icms)', function () {
 });
 
 it('ICMS/IPI expoe apuracao_icms e notas_transportes mas nao notas_servicos', function () {
-    $imp = novaImportacao($this->user->id, $this->cliente, 'EFD ICMS/IPI', 'concluido');
+    $imp = novaImportacaoProgresso($this->user->id, $this->cliente, 'EFD ICMS/IPI', 'concluido');
 
     $p = (new EfdProgressoBuilder)->build($imp);
 
@@ -116,7 +135,7 @@ it('ICMS/IPI expoe apuracao_icms e notas_transportes mas nao notas_servicos', fu
 });
 
 it('progresso = razao de blocos com count>0 sobre blocos esperados durante processamento', function () {
-    $imp = novaImportacao($this->user->id, $this->cliente, 'EFD PIS/COFINS');
+    $imp = novaImportacaoProgresso($this->user->id, $this->cliente, 'EFD PIS/COFINS');
     // PIS/COFINS espera 6 blocos: participantes, catalogo, notas_servicos, notas_mercadorias, apuracao_pis_cofins, retencoes_fonte
 
     \DB::table('participantes')->insert([

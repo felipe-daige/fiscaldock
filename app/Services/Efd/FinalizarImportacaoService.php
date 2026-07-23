@@ -13,8 +13,7 @@ use Illuminate\Support\Facades\Log;
  * source of truth), roda o guardrail de integridade (SPED bruto × banco), persiste na
  * importação e atualiza o cache do SSE pra UI fechar. §L4/§10.6 passo 6.
  *
- * Compartilhado entre o motor Laravel (`ProcessarEfdImportacaoJob`) e o endpoint n8n
- * legado (`DataReceiverController::finalizarImportacaoEfd`) — miolo idêntico, uma fonte.
+ * Miolo da finalização usado pelo motor Laravel (`ProcessarEfdImportacaoJob`).
  */
 class FinalizarImportacaoService
 {

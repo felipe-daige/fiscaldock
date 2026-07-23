@@ -21,11 +21,8 @@
  </span>
  </div>
  <div class="ml-auto">
- @php
- $docBusca = $importacao->cliente->documento ?? '';
- @endphp
  <a
- href="/app/clientes?search={{ urlencode($docBusca) }}"
+ href="/app/cliente/{{ $importacao->cliente->id }}"
  data-link
  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-gray-300 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50 transition"
  >

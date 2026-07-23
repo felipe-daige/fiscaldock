@@ -355,6 +355,7 @@
                                         </td>
                                         <td class="px-3 py-3 text-right align-middle">
                                             <x-acoes-menu trigger="kebab">
+                                                <x-acoes-item href="/app/cliente/{{ $cliente->id }}" data-link>Ver cadastro</x-acoes-item>
                                                 <x-acoes-item href="/app/cliente/{{ $cliente->id }}/editar" data-link>Editar</x-acoes-item>
                                                 @unless($cliente->is_empresa_propria)
                                                     <x-acoes-item variant="danger"

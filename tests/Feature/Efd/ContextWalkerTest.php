@@ -97,6 +97,32 @@ it('A100 (NFS-e sem chave) vira pai do A170 por identidade lógica', function ()
         ->and($pai->chave)->toBe('');        // NFS-e sem chave de acesso
 });
 
+it('preserva o pai C100 através de registros intermediários (C110/C113); não orfana filhos', function () {
+    // C110 (infCpl) e C113 aparecem ENTRE o C100 e o C170/C190 em toda NF-e B2B real.
+    // Antes do fix, qualquer registro não-listado zerava o pai e os filhos viravam órfãos.
+    $conteudo = implode("\n", [
+        '|C100|0|1|FOR1|55|00|1|123|CHAVE_A|31012026|31012026|100,00|',
+        '|C110|10|Informacao complementar qualquer|',
+        '|C113|55|...|',
+        '|C170|1|COD|desc|',
+        '|C190|00|5102|18|100|',
+        '|C001|0|', // fronteira de bloco: encerra o pai
+        '|C190|00|9999|0|0|', // órfão de verdade, após a fronteira
+    ]);
+
+    $resumo = array_map(fn ($p) => [$p[0], $p[1]?->chave], spedWalk($conteudo));
+
+    expect($resumo)->toBe([
+        ['C100', null],
+        ['C110', null],       // intermediário: emitido sem pai, mas NÃO zera o contexto
+        ['C113', null],
+        ['C170', 'CHAVE_A'],  // ainda acha o pai
+        ['C190', 'CHAVE_A'],  // idem
+        ['C001', null],       // fronteira de bloco encerra
+        ['C190', null],       // agora sim órfão
+    ]);
+});
+
 it('filho órfão (SPED malformado) sai com contexto null, sem quebrar', function () {
     $pares = spedWalk('|C190|00|5102|18|100|'); // C190 sem C100 antes
 

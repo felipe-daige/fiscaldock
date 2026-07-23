@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\XmlNota;
+use App\Support\Efd\ModeloDocumento;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\DB;
@@ -725,11 +726,11 @@ class BiService
 
     public function getVolumePorBlocoEfd(int $userId, ?string $dataInicio, ?string $dataFim): array
     {
-        // Classificar por MODELO da nota (não por tipo_efd): a mesma NF-e está
-        // nas 2 origens e era contada como "serviços" no lado PIS/COFINS. Modelo
-        // 00=serviços (NFS-e), 57=transportes (CT-e), demais=mercadorias.
-        // Base dedup (P1) evita dobrar a NF-e compartilhada entre merc/serv.
-        $blocoExpr = "CASE WHEN n.modelo = '00' THEN 'notas_servicos' WHEN n.modelo = '57' THEN 'notas_transportes' ELSE 'notas_mercadorias' END";
+        // Classificar por MODELO da nota (não por tipo_efd): a mesma NF-e está nas 2 origens
+        // e era contada como "serviços" no lado PIS/COFINS. Bucket canônico (ModeloDocumento):
+        // 00=serviços, 57/67=transportes, demais=mercadorias — antes '67' (CT-e OS) caía em
+        // mercadorias, divergindo do resumo. Base dedup (P1) evita dobrar a NF-e compartilhada.
+        $blocoExpr = ModeloDocumento::sqlBlocoAgrupado('n.modelo');
 
         $rows = $this->efd->notasDedup($userId, null, $dataInicio, $dataFim)
             ->select([

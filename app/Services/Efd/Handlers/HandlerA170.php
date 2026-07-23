@@ -31,7 +31,8 @@ class HandlerA170 implements SpedRegistroHandler
     {
         return [
             'numero_item' => Campos::inteiro($rec->campo(2)) ?? 0,
-            'codigo_item' => Campos::texto($rec->campo(3)),
+            'codigo_item' => Campos::texto($rec->campo(3)) ?? '', // NOT NULL — não abortar por COD_ITEM vazio
+
             'descricao' => Campos::texto($rec->campo(4)),
             'quantidade' => null,
             'unidade_medida' => null,
