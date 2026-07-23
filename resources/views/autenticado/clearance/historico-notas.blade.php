@@ -83,16 +83,24 @@
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Verificações</span>
             </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full tabela-cards">
+            <div class="w-full min-w-0">
+                <table class="tabela-cards historico-tabela">
+                    <colgroup>
+                        <col class="w-[31%]">
+                        <col class="w-[12%]">
+                        <col class="w-[23%]">
+                        <col class="w-[11%]">
+                        <col class="w-[13%]">
+                        <col class="w-[10%]">
+                    </colgroup>
                     <thead class="bg-gray-50">
                         <tr class="border-b border-gray-300">
-                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Lote / Data</th>
-                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Escopo</th>
-                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Documentos</th>
-                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Custo</th>
-                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Status</th>
-                            <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Ação</th>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Verificação realizada</th>
+                            <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Escopo</th>
+                            <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Resultado</th>
+                            <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Custo</th>
+                            <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Status</th>
+                            <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide"><span class="sr-only">Ações</span></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -105,31 +113,91 @@
                                     default => ['label' => 'Pendente', 'hex' => '#6b7280'],
                                 };
                                 $tier = ($lote->resultado_resumo['tier'] ?? 'basico') === 'full' ? 'Completa' : 'Básica';
+                                $tierHex = $tier === 'Completa' ? '#7c3aed' : '#1d4ed8';
                                 $preview = $lote->resultado_preview ?? [];
+                                $documentosPreview = collect($preview['documentos'] ?? []);
+                                $documentoPrincipal = $documentosPreview->first();
+                                $totalRetornos = (int) ($preview['total'] ?? 0);
+                                $totalEsperados = (int) ($preview['esperados'] ?? $lote->total_participantes);
+                                $parteOrigem = $documentoPrincipal?->emit_nome;
+                                $parteDestino = $documentoPrincipal?->dest_nome ?: $documentoPrincipal?->tomador_nome;
+                                $tituloVerificacao = $parteOrigem && $parteDestino
+                                    ? $parteOrigem.' → '.$parteDestino
+                                    : ($parteOrigem ?: ($parteDestino ?: number_format($totalEsperados, 0, ',', '.').' documento'.($totalEsperados === 1 ? '' : 's').' enviado'.($totalEsperados === 1 ? '' : 's')));
+                                $tipoDocumentoPrincipal = strtoupper((string) ($documentoPrincipal?->tipo_documento ?: ''));
+                                $numeroDocumentoPrincipal = $documentoPrincipal?->numero;
+                                $outrosDocumentos = max(0, $totalEsperados - 1);
+                                $vereditoMeta = match(data_get($preview, 'veredito.severidade')) {
+                                    'critica' => ['label' => 'Divergências críticas', 'hex' => '#dc2626'],
+                                    'revisar' => ['label' => 'Revisão necessária', 'hex' => '#b45309'],
+                                    'ruido' => ['label' => 'Dentro da tolerância', 'hex' => '#6b7280'],
+                                    'ok' => ['label' => 'Tudo correto', 'hex' => '#047857'],
+                                    default => match(\App\Models\ConsultaLote::normalizeStatus($lote->status)) {
+                                        'erro' => ['label' => 'Não concluída', 'hex' => '#dc2626'],
+                                        'processando' => ['label' => 'Em análise', 'hex' => '#b45309'],
+                                        default => ['label' => 'Sem retorno', 'hex' => '#6b7280'],
+                                    },
+                                };
+                                $autorizadas = (int) ($preview['autorizadas'] ?? 0);
+                                $alertasResultado = (int) ($preview['alertas'] ?? 0);
+                                $revisarResultado = (int) ($preview['indeterminadas'] ?? 0) + (int) ($preview['erros'] ?? 0);
+                                $dataLabel = $lote->created_at->isToday()
+                                    ? 'Hoje'
+                                    : ($lote->created_at->isYesterday() ? 'Ontem' : $lote->created_at->format('d/m'));
                                 $detalheId = 'historico-notas-detalhe-'.$lote->id;
                                 $resultadoUrl = route('app.clearance.notas.resultado', ['consultaLoteId' => $lote->id]);
                             @endphp
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-3 py-3" data-label="Lote / Data">
-                                    <p class="text-sm font-semibold text-gray-900">Lote #{{ $lote->id }}</p>
-                                    <p class="text-[11px] text-gray-500 mt-0.5">{{ $lote->created_at->format('d/m/Y H:i') }}</p>
+                            <tr class="cursor-pointer hover:bg-gray-50"
+                                data-history-result-url="{{ $resultadoUrl }}">
+                                <td class="px-3 py-3.5">
+                                    <div class="flex w-full min-w-0 items-start gap-3">
+                                        <div class="w-12 shrink-0 border-r border-gray-200 pr-3 text-center" title="{{ $lote->created_at->format('d/m/Y H:i') }}">
+                                            <p class="text-[10px] font-bold uppercase text-gray-500">{{ $dataLabel }}</p>
+                                            <p class="mt-0.5 text-xs font-semibold text-gray-900">{{ $lote->created_at->format('H:i') }}</p>
+                                        </div>
+                                        <div class="min-w-0 max-w-[390px]">
+                                            <p class="truncate text-sm font-semibold text-gray-900" title="{{ $tituloVerificacao }}">{{ $tituloVerificacao }}</p>
+                                            <div class="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-gray-500">
+                                                @if($tipoDocumentoPrincipal !== '')
+                                                    <span>{{ $tipoDocumentoPrincipal }}{{ $numeroDocumentoPrincipal ? ' nº '.$numeroDocumentoPrincipal : '' }}</span>
+                                                @endif
+                                                @if($outrosDocumentos > 0)
+                                                    <span aria-hidden="true">•</span>
+                                                    <span class="font-semibold text-gray-700">+ {{ number_format($outrosDocumentos, 0, ',', '.') }} documento{{ $outrosDocumentos === 1 ? '' : 's' }}</span>
+                                                @endif
+                                            </div>
+                                            <p class="mt-1 text-[10px] uppercase text-gray-400">Lote #{{ $lote->id }} · {{ $totalRetornos }} de {{ $totalEsperados }} retorno{{ $totalEsperados === 1 ? '' : 's' }}</p>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td class="px-3 py-3 text-sm text-gray-700" data-label="Escopo">{{ $tier }}</td>
-                                <td class="px-3 py-3 text-sm text-gray-700" data-label="Documentos">{{ number_format($lote->total_participantes, 0, ',', '.') }}</td>
-                                <td class="px-3 py-3 text-sm font-mono font-semibold text-gray-900" data-label="Custo">{{ \App\Support\Dinheiro::brl(($lote->creditos_cobrados)) }}</td>
-                                <td class="px-3 py-3" data-label="Status"><span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusMeta['hex'] }}">{{ $statusMeta['label'] }}</span></td>
-                                <td class="px-3 py-3 text-right whitespace-nowrap" data-label="Ação">
+                                <td class="px-3 py-3 text-center" data-label="Escopo">
+                                    <span class="inline-block whitespace-nowrap rounded px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $tierHex }}">{{ $tier }}</span>
+                                </td>
+                                <td class="px-3 py-3 text-center" data-label="Resultado">
+                                    <span class="inline-block whitespace-nowrap rounded px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $vereditoMeta['hex'] }}">{{ $vereditoMeta['label'] }}</span>
+                                    @if($totalRetornos > 0)
+                                        <p class="mt-1.5 text-[10px] text-gray-500">{{ $autorizadas }} autorizada{{ $autorizadas === 1 ? '' : 's' }} · {{ $alertasResultado }} alerta{{ $alertasResultado === 1 ? '' : 's' }} · {{ $revisarResultado }} a revisar</p>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-3 text-right text-sm font-mono font-semibold text-gray-900" data-label="Custo">
+                                    <span>{{ \App\Support\Dinheiro::brl(($lote->creditos_cobrados)) }}</span>
+                                </td>
+                                <td class="px-3 py-3 text-center" data-label="Status">
+                                    <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusMeta['hex'] }}">{{ $statusMeta['label'] }}</span>
+                                </td>
+                                <td class="px-3 py-3 text-right whitespace-nowrap">
                                     <button type="button"
-                                            class="historico-notas-details-toggle inline-flex items-center gap-1 whitespace-nowrap text-xs font-semibold text-gray-700 hover:text-gray-900 hover:underline"
+                                            class="historico-notas-details-toggle inline-flex h-8 w-8 items-center justify-center rounded text-gray-500 hover:bg-gray-100 hover:text-gray-900"
                                             data-history-details-toggle="{{ $detalheId }}"
                                             aria-controls="{{ $detalheId }}"
-                                            aria-expanded="false">
-                                        <span data-history-details-label>Ver detalhes</span>
+                                            aria-expanded="false"
+                                            aria-label="Ver detalhes"
+                                            title="Ver detalhes">
+                                        <span class="sr-only" data-history-details-label>Ver detalhes</span>
                                         <svg class="w-3.5 h-3.5 transition-transform" data-history-details-chevron viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"></path>
                                         </svg>
                                     </button>
-                                    <a href="{{ $resultadoUrl }}" data-link class="ml-3 inline-flex whitespace-nowrap text-xs font-semibold text-gray-700 hover:text-gray-900 hover:underline">Abrir resultado</a>
                                 </td>
                             </tr>
                             <tr id="{{ $detalheId }}" class="hidden historico-notas-detail-row" data-history-details="lote-{{ $lote->id }}">
@@ -163,20 +231,33 @@
     root.dataset.detailsInitialized = '1';
     root.addEventListener('click', function (event) {
         const toggle = event.target.closest('[data-history-details-toggle]');
-        if (!toggle || !root.contains(toggle)) return;
+        if (toggle && root.contains(toggle)) {
+            const detailRow = document.getElementById(toggle.dataset.historyDetailsToggle);
+            if (!detailRow) return;
 
-        const detailRow = document.getElementById(toggle.dataset.historyDetailsToggle);
-        if (!detailRow) return;
+            const willOpen = detailRow.classList.contains('hidden');
+            detailRow.classList.toggle('hidden', !willOpen);
+            toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
 
-        const willOpen = detailRow.classList.contains('hidden');
-        detailRow.classList.toggle('hidden', !willOpen);
-        toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+            const label = toggle.querySelector('[data-history-details-label]');
+            if (label) label.textContent = willOpen ? 'Ocultar detalhes' : 'Ver detalhes';
+            toggle.setAttribute('aria-label', willOpen ? 'Ocultar detalhes' : 'Ver detalhes');
+            toggle.title = willOpen ? 'Ocultar detalhes' : 'Ver detalhes';
 
-        const label = toggle.querySelector('[data-history-details-label]');
-        if (label) label.textContent = willOpen ? 'Ocultar detalhes' : 'Ver detalhes';
+            const chevron = toggle.querySelector('[data-history-details-chevron]');
+            if (chevron) chevron.classList.toggle('rotate-180', willOpen);
+            return;
+        }
 
-        const chevron = toggle.querySelector('[data-history-details-chevron]');
-        if (chevron) chevron.classList.toggle('rotate-180', willOpen);
+        if (event.target.closest('a, button, input, label, select, [data-acoes-menu]')) return;
+
+        const row = event.target.closest('[data-history-result-url]');
+        if (!row || !root.contains(row)) return;
+
+        const url = row.dataset.historyResultUrl;
+        if (!url) return;
+
+        window.navigateTo ? window.navigateTo(url) : window.location.href = url;
     });
 })();
 </script>

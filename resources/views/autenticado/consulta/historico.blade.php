@@ -141,8 +141,16 @@
                     </div>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="min-w-full tabela-cards">
+                <div class="w-full min-w-0">
+                    <table class="tabela-cards historico-tabela">
+                        <colgroup>
+                            <col class="w-[31%]">
+                            <col class="w-[15%]">
+                            <col class="w-[23%]">
+                            <col class="w-[11%]">
+                            <col class="w-[14%]">
+                            <col class="w-[6%]">
+                        </colgroup>
                         <thead>
                             <tr class="border-b border-gray-300">
                                 <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Consulta realizada</th>
@@ -168,9 +176,10 @@
                                     ]);
                                 @endphp
                                 <tr class="hover:bg-gray-50/50 transition-colors cursor-pointer"
+                                    data-history-result-url="/app/consulta/lote/{{ $lote->id }}"
                                     onclick="if(event.target.closest('a,button,[data-acoes-menu]'))return; var u='/app/consulta/lote/{{ $lote->id }}'; window.navigateTo?window.navigateTo(u):window.location.href=u;">
                                     <td class="px-3 py-3.5">
-                                        <div class="flex min-w-[280px] items-start gap-3">
+                                        <div class="flex w-full min-w-0 items-start gap-3">
                                             <div class="w-12 shrink-0 border-r border-gray-200 pr-3 text-center" title="{{ $lote->created_at->format('d/m/Y H:i') }}">
                                                 <p class="text-[10px] font-bold uppercase text-gray-500">{{ $preview['data_label'] }}</p>
                                                 <p class="mt-0.5 text-xs font-semibold text-gray-900">{{ $lote->created_at->format('H:i') }}</p>

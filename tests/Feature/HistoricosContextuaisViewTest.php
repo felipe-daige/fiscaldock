@@ -117,6 +117,7 @@ it('Buscar Nota mostra somente snapshots de buscas avulsas do próprio usuário'
         'emit_nome' => 'CLIENTE IDENTIFICADO LTDA',
         'dest_cnpj' => '07863768000138',
         'dest_nome' => 'PARTICIPANTE IDENTIFICADO LTDA',
+        'valor_total' => 912.34,
         'eventos' => [[
             'evento' => 'Autorização de Uso',
             'data_autorizacao' => '10/07/2026 às 09:16:00-03:00',
@@ -162,6 +163,15 @@ it('Buscar Nota mostra somente snapshots de buscas avulsas do próprio usuário'
     actingAs($user)->get(route('app.clearance.buscar.historico', ['origem_fluxo' => 'lote']))
         ->assertOk()
         ->assertSee('data-history-view="clearance-avulsa"', false)
+        ->assertSee('tabela-cards historico-tabela', false)
+        ->assertSee('data-history-result-url="', false)
+        ->assertSee('data-history-fallback-details="historico-busca-detalhe-', false)
+        ->assertSee('Documento consultado')
+        ->assertSee('CLIENTE IDENTIFICADO LTDA → PARTICIPANTE IDENTIFICADO LTDA')
+        ->assertSee('11.444.777/0001-61 → 07.863.768/0001-38')
+        ->assertSee('2 partes vinculadas')
+        ->assertSee('R$ 912,34')
+        ->assertSee('1 evento SEFAZ')
         ->assertSee('Ver detalhes')
         ->assertSee('Resultado resumido')
         ->assertSee('data-history-details="', false)

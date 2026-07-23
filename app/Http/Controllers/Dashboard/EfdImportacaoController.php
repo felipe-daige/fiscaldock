@@ -12,6 +12,7 @@ use App\Models\Participante;
 use App\Models\XmlImportacao;
 use App\Services\EfdProgressoBuilder;
 use App\Services\Entitlements\EntitlementService;
+use App\Services\Importacao\HistoricoImportacaoPresenter;
 use App\Services\SaldoService;
 use App\Services\SpedDetectorService;
 use Illuminate\Http\JsonResponse;
@@ -34,6 +35,7 @@ class EfdImportacaoController extends Controller
         protected SpedDetectorService $spedDetector,
         protected \App\Services\Efd\EfdImportacaoDuplicidadeService $duplicidade,
         protected \App\Services\Efd\ExcluirImportacaoService $excluir,
+        protected HistoricoImportacaoPresenter $historicoImportacaoPresenter,
         protected \App\Services\Efd\ConsolidadoFiscalService $consolidadoFiscal = new \App\Services\Efd\ConsolidadoFiscalService,
         protected EntitlementService $entitlements = new EntitlementService,
         protected \App\Services\Efd\EfdPlanilhaExportService $planilhaExport = new \App\Services\Efd\EfdPlanilhaExportService,
@@ -313,7 +315,10 @@ class EfdImportacaoController extends Controller
 
                 return strtotime($b['created_at'] ?? '') <=> strtotime($a['created_at'] ?? '');
             })
-            ->values();
+            ->values()
+            ->map(fn (array $importacao) => array_merge($importacao, [
+                '_preview' => $this->historicoImportacaoPresenter->paraImportacao($importacao),
+            ]));
 
         $data = ['importacoes' => $importacoes];
 

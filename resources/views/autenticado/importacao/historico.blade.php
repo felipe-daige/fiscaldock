@@ -62,211 +62,100 @@
             </div>
 
             <div class="bg-white rounded border border-gray-300 overflow-hidden">
-                <div class="hidden md:block overflow-hidden">
-                    <table class="w-full table-fixed">
+                <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3">
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Importações</span>
+                    <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ $totalImportacoes }} no histórico</span>
+                </div>
+                <div class="w-full min-w-0">
+                    <table class="tabela-cards historico-tabela">
                         <colgroup>
-                            <col style="width: 10%">
-                            <col style="width: 12%">
-                            <col style="width: 32%">
-                            <col style="width: 11%">
-                            <col style="width: 10%">
-                            <col style="width: 10%">
-                            <col style="width: 9%">
-                            <col style="width: 8%">
+                            <col class="w-[31%]">
+                            <col class="w-[14%]">
+                            <col class="w-[23%]">
+                            <col class="w-[13%]">
+                            <col class="w-[13%]">
+                            <col class="w-[6%]">
                         </colgroup>
                         <thead>
                             <tr class="border-b border-gray-300">
-                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Origem</th>
-                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Arquivo / Lote</th>
-                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Cliente</th>
-                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Data</th>
-                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Competência</th>
-                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Volume</th>
-                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Status</th>
-                                <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Ação</th>
+                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Importação realizada</th>
+                                <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Conteúdo</th>
+                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Resultado</th>
+                                <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Competência</th>
+                                <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Status</th>
+                                <th class="w-12 px-3 py-2.5 bg-gray-50"><span class="sr-only">Ações</span></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
-                            @foreach($importacoes as $imp)
-                                @php
-                                    $tipo = $imp['_tipo'];
-                                    $id = $imp['id'];
-                                    $dataFormatada = isset($imp['created_at']) ? \Carbon\Carbon::parse($imp['created_at'])->format('d/m/Y H:i') : '—';
-                                    $filename = $imp['filename'] ?? $imp['arquivo'] ?? ('Importação #' . $id);
-                                    $clienteId = $imp['cliente']['id'] ?? null;
-                                    $clientesN = (int) ($imp['clientes_resolvidos'] ?? 0);
-                                    $clienteNome = $imp['cliente']['razao_social']
-                                        ?? ($clientesN > 1 ? "Vários ({$clientesN} clientes)" : 'Sem cliente');
-                                    $volume = $imp['volume_label'] ?? '—';
-
-                                    $competencia = null;
-                                    if (!empty($imp['periodo_inicio'])) {
-                                        $mesesPt = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-                                        $pi = \Carbon\Carbon::parse($imp['periodo_inicio']);
-                                        $competencia = $mesesPt[$pi->month - 1] . '/' . $pi->year;
-                                    }
-
-                                    $origemDetalhe = null;
-
-                                    if ($tipo === 'efd') {
-                                        $href = '/app/importacao/efd/' . $id;
-                                        $origemBadge = ($imp['tipo_efd'] ?? '') === 'EFD PIS/COFINS'
-                                            ? ['label' => 'EFD', 'hex' => '#0f766e']
-                                            : ['label' => 'EFD', 'hex' => '#4338ca'];
-                                        $origemDetalhe = ($imp['tipo_efd'] ?? '') === 'EFD PIS/COFINS' ? 'PIS/COFINS' : 'Fiscal';
-                                    } else {
-                                        $href = '/app/importacao/xml/' . $id;
-                                        $origemBadge = match($imp['tipo_documento'] ?? '') {
-                                            'nfe' => ['label' => 'NF-e', 'hex' => '#0f766e'],
-                                            'nfse' => ['label' => 'NFS-e', 'hex' => '#374151'],
-                                            'cte' => ['label' => 'CT-e', 'hex' => '#b45309'],
-                                            default => ['label' => 'XML', 'hex' => '#374151'],
-                                        };
-                                    }
-
-                                    $statusBadge = match($imp['status'] ?? '') {
-                                        'concluido' => ['label' => 'Concluído', 'hex' => '#047857'],
-                                        'processando' => ['label' => 'Processando', 'hex' => '#b45309'],
-                                        'erro' => ['label' => 'Erro', 'hex' => '#dc2626'],
-                                        default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
-                                    };
-                                @endphp
-                                <tr class="hist-row cursor-pointer hover:bg-gray-50/50 transition-colors" data-tipo="{{ $tipo }}">
-                                    <td class="pl-3 pr-4 py-3">
-                                        <div class="flex items-center gap-2 whitespace-nowrap">
-                                            <span class="inline-block whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemBadge['hex'] }}">{{ $origemBadge['label'] }}</span>
-                                            @if($origemDetalhe)
-                                                <span class="text-[10px] text-gray-500 uppercase tracking-wide whitespace-nowrap">{{ $origemDetalhe }}</span>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td class="pl-4 pr-2 py-3 text-sm text-gray-700 max-w-0">
-                                        <a href="{{ $href }}" data-link class="block truncate text-gray-900 hover:text-gray-600 hover:underline" title="{{ $filename }}">{{ $filename }}</a>
-                                    </td>
-                                    <td class="px-2 py-3 text-sm text-gray-700 max-w-0">
-                                        @if($clienteId)
-                                            <a href="/app/cliente/{{ $clienteId }}" data-link class="block truncate text-gray-900 hover:text-gray-600 hover:underline" title="{{ $clienteNome }}">{{ $clienteNome }}</a>
-                                        @else
-                                            <span class="block truncate" title="{{ $clienteNome }}">{{ $clienteNome }}</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-2 py-3 text-sm text-gray-700 whitespace-nowrap">{{ $dataFormatada }}</td>
-                                    <td class="px-2 py-3 whitespace-nowrap">
-                                        @if($competencia)
-                                            <span class="inline-block px-2 py-0.5 rounded text-[11px] font-bold text-gray-800" style="background-color: #f3f4f6">{{ $competencia }}</span>
-                                        @else
-                                            <span class="text-sm text-gray-400">—</span>
-                                        @endif
-                                    </td>
-                                    <td class="pl-2 pr-3 py-3 text-sm text-gray-700 leading-tight" title="{{ $volume }}">{{ $volume }}</td>
-                                    <td class="px-1 py-3 whitespace-nowrap">
-                                        <span class="whitespace-nowrap inline-block max-w-full truncate px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white align-middle" style="background-color: {{ $statusBadge['hex'] }}">{{ $statusBadge['label'] }}</span>
-                                    </td>
-                                    <td class="pl-2 pr-3 py-3 text-right whitespace-nowrap">
-                                        @php $proc = in_array($imp['status'] ?? '', ['processando', 'pendente'], true); @endphp
-                                        <x-acoes-menu>
-                                            <x-acoes-item href="{{ $href }}" data-link>Abrir</x-acoes-item>
-                                            @if(! $proc && $tipo === 'efd')
-                                                <x-acoes-item variant="danger" data-excluir-importacao="{{ $id }}" data-filename="{{ $filename }}">Excluir</x-acoes-item>
-                                            @elseif(! $proc && $tipo === 'xml')
-                                                <x-acoes-item variant="danger" data-excluir-xml="{{ $id }}" data-filename="{{ $filename }}">Excluir</x-acoes-item>
-                                            @endif
-                                        </x-acoes-menu>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="divide-y divide-gray-100 md:hidden" id="cards-grid">
                     @foreach($importacoes as $imp)
                         @php
-                            $tipo = $imp['_tipo'];
-                            $id = $imp['id'];
-                            $dataFormatada = isset($imp['created_at']) ? \Carbon\Carbon::parse($imp['created_at'])->format('d/m/Y H:i') : '—';
-                            $filename = $imp['filename'] ?? $imp['arquivo'] ?? ('Importação #' . $id);
-                            $clienteId = $imp['cliente']['id'] ?? null;
-                            $clientesN = (int) ($imp['clientes_resolvidos'] ?? 0);
-                            $clienteNome = $imp['cliente']['razao_social']
-                                ?? ($clientesN > 1 ? "Vários ({$clientesN} clientes)" : 'Sem cliente');
-                            $volume = $imp['volume_label'] ?? '—';
-
-                            $competencia = null;
-                            if (!empty($imp['periodo_inicio'])) {
-                                $mesesPt = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-                                $pi = \Carbon\Carbon::parse($imp['periodo_inicio']);
-                                $competencia = $mesesPt[$pi->month - 1] . '/' . $pi->year;
-                            }
-
-                            $origemDetalhe = null;
-
-                            if ($tipo === 'efd') {
-                                $href = '/app/importacao/efd/' . $id;
-                                $origemBadge = ($imp['tipo_efd'] ?? '') === 'EFD PIS/COFINS'
-                                    ? ['label' => 'EFD', 'hex' => '#0f766e']
-                                    : ['label' => 'EFD', 'hex' => '#4338ca'];
-                                $origemDetalhe = ($imp['tipo_efd'] ?? '') === 'EFD PIS/COFINS' ? 'PIS/COFINS' : 'Fiscal';
-                            } else {
-                                $href = '/app/importacao/xml/' . $id;
-                                $origemBadge = match($imp['tipo_documento'] ?? '') {
-                                    'nfe' => ['label' => 'NF-e', 'hex' => '#0f766e'],
-                                    'nfse' => ['label' => 'NFS-e', 'hex' => '#374151'],
-                                    'cte' => ['label' => 'CT-e', 'hex' => '#b45309'],
-                                    default => ['label' => 'XML', 'hex' => '#374151'],
-                                };
-                            }
-
-                            $statusBadge = match($imp['status'] ?? '') {
-                                'concluido' => ['label' => 'Concluído', 'hex' => '#047857'],
-                                'processando' => ['label' => 'Processando', 'hex' => '#b45309'],
-                                'erro' => ['label' => 'Erro', 'hex' => '#dc2626'],
-                                default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
-                            };
+                            $preview = $imp['_preview'];
+                            $data = $preview['data'];
                         @endphp
-                        <div class="hist-card cursor-pointer hover:bg-gray-50/50 transition-colors px-4 py-3" data-tipo="{{ $tipo }}" data-importacao-card="{{ $id }}">
-                            <div class="flex items-center gap-2 flex-wrap mb-2">
-                                <span class="inline-block whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $origemBadge['hex'] }}">{{ $origemBadge['label'] }}</span>
-                                @if($origemDetalhe)
-                                    <span class="text-[10px] text-gray-500 uppercase tracking-wide whitespace-nowrap">{{ $origemDetalhe }}</span>
+                        <tr class="hist-row cursor-pointer hover:bg-gray-50/50 transition-colors"
+                            data-tipo="{{ $preview['tipo'] }}"
+                            data-importacao-card="{{ $preview['id'] }}"
+                            data-history-result-url="{{ $preview['href'] }}">
+                            <td class="px-3 py-3.5">
+                                <div class="flex w-full min-w-0 items-start gap-3">
+                                    <div class="w-12 shrink-0 border-r border-gray-200 pr-3 text-center" title="{{ $data?->format('d/m/Y H:i') }}">
+                                        <p class="text-[10px] font-bold uppercase text-gray-500">{{ $preview['data_label'] ?? '—' }}</p>
+                                        <p class="mt-0.5 text-xs font-semibold text-gray-900">{{ $data?->format('H:i') ?? '—' }}</p>
+                                    </div>
+                                    <div class="min-w-0 max-w-[390px]">
+                                        <a href="{{ $preview['href'] }}" data-link class="block truncate text-sm font-semibold text-gray-900 hover:text-gray-600 hover:underline" title="{{ $preview['titulo'] }}">{{ $preview['titulo'] }}</a>
+                                        <p class="mt-0.5 truncate text-[11px] text-gray-500" title="{{ $preview['arquivo'] }}">{{ $preview['arquivo'] }}</p>
+                                        <div class="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] uppercase text-gray-400">
+                                            <span>Importação #{{ $preview['id'] }}</span>
+                                            @if($preview['cnpj'] && $preview['titulo'] !== $preview['cnpj'])
+                                                <span aria-hidden="true">•</span>
+                                                <span class="font-mono">{{ $preview['cnpj'] }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td data-label="Conteúdo" class="px-3 py-3 text-center">
+                                <div class="text-center">
+                                    <span class="inline-block whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $preview['conteudo']['badge']['hex'] }}">{{ $preview['conteudo']['badge']['label'] }}</span>
+                                    <p class="mt-1.5 text-[11px] text-gray-500">{{ $preview['conteudo']['detalhe'] }}</p>
+                                </div>
+                            </td>
+                            <td data-label="Resultado" class="px-3 py-3">
+                                <div class="text-left">
+                                    <p class="text-xs font-semibold text-gray-900">{{ $preview['resultado']['titulo'] }}</p>
+                                    @if($preview['resultado']['detalhes'] !== [])
+                                        <p class="mt-1 text-[11px] text-gray-500">{{ implode(' · ', $preview['resultado']['detalhes']) }}</p>
+                                    @endif
+                                    @if($preview['resultado']['valor'])
+                                        <p class="mt-1 text-[11px] font-mono text-gray-700">{{ $preview['resultado']['valor'] }}</p>
+                                    @endif
+                                </div>
+                            </td>
+                            <td data-label="Competência" class="px-3 py-3 text-center">
+                                @if($preview['competencia'])
+                                    <span class="inline-block whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-bold text-gray-800" style="background-color: #f3f4f6">{{ $preview['competencia'] }}</span>
+                                @else
+                                    <span class="text-sm text-gray-400">—</span>
                                 @endif
-                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusBadge['hex'] }}">{{ $statusBadge['label'] }}</span>
-                            </div>
-                            <a href="{{ $href }}" data-link class="block text-sm text-gray-900 hover:text-gray-600 hover:underline">{{ $filename }}</a>
-                            @if($competencia)
-                                <span class="inline-block mt-1 px-2 py-0.5 rounded text-[11px] font-bold text-gray-800" style="background-color: #f3f4f6">Competência {{ $competencia }}</span>
-                            @endif
-                            @php $procMob = in_array($imp['status'] ?? '', ['processando', 'pendente'], true); @endphp
-                            <div class="mt-2">
-                                <x-acoes-menu align="left">
-                                    <x-acoes-item href="{{ $href }}" data-link>Abrir</x-acoes-item>
-                                    @if(! $procMob && $tipo === 'efd')
-                                        <x-acoes-item variant="danger" data-excluir-importacao="{{ $id }}" data-filename="{{ $filename }}">Excluir</x-acoes-item>
-                                    @elseif(! $procMob && $tipo === 'xml')
-                                        <x-acoes-item variant="danger" data-excluir-xml="{{ $id }}" data-filename="{{ $filename }}">Excluir</x-acoes-item>
+                            </td>
+                            <td data-label="Status" class="px-3 py-3 text-center">
+                                <span class="inline-block whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $preview['status']['hex'] }}">{{ $preview['status']['label'] }}</span>
+                            </td>
+                            <td class="px-3 py-3 text-right">
+                                <x-acoes-menu trigger="kebab">
+                                    <x-acoes-item href="{{ $preview['href'] }}" data-link>Abrir</x-acoes-item>
+                                    @if(! $preview['processando'] && $preview['tipo'] === 'efd')
+                                        <x-acoes-item variant="danger" data-excluir-importacao="{{ $preview['id'] }}" data-filename="{{ $preview['arquivo'] }}">Excluir</x-acoes-item>
+                                    @elseif(! $preview['processando'] && $preview['tipo'] === 'xml')
+                                        <x-acoes-item variant="danger" data-excluir-xml="{{ $preview['id'] }}" data-filename="{{ $preview['arquivo'] }}">Excluir</x-acoes-item>
                                     @endif
                                 </x-acoes-menu>
-                            </div>
-                            <div class="mt-2 grid grid-cols-2 gap-3">
-                                <div>
-                                    <p class="text-[10px] text-gray-400 uppercase">Cliente</p>
-                                    @if($clienteId)
-                                        <a href="/app/cliente/{{ $clienteId }}" data-link class="text-xs text-gray-900 hover:text-gray-600 hover:underline">{{ $clienteNome }}</a>
-                                    @else
-                                        <p class="text-xs text-gray-700">{{ $clienteNome }}</p>
-                                    @endif
-                                </div>
-                                <div>
-                                    <p class="text-[10px] text-gray-400 uppercase">Data</p>
-                                    <p class="text-xs text-gray-700">{{ $dataFormatada }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] text-gray-400 uppercase">Volume</p>
-                                    <p class="text-xs text-gray-700">{{ $volume }}</p>
-                                </div>
-                            </div>
-                        </div>
+                            </td>
+                        </tr>
                     @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -289,7 +178,6 @@
 <script>
 (function () {
     var btns = document.querySelectorAll('.filtro-tipo');
-    var cards = document.querySelectorAll('.hist-card');
     var rows = document.querySelectorAll('.hist-row');
     var zeroFiltro = document.getElementById('zero-state-filtro');
 
@@ -308,17 +196,11 @@
             this.classList.add('bg-gray-800', 'text-white', 'border-gray-800', 'hover:bg-gray-800', 'hover:text-white');
             this.classList.remove('bg-white', 'text-gray-700', 'border-gray-300');
 
-            cards.forEach(function (card) {
-                var cardTipo = card.getAttribute('data-tipo');
-                var show = tipo === 'todos' || cardTipo === tipo;
-                card.style.display = show ? '' : 'none';
-                if (show) visiveis++;
-            });
-
             rows.forEach(function (row) {
                 var rowTipo = row.getAttribute('data-tipo');
                 var show = tipo === 'todos' || rowTipo === tipo;
                 row.style.display = show ? '' : 'none';
+                if (show) visiveis++;
             });
 
             if (zeroFiltro) zeroFiltro.classList.toggle('hidden', visiveis > 0);

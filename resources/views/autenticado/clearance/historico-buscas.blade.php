@@ -59,16 +59,24 @@
             <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Buscas Avulsas</span>
             </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full tabela-cards">
+            <div class="w-full min-w-0">
+                <table class="tabela-cards historico-tabela">
+                    <colgroup>
+                        <col class="w-[24%]">
+                        <col class="w-[24%]">
+                        <col class="w-[17%]">
+                        <col class="w-[12%]">
+                        <col class="w-[12%]">
+                        <col class="w-[11%]">
+                    </colgroup>
                     <thead class="bg-gray-50">
                         <tr class="border-b border-gray-300">
-                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Consulta / Documento</th>
-                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Emitente</th>
-                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Destinatário / Tomador</th>
-                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Cliente</th>
-                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Status</th>
-                            <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Ação</th>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Documento consultado</th>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Operação</th>
+                            <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Cliente / Vínculos</th>
+                            <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Valor / Eventos</th>
+                            <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Situação SEFAZ</th>
+                            <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide"><span class="sr-only">Ações</span></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -82,7 +90,25 @@
                                     default => '#6b7280',
                                 };
                                 $tipoDocumento = strtoupper((string) ($consulta->tipo_documento ?: 'NFE'));
+                                $tipoDocumentoLabel = match($tipoDocumento) {
+                                    'NFE' => 'NF-e',
+                                    'NFCE' => 'NFC-e',
+                                    'CTE' => 'CT-e',
+                                    default => $tipoDocumento,
+                                };
+                                $situacaoLabel = match($situacao) {
+                                    'NAO_ENCONTRADA' => 'Não encontrada',
+                                    'INDETERMINADO' => 'Indeterminado',
+                                    default => ucfirst(mb_strtolower(str_replace('_', ' ', $situacao))),
+                                };
                                 $parteDestino = $consulta->dest_nome ?: $consulta->tomador_nome;
+                                $documentoDestino = $consulta->dest_cnpj ?: $consulta->tomador_cnpj;
+                                $operacaoTitulo = collect([$consulta->emit_nome, $parteDestino])
+                                    ->filter(fn ($parte) => trim((string) $parte) !== '')
+                                    ->implode(' → ');
+                                $operacaoTitulo = $operacaoTitulo !== '' ? $operacaoTitulo : 'Partes não informadas';
+                                $emitDocumentoLabel = $consulta->emit_cnpj ? \App\Support\Cnpj::formatar((string) $consulta->emit_cnpj) : null;
+                                $destDocumentoLabel = $documentoDestino ? \App\Support\Cnpj::formatar((string) $documentoDestino) : null;
                                 $resultadoUrl = $consulta->consulta_lote_id
                                     ? route('app.clearance.buscar.resultado', [
                                         'consultaLoteId' => $consulta->consulta_lote_id,
@@ -94,36 +120,67 @@
                                 $valorTotalLabel = is_numeric($consulta->valor_total)
                                     ? 'R$ '.number_format((float) $consulta->valor_total, 2, ',', '.')
                                     : '—';
+                                $dataConsulta = ($consulta->consultado_em ?? $consulta->created_at)
+                                    ? \Carbon\Carbon::parse($consulta->consultado_em ?? $consulta->created_at)
+                                    : null;
+                                $dataLabel = $dataConsulta?->isToday()
+                                    ? 'Hoje'
+                                    : ($dataConsulta?->isYesterday() ? 'Ontem' : $dataConsulta?->format('d/m'));
+                                $partesVinculadas = collect($consulta->partes_identificadas ?? [])
+                                    ->filter(fn ($parte) => ! empty($parte['cliente']) || ! empty($parte['participante']))
+                                    ->count();
+                                $eventosTimeline = collect(data_get($consulta, 'timeline_preview.itens', []))
+                                    ->reject(fn ($item) => in_array($item['label'] ?? '', ['Emissão', 'Consultada no FiscalDock'], true))
+                                    ->count()
+                                    + (int) data_get($consulta, 'timeline_preview.eventos_adicionais', 0);
                             @endphp
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-3 py-3" data-label="Consulta / Documento">
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $tipoDocumento }}</span>
-                                        @if($consulta->numero)<span class="text-sm font-semibold text-gray-900">Nº {{ $consulta->numero }}</span>@endif
+                            <tr class="cursor-pointer hover:bg-gray-50"
+                                data-history-result-url="{{ $resultadoUrl ?? '' }}"
+                                data-history-fallback-details="{{ $detalheId }}">
+                                <td class="px-3 py-3.5">
+                                    <div class="flex w-full min-w-0 items-start gap-3">
+                                        <div class="w-12 shrink-0 border-r border-gray-200 pr-3 text-center" title="{{ $consulta->momento_consulta }}">
+                                            <p class="text-[10px] font-bold uppercase text-gray-500">{{ $dataLabel ?? '—' }}</p>
+                                            <p class="mt-0.5 text-xs font-semibold text-gray-900">{{ $dataConsulta?->format('H:i') ?? '—' }}</p>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="flex flex-wrap items-center gap-1.5">
+                                                <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ $tipoDocumentoLabel }}</span>
+                                                <p class="text-sm font-semibold text-gray-900">{{ $consulta->numero ? 'Nº '.$consulta->numero : 'Documento fiscal' }}</p>
+                                            </div>
+                                            <p class="mt-1 text-[11px] text-gray-500">Série {{ $consulta->serie ?: '—' }} · emissão {{ $consulta->data_emissao ?: '—' }}</p>
+                                            <p class="mt-1 truncate font-mono text-[10px] text-gray-400" title="{{ $consulta->chave_acesso }}">Chave …{{ substr((string) $consulta->chave_acesso, -12) }}</p>
+                                        </div>
                                     </div>
-                                    <p class="text-[10px] text-gray-500 mt-1">{{ $consulta->momento_consulta }}</p>
-                                    <p class="text-[10px] text-gray-400 font-mono mt-0.5 break-all">{{ $consulta->chave_acesso }}</p>
                                 </td>
-                                <td class="px-3 py-3 text-sm text-gray-700" data-label="Emitente"><p>{{ $consulta->emit_nome ?: '—' }}</p><p class="text-[10px] font-mono text-gray-500 mt-0.5">{{ $consulta->emit_cnpj }}</p></td>
-                                <td class="px-3 py-3 text-sm text-gray-700" data-label="Destinatário / Tomador"><p>{{ $parteDestino ?: '—' }}</p><p class="text-[10px] font-mono text-gray-500 mt-0.5">{{ $consulta->dest_cnpj ?: $consulta->tomador_cnpj }}</p></td>
-                                <td class="px-3 py-3 text-sm text-gray-700" data-label="Cliente">{{ $consulta->cliente_nome ?: 'Sem cliente' }}</td>
-                                <td class="px-3 py-3" data-label="Status"><span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusHex }}">{{ str_replace('_', ' ', $situacao) }}</span></td>
-                                <td class="px-3 py-3 text-right whitespace-nowrap" data-label="Ação">
+                                <td class="px-3 py-3 text-sm text-gray-700" data-label="Operação">
+                                    <p class="max-w-[340px] truncate font-semibold text-gray-900" title="{{ $operacaoTitulo }}">{{ $operacaoTitulo }}</p>
+                                    @if($emitDocumentoLabel || $destDocumentoLabel)
+                                        <p class="mt-1 text-[10px] font-mono text-gray-500">{{ $emitDocumentoLabel ?: '—' }} → {{ $destDocumentoLabel ?: '—' }}</p>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-3 text-sm text-gray-700" data-label="Cliente / Vínculos">
+                                    <p class="max-w-[220px] truncate text-gray-900" title="{{ $consulta->cliente_nome ?: 'Sem cliente associado' }}">{{ $consulta->cliente_nome ?: 'Sem cliente associado' }}</p>
+                                    <p class="mt-1 text-[10px] text-gray-500">{{ $partesVinculadas }} parte{{ $partesVinculadas === 1 ? '' : 's' }} vinculada{{ $partesVinculadas === 1 ? '' : 's' }}</p>
+                                </td>
+                                <td class="px-3 py-3 text-right" data-label="Valor / Eventos">
+                                    <p class="text-sm font-mono font-semibold text-gray-900">{{ $valorTotalLabel }}</p>
+                                    <p class="mt-1 text-[10px] text-gray-500">{{ $eventosTimeline }} evento{{ $eventosTimeline === 1 ? '' : 's' }} SEFAZ</p>
+                                </td>
+                                <td class="px-3 py-3 text-center" data-label="Situação SEFAZ"><span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusHex }}">{{ $situacaoLabel }}</span></td>
+                                <td class="px-3 py-3 text-right whitespace-nowrap">
                                     <button type="button"
-                                            class="historico-busca-details-toggle inline-flex items-center gap-1 whitespace-nowrap text-xs font-semibold text-gray-700 hover:text-gray-900 hover:underline"
+                                            class="historico-busca-details-toggle inline-flex h-8 w-8 items-center justify-center rounded text-gray-500 hover:bg-gray-100 hover:text-gray-900"
                                             data-history-details-toggle="{{ $detalheId }}"
                                             aria-controls="{{ $detalheId }}"
-                                            aria-expanded="false">
-                                        <span data-history-details-label>Ver detalhes</span>
+                                            aria-expanded="false"
+                                            aria-label="Ver detalhes"
+                                            title="Ver detalhes">
+                                        <span class="sr-only" data-history-details-label>Ver detalhes</span>
                                         <svg class="w-3.5 h-3.5 transition-transform" data-history-details-chevron viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"></path>
                                         </svg>
                                     </button>
-                                    @if($resultadoUrl)
-                                        <a href="{{ $resultadoUrl }}" data-link class="ml-3 inline-flex whitespace-nowrap text-xs font-semibold text-gray-700 hover:text-gray-900 hover:underline">Abrir resultado</a>
-                                    @else
-                                        <span class="ml-3 text-[10px] text-gray-400">Snapshot legado</span>
-                                    @endif
                                 </td>
                             </tr>
                             <tr id="{{ $detalheId }}" class="hidden historico-busca-detail-row" data-history-details="{{ $consulta->id }}">
@@ -132,21 +189,21 @@
                                         <div class="px-4 py-2 border-b border-gray-200 flex flex-wrap items-center justify-between gap-2" style="background-color: #f9fafb">
                                             <div>
                                                 <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resultado resumido</p>
-                                                <p class="text-xs text-gray-500 mt-0.5">{{ $tipoDocumento }}{{ $consulta->numero ? ' nº '.$consulta->numero : '' }} · consultada em {{ $consulta->momento_consulta }}</p>
+                                                <p class="text-xs text-gray-500 mt-0.5">{{ $tipoDocumentoLabel }}{{ $consulta->numero ? ' nº '.$consulta->numero : '' }} · consultada em {{ $consulta->momento_consulta }}</p>
                                             </div>
-                                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusHex }}">{{ str_replace('_', ' ', $situacao) }}</span>
+                                            <span class="whitespace-nowrap px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusHex }}">{{ $situacaoLabel }}</span>
                                         </div>
 
                                         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-200">
                                             <div class="p-3">
                                                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Documento</p>
-                                                <p class="text-sm font-semibold text-gray-900 mt-1">{{ $tipoDocumento }}{{ $consulta->numero ? ' nº '.$consulta->numero : '' }}</p>
+                                                <p class="text-sm font-semibold text-gray-900 mt-1">{{ $tipoDocumentoLabel }}{{ $consulta->numero ? ' nº '.$consulta->numero : '' }}</p>
                                                 <p class="text-[11px] text-gray-500 mt-0.5">Série {{ $consulta->serie ?: '—' }} · emissão {{ $consulta->data_emissao ?: '—' }}</p>
                                             </div>
                                             <div class="p-3">
                                                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Valor</p>
                                                 <p class="text-sm font-mono font-semibold text-gray-900 mt-1">{{ $valorTotalLabel }}</p>
-                                                <p class="text-[11px] text-gray-500 mt-0.5">Situação oficial: {{ str_replace('_', ' ', $situacao) }}</p>
+                                                <p class="text-[11px] text-gray-500 mt-0.5">Situação oficial: {{ $situacaoLabel }}</p>
                                             </div>
                                             <div class="p-3">
                                                 <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Cliente associado</p>
@@ -260,20 +317,37 @@
     root.dataset.detailsInitialized = '1';
     root.addEventListener('click', function (event) {
         const toggle = event.target.closest('[data-history-details-toggle]');
-        if (!toggle || !root.contains(toggle)) return;
+        if (toggle && root.contains(toggle)) {
+            const detailRow = document.getElementById(toggle.dataset.historyDetailsToggle);
+            if (!detailRow) return;
 
-        const detailRow = document.getElementById(toggle.dataset.historyDetailsToggle);
-        if (!detailRow) return;
+            const willOpen = detailRow.classList.contains('hidden');
+            detailRow.classList.toggle('hidden', !willOpen);
+            toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
 
-        const willOpen = detailRow.classList.contains('hidden');
-        detailRow.classList.toggle('hidden', !willOpen);
-        toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+            const label = toggle.querySelector('[data-history-details-label]');
+            if (label) label.textContent = willOpen ? 'Ocultar detalhes' : 'Ver detalhes';
+            toggle.setAttribute('aria-label', willOpen ? 'Ocultar detalhes' : 'Ver detalhes');
+            toggle.title = willOpen ? 'Ocultar detalhes' : 'Ver detalhes';
 
-        const label = toggle.querySelector('[data-history-details-label]');
-        if (label) label.textContent = willOpen ? 'Ocultar detalhes' : 'Ver detalhes';
+            const chevron = toggle.querySelector('[data-history-details-chevron]');
+            if (chevron) chevron.classList.toggle('rotate-180', willOpen);
+            return;
+        }
 
-        const chevron = toggle.querySelector('[data-history-details-chevron]');
-        if (chevron) chevron.classList.toggle('rotate-180', willOpen);
+        if (event.target.closest('a, button, input, label, select, [data-acoes-menu]')) return;
+
+        const row = event.target.closest('[data-history-result-url]');
+        if (!row || !root.contains(row)) return;
+
+        const url = row.dataset.historyResultUrl;
+        if (url) {
+            window.navigateTo ? window.navigateTo(url) : window.location.href = url;
+            return;
+        }
+
+        const fallbackToggle = row.querySelector('[data-history-details-toggle]');
+        if (fallbackToggle) fallbackToggle.click();
     });
 })();
 </script>
