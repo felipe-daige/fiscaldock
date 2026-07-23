@@ -27,27 +27,10 @@ class ComercialParametroService
             'default' => PricingCatalogService::MINIMUM_DEPOSIT, // 100.00
             'dica' => 'Valor mínimo de recarga avulsa.',
         ],
-        // Preços por produto em R$ — consumidos por PricingCatalogService::getProductPriceByPlan
-        // e cobrados diretamente do saldo em R$. Defaults = custo do PlanoCatalog (R$ 3/4/5).
-        // Tipo float: preço com centavos é válido.
-        'preco_validacao' => [
-            'rotulo' => 'Preço Validação (R$)',
-            'tipo' => 'float',
-            'default' => 3.00,
-            'dica' => 'Preço por CNPJ exibido e cobrado para o produto Validação.',
-        ],
-        'preco_licitacao' => [
-            'rotulo' => 'Preço Licitação (R$)',
-            'tipo' => 'float',
-            'default' => 4.00,
-            'dica' => 'Preço por CNPJ exibido e cobrado para o produto Licitação.',
-        ],
-        'preco_compliance' => [
-            'rotulo' => 'Preço Compliance (R$)',
-            'tipo' => 'float',
-            'default' => 5.00,
-            'dica' => 'Preço por CNPJ exibido e cobrado para o produto Compliance.',
-        ],
+        // Os preços por produto per-plano (preco_validacao/licitacao/compliance) foram REMOVIDOS na
+        // migração escada→à la carte (2026-07-22): não há mais escada de planos, só consultas por
+        // FONTE (fonte_precos, admin em /app/admin/fontes) e kits (consulta_kits). O preço de
+        // exibição de plano legado cai no custo do PlanoCatalog.
     ];
 
     /** @var array<string, string>|null cache por request dos overrides persistidos */

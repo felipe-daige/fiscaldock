@@ -19,15 +19,12 @@ uses(RefreshDatabase::class);
  */
 beforeEach(function () {
     (new ComercialParametroService)->definir('minimum_deposit', 80.00, null);
-    (new ComercialParametroService)->definir('preco_compliance', 6.00, null);
 });
 
-it('a landing /precos reflete o depósito mínimo e o preço de produto do override', function () {
+it('a landing /precos reflete o override do depósito mínimo', function () {
     get('/precos')
         ->assertOk()
-        ->assertSee('Recarga mínima de R$&nbsp;80', false)
-        ->assertSee('R$&nbsp;6,00', false)
-        ->assertDontSee('R$&nbsp;5,00', false);
+        ->assertSee('Recarga mínima de R$&nbsp;80', false);
 });
 
 /**

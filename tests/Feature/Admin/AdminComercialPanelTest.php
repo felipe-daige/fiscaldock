@@ -25,7 +25,8 @@ it('permite acesso ao admin e lista os parâmetros', function () {
         ->get('/app/admin/comercial')
         ->assertOk()
         ->assertSee('Parâmetros comerciais')
-        ->assertSee('Preço Compliance (R$)');
+        ->assertSee('Depósito mínimo (R$)')
+        ->assertDontSee('Preço Compliance (R$)');
 });
 
 it('renderiza o painel comercial no design system e em largura total', function () {
@@ -51,17 +52,14 @@ it('admin grava override e o PricingCatalogService passa a lê-lo', function () 
     expect((new PricingCatalogService)->getMinimumDeposit())->toBe(120.00);
 });
 
-it('admin grava preço de produto em reais e o catálogo cobra em reais', function () {
+it('preço per-plano legado não é mais editável pelo painel (404)', function () {
     $admin = User::factory()->create(['is_admin' => true]);
 
     actingAs($admin)
         ->post('/app/admin/comercial/preco_compliance', ['valor' => '6.00'])
-        ->assertRedirect();
+        ->assertNotFound();
 
-    $plano = \App\Models\MonitoramentoPlano::where('codigo', 'compliance')->firstOrFail();
-
-    $this->assertDatabaseHas('comercial_parametros', ['chave' => 'preco_compliance', 'valor' => '6']);
-    expect((new PricingCatalogService)->getProductPriceByPlan($plano))->toBe(6.00);
+    $this->assertDatabaseMissing('comercial_parametros', ['chave' => 'preco_compliance']);
 });
 
 it('admin reseta o override e volta ao padrão', function () {

@@ -31,7 +31,7 @@ class ConsultaKitSeeder extends Seeder
             ],
             [
                 'slug' => 'fiscal-validacao',
-                'nome' => 'Validação Fiscal',
+                'nome' => 'Validação',
                 'descricao' => 'Raio-X cadastral com parecer fiscal: regime tributário, Simples, QSA e CNAEs.',
                 'fontes' => ['cadastro', 'analise_fiscal'],
                 'desconto_percentual' => 0,
@@ -40,7 +40,7 @@ class ConsultaKitSeeder extends Seeder
             ],
             [
                 'slug' => 'fiscal-licitacao',
-                'nome' => 'Regularidade Fiscal (Licitação)',
+                'nome' => 'Licitação',
                 'descricao' => 'Análise fiscal + CND Federal, FGTS e CNDT para editais e contratos.',
                 'fontes' => ['cadastro', 'analise_fiscal', 'cnd_federal', 'crf_fgts', 'cndt'],
                 'desconto_percentual' => 0,
@@ -49,7 +49,7 @@ class ConsultaKitSeeder extends Seeder
             ],
             [
                 'slug' => 'fiscal-compliance',
-                'nome' => 'Compliance Fiscal do Contador',
+                'nome' => 'Compliance',
                 'descricao' => 'Regularidade fiscal e trabalhista completa: federais + estaduais/municipais + SINTEGRA.',
                 'fontes' => ['cadastro', 'analise_fiscal', 'cnd_federal', 'crf_fgts', 'cndt', 'cnd_estadual', 'cnd_municipal', 'sintegra'],
                 'desconto_percentual' => 0,

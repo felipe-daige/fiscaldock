@@ -253,12 +253,13 @@ class PricingCatalogService
     }
 
     /**
-     * Preço em reais para exibir e cobrar um produto de consulta.
-     * Override admin opcional via comercial_parametros; default = custo do PlanoCatalog (R$).
+     * Preço em reais de exibição legado de um plano da escada.
+     * A escada morreu na migração à la carte (2026-07-22) — o preço real vem de fonte_precos/kits;
+     * este método só alimenta telas legadas e vale o custo do PlanoCatalog (sem override comercial).
      */
     public function getProductPriceByPlan(MonitoramentoPlano $plan): float
     {
-        return round((float) $this->comercial->valor('preco_'.$plan->codigo, (float) $plan->custo_creditos), 2);
+        return round((float) $plan->custo_creditos, 2);
     }
 
     /**

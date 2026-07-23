@@ -24,23 +24,17 @@ it('override de minimum_deposit é lido pelo PricingCatalogService', function ()
     expect((new PricingCatalogService)->getMinimumDeposit())->toBe(80.00);
 });
 
-it('override de preço por plano é preenchido em reais e cobrado em reais', function () {
-    (new ComercialParametroService)->definir('preco_compliance', 6.00, null);
+it('preço per-plano legado saiu do registro comercial (migração à la carte)', function () {
+    expect(ComercialParametroService::DEFAULTS)->not->toHaveKeys(['preco_validacao', 'preco_licitacao', 'preco_compliance']);
+    expect(fn () => (new ComercialParametroService)->definir('preco_compliance', 6.00, null))
+        ->toThrow(InvalidArgumentException::class);
+});
 
+it('preço de exibição legado do plano vale o custo do PlanoCatalog (sem override comercial)', function () {
     $plano = \App\Models\MonitoramentoPlano::where('codigo', 'compliance')->firstOrFail();
     $pricing = new PricingCatalogService;
 
-    expect($pricing->getProductPriceByPlan($plano))->toBe(6.00);
-});
-
-it('landing pricing lê override de preço por plano', function () {
-    (new ComercialParametroService)->definir('preco_compliance', 6.00, null);
-
-    $produto = collect((new PricingCatalogService)->getLandingPricingData()['products'])
-        ->firstWhere('slug', 'compliance');
-
-    expect($produto['price'])->toBe(6.00);
-    expect($produto['price_label'])->toBe(\App\Support\Dinheiro::brl(6.00).'/consulta');
+    expect($pricing->getProductPriceByPlan($plano))->toBe(round((float) $plano->custo_creditos, 2));
 });
 
 it('faixas de volume removidas do PricingCatalogService', function () {
