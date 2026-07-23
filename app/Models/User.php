@@ -33,6 +33,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'cargo',
         'persona',
         'cnpj',
+        'cpf',
         'faturamento_anual',
         'desafio_principal',
         'desafio_secundario',

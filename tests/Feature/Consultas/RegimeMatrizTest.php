@@ -35,7 +35,7 @@ it('completa o regime da filial com o da matriz (RFB só publica na matriz)', fu
 
     ProcessarConsultaJob::dispatchSync(
         loteId: $loteId, alvoTipo: 'participante', alvoId: $participanteId, userId: $userId, tabId: 'tab-test',
-        consultasIncluidas: ['situacao_cadastral', 'dados_cadastrais'],
+        consultasIncluidas: ['situacao_cadastral', 'dados_cadastrais', 'regime_tributario'],
         alvo: ['cnpj' => '07903169001768'],
         etapas: ['Preparando consulta', 'Dados cadastrais'],
     );
@@ -61,7 +61,7 @@ it('nao chama a matriz quando a filial ja tem regime (Simples)', function () {
 
     ProcessarConsultaJob::dispatchSync(
         loteId: $loteId, alvoTipo: 'participante', alvoId: $participanteId, userId: $userId, tabId: 'tab-test',
-        consultasIncluidas: ['situacao_cadastral', 'dados_cadastrais'],
+        consultasIncluidas: ['situacao_cadastral', 'dados_cadastrais', 'regime_tributario'],
         alvo: ['cnpj' => '07903169001768'],
         etapas: ['Preparando consulta', 'Dados cadastrais'],
     );
@@ -85,7 +85,7 @@ it('estima o regime quando a matriz tambem nao tem regime publicado', function (
 
     ProcessarConsultaJob::dispatchSync(
         loteId: $loteId, alvoTipo: 'participante', alvoId: $participanteId, userId: $userId, tabId: 'tab-test',
-        consultasIncluidas: ['situacao_cadastral', 'dados_cadastrais'],
+        consultasIncluidas: ['situacao_cadastral', 'dados_cadastrais', 'regime_tributario'],
         alvo: ['cnpj' => '07903169001768'],
         etapas: ['Preparando consulta', 'Dados cadastrais'],
     );

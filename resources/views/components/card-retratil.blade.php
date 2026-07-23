@@ -4,7 +4,7 @@
      funciona em qualquer página, sem depender de handler em JS-file.
      Props: titulo, acento (hex — borda esquerda de status), id (auto).
      Slots: badges (header, à direita antes do chevron), subheader (linhas sob o título). --}}
-@props(['titulo', 'acento' => null, 'id' => null])
+@props(['titulo', 'acento' => null, 'id' => null, 'truncarTitulo' => false])
 @php
     $cardId = $id ?? 'ret-'.bin2hex(random_bytes(6));
 @endphp
@@ -13,7 +13,7 @@
             onclick="(function(b){var t=document.getElementById('{{ $cardId }}');if(!t)return;var h=t.classList.toggle('hidden');b.setAttribute('aria-expanded',h?'false':'true');var c=b.querySelector('.detalhe-chevron');if(c)c.style.transform=h?'':'rotate(90deg)';var l=b.querySelector('[data-toggle-ver]');if(l)l.textContent=h?'Ver tudo':'Ocultar'})(this)"
             class="w-full flex items-start justify-between gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 text-left transition-colors">
         <span class="min-w-0 flex-1">
-            <span class="text-[11px] font-semibold text-gray-600 uppercase tracking-wide">{{ $titulo }}</span>
+            <span class="text-[11px] font-semibold text-gray-600 uppercase tracking-wide {{ $truncarTitulo ? 'block truncate' : '' }}"@if($truncarTitulo) title="{{ $titulo }}"@endif>{{ $titulo }}</span>
             @isset($subheader)
                 <span class="block mt-0.5">{{ $subheader }}</span>
             @endisset

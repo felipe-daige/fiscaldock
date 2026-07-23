@@ -8,15 +8,20 @@ beforeEach(function () {
     config()->set('consultas.providers.infosimples.token', 'test-token');
 });
 
-test('grupos lista as 6 fontes fiscais com preco default de R$ 1,00', function () {
+test('grupos fiscal lista cadastro (gratis) + analise fiscal + 6 certidoes', function () {
     $catalogo = app(CatalogoFontesAvulsas::class);
 
     $grupos = $catalogo->grupos();
 
     expect($grupos)->toHaveKey('fiscal');
     $chaves = array_column($grupos['fiscal']['fontes'], 'chave');
-    expect($chaves)->toBe(['cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts', 'cndt', 'sintegra'])
-        ->and(array_column($grupos['fiscal']['fontes'], 'preco'))->each->toBe(1.00);
+    expect($chaves)->toBe(['cadastro', 'analise_fiscal', 'cnd_federal', 'cnd_estadual', 'cnd_municipal', 'crf_fgts', 'cndt', 'sintegra']);
+
+    // Cadastro é grátis; análise fiscal e as certidões, R$ 1,00.
+    $precos = array_column($grupos['fiscal']['fontes'], 'preco', 'chave');
+    expect($precos['cadastro'])->toBe(0.0)
+        ->and($precos['analise_fiscal'])->toBe(1.00)
+        ->and($precos['cnd_federal'])->toBe(1.00);
 });
 
 test('override de preco por fonte vence o default', function () {
@@ -28,12 +33,13 @@ test('override de preco por fonte vence o default', function () {
         ->and($catalogo->precoSelecao(['sintegra', 'cnd_federal', 'cnd_federal']))->toBe(3.50);
 });
 
-test('fonte nao pronta some do catalogo', function () {
+test('fonte infosimples nao pronta some; analise_fiscal (minhareceita) permanece', function () {
     config()->set('consultas.infosimples_ativo', false);
     $catalogo = app(CatalogoFontesAvulsas::class);
 
-    expect($catalogo->grupos())->toBe([])
-        ->and($catalogo->chavesDisponiveis())->toBe([]);
+    // Todas as fontes InfoSimples somem; cadastro (grátis) + Análise Fiscal (derivada) ficam.
+    expect($catalogo->chavesDisponiveis())->toBe(['cadastro', 'analise_fiscal'])
+        ->and(array_keys($catalogo->grupos()))->toBe(['fiscal']);
 });
 
 test('atributosDe inclui sempre o cadastro alem das fontes selecionadas', function () {

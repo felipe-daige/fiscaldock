@@ -14,7 +14,7 @@ use Illuminate\Support\Str;
 /**
  * Painel admin dos kits da consulta avulsa por fontes (consulta_kits) — somente operador
  * FiscalDock (EnsureAdmin na rota). Kit é preset de seleção com desconto, não plano: editar
- * aqui muda apresentação e precificação da tela /app/consulta/fontes na hora.
+ * aqui muda apresentação e precificação da tela /app/consulta/painel na hora.
  *
  * Padrão espelha AdminPlanosController. Spec: docs/advocacia/consultas-certidoes.md (fase 3).
  */
@@ -30,7 +30,7 @@ class AdminKitsController extends Controller
     {
         $view = 'autenticado.admin.kits';
         $data = [
-            'kits' => ConsultaKit::orderBy('ordem')->get(),
+            'kits' => ConsultaKit::globais()->orderBy('ordem')->get(),
             'catalogoPrecos' => $this->catalogo,
         ];
 

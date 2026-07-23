@@ -31,6 +31,12 @@ abstract class FonteInfoSimplesBase implements Fonte
 
     public function pronta(): bool
     {
+        // Fonte pausada na origem (InfoSimples despausou o endpoint globalmente): some da tela e do
+        // registry, não roda nem cobra. Reabrir = tirar da lista config('consultas.fontes_pausadas').
+        if (in_array($this->chave(), (array) config('consultas.fontes_pausadas', []), true)) {
+            return false;
+        }
+
         // Só consulta o InfoSimples quando estiver explicitamente ativado
         // (pago/validado) E houver token. Enquanto false, as fontes InfoSimples não rodam.
         return (bool) config('consultas.infosimples_ativo', false)
@@ -55,6 +61,26 @@ abstract class FonteInfoSimplesBase implements Fonte
     public function params(array $alvo): array
     {
         return ['cnpj' => preg_replace('/[^0-9]/', '', (string) ($alvo['cnpj'] ?? ''))];
+    }
+
+    /**
+     * Município do alvo em forma canônica (ascii, minúsculo, kebab) — chave de todo mapa por
+     * cidade das fontes (slug da CND Municipal, TRT2 × TRT15 da CEAT). A minhareceita devolve
+     * o município em caixa alta e com acento; os mapas são sempre acento-free.
+     */
+    public static function normalizarCidade(string $cidade): string
+    {
+        $cidade = trim($cidade);
+        if ($cidade === '') {
+            return '';
+        }
+
+        $ascii = @iconv('UTF-8', 'ASCII//TRANSLIT', $cidade);
+        $cidade = $ascii !== false ? $ascii : $cidade;
+        $cidade = strtolower($cidade);
+        $cidade = preg_replace('/[^a-z0-9]+/', '-', $cidade);
+
+        return trim((string) $cidade, '-');
     }
 
     /**

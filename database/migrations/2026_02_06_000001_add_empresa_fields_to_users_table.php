@@ -19,6 +19,11 @@ return new class extends Migration
             if (! Schema::hasColumn('users', 'cnpj')) {
                 $table->string('cnpj', 18)->nullable()->after('cargo');
             }
+            if (! Schema::hasColumn('users', 'cpf')) {
+                // CPF do dono da conta — identidade do SOLICITANTE nas certidões judiciais que o
+                // exigem (CEAT TRT24). Só dígitos. Nullable: contas legadas/fiscais não têm.
+                $table->string('cpf', 11)->nullable()->after('cnpj');
+            }
             if (! Schema::hasColumn('users', 'persona')) {
                 // Vertical do usuário (empresa | contador | advogado) — dirige empacotamento
                 // (sidebar, planos exibidos, labels), nunca gate duro de compra.
@@ -52,7 +57,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['empresa', 'cargo', 'persona', 'cnpj', 'faturamento_anual', 'desafio_principal', 'desafio_secundario']);
+            $table->dropColumn(['empresa', 'cargo', 'persona', 'cnpj', 'cpf', 'faturamento_anual', 'desafio_principal', 'desafio_secundario']);
         });
     }
 };

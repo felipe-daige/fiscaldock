@@ -27,6 +27,7 @@
             str_contains($normalizado, 'indetermin') => 'INDET.',
             str_contains($normalizado, 'falha') || str_contains($normalizado, 'erro') => 'FALHA',
             str_contains($normalizado, 'indispon') => 'INDISP.',
+            str_contains($normalizado, 'não consultada') || str_contains($normalizado, 'nao consultada') => 'N/C',
             str_contains($normalizado, 'não encontrado') || str_contains($normalizado, 'nao encontrado') => 'S/DADO',
             mb_strlen($label) > 12 => \Illuminate\Support\Str::limit($label, 12),
             default => $label,
@@ -207,7 +208,7 @@
                         <div class="consulta-fontes-mosaic-card" style="--consulta-mosaic-order: {{ $ordem }}">
                             {{-- Card retrátil (componente DS): o badge no header preserva o status à vista; o
                                  corpo (mensagem oficial longa, itens, comprovante) só abre sob demanda. --}}
-                            <x-card-retratil :titulo="$bloco['titulo']" :acento="$acento">
+                            <x-card-retratil :titulo="$bloco['titulo']" :acento="$acento" :truncar-titulo="true">
                                 <x-slot:badges>
                                     @if(!empty($bloco['badge']))
                                         @php

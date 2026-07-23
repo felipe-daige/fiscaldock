@@ -20,6 +20,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(\App\Services\Consultas\FonteRegistry::class, fn () => new \App\Services\Consultas\FonteRegistry([
             new \App\Services\Consultas\Fontes\CadastroFonte,
+            // Análise Fiscal (paga): desbloqueia o raio-X tributário derivado do cadastro grátis.
+            new \App\Services\Consultas\Fontes\AnaliseFiscalFonte,
             new \App\Services\Consultas\Fontes\CndFederalFonte,
             new \App\Services\Consultas\Fontes\CndtFonte,
             new \App\Services\Consultas\Fontes\CrfFgtsFonte,
@@ -39,6 +41,9 @@ class AppServiceProvider extends ServiceProvider
             new \App\Services\Consultas\Fontes\Advocacia\ImprobidadeFonte,
             new \App\Services\Consultas\Fontes\Advocacia\CeisFonte,
             new \App\Services\Consultas\Fontes\Advocacia\CnepFonte,
+            // Certidão de 2 etapas (fase 4). Registrada p/ o follow-up job resolvê-la; fica oculta
+            // da tela via `consultas.fontes_pausadas` até o smoke validar comarca/modelo.
+            new \App\Services\Consultas\Fontes\Advocacia\TjmsPedidoFonte,
         ]));
 
         $this->app->bind(

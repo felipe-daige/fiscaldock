@@ -154,20 +154,4 @@ class CndMunicipalFonte extends FonteCertidaoInfoSimples
 
         return config('consultas.cnd_municipal.slugs')[$uf.':'.$cidade] ?? null;
     }
-
-    /** "RIO DE JANEIRO" → "rio-de-janeiro" (lowercase, sem acento, espaços→hífen). */
-    public static function normalizarCidade(string $cidade): string
-    {
-        $cidade = trim($cidade);
-        if ($cidade === '') {
-            return '';
-        }
-
-        $ascii = @iconv('UTF-8', 'ASCII//TRANSLIT', $cidade);
-        $cidade = $ascii !== false ? $ascii : $cidade;
-        $cidade = strtolower($cidade);
-        $cidade = preg_replace('/[^a-z0-9]+/', '-', $cidade);
-
-        return trim((string) $cidade, '-');
-    }
 }

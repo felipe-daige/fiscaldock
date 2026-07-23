@@ -272,7 +272,7 @@ class RetryConsultaService
     }
 
     /**
-     * @return array{cnpj:string, uf:?string, crt:mixed, matriz_filial:?string}
+     * @return array{cnpj:string, uf:?string, municipio:?string, crt:mixed, matriz_filial:?string, razao_social:?string}
      */
     private function resolverAlvo(int $loteId, string $tipo, int $id): array
     {
@@ -285,15 +285,19 @@ class RetryConsultaService
             ->value('resultado_dados');
         $matrizFilial = is_array($matrizFilial) ? ($matrizFilial['matriz_filial'] ?? null) : null;
 
+        // `municipio` pela mesma razão: sem o cadastro pra injetar o município autoritativo, as
+        // fontes que resolvem endpoint POR CIDADE ficariam INDISPONÍVEIS só na reconsulta —
+        // CndMunicipalFonte (slug por UF+cidade) e CeatTrtFonte (em SP, TRT2 × TRT15). O cadastro
+        // do próprio alvo é o melhor substituto disponível aqui.
         if ($tipo === 'cliente') {
             $c = Cliente::find($id);
 
-            return ['cnpj' => preg_replace('/[^0-9]/', '', (string) $c?->documento), 'uf' => $c?->uf, 'crt' => null, 'matriz_filial' => $matrizFilial, 'razao_social' => $c?->razao_social];
+            return ['cnpj' => preg_replace('/[^0-9]/', '', (string) $c?->documento), 'uf' => $c?->uf, 'municipio' => $c?->municipio, 'crt' => null, 'matriz_filial' => $matrizFilial, 'razao_social' => $c?->razao_social];
         }
 
         $p = Participante::find($id);
 
-        return ['cnpj' => preg_replace('/[^0-9]/', '', (string) $p?->documento), 'uf' => $p?->uf, 'crt' => $p?->crt, 'matriz_filial' => $matrizFilial, 'razao_social' => $p?->razao_social];
+        return ['cnpj' => preg_replace('/[^0-9]/', '', (string) $p?->documento), 'uf' => $p?->uf, 'municipio' => $p?->municipio, 'crt' => $p?->crt, 'matriz_filial' => $matrizFilial, 'razao_social' => $p?->razao_social];
     }
 
     /**

@@ -35,11 +35,24 @@ return [
         explode(',', (string) env('CONSULTAS_INFOSIMPLES_TESTE_CNPJS', ''))
     ))),
 
+    // Fontes TEMPORARIAMENTE pausadas na origem (InfoSimples pausa o endpoint globalmente quando
+    // o site oficial está instável/em manutenção — ex.: tst/banco-falencias=falencias,
+    // ieptb/protestos=protestos). Enquanto na lista, a fonte fica `pronta()=false`: some da tela
+    // de seleção, não entra no registry, não é cobrada. Não é bug de código nem permissão —
+    // reabrir REMOVENDO da lista quando a InfoSimples despausar (re-testar). CSV de CHAVES de fonte
+    // (não slugs). Controle OPERACIONAL por ENV (não baked no código): CONSULTAS_FONTES_PAUSADAS.
+    // Prod hoje (2026-07-22): `falencias,protestos` (pausadas na origem InfoSimples).
+    'fontes_pausadas' => array_values(array_filter(array_map(
+        fn ($c) => trim((string) $c),
+        explode(',', (string) env('CONSULTAS_FONTES_PAUSADAS', ''))
+    ))),
+
     // Mapa fonte → etapa (grupo) do progresso. Várias fontes compartilham a mesma etapa
     // (ex: cnd_federal/cndt/crf_fgts = certidoes_federais), p/ o strip avançar por grupo e não
     // repetir um "loop" por fonte. As chaves de etapa vêm de PlanoCatalog (resolvedEtapas).
     'fonte_etapa' => [
         'cadastro' => 'cadastrais',
+        'analise_fiscal' => 'cadastrais',
         'cnd_federal' => 'certidoes_federais',
         'cndt' => 'certidoes_federais',
         'crf_fgts' => 'certidoes_federais',
@@ -52,6 +65,7 @@ return [
         'ceat_trt' => 'certidoes_judiciais',
         'certidao_mpt' => 'certidoes_judiciais',
         'certidao_mpf' => 'certidoes_judiciais',
+        'certidao_tjms' => 'certidoes_judiciais',
         'certidao_tcu' => 'integridade',
         'improbidade' => 'integridade',
         'ceis' => 'integridade',
@@ -64,7 +78,8 @@ return [
     // Dá feedback textual por fonte mesmo quando várias caem na mesma etapa/grupo (ex: as 3
     // federais). Fallback = a própria chave quando não mapeada.
     'fonte_nome' => [
-        'cadastro' => 'Dados Cadastrais',
+        'cadastro' => 'Situação Cadastral (grátis)',
+        'analise_fiscal' => 'Análise Fiscal (regime, Simples, parecer)',
         'cnd_federal' => 'CND Federal (Receita/PGFN)',
         'cndt' => 'CNDT (débitos trabalhistas)',
         'crf_fgts' => 'CRF FGTS (Caixa)',
@@ -76,6 +91,7 @@ return [
         'ceat_trt' => 'CEAT — Ações Trabalhistas (TRT da sede)',
         'certidao_mpt' => 'Certidão MPT (feitos trabalhistas)',
         'certidao_mpf' => 'Certidão MPF',
+        'certidao_tjms' => 'Certidão Cível TJMS (2 etapas)',
         'certidao_tcu' => 'TCU — Consolidada (inidôneos/inabilitados)',
         'improbidade' => 'CNJ — Improbidade Administrativa',
         'ceis' => 'CEIS (inidôneas e suspensas)',
@@ -247,6 +263,7 @@ return [
         'ceat_trt' => (float) env('CONSULTA_CREDITOS_CEAT_TRT', 1.00),
         'certidao_mpt' => (float) env('CONSULTA_CREDITOS_CERTIDAO_MPT', 1.00),
         'certidao_mpf' => (float) env('CONSULTA_CREDITOS_CERTIDAO_MPF', 1.00),
+        'certidao_tjms' => (float) env('CONSULTA_CREDITOS_CERTIDAO_TJMS', 1.00),
         'certidao_tcu' => (float) env('CONSULTA_CREDITOS_CERTIDAO_TCU', 1.00),
         'improbidade' => (float) env('CONSULTA_CREDITOS_IMPROBIDADE', 1.00),
         'ceis' => (float) env('CONSULTA_CREDITOS_CEIS', 1.00),
@@ -312,6 +329,15 @@ return [
                 'orientacao' => 'A fonte oficial recusou a consulta com os dados deste CNPJ. Confira o cadastro (CNPJ/UF/situação) antes de reconsultar: essa resposta é faturada pela fonte, então a reconsulta é cobrada mesmo que a recusa se repita. Se persistir, comunique o suporte.',
             ],
         ],
+    ],
+
+    // Pedidos de certidão de 2 ETAPAS (fase 4) — genérico a TODO tribunal (não é TJMS-específico).
+    // Bloco PRÓPRIO, irmão de `retry`: aninhá-lo dentro do retry (como já aconteceu uma vez)
+    // desloca `codigo_motivo`/`motivos` e o RetryConsultaService passa a ler config vazia.
+    // `retry_tecnico_max`: quantas re-conferências CURTAS (15s→30s) uma falha transitória (615/605)
+    // ganha antes de contar como conferência efetiva ao tribunal.
+    'pedidos' => [
+        'retry_tecnico_max' => (int) env('CONSULTAS_PEDIDOS_RETRY_TECNICO_MAX', 2),
     ],
 
     // Card "Relacionamento & Movimentação Fiscal" no resultado da consulta.

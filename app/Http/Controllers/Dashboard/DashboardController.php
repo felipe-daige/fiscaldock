@@ -37,6 +37,7 @@ class DashboardController extends Controller
         protected ResultadoDetalhePresenter $detalhePresenter,
         protected PerfilConsultaHistoricoService $perfilConsultaHistorico,
         protected \App\Services\GuiaAlertaService $guiaAlertaService,
+        protected \App\Services\Efd\ConsolidadoFiscalService $consolidadoFiscal,
     ) {}
 
     /** Rótulo curto por fonte de certidão p/ os badges compactos na listagem de clientes. */
@@ -596,6 +597,11 @@ class DashboardController extends Controller
             'notasContexto' => 'cliente',
             'notasEntityId' => $cliente->id,
             'historicoConsultasPerfil' => $this->perfilConsultaHistorico->paraCliente($cliente),
+            // Consolidado fiscal ACUMULADO (todas as importações EFD deste cliente):
+            // resumo tributário por CFOP/CST/alíquota — a visão que o varejo (NFC-e, sem
+            // detalhe por item) precisa.
+            'consolidadoFiscal' => $this->consolidadoFiscal
+                ->porCliente($cliente->id, (int) Auth::id()),
         ];
 
         $viewData['planos'] = \App\Models\MonitoramentoPlano::ativos();
@@ -850,6 +856,8 @@ class DashboardController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'sobrenome' => ['nullable', 'string', 'max:255'],
             'telefone' => ['nullable', 'string', 'max:20'],
+            // CPF do solicitante das certidões judiciais (CEAT). Opcional; DV validado quando presente.
+            'cpf' => ['nullable', 'string', 'max:14', new \App\Rules\CpfValido],
         ]);
 
         $user = Auth::user();
@@ -860,6 +868,9 @@ class DashboardController extends Controller
         if ($request->has('telefone')) {
             $user->telefone = $dados['telefone'];
         }
+        if ($request->has('cpf')) {
+            $user->cpf = \App\Support\Cpf::digitos($dados['cpf'] ?? '') ?: null;
+        }
         $user->save();
 
         if ($this->isAjaxRequest($request)) {
@@ -869,6 +880,7 @@ class DashboardController extends Controller
                     'name' => $user->name,
                     'sobrenome' => $user->sobrenome,
                     'telefone' => $user->telefone,
+                    'cpf' => $user->cpf,
                 ],
             ]);
         }

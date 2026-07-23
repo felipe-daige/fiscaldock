@@ -11,7 +11,6 @@ use App\Services\Consultas\FonteRegistry;
 use App\Services\Consultas\Fontes\CndMunicipalFonte;
 use App\Services\Consultas\InscricaoMunicipalResolver;
 use App\Services\Consultas\Persistencia\PersistenciaCnpj;
-use App\Services\Consultas\Providers\MinhaReceitaProvider;
 use App\Services\Consultas\ThrottleProvider;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
@@ -82,10 +81,23 @@ class ProcessarConsultaJob implements ShouldQueue
         // fontes UF-dependentes (ex: CND Estadual). O cadastro é a 1ª fonte de todo plano.
         $alvo = $this->alvo;
 
+        // CPF do SOLICITANTE (requerente) das certidões judiciais que o exigem (CEAT TRT24). É a
+        // identidade de QUEM PEDE — o dono da conta, não o alvo consultado. Injetado uma vez aqui
+        // (choke point de todo lote: plano e avulso) a partir do usuário; a Fonte lê do alvo.
+        if (empty($alvo['cpf_solicitante'])) {
+            $cpfSolicitante = \App\Models\User::where('id', $this->userId)->value('cpf');
+            if (! empty($cpfSolicitante)) {
+                $alvo['cpf_solicitante'] = \App\Support\Cpf::digitos($cpfSolicitante);
+            }
+        }
+
         // Ordena as fontes pela ETAPA (cadastrais→federais→estaduais) para que o
         // progresso avance de forma monotônica. O cadastro (etapa 2) cai naturalmente em
         // primeiro, garantindo a captura de UF/município antes das fontes UF-dependentes.
         $fontes = $registry->fontesDe($this->consultasIncluidas);
+        // Fontes DERIVADAS (ex.: analise_fiscal) não fazem chamada externa: são só flag de unlock
+        // do bloco enriquecido do cadastro. Fora do loop de provedores (não viram etapa/consulta).
+        $fontes = array_values(array_filter($fontes, fn ($f) => $f->provider() !== 'derivado'));
         usort($fontes, fn ($a, $b) => $this->etapaParaFonte($a->chave())[0] <=> $this->etapaParaFonte($b->chave())[0]);
 
         // Reconsulta escopada: processa SÓ as fontes selecionadas. Filtrar ANTES do loop faz o
@@ -268,12 +280,19 @@ class ProcessarConsultaJob implements ShouldQueue
                     $alvo['matriz_filial'] = $dados['matriz_filial'];
                 }
 
+                // Raio-X tributário (regime + estimativa) só é PROCESSADO quando a Análise Fiscal
+                // (paga) está na seleção — sentinela `regime_tributario` em consultasIncluidas.
+                // Sem ela, o cadastro grátis não completa nem estima regime e o bloco enriquecido
+                // é descartado antes de persistir (abaixo).
+                $analiseComprada = in_array('regime_tributario', $this->consultasIncluidas, true);
+
                 // Regime tributário é da PJ inteira, mas a RFB só publica no CNPJ da
                 // matriz — filial consultada ficava "Não informado". 1 chamada extra
                 // (grátis, minhareceita) pra matriz completa o regime; falha aqui não
                 // derruba o cadastro (fica "Não informado" como antes).
                 $cnpjAlvo = \App\Support\Cnpj::digitos((string) ($alvo['cnpj'] ?? ''));
-                if ($fonte instanceof \App\Services\Consultas\Fontes\CadastroFonte
+                if ($analiseComprada
+                    && $fonte instanceof \App\Services\Consultas\Fontes\CadastroFonte
                     && $resp->status === 'sucesso'
                     && $fonte->regimeIndefinido($dados)
                     && ($alvo['matriz_filial'] ?? null) === 'filial') {
@@ -291,11 +310,27 @@ class ProcessarConsultaJob implements ShouldQueue
                 // Regime seguiu indefinido (RFB não publica, nem na matriz) → estima pelo
                 // perfil (natureza/CNAE/EFD/exclusão do Simples) com origem 'estimado'. A
                 // ficha nunca deixa a estimativa sobrescrever regime real já persistido.
-                if ($fonte instanceof \App\Services\Consultas\Fontes\CadastroFonte
+                if ($analiseComprada
+                    && $fonte instanceof \App\Services\Consultas\Fontes\CadastroFonte
                     && $resp->status === 'sucesso'
                     && $fonte->regimeIndefinido($dados)) {
                     $dados = app(\App\Services\Consultas\RegimeEstimadoResolver::class)
                         ->aplicar($dados, $this->userId, $this->alvoTipo, $this->alvoId);
+                }
+
+                // Análise Fiscal NÃO comprada → descarta o bloco enriquecido (regime/Simples/MEI):
+                // dado da mesma chamada grátis, mas é produto pago. Identidade/endereço/situação
+                // (grátis) permanecem. `consultas_realizadas` também perde os itens enriquecidos.
+                if (! $analiseComprada && $fonte instanceof \App\Services\Consultas\Fontes\CadastroFonte) {
+                    foreach (\App\Services\Consultas\Fontes\AnaliseFiscalFonte::CHAVES_BLOQUEADAS as $chaveBloqueada) {
+                        unset($dados[$chaveBloqueada]);
+                    }
+                    if (isset($dados['consultas_realizadas']) && is_array($dados['consultas_realizadas'])) {
+                        $dados['consultas_realizadas'] = array_values(array_diff(
+                            $dados['consultas_realizadas'],
+                            \App\Services\Consultas\Fontes\AnaliseFiscalFonte::CHAVES_BLOQUEADAS,
+                        ));
+                    }
                 }
             }
 
@@ -304,6 +339,26 @@ class ProcessarConsultaJob implements ShouldQueue
                 $resp->status, $fonte->custoCreditos(), $resp->mensagem,
             );
             $persistencia->gravar($this->loteId, $this->alvoTipo, $this->alvoId, $resultado);
+
+            // Fonte de 2 ETAPAS (fase 4): a etapa 1 (aqui) só CADASTROU o pedido no tribunal. Cria
+            // a máquina de estados (CertidaoPedido) que agenda o follow-up da etapa 2 (obter). NÃO
+            // grava em `certidoes` — o bloco vem com status "Em andamento" (o registro já o pula).
+            if ($resp->status === 'sucesso' && $fonte instanceof \App\Services\Consultas\Contracts\FonteDuasEtapas) {
+                try {
+                    app(\App\Services\Consultas\CertidaoPedidoService::class)->criar(
+                        $fonte,
+                        $alvo,
+                        (array) ($resp->raw['data'][0] ?? []),
+                        $this->userId,
+                        $this->alvoTipo,
+                        $this->alvoId,
+                        (string) ($alvo['cnpj'] ?? ''),
+                        $this->loteId,
+                    );
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
 
             // Registro canônico de certidão emitida (tabela `certidoes`): alimenta os alertas de
             // vencimento e aponta o PDF já arquivado. Falha aqui nunca derruba a consulta.
@@ -458,11 +513,7 @@ class ProcessarConsultaJob implements ShouldQueue
 
     private function resolverProvider(string $nome)
     {
-        return match ($nome) {
-            'minhareceita' => app(MinhaReceitaProvider::class),
-            'infosimples' => app(\App\Services\Consultas\Providers\InfoSimplesProvider::class),
-            default => throw new \RuntimeException("Provider não suportado: {$nome}"),
-        };
+        return app(\App\Services\Consultas\ProviderResolver::class)->resolver($nome);
     }
 
     /** Etapa (numero, label) por chave no array de etapas do plano. */

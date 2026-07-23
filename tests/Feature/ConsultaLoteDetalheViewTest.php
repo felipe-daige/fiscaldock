@@ -384,6 +384,66 @@ it('historico exibe acao abrir para qualquer lote', function () {
         ->assertSee('Abrir');
 });
 
+it('historico destaca a empresa consultada e o resumo do resultado', function () {
+    $user = User::factory()->create();
+    $lote = criarLoteDetalhe($user, [
+        'status' => ConsultaLote::STATUS_FINALIZADO,
+        'processado_em' => now(),
+    ]);
+
+    adicionarResultadoDetalheCustom($lote, $user, 1, [
+        'resultado_dados' => [
+            'razao_social' => 'DISTRIBUIDORA ALVORADA LTDA',
+            'situacao_cadastral' => 'ATIVA',
+        ],
+    ], [
+        'documento' => '11222333000181',
+        'razao_social' => 'Distribuidora Alvorada',
+    ]);
+
+    actingAs($user)
+        ->get('/app/consulta/historico')
+        ->assertOk()
+        ->assertSee('Consulta realizada')
+        ->assertSee('DISTRIBUIDORA ALVORADA LTDA')
+        ->assertSee('11.222.333/0001-81')
+        ->assertSee('1 disponível')
+        ->assertSee('Consulta manual')
+        ->assertSee("Lote #{$lote->id}");
+});
+
+it('historico resume lote multiplo mesmo antes de haver resultados', function () {
+    $user = User::factory()->create();
+    $lote = criarLoteDetalhe($user, [
+        'total_participantes' => 3,
+        'status' => ConsultaLote::STATUS_PROCESSANDO,
+    ]);
+
+    foreach ([
+        ['12345678000195', 'Fornecedor Aurora'],
+        ['23456789000196', 'Fornecedor Boreal'],
+        ['34567890000197', 'Fornecedor Central'],
+    ] as [$documento, $razaoSocial]) {
+        $participante = Participante::create([
+            'user_id' => $user->id,
+            'documento' => $documento,
+            'razao_social' => $razaoSocial,
+            'uf' => 'SP',
+        ]);
+
+        $lote->participantes()->attach($participante->id);
+    }
+
+    actingAs($user)
+        ->get('/app/consulta/historico')
+        ->assertOk()
+        ->assertSee('Fornecedor Aurora')
+        ->assertSee('12.345.678/0001-95')
+        ->assertSee('+ 2 CNPJs')
+        ->assertSee('Também: Fornecedor Boreal · Fornecedor Central')
+        ->assertSee('Aguardando resultados');
+});
+
 it('renderiza erro critico sanitizado com contato de suporte no detalhe do lote', function () {
     $user = User::factory()->create();
     $lote = criarLoteDetalhe($user, [
@@ -516,6 +576,12 @@ it('exibe razão social e CNPJ do CLIENTE quando o resultado é do escopo client
     actingAs($user)
         ->get("/app/consulta/lote/{$lote->id}")
         ->assertOk()
+        ->assertSee('Clientes Consultados')
+        ->assertSee('Mostrando 1–1 de 1 cliente')
+        ->assertSee('>Clientes</p>', false)
+        ->assertSee('>Cliente</th>', false)
+        ->assertDontSee('Participantes Consultados')
+        ->assertDontSee('>Participante</th>', false)
         ->assertSee('HIDRATOP COMERCIO DE PECAS E SERVICOS HIDRAULICOS LTDA')
         ->assertSee('97.551.165/0001-93')
         ->assertDontSee('Sem razão social');

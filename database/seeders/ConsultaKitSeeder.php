@@ -17,6 +17,45 @@ class ConsultaKitSeeder extends Seeder
     public function run(): void
     {
         $kits = [
+            // PLANOS DO SISTEMA (vitrine do contador) — a escada fiscal recriada como kits
+            // (migração escada→à la carte 2026-07-22). `sistema=true` os coloca na seção "Planos do
+            // contador"; nomes sinalizam o público. Gratuito = só a situação cadastral (R$ 0).
+            [
+                'slug' => 'fiscal-gratuito',
+                'nome' => 'Cadastral do Contador (Grátis)',
+                'descricao' => 'Confirma que o CNPJ existe, está ativo e com endereço válido. Sem custo.',
+                'fontes' => ['cadastro'],
+                'desconto_percentual' => 0,
+                'sistema' => true,
+                'ordem' => 10,
+            ],
+            [
+                'slug' => 'fiscal-validacao',
+                'nome' => 'Validação Fiscal',
+                'descricao' => 'Raio-X cadastral com parecer fiscal: regime tributário, Simples, QSA e CNAEs.',
+                'fontes' => ['cadastro', 'analise_fiscal'],
+                'desconto_percentual' => 0,
+                'sistema' => true,
+                'ordem' => 11,
+            ],
+            [
+                'slug' => 'fiscal-licitacao',
+                'nome' => 'Regularidade Fiscal (Licitação)',
+                'descricao' => 'Análise fiscal + CND Federal, FGTS e CNDT para editais e contratos.',
+                'fontes' => ['cadastro', 'analise_fiscal', 'cnd_federal', 'crf_fgts', 'cndt'],
+                'desconto_percentual' => 0,
+                'sistema' => true,
+                'ordem' => 12,
+            ],
+            [
+                'slug' => 'fiscal-compliance',
+                'nome' => 'Compliance Fiscal do Contador',
+                'descricao' => 'Regularidade fiscal e trabalhista completa: federais + estaduais/municipais + SINTEGRA.',
+                'fontes' => ['cadastro', 'analise_fiscal', 'cnd_federal', 'crf_fgts', 'cndt', 'cnd_estadual', 'cnd_municipal', 'sintegra'],
+                'desconto_percentual' => 0,
+                'sistema' => true,
+                'ordem' => 13,
+            ],
             [
                 'slug' => 'licitacao',
                 'nome' => 'Kit Licitação',

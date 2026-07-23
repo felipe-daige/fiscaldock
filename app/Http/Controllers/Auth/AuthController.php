@@ -277,6 +277,10 @@ class AuthController extends Controller
                 'telefone' => 'required|string|max:20',
                 'senha' => ['required', 'confirmed', Password::min(8)->letters()->numbers()->uncompromised()],
                 'perfil_conta' => 'nullable|string|in:'.implode(',', User::PERSONAS),
+                // CPF do solicitante das certidões judiciais (CEAT exige). Obrigatório pra
+                // advogado (persona que usa Contencioso); opcional pros demais (sem fricção no
+                // funil fiscal). DV validado quando presente — tribunal/InfoSimples rejeita inválido.
+                'cpf' => ['nullable', 'string', 'max:14', 'required_if:perfil_conta,advogado', new \App\Rules\CpfValido],
                 'empresa' => 'required|string|max:255',
                 'cargo' => 'required|string|max:255',
                 'documento' => 'required|string|max:18',
@@ -288,6 +292,7 @@ class AuthController extends Controller
             ], [
                 'terms_aceitos.accepted' => 'Você precisa aceitar os Termos de Uso e a Política de Privacidade.',
                 'desafio_secundario.different' => 'O desafio secundário precisa ser diferente do principal.',
+                'cpf.required_if' => 'Informe o CPF do responsável — ele é o solicitante das certidões judiciais.',
                 // Mensagens claras em pt-BR para a senha (locale do app é "en";
                 // a regra Password emite falhas nas chaves password.letters/numbers/uncompromised).
                 'senha.required' => 'Informe uma senha.',
@@ -364,6 +369,7 @@ class AuthController extends Controller
                 'cargo' => $validated['cargo'],
                 'persona' => $validated['perfil_conta'] ?? 'empresa',
                 'cnpj' => $validated['documento'],
+                'cpf' => \App\Support\Cpf::digitos($validated['cpf'] ?? '') ?: null,
                 'faturamento_anual' => $validated['faturamento'],
                 'desafio_principal' => $validated['desafio_principal'],
                 'desafio_secundario' => $validated['desafio_secundario'] ?? null,

@@ -189,6 +189,71 @@ services:
       - "127.0.0.1:1025:1025"
       - "127.0.0.1:8025:8025"
 
+  # Runner de TESTE e LINT (pest/pint). Não serve tráfego: fica dormindo e recebe `docker exec`.
+  # A imagem de produção instala o vendor com --no-dev (não tem pest/pint), por isso este serviço
+  # usa a imagem `dev` local, que traz as devDependencies.
+  #
+  #   docker exec fiscaldock-app-test-1 sh -c './vendor/bin/pest <arquivos|dirs>'
+  #   docker exec fiscaldock-app-test-1 sh -c './vendor/bin/pint <arquivos>'
+  #
+  # `profiles: [test]` impede que um `docker compose up -d` de produção quebre caso a imagem dev
+  # não exista na máquina; `restart: unless-stopped` garante que, uma vez criado, ele volte sozinho
+  # depois de reboot. Criar/recriar:  docker compose --profile test up -d app-test
+  app-test:
+    image: fiscaldock:dev-arm64
+    restart: unless-stopped
+    command: sh -c "sleep infinity"
+    networks:
+      - postgres-internal
+    volumes:
+      - /usr/share/zoneinfo:/usr/share/zoneinfo:ro
+      - /var/www/html/app:/var/www/html/app
+      - /var/www/html/config:/var/www/html/config
+      - /var/www/html/database:/var/www/html/database
+      - /var/www/html/routes:/var/www/html/routes
+      - /var/www/html/resources:/var/www/html/resources
+      - /var/www/html/tests:/var/www/html/tests
+      - /var/www/html/public/js:/var/www/html/public/js
+      - /var/www/html/public/css:/var/www/html/public/css
+      - /var/www/html/public/build:/var/www/html/public/build
+      # SÓ o arquivo bootstrap/app.php — montar o diretório arrastaria bootstrap/cache (config
+      # cacheada, views compiladas) e quebraria o boot. Sem este mount a imagem fica stale e
+      # mudanças de middleware viram "regressões" falsas (ex.: AuthSecurityTest).
+      - /var/www/html/bootstrap/app.php:/var/www/html/bootstrap/app.php:ro
+      # Bind de ARQUIVO: um save atômico no host troca o inode e o container para de ver as
+      # mudanças. Depois de editar o phpunit.xml, recriar:
+      #   docker compose --profile test up -d --force-recreate app-test
+      - /var/www/html/phpunit.xml:/var/www/html/phpunit.xml:ro
+      - ./.env:/var/www/html/.env:ro
+      - ./storage/logs:/var/www/html/storage/logs
+    environment:
+      # O Dotenv do Laravel é IMUTÁVEL: variáveis reais de ambiente VENCEM o .env montado acima.
+      # É assim que isolamos o teste do .env de produção sem precisar de um .env.testing paralelo.
+      TZ: America/Sao_Paulo
+      APP_ENV: testing
+      APP_DEBUG: "true"
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: pgsql
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      # TRAVA DE SEGURANÇA: sem isto, `artisan tinker/migrate` neste container cai no banco REAL
+      # (o phpunit.xml só força o banco durante a suíte, não em comandos avulsos).
+      DB_DATABASE: fiscaldock_test
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD}
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+      MAIL_MAILER: array
+      LOG_LEVEL: debug
+      # Toggles OPERACIONAIS de produção não podem vazar pro teste (uma fonte pausada em prod
+      # sumia do catálogo e derrubava testes que a esperavam disponível).
+      CONSULTAS_INFOSIMPLES_ATIVO: "false"
+      CONSULTAS_INFOSIMPLES_TESTE_CNPJS: ""
+      CONSULTAS_FONTES_PAUSADAS: ""
+    profiles:
+      - test
+
 volumes:
   app_storage:
     external: true

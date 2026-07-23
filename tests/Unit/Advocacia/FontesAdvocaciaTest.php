@@ -11,6 +11,7 @@ beforeEach(function () {
 });
 
 test('as 11 fontes advocacia estao registradas e prontas', function () {
+    config()->set('consultas.fontes_pausadas', []); // baseline: nada pausado na origem
     $registry = app(FonteRegistry::class);
     $chaves = ['certidao_stj', 'certidao_trf', 'ceat_trt', 'certidao_mpt', 'certidao_mpf',
         'certidao_tcu', 'improbidade', 'ceis', 'cnep', 'protestos', 'falencias'];
@@ -23,21 +24,26 @@ test('as 11 fontes advocacia estao registradas e prontas', function () {
     }
 });
 
-test('catalogo avulso agora expoe 17 fontes em 4 grupos', function () {
+test('catalogo avulso expoe 20 fontes em 4 grupos (TJMS 2-etapas + cadastro gratis + analise fiscal)', function () {
+    config()->set('consultas.fontes_pausadas', []); // baseline: nada pausado na origem
     $grupos = app(\App\Services\Advocacia\CatalogoFontesAvulsas::class)->grupos();
 
     expect(array_keys($grupos))->toBe(['judicial', 'integridade', 'passivo', 'fiscal'])
-        ->and(count($grupos['judicial']['fontes']))->toBe(5)
+        ->and(count($grupos['judicial']['fontes']))->toBe(6) // + certidao_tjms (fase 4)
         ->and(count($grupos['integridade']['fontes']))->toBe(4)
         ->and(count($grupos['passivo']['fontes']))->toBe(2)
-        ->and(count($grupos['fiscal']['fontes']))->toBe(6);
+        ->and(count($grupos['fiscal']['fontes']))->toBe(8); // + cadastro (grátis) + analise_fiscal (paga)
 
-    // Todas a R$ 1,00 default.
+    // R$ 1,00 default em todas as single-call. Exceção: fonte de 2 ETAPAS custa ≥2 chamadas pagas
+    // ao provedor (pedido + conferências), então tem override em `advocacia.precos`.
+    $overrides = (array) config('advocacia.precos', []);
     foreach ($grupos as $g) {
         foreach ($g['fontes'] as $f) {
-            expect($f['preco'])->toBe(1.00);
+            expect($f['preco'])->toBe((float) ($overrides[$f['chave']] ?? 1.00));
         }
     }
+
+    expect($overrides['certidao_tjms'] ?? null)->toBe(2.00); // 2 etapas não cabe no R$ 1,00
 });
 
 test('etapas dinamicas incluem os grupos novos em ordem canonica', function () {
@@ -68,26 +74,81 @@ test('certidao STJ normaliza sucesso negativa e 611 indeterminado', function () 
     expect($fonte->normalizar(['code' => 605], 'retry'))->toBe([]);
 });
 
-test('CEAT resolve o TRT pela UF, exige nome e manda nome+cnpj nos params', function () {
+test('CEAT resolve o TRT pela UF, exige nome+cpf_solicitante e manda nome+cnpj+cpf_solicitante nos params', function () {
     $fonte = new CeatTrtFonte;
 
     expect($fonte->slugPara(['uf' => 'RJ']))->toBe('tribunal/trt1/ceat')
-        ->and($fonte->slugPara(['uf' => 'sp']))->toBe('tribunal/trt2/ceat')
         ->and($fonte->slugPara(['uf' => 'MS']))->toBe('tribunal/trt24/ceat')
         ->and($fonte->slugPara(['uf' => 'AP']))->toBe('tribunal/trt8/ceat')
-        ->and($fonte->aplicavelPara(['uf' => 'MG', 'razao_social' => 'ACME LTDA']))->toBeTrue()
-        // `nome` é obrigatório no endpoint (606 billable sem ele — smoke lote 260): sem razão
-        // social a fonte fica INDISPONIVEL sem chamar nem cobrar.
-        ->and($fonte->aplicavelPara(['uf' => 'MG']))->toBeFalse()
-        ->and($fonte->aplicavelPara(['uf' => '', 'razao_social' => 'ACME']))->toBeFalse()
+        // TRT6 (PE) é a exceção de slug: `certidao`, não `ceat`.
+        ->and($fonte->slugPara(['uf' => 'PE']))->toBe('tribunal/trt6/certidao')
+        // Aplicável exige UF + razão social + CPF do solicitante (do dono da conta, no alvo).
+        ->and($fonte->aplicavelPara(['uf' => 'MG', 'razao_social' => 'ACME LTDA', 'cpf_solicitante' => '11144477735']))->toBeTrue()
+        // `nome` obrigatório (606 billable sem ele — smoke lote 260): sem razão social → INDISPONIVEL.
+        ->and($fonte->aplicavelPara(['uf' => 'MG', 'cpf_solicitante' => '11144477735']))->toBeFalse()
+        ->and($fonte->aplicavelPara(['uf' => '', 'razao_social' => 'ACME', 'cpf_solicitante' => '11144477735']))->toBeFalse()
         ->and($fonte->aplicavelPara([]))->toBeFalse();
 
-    expect($fonte->params(['cnpj' => '19.131.243/0001-97', 'razao_social' => 'ACME LTDA']))
-        ->toBe(['cnpj' => '19131243000197', 'nome' => 'ACME LTDA']);
+    // Params carregam nome + cnpj + o cpf_solicitante do alvo (dono da conta, injetado pelo job).
+    expect($fonte->params(['cnpj' => '19.131.243/0001-97', 'razao_social' => 'ACME LTDA', 'cpf_solicitante' => '111.444.777-35']))
+        ->toBe(['cnpj' => '19131243000197', 'nome' => 'ACME LTDA', 'cpf_solicitante' => '11144477735']);
+
+    // Sem cpf_solicitante no alvo (usuário sem users.cpf), a fonte fica INDISPONIVEL sem chamar nem
+    // cobrar — NÃO há mais fallback de CPF de sistema (evita emitir certidão em nome de terceiro).
+    expect($fonte->aplicavelPara(['uf' => 'MS', 'razao_social' => 'ACME LTDA']))->toBeFalse()
+        ->and($fonte->params(['cnpj' => '19131243000197', 'razao_social' => 'ACME LTDA']))
+        ->toBe(['cnpj' => '19131243000197', 'nome' => 'ACME LTDA', 'cpf_solicitante' => ''])
+        ->and($fonte->motivoIndisponivel(['uf' => 'MS', 'razao_social' => 'ACME LTDA']))
+        ->toContain('CPF do solicitante');
 
     // Sem UF/nome o job persiste INDISPONIVEL com o motivo — sem chamada nem cobrança.
     $bloco = $fonte->normalizar(['_motivo' => $fonte->motivoIndisponivel([])], 'nao_aplicavel');
     expect($bloco['ceat_trt']['status'])->toBe('INDISPONIVEL');
+});
+
+test('CEAT em SP separa TRT2 (Grande SP/Baixada) de TRT15 (interior) pelo município', function () {
+    $fonte = new CeatTrtFonte;
+
+    $sp = fn (string $municipio) => $fonte->slugPara(['uf' => 'SP', 'municipio' => $municipio]);
+
+    // Jurisdição do TRT2: capital, Grande SP, ABC, Baixada Santista, Ibiúna.
+    expect($sp('SAO PAULO'))->toBe('tribunal/trt2/ceat')
+        ->and($sp('São Bernardo do Campo'))->toBe('tribunal/trt2/ceat')
+        ->and($sp('GUARULHOS'))->toBe('tribunal/trt2/ceat')
+        ->and($sp('SANTOS'))->toBe('tribunal/trt2/ceat')
+        ->and($sp('CUBATÃO'))->toBe('tribunal/trt2/ceat')
+        ->and($sp('IBIÚNA'))->toBe('tribunal/trt2/ceat')
+        // Todo o resto do estado é TRT15/Campinas — inclusive a Baixada que ficou de fora do TRT2.
+        ->and($sp('RIBEIRAO PRETO'))->toBe('tribunal/trt15/ceat')
+        ->and($sp('Ribeirão Preto'))->toBe('tribunal/trt15/ceat')
+        ->and($sp('CAMPINAS'))->toBe('tribunal/trt15/ceat')
+        ->and($sp('SOROCABA'))->toBe('tribunal/trt15/ceat')
+        ->and($sp('SÃO JOSÉ DOS CAMPOS'))->toBe('tribunal/trt15/ceat')
+        ->and($sp('PERUÍBE'))->toBe('tribunal/trt15/ceat')
+        ->and($sp('ITANHAÉM'))->toBe('tribunal/trt15/ceat')
+        ->and($sp('MONGAGUÁ'))->toBe('tribunal/trt15/ceat');
+
+    // Homônimo de outro estado não vaza pro mapa de SP (São Paulo só existe como SP aqui).
+    expect($fonte->slugPara(['uf' => 'MG', 'municipio' => 'SANTOS DUMONT']))->toBe('tribunal/trt3/ceat');
+
+    $alvo = ['uf' => 'SP', 'razao_social' => 'ACME LTDA', 'cpf_solicitante' => '11144477735'];
+
+    // Sem município NÃO chuta o TRT: certidão da região errada volta negativa falsa.
+    expect($fonte->trtPara($alvo))->toBeNull()
+        ->and($fonte->aplicavelPara($alvo))->toBeFalse()
+        ->and($fonte->motivoIndisponivel($alvo))->toContain('município')
+        ->and($fonte->slugPara($alvo))->toBe('tribunal/trt{n}/ceat')
+        ->and($fonte->aplicavelPara($alvo + ['municipio' => 'RIBEIRAO PRETO']))->toBeTrue()
+        ->and($fonte->trtPara($alvo + ['municipio' => 'RIBEIRAO PRETO']))->toBe(15);
+});
+
+test('CEAT fica indisponível no TRT22 (PI), que não publica CEAT', function () {
+    $fonte = new CeatTrtFonte;
+    $alvo = ['uf' => 'PI', 'razao_social' => 'ACME LTDA', 'cpf_solicitante' => '11144477735'];
+
+    expect($fonte->trtPara($alvo))->toBeNull()
+        ->and($fonte->aplicavelPara($alvo))->toBeFalse()
+        ->and($fonte->motivoIndisponivel($alvo))->toContain('TRT22');
 });
 
 test('CEAT normaliza o contrato real (nada consta, processos do CNPJ, expedicao)', function () {
@@ -168,6 +229,52 @@ test('TRF unificada manda tipo+email e deriva status da conjuncao dos TRFs', fun
     ]]], 'sucesso');
     expect($pos['certidao_trf']['status'])->toBe('Positiva')
         ->and($pos['certidao_trf']['tribunais_com_feitos'])->toBe(['TRF3']);
+
+    // Async do CJF (lote 261): pedido aceito, sem `tribunais`, "em andamento por e-mail em 6h".
+    // Vira estado EM_ANDAMENTO (não status nulo silencioso) e mensagem honesta (sem "veja seu e-mail").
+    $and = $fonte->normalizar(['data' => [[
+        'conseguiu_emitir' => false,
+        'mensagem' => 'Solicitação ainda em andamento! Aguarde a disponibilização da certidão por email em até 06 horas.',
+        'detalhes_certidao' => [],
+    ]]], 'sucesso');
+    expect($and['certidao_trf']['status'])->toBe('Em andamento')
+        ->and($and['certidao_trf']['certidao_codigo'])->toBeNull()
+        ->and($and['certidao_trf']['mensagem'])->not->toContain('email')
+        ->and($and['certidao_trf']['mensagem'])->toContain('CJF');
+});
+
+test('fonte pausada na origem some da tela e da selecao (pronta=false), sem cobrar', function () {
+    $catalogo = app(\App\Services\Advocacia\CatalogoFontesAvulsas::class);
+
+    config()->set('consultas.fontes_pausadas', []);
+    expect($catalogo->chavesDisponiveis())->toContain('falencias')->toContain('protestos');
+
+    // Pausa protestos+falencias (estado prod 2026-07-22): saem do catálogo e do grupo passivo.
+    config()->set('consultas.fontes_pausadas', ['falencias', 'protestos']);
+    $catalogo = app(\App\Services\Advocacia\CatalogoFontesAvulsas::class); // memo por instância
+    $disp = $catalogo->chavesDisponiveis();
+    expect($disp)->not->toContain('falencias')
+        ->and($disp)->not->toContain('protestos')
+        ->and($disp)->toContain('certidao_stj') // as demais seguem disponíveis
+        ->and(array_key_exists('passivo', $catalogo->grupos()))->toBeFalse(); // grupo vazio some
+});
+
+test('badge classifica "Em andamento" como pendente ambar (nao indeterminado)', function () {
+    $badge = \App\Support\CertidaoBadge::classificar(['status' => \App\Support\CertidaoBadge::STATUS_EM_ANDAMENTO], true);
+    expect($badge['label'])->toBe('Em andamento')
+        ->and($badge['hex'])->toBe(\App\Support\CertidaoBadge::HEX_INDETERMINADO)
+        ->and($badge['indeterminado'] ?? false)->toBeFalse(); // não dispara "Sem emissão online"
+
+    // Match por IGUALDADE, não substring: um status externo contendo "andamento" NÃO vira pendente.
+    $baixa = \App\Support\CertidaoBadge::classificar(['status' => 'Baixa de ofício em andamento'], true);
+    expect($baixa['label'])->not->toBe('Em andamento')
+        ->and($baixa['hex'])->not->toBe(\App\Support\CertidaoBadge::HEX_INDETERMINADO);
+});
+
+test('CertidaoRegistro NAO grava certidao em andamento (pedido pendente, nao emitida)', function () {
+    $reg = app(\App\Services\Consultas\CertidaoRegistro::class);
+    $out = $reg->registrar('certidao_trf', ['status' => 'Em andamento'], 1, 'participante', 1, '19131243000197', 1);
+    expect($out)->toBeNull();
 });
 
 test('fonte de lista: nada consta vira Negativa, registros viram Positiva com resumo', function () {

@@ -13,23 +13,20 @@ class CadastroFonte implements Fonte
 
     public function fornece(): array
     {
-        // Sub-atributos de consultas_incluidas cobertos pelos dados da minhareceita.
+        // Atributos GRÁTIS do cadastro (minhareceita): identidade, endereço e situação. O raio-X
+        // tributário (regime, histórico Simples, QSA detalhado, CNAEs secundários, parecer) migrou
+        // pra AnaliseFiscalFonte (paga) na migração escada→à la carte — a chamada é a mesma, o
+        // dado enriquecido só é mantido quando a Análise Fiscal está na seleção.
         return [
             'situacao_cadastral',
             'dados_cadastrais',
             'endereco',
             'cnaes',
-            'cnaes_secundarios',
             'qsa',
-            'qsa_detalhado',
-            'simples_nacional',
-            'mei',
             'capital_social',
             'natureza_juridica',
             'porte',
             'data_inicio_atividade',
-            'regime_tributario',
-            'historico_simples',
         ];
     }
 

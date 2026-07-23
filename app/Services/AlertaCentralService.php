@@ -1104,17 +1104,19 @@ class AlertaCentralService
 
     /**
      * Certidões do registro canônico (tabela `certidoes`) com valida_ate dentro da 1ª faixa de
-     * aviso (default 15 dias) ou vencidas, com a FAIXA atual resolvida (15/7/1/vencida). Exclui
-     * os tipos fiscais já cobertos pelo detector de scores (3c) — nunca 2 alertas pro mesmo
-     * vencimento. Certidão renovada sai da janela e o alerta auto-resolve no passo 4.
+     * aviso (default 15 dias) ou vencidas há pouco, com a FAIXA atual resolvida (15/7/1/vencida).
+     * Exclui os tipos fiscais já cobertos pelo detector de scores (3c) — nunca 2 alertas pro
+     * mesmo vencimento — e as POSITIVAS (irregulares), cujo problema não é o prazo. Certidão
+     * renovada (ou vencida há muito) sai da janela e o alerta auto-resolve no passo 4.
      *
-     * @return array<int, array{certidao: \App\Models\Certidao, faixa: string, dias: int}>
+     * @return array<int, array{certidao: \App\Models\Certidao, faixa: string, dias: int, faixa_larga: int}>
      */
     private function detectarCertidoesRegistroVencendo(int $userId): array
     {
         $faixas = (array) config('certidoes.alerta_faixas', [15, 7, 1]);
         rsort($faixas); // maior → menor (15, 7, 1)
-        $janela = (int) ($faixas[0] ?? 15);
+        $faixaLarga = (int) ($faixas[0] ?? 15);
+        $vencidaAteDias = (int) config('certidoes.alerta_vencida_ate_dias', 30);
 
         $hoje = now()->startOfDay();
 
@@ -1124,7 +1126,13 @@ class AlertaCentralService
         $certidoes = \App\Models\Certidao::where('user_id', $userId)
             ->whereNotNull('valida_ate')
             ->whereNotIn('tipo', $tiposCobertos)
-            ->where('valida_ate', '<=', $hoje->copy()->addDays($janela))
+            // Só REGULARES: 'Positiva' pura é irregular — vira problema próprio, não alerta de prazo
+            // ("Positiva com efeito de negativa" é regular e passa, pois != 'Positiva').
+            ->where('status', '!=', 'Positiva')
+            // Janela: [hoje - vencidaAteDias, hoje + faixaLarga]. O piso inferior impede que uma
+            // certidão de alvo abandonado gere alerta 'vencida' eternamente no recalcular diário.
+            ->where('valida_ate', '<=', $hoje->copy()->addDays($faixaLarga))
+            ->where('valida_ate', '>=', $hoje->copy()->subDays($vencidaAteDias))
             ->with(['participante:id,razao_social,documento,cliente_id', 'cliente:id,razao_social,nome,documento'])
             ->get();
 
@@ -1141,7 +1149,7 @@ class AlertaCentralService
                 }
             }
 
-            $itens[] = ['certidao' => $certidao, 'faixa' => $faixa, 'dias' => $dias];
+            $itens[] = ['certidao' => $certidao, 'faixa' => $faixa, 'dias' => $dias, 'faixa_larga' => $faixaLarga];
         }
 
         return $itens;
@@ -1151,7 +1159,7 @@ class AlertaCentralService
      * Alerta de vencimento de certidão do registro (1 por certidão × faixa). `detalhes` carrega
      * a URL de re-emissão em 1 clique (tela Consulta por Fontes com fonte + alvo pré-marcados).
      *
-     * @param  array{certidao: \App\Models\Certidao, faixa: string, dias: int}  $item
+     * @param  array{certidao: \App\Models\Certidao, faixa: string, dias: int, faixa_larga: int}  $item
      * @return array<string, mixed>
      */
     private function buildCertidaoRegistroAlertData(array $item): array
@@ -1176,15 +1184,17 @@ class AlertaCentralService
             $prazoTxt = "vence em {$dias} dias — ".$venceEm->format('d/m/Y');
         }
 
-        $reemitirUrl = route('app.consulta.fontes', [
+        $reemitirUrl = route('app.consulta.nova', [
             'fonte' => $certidao->tipo,
             'documento' => $certidao->alvo_documento,
         ]);
 
         return [
             'tipo' => 'certidao_vencendo',
+            // A faixa mais larga (menos urgente) é média; as demais e a vencida são alta. Deriva de
+            // faixa_larga (config) — não da string literal '15', que quebraria se as faixas mudassem.
             'categoria' => 'compliance',
-            'severidade' => $item['faixa'] === '15' ? 'media' : 'alta',
+            'severidade' => $item['faixa'] === (string) $item['faixa_larga'] ? 'media' : 'alta',
             'participante_id' => $certidao->participante_id,
             'cliente_id' => $certidao->cliente_id,
             'titulo' => "Certidão {$nomeFonte} {$prazoTxt} — {$razao}",

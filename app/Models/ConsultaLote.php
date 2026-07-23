@@ -130,6 +130,24 @@ class ConsultaLote extends Model
     }
 
     /**
+     * Identifica a entidade consultada pelos vínculos persistidos nos resultados.
+     */
+    public function tipoAlvosConsultados(): string
+    {
+        $contagens = $this->resultados()
+            ->selectRaw('COUNT(cliente_id) AS clientes, COUNT(participante_id) AS participantes')
+            ->first();
+        $temClientes = (int) ($contagens?->clientes ?? 0) > 0;
+        $temParticipantes = (int) ($contagens?->participantes ?? 0) > 0;
+
+        return match (true) {
+            $temClientes && $temParticipantes => 'misto',
+            $temClientes => 'cliente',
+            default => 'participante',
+        };
+    }
+
+    /**
      * Verifica se o lote está em processamento.
      */
     public function isProcessando(): bool

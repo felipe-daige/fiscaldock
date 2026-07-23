@@ -16,7 +16,10 @@ use App\Support\DataBr;
  */
 class CertidaoRegistro
 {
-    private const STATUS_NAO_EMITIDA = ['INDISPONIVEL', 'NAO_ENCONTRADA', 'INDETERMINADO'];
+    // 'EM ANDAMENTO' = strtoupper de CertidaoBadge::STATUS_EM_ANDAMENTO (pedido aceito mas ainda
+    // não emitido — TRF/CJF assíncrono, TJMS 2 etapas). Não é certidão em mãos → não vira registro
+    // canônico nem dispara alerta de validade. Comparação uppercase em registrar() (linha ~34).
+    private const STATUS_NAO_EMITIDA = ['INDISPONIVEL', 'NAO_ENCONTRADA', 'INDETERMINADO', 'EM ANDAMENTO'];
 
     public function registrar(
         string $chaveFonte,

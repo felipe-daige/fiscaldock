@@ -131,3 +131,23 @@ it('lote de PLANO tambem registra certidoes (nao e exclusivo do avulso)', functi
 
     expect($certidao->consulta_lote_id)->toBe($lote->id);
 });
+
+it('mesmo CNPJ como participante E cliente do usuario gera DUAS linhas (nao colide na unique)', function () {
+    [$user, $pid] = alvoParticipante();
+    $cid = DB::table('clientes')->insertGetId([
+        'user_id' => $user->id, 'documento' => '19131243000197', 'razao_social' => 'EMPRESA PROPRIA',
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $registro = app(CertidaoRegistro::class);
+
+    $comoPart = $registro->registrar('certidao_stj', ['status' => 'Negativa'], $user->id, 'participante', $pid, '19131243000197', 0);
+    $comoCli = $registro->registrar('certidao_stj', ['status' => 'Negativa'], $user->id, 'cliente', $cid, '19131243000197', 0);
+
+    // Antes do fix (unique só user+documento+tipo) o 2º updateOrCreate sobrescrevia o 1º.
+    expect(Certidao::where('user_id', $user->id)->where('tipo', 'certidao_stj')->count())->toBe(2)
+        ->and($comoPart->id)->not->toBe($comoCli->id)
+        ->and($comoPart->fresh()->participante_id)->toBe($pid)
+        ->and($comoPart->fresh()->cliente_id)->toBeNull()
+        ->and($comoCli->cliente_id)->toBe($cid)
+        ->and($comoCli->participante_id)->toBeNull();
+});

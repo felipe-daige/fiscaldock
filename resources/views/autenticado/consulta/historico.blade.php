@@ -137,73 +137,101 @@
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                     <div class="flex items-center justify-between gap-3">
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Consultas Recentes</span>
-                        <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">Abrir + Exportação</span>
+                        <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ $lotes->total() }} no histórico</span>
                     </div>
                 </div>
 
-                <div class="hidden md:block overflow-x-auto">
-                    <table class="min-w-full">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full tabela-cards">
                         <thead>
                             <tr class="border-b border-gray-300">
-                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Lote / Data</th>
-                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Produto</th>
-                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Participantes</th>
-                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Custo</th>
-                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Status</th>
-                                <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Ações</th>
+                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Consulta realizada</th>
+                                <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Produto</th>
+                                <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Resultado</th>
+                                <th class="px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Custo</th>
+                                <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Status</th>
+                                <th class="w-12 px-3 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">
+                                    <span class="sr-only">Ações</span>
+                                </th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @foreach($lotes as $lote)
                                 @php
-                                    $statusMeta = match(\App\Models\ConsultaLote::normalizeStatus($lote->status)) {
-                                        'finalizado' => ['label' => 'Finalizado', 'hex' => '#047857'],
-                                        'processando' => ['label' => 'Processando', 'hex' => '#b45309'],
-                                        'erro' => ['label' => 'Erro', 'hex' => '#dc2626'],
-                                        default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
-                                    };
+                                    $preview = $previewsLotes->get($lote->id);
+                                    $statusMeta = $preview['status'];
+                                    $produtoPreview = $preview['produto'];
+                                    $alvoPreview = $preview['alvo'];
+                                    $resultadoPreview = $preview['resultado'];
                                     $erroCritico = $lote->publicErrorUi([
                                         'url' => '/app/consulta/historico',
                                     ]);
                                 @endphp
                                 <tr class="hover:bg-gray-50/50 transition-colors cursor-pointer"
                                     onclick="if(event.target.closest('a,button,[data-acoes-menu]'))return; var u='/app/consulta/lote/{{ $lote->id }}'; window.navigateTo?window.navigateTo(u):window.location.href=u;">
-                                    <td class="px-3 py-3">
-                                        <div class="text-sm text-gray-900 font-medium">Lote #{{ $lote->id }}</div>
-                                        <div class="text-[11px] text-gray-500 mt-1">{{ $lote->created_at->format('d/m/Y H:i') }}</div>
+                                    <td class="px-3 py-3.5">
+                                        <div class="flex min-w-[280px] items-start gap-3">
+                                            <div class="w-12 shrink-0 border-r border-gray-200 pr-3 text-center" title="{{ $lote->created_at->format('d/m/Y H:i') }}">
+                                                <p class="text-[10px] font-bold uppercase text-gray-500">{{ $preview['data_label'] }}</p>
+                                                <p class="mt-0.5 text-xs font-semibold text-gray-900">{{ $lote->created_at->format('H:i') }}</p>
+                                            </div>
+                                            <div class="min-w-0 max-w-[390px]">
+                                                <p class="truncate text-sm font-semibold text-gray-900" title="{{ $alvoPreview['nome'] }}">{{ $alvoPreview['nome'] }}</p>
+                                                <div class="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-gray-500">
+                                                    @if($alvoPreview['documento'])
+                                                        <span class="font-mono">{{ $alvoPreview['documento'] }}</span>
+                                                    @endif
+                                                    @if($alvoPreview['outros_total'] > 0)
+                                                        <span aria-hidden="true">•</span>
+                                                        <span class="font-semibold text-gray-700">+ {{ number_format($alvoPreview['outros_total'], 0, ',', '.') }} CNPJ{{ $alvoPreview['outros_total'] === 1 ? '' : 's' }}</span>
+                                                    @endif
+                                                </div>
+                                                @if($alvoPreview['outros_nomes'] !== '')
+                                                    <p class="mt-1 truncate text-[10px] text-gray-400" title="{{ $alvoPreview['outros_nomes'] }}">Também: {{ $alvoPreview['outros_nomes'] }}</p>
+                                                @endif
+                                                <p class="mt-1 text-[10px] uppercase text-gray-400">Lote #{{ $lote->id }}</p>
+                                            </div>
+                                        </div>
                                     </td>
-                                    <td class="px-3 py-3 text-sm text-gray-700">
-                                        <div class="text-gray-900">{{ $lote->plano?->nome ?? 'Sem plano' }}</div>
+                                    <td data-label="Produto" class="px-3 py-3 text-center text-sm text-gray-700">
+                                        <div class="text-center">
+                                            <span class="inline-block whitespace-nowrap rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $produtoPreview['hex'] }}">{{ $produtoPreview['nome'] }}</span>
+                                            <p class="mt-1.5 text-[11px] text-gray-500">{{ $produtoPreview['origem'] }}</p>
+                                        </div>
                                         @if($lote->eh_monitoramento ?? false)
-                                            <span class="whitespace-nowrap inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #7c3aed">Monitoramento</span>
-                                        @endif
-                                        @if($lote->processado_em)
-                                            <div class="text-[11px] text-gray-500 mt-1">Processado em {{ $lote->processado_em->format('d/m/Y H:i') }}</div>
+                                            <span class="sr-only">Monitoramento</span>
                                         @endif
                                     </td>
-                                    <td class="px-3 py-3 text-sm text-gray-700">
-                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: #374151">{{ number_format($lote->total_participantes, 0, ',', '.') }}</span>
-                                    </td>
-                                    <td class="px-3 py-3 text-sm font-semibold text-gray-900 font-mono">
-                                        {{ \App\Support\Dinheiro::brl(($lote->creditos_cobrados)) }}
-                                    </td>
-                                    <td class="px-3 py-3">
-                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusMeta['hex'] }}">{{ $statusMeta['label'] }}</span>
-                                        @if($lote->isErro())
-                                            <div class="mt-2">
+                                    <td data-label="Resultado" class="px-3 py-3 text-sm text-gray-700">
+                                        <div class="text-left">
+                                            <p class="whitespace-nowrap text-xs font-semibold text-gray-900">
+                                                <span class="mr-1 inline-block h-2 w-2 rounded-full" style="background-color: {{ $resultadoPreview['hex'] }}"></span>
+                                                {{ $resultadoPreview['titulo'] }}
+                                            </p>
+                                            @if($resultadoPreview['detalhe'])
+                                                <p class="mt-1 text-[11px] text-gray-500">{{ $resultadoPreview['detalhe'] }}</p>
+                                            @endif
+
+                                            @if($lote->isErro())
                                                 <a href="{{ $erroCritico['action_url'] ?? config('support.whatsapp_url') }}"
                                                    target="{{ $erroCritico['action_target'] ?? '_blank' }}"
                                                    rel="{{ $erroCritico['action_rel'] ?? 'noopener noreferrer' }}"
-                                                   class="text-[11px] text-gray-600 hover:text-gray-900 hover:underline">
+                                                   class="mt-1 inline-flex text-[11px] text-gray-600 hover:text-gray-900 hover:underline">
                                                     {{ $erroCritico['action_label'] ?? config('support.contact_label') }}
                                                 </a>
-                                            </div>
-                                        @endif
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td data-label="Custo" class="px-3 py-3 text-right text-sm font-semibold text-gray-900 font-mono">
+                                        <span>{{ \App\Support\Dinheiro::brl(($lote->creditos_cobrados)) }}</span>
+                                    </td>
+                                    <td data-label="Status" class="px-3 py-3 text-center">
+                                        <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusMeta['hex'] }}">{{ $statusMeta['label'] }}</span>
                                     </td>
                                     <td class="px-3 py-3 text-right">
-                                        <x-acoes-menu>
+                                        <x-acoes-menu trigger="kebab">
                                             <x-acoes-item href="/app/consulta/lote/{{ $lote->id }}" data-link>Abrir</x-acoes-item>
-                                            @if($lote->isFinalizado() && $lote->hasResultados())
+                                            @if($lote->isFinalizado() && $resultadoPreview['sucessos'] > 0)
                                                 <x-acoes-item href="/app/consulta/lote/{{ $lote->id }}/baixar?formato=csv">CSV</x-acoes-item>
                                                 <x-acoes-item href="/app/consulta/lote/{{ $lote->id }}/baixar?formato=xlsx">Excel (XLSX)</x-acoes-item>
                                                 <x-acoes-item href="/app/consulta/lote/{{ $lote->id }}/baixar?formato=pdf">PDF</x-acoes-item>
@@ -214,66 +242,6 @@
                             @endforeach
                         </tbody>
                     </table>
-                </div>
-
-                <div class="divide-y divide-gray-100 md:hidden">
-                    @foreach($lotes as $lote)
-                        @php
-                            $statusMeta = match(\App\Models\ConsultaLote::normalizeStatus($lote->status)) {
-                                'finalizado' => ['label' => 'Finalizado', 'hex' => '#047857'],
-                                'processando' => ['label' => 'Processando', 'hex' => '#b45309'],
-                                'erro' => ['label' => 'Erro', 'hex' => '#dc2626'],
-                                default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
-                            };
-                            $erroCritico = $lote->publicErrorUi([
-                                'url' => '/app/consulta/historico',
-                            ]);
-                        @endphp
-                        <div class="px-4 py-3 cursor-pointer"
-                            onclick="if(event.target.closest('a,button,[data-acoes-menu]'))return; var u='/app/consulta/lote/{{ $lote->id }}'; window.navigateTo?window.navigateTo(u):window.location.href=u;">
-                            <div class="flex items-start justify-between gap-3">
-                                <div class="min-w-0">
-                                    <p class="text-[10px] text-gray-400 uppercase">Lote</p>
-                                    <p class="text-sm text-gray-900 font-medium">#{{ $lote->id }} · {{ $lote->plano?->nome ?? 'Sem plano' }}</p>
-                                </div>
-                                <span class="whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-white" style="background-color: {{ $statusMeta['hex'] }}">{{ $statusMeta['label'] }}</span>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3 mt-3 text-sm text-gray-700">
-                                <div>
-                                    <p class="text-[10px] text-gray-400 uppercase">Data</p>
-                                    <p>{{ $lote->created_at->format('d/m/Y H:i') }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] text-gray-400 uppercase">Participantes</p>
-                                    <p>{{ number_format($lote->total_participantes, 0, ',', '.') }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] text-gray-400 uppercase">Custo</p>
-                                    <p class="font-mono text-gray-900">{{ \App\Support\Dinheiro::brl(($lote->creditos_cobrados)) }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] text-gray-400 uppercase">Ações</p>
-                                    <x-acoes-menu align="left">
-                                        <x-acoes-item href="/app/consulta/lote/{{ $lote->id }}" data-link>Abrir</x-acoes-item>
-                                        @if($lote->isFinalizado() && $lote->hasResultados())
-                                            <x-acoes-item href="/app/consulta/lote/{{ $lote->id }}/baixar?formato=csv">CSV</x-acoes-item>
-                                            <x-acoes-item href="/app/consulta/lote/{{ $lote->id }}/baixar?formato=xlsx">Excel (XLSX)</x-acoes-item>
-                                            <x-acoes-item href="/app/consulta/lote/{{ $lote->id }}/baixar?formato=pdf">PDF</x-acoes-item>
-                                        @endif
-                                    </x-acoes-menu>
-                                </div>
-                            </div>
-                            @if($lote->isErro())
-                                <p class="text-xs text-gray-500 mt-3">{{ $lote->publicErrorMessage() }}</p>
-                                <a href="{{ $erroCritico['action_url'] ?? config('support.whatsapp_url') }}"
-                                   target="{{ $erroCritico['action_target'] ?? '_blank' }}"
-                                   rel="{{ $erroCritico['action_rel'] ?? 'noopener noreferrer' }}"
-                                   class="inline-flex mt-2 text-xs text-gray-700 hover:text-gray-900 hover:underline">
-                                    {{ $erroCritico['action_label'] ?? config('support.contact_label') }}
-                                </a>
-                            @endif
-                        </div>
-                    @endforeach
                 </div>
 
                 @if($lotes->hasPages())

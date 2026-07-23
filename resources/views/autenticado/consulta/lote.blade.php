@@ -5,6 +5,12 @@
     $etapasJson = e(json_encode($etapas ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     $resultados = $resultados ?? new \Illuminate\Pagination\LengthAwarePaginator(collect(), 0, 20, 1);
     $temResultadosNoLote = $temResultadosNoLote ?? false;
+    $tipoAlvosConsultados = $temResultadosNoLote ? $lote->tipoAlvosConsultados() : 'participante';
+    $rotulosAlvo = match ($tipoAlvosConsultados) {
+        'cliente' => ['singular' => 'Cliente', 'plural' => 'Clientes'],
+        'misto' => ['singular' => 'CNPJ', 'plural' => 'CNPJs'],
+        default => ['singular' => 'Participante', 'plural' => 'Participantes'],
+    };
     $erroCriticoLote = $lote->publicErrorUi([
         'url' => request()->getPathInfo(),
     ]);
@@ -101,7 +107,7 @@
                     </span>
                 </div>
                 <div class="px-4 py-3 min-h-[96px] flex flex-col">
-                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Participantes</p>
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{{ $rotulosAlvo['plural'] }}</p>
                     <div class="flex-1 flex items-center">
                         <p class="text-lg font-bold text-gray-900">{{ number_format((int) ($lote->total_participantes ?? 0), 0, ',', '.') }}</p>
                     </div>
@@ -547,7 +553,7 @@
                 <div class="bg-white rounded border border-gray-300 overflow-hidden">
                     <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-3 flex-wrap">
                         <div class="flex items-center gap-2">
-                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Participantes Consultados</span>
+                            <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">{{ $rotulosAlvo['plural'] }} Consultados</span>
                             <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">{{ number_format((int) $resultados->total(), 0, ',', '.') }}</span>
                         </div>
                         <div class="flex items-center gap-2 flex-wrap">
@@ -657,7 +663,7 @@
                         <table class="min-w-full">
                             <thead>
                                 <tr class="border-b border-gray-300">
-                                    <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Participante</th>
+                                    <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">{{ $rotulosAlvo['singular'] }}</th>
                                     <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Situação</th>
                                     <th class="px-3 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50 whitespace-nowrap">Regime Tributário</th>
                                     <th class="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">Certidões</th>
@@ -835,7 +841,7 @@
 
                     <div class="border-t border-gray-300 px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
                         <span class="text-[10px] text-gray-500 uppercase tracking-wide">
-                            Mostrando {{ $resultados->firstItem() }}–{{ $resultados->lastItem() }} de {{ $resultados->total() }} participantes
+                            Mostrando {{ $resultados->firstItem() }}–{{ $resultados->lastItem() }} de {{ $resultados->total() }} {{ mb_strtolower($resultados->total() === 1 ? $rotulosAlvo['singular'] : $rotulosAlvo['plural']) }}
                         </span>
                         <div class="flex items-center gap-2">
                             @if($resultados->onFirstPage())

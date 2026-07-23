@@ -15,6 +15,12 @@ pest()->extend(Tests\TestCase::class)
  // ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
     ->in('Feature');
 
+// `consultas.fontes_pausadas` é toggle OPERACIONAL (o .env de prod, lido também pelo container de
+// teste, pode ter fontes pausadas na origem). Nenhum teste deve herdar isso: baseline = nada
+// pausado. O teste específico do gate de pausa sobrescreve dentro do corpo (roda após o beforeEach).
+pest()->beforeEach(fn () => config()->set('consultas.fontes_pausadas', []))
+    ->in('Feature', 'Unit/Advocacia', 'Unit/Consultas');
+
 pest()->extend(Tests\TestCase::class)
     ->in('Unit/Admin');
 

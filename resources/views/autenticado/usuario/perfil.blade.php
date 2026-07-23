@@ -72,6 +72,11 @@
                                 <label class="text-[11px] text-gray-500 block mb-1">Telefone</label>
                                 <input name="telefone" value="{{ $user->telefone ?? '' }}" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
                             </div>
+                            <div>
+                                <label class="text-[11px] text-gray-500 block mb-1">CPF do responsável</label>
+                                <input name="cpf" value="{{ $user->cpf ? \App\Support\Cpf::formatar($user->cpf) : '' }}" inputmode="numeric" placeholder="000.000.000-00" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded">
+                                <p class="text-[11px] text-gray-500 mt-1">Solicitante das certidões judiciais (CEAT e afins).</p>
+                            </div>
                         </div>
                         <div class="flex justify-end">
                             <button type="submit" class="px-4 py-2 text-sm font-medium text-white rounded" style="background-color: #1f2937">Salvar</button>

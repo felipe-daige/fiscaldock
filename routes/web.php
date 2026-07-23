@@ -545,6 +545,13 @@ Route::middleware([
             Route::post('/{id}/excluir', [\App\Http\Controllers\Dashboard\AdminKitsController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
         });
 
+    // Painel admin — preço por consulta (fonte_precos, modelo à la carte, somente operador FiscalDock)
+    Route::prefix('app/admin/fontes')->name('app.admin.fontes.')
+        ->middleware(\App\Http\Middleware\EnsureAdmin::class)->group(function () {
+            Route::get('/', [\App\Http\Controllers\Dashboard\AdminFontesController::class, 'index'])->name('index');
+            Route::post('/', [\App\Http\Controllers\Dashboard\AdminFontesController::class, 'save'])->name('save');
+        });
+
     // Impersonação — sair (fora do EnsureAdmin: sessão vira do alvo não-admin durante impersonação)
     Route::post('/app/admin/impersonar/sair', [\App\Http\Controllers\Dashboard\AdminUsuarioAcaoController::class, 'impersonarSair'])->name('app.admin.impersonar.sair');
 
@@ -576,16 +583,22 @@ Route::middleware([
         // Painel de consulta (ex-"Nova Consulta"). O route name 'nova' fica na rota /painel de
         // propósito: name é identidade interna (dezenas de refs app.consulta.nova.*), URI é o
         // endereço público. Os endpoints AJAX seguem sob /nova/* — só a página HTML mudou.
-        Route::get('/painel', [ConsultaController::class, 'index'])->name('nova');
+        // Painel de consulta agora É o seletor à la carte por fontes (migração 2026-07-22): a
+        // escada fixa morreu. `index` (nova.blade) fica legado até a limpeza F6.
+        Route::get('/painel', [ConsultaController::class, 'fontesIndex'])->name('nova');
         Route::get('/nova', fn () => redirect('/app/consulta/painel', 301));
         Route::get('/nova/participantes', [ConsultaController::class, 'getParticipantes'])->name('nova.participantes');
         Route::get('/nova/participantes/grupo/{id}', [ConsultaController::class, 'getParticipantesGrupo'])->name('nova.participantes.grupo');
         Route::post('/nova/calcular-custo', [ConsultaController::class, 'calcularCusto'])->name('nova.calcular-custo');
         Route::post('/nova/executar', [ConsultaController::class, 'executar'])->name('nova.executar');
         // Lote avulso por fontes (à la carte, vertical advocacia) — docs/advocacia/consultas-certidoes.md
-        Route::get('/fontes', [ConsultaController::class, 'fontesIndex'])->name('fontes');
         Route::post('/nova/fontes/calcular-custo', [ConsultaController::class, 'calcularCustoFontes'])->name('nova.fontes.calcular-custo');
         Route::post('/nova/fontes/executar', [ConsultaController::class, 'executarFontes'])->name('nova.fontes.executar');
+        // Presets pessoais ("meus planos"): combinação de consultas salva pelo próprio usuário.
+        Route::post('/meus-planos', [ConsultaController::class, 'salvarPlano'])->name('meus-planos.salvar');
+        Route::post('/meus-planos/{id}/excluir', [ConsultaController::class, 'excluirPlano'])->name('meus-planos.excluir')->whereNumber('id');
+        // Detalhe expansível (certidões da última consulta) de um alvo na tela de seleção.
+        Route::get('/alvo/{tipo}/{id}/certidoes', [ConsultaController::class, 'certidoesAlvo'])->name('alvo.certidoes')->where('tipo', 'participante|cliente')->whereNumber('id');
         Route::post('/nova/adicionar-cnpj', [ConsultaController::class, 'adicionarCnpj'])->name('nova.adicionar-cnpj');
         Route::get('/nova/progresso/stream', [ConsultaController::class, 'streamProgresso'])->name('nova.progresso.stream');
         Route::get('/progresso/stream', [ConsultaController::class, 'streamProgresso'])->name('progresso.stream');

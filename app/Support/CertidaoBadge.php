@@ -38,6 +38,12 @@ class CertidaoBadge
 
     public const HEX_ERRO_INTERNO = '#7c3aed';
 
+    // Status canônico de PEDIDO PENDENTE (2 etapas / TRF assíncrono): a certidão foi solicitada
+    // mas ainda não emitida. Fonte única do literal — usado pelas fontes que o PRODUZEM
+    // (CertidaoTrfFonte/TjmsPedidoFonte), pelo CertidaoRegistro (que NÃO grava pendente) e aqui
+    // no match do badge. Grafia exata: comparar por IGUALDADE, nunca por substring.
+    public const STATUS_EM_ANDAMENTO = 'Em andamento';
+
     public static function classificar(mixed $valor, bool $aplicarIndeterminado = false): array
     {
         // CND Federal: o caso INDETERMINADO (611 / conseguiu_emitir=false) tem regra própria
@@ -72,6 +78,15 @@ class CertidaoBadge
 
         if (str_contains($t, 'indisponiv') || str_contains($t, 'indisponív') || str_contains($t, 'nao consultad') || str_contains($t, 'não consultad')) {
             return ['label' => 'Indisponível', 'hex' => self::HEX_NEUTRO];
+        }
+
+        // Pedido aceito mas ainda não emitido (ex.: TRF unificada/CJF entrega por e-mail em até 6h).
+        // NÃO é "indeterminado" (a fonte não recusou) — é pendente: âmbar de atenção, sem o flag
+        // indeterminado (o card mostra o status real "Em andamento", não "Sem emissão online").
+        // IGUALDADE contra o literal canônico (que as fontes produzem), NUNCA substring: um status
+        // externo do provedor como "processo de baixa em andamento" NÃO pode virar pendente.
+        if ($texto === self::STATUS_EM_ANDAMENTO) {
+            return ['label' => self::STATUS_EM_ANDAMENTO, 'hex' => self::HEX_INDETERMINADO];
         }
 
         // "negativa" (certidão negativa / com efeitos de negativa) = SEM débitos = regular.

@@ -37,6 +37,7 @@ class ResultadoDetalhePresenter
         'ceat_trt',
         'certidao_mpt',
         'certidao_mpf',
+        'certidao_tjms',
         'certidao_tcu',
         'improbidade',
         'ceis',
@@ -56,6 +57,7 @@ class ResultadoDetalhePresenter
         'certidao_stj' => 'STJ',
         'certidao_trf' => 'TRF',
         'ceat_trt' => 'CEAT',
+        'certidao_tjms' => 'TJMS',
         'certidao_mpt' => 'MPT',
         'certidao_mpf' => 'MPF',
         'certidao_tcu' => 'TCU',
@@ -78,7 +80,8 @@ class ResultadoDetalhePresenter
         'sintegra' => 'O SINTEGRA (SEFAZ)',
         'certidao_stj' => 'O Superior Tribunal de Justiça (STJ)',
         'certidao_trf' => 'A Justiça Federal (TRFs)',
-        'ceat_trt' => 'O Tribunal Regional do Trabalho da região',
+        'ceat_trt' => 'O Tribunal Regional do Trabalho (TRT)',
+        'certidao_tjms' => 'O Tribunal de Justiça de Mato Grosso do Sul (TJMS)',
         'certidao_mpt' => 'O Ministério Público do Trabalho (MPT)',
         'certidao_mpf' => 'O Ministério Público Federal (MPF)',
         'certidao_tcu' => 'O Tribunal de Contas da União (TCU)',
@@ -107,6 +110,25 @@ class ResultadoDetalhePresenter
     public function esperadasDoPlano(?array $consultasIncluidas): array
     {
         return array_values(array_intersect($consultasIncluidas ?? [], array_keys(self::SIGLAS)));
+    }
+
+    /**
+     * Universo de TODAS as consultas de regularidade que o partial sabe renderizar (chaves de
+     * SIGLAS/ORDEM). Passar isto como `esperadas` faz o detalhe mostrar TODA consulta possível —
+     * as consultadas com dado, as não-consultadas como placeholder "disponível". No modelo à la
+     * carte substitui o `consultas_incluidas` do plano (que morreu). Intersecção opcional com
+     * `$restringirA` (ex.: só as fontes prontas/à venda do catálogo) pra não listar fonte pausada.
+     *
+     * @param  array<int,string>|null  $restringirA
+     * @return array<int,string>
+     */
+    public function esperadasTodas(?array $restringirA = null): array
+    {
+        $todas = array_keys(self::SIGLAS);
+
+        return $restringirA === null
+            ? $todas
+            : array_values(array_intersect($todas, $restringirA));
     }
 
     /**
@@ -143,7 +165,7 @@ class ResultadoDetalhePresenter
      *                                                 que ele nunca consultou.
      * @return array{blocos: array, resumo: ?string, certidoes: array, cabecalho: array}|null
      */
-    public function detalheDoParticipante(Participante $participante, bool $somenteConsultadas = false, ?array $somenteFontes = null): ?array
+    public function detalheDoParticipante(Participante $participante, bool $somenteConsultadas = false, ?array $somenteFontes = null, ?array $esperadasOverride = null): ?array
     {
         $ultima = ConsultaResultado::where('participante_id', $participante->id)
             ->where('status', ConsultaResultado::STATUS_SUCESSO)
@@ -167,6 +189,7 @@ class ResultadoDetalhePresenter
             ],
             $somenteConsultadas,
             $somenteFontes,
+            $esperadasOverride,
         );
     }
 
@@ -177,7 +200,7 @@ class ResultadoDetalhePresenter
      * @param  array<int,string>|null  $somenteFontes
      * @return array{blocos: array, resumo: ?string, certidoes: array, cabecalho: array, consultado_em: mixed}|null
      */
-    public function detalheDoCliente(Cliente $cliente, bool $somenteConsultadas = false, ?array $somenteFontes = null): ?array
+    public function detalheDoCliente(Cliente $cliente, bool $somenteConsultadas = false, ?array $somenteFontes = null, ?array $esperadasOverride = null): ?array
     {
         $documento = Cnpj::digitos((string) $cliente->documento);
         $participanteIds = strlen($documento) === 14
@@ -216,6 +239,7 @@ class ResultadoDetalhePresenter
             ],
             $somenteConsultadas,
             $somenteFontes,
+            $esperadasOverride,
         );
     }
 
@@ -229,9 +253,12 @@ class ResultadoDetalhePresenter
         array $cabecalho,
         bool $somenteConsultadas,
         ?array $somenteFontes,
+        ?array $esperadasOverride = null,
     ): array {
         // esperadas vazio = fonte sem dado simplesmente não aparece (nem card, nem chip).
-        $esperadas = $somenteConsultadas ? [] : $this->esperadasDoResultado($ultima);
+        // Override (ex.: "todas as consultas possíveis" da tela de seleção) vence o do plano.
+        $esperadas = $esperadasOverride
+            ?? ($somenteConsultadas ? [] : $this->esperadasDoResultado($ultima));
 
         return [
             'blocos' => $this->filtrarPorFonte($this->blocos($ultima, $esperadas), $somenteFontes),
@@ -291,9 +318,13 @@ class ResultadoDetalhePresenter
             $temDado = array_key_exists($chave, $dados) && is_array($dados[$chave]) && ! empty($dados[$chave]);
 
             if (! $temDado) {
-                // Fonte de regularidade pedida pelo plano mas sem resultado → card de erro.
                 if (isset(self::SIGLAS[$chave]) && in_array($chave, $esperadas, true)) {
-                    $blocos[] = $this->blocoFalhou($chave, $errosFonte[$chave] ?? null);
+                    // Distingue FALHA real de NUNCA CONSULTADA: só há falha quando existe registro
+                    // de erro (`_fontes_erro`). Sem ele, a fonte esperada nunca foi de fato pedida
+                    // (caso do "todas as consultas possíveis" da tela de seleção) → card neutro.
+                    $blocos[] = isset($errosFonte[$chave])
+                        ? $this->blocoFalhou($chave, $errosFonte[$chave])
+                        : $this->blocoNaoConsultada($chave);
                 }
 
                 continue;
@@ -340,10 +371,27 @@ class ResultadoDetalhePresenter
 
             if (! $temDado) {
                 if (! in_array($chave, $esperadas, true)) {
-                    continue; // fora do plano e ausente → não mostra
+                    continue; // fora do universo esperado e ausente → não mostra
                 }
 
-                $erro = $this->erroCert($errosFonte[$chave] ?? null, $chave);
+                // Sem registro de erro = nunca consultada (neutra), não falha.
+                if (! isset($errosFonte[$chave])) {
+                    $strip[] = [
+                        'chave' => $chave,
+                        'sigla' => $sigla,
+                        'titulo' => $this->tituloCertidao($chave),
+                        'label' => 'Não consultada',
+                        'hex' => '#9ca3af',
+                        'estado' => 'neutro',
+                        'glyph' => '·',
+                        'motivo' => null,
+                        'descricao' => 'Esta consulta ainda não foi realizada para este CNPJ.',
+                    ];
+
+                    continue;
+                }
+
+                $erro = $this->erroCert($errosFonte[$chave], $chave);
                 $strip[] = [
                     'chave' => $chave,
                     'sigla' => $sigla,
@@ -479,6 +527,22 @@ class ResultadoDetalhePresenter
             [],
             [],
             $erro['descricao'],
+        );
+    }
+
+    /**
+     * Card NEUTRO de fonte que nunca foi consultada (esperada no universo "todas as consultas",
+     * mas sem registro de resultado nem de erro). Diferente de FALHA: é oferta, não problema.
+     */
+    private function blocoNaoConsultada(string $chave): array
+    {
+        return $this->bloco(
+            $chave,
+            $this->tituloCertidao($chave),
+            ['label' => 'Não consultada', 'hex' => '#9ca3af'],
+            [],
+            [],
+            'Esta consulta ainda não foi realizada para este CNPJ.',
         );
     }
 

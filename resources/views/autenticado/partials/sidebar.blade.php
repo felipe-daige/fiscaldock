@@ -132,29 +132,31 @@
          duro de compra). docs/advocacia/consultas-certidoes.md --}}
     @if(auth()->user()?->persona === 'advogado')
         <x-sidebar.section title="CONTENCIOSO">
-            <x-sidebar.item href="/app/consulta/fontes">
+            <x-sidebar.item href="/app/consulta/painel">
                 <x-slot:icon>
                     <svg class="sidebar__item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6M9 8h6M5 4h14v16H5V4zm4 16v-3h6v3"></path>
                     </svg>
                 </x-slot:icon>
-                Consulta por Fontes
+                Consulta
             </x-sidebar.item>
         </x-sidebar.section>
     @endif
 
     {{-- CONSULTAS --}}
     <x-sidebar.section title="CONSULTAS">
-        {{-- Link direto (sem submenu): Histórico e Planos são alcançados pelos botões
-             no header de /app/consulta/painel — mesmo padrão de Clientes/Participantes. --}}
-        <x-sidebar.item href="/app/consulta/painel">
-            <x-slot:icon>
-                <svg class="sidebar__item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-            </x-slot:icon>
-            Consulta CNPJ
-        </x-sidebar.item>
+        {{-- Consulta à la carte (seletor por fontes). O advogado já acessa a MESMA tela pela
+             seção CONTENCIOSO acima — some aqui pra não duplicar navegação pro mesmo destino. --}}
+        @if(auth()->user()?->persona !== 'advogado')
+            <x-sidebar.item href="/app/consulta/painel">
+                <x-slot:icon>
+                    <svg class="sidebar__item-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </x-slot:icon>
+                Consulta
+            </x-sidebar.item>
+        @endif
 
         {{-- Item único (sem submenu): Histórico e o freio de consumo são alcançados
              dentro do próprio painel — mesmo padrão de Consulta CNPJ. --}}

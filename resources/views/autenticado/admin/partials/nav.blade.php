@@ -8,6 +8,7 @@
         'armazenamento' => ['Armazenamento', '/app/admin/armazenamento'],
         'comercial' => ['Comercial', '/app/admin/comercial'],
         'planos' => ['Planos', '/app/admin/planos'],
+        'fontes' => ['Consultas', '/app/admin/fontes'],
         'kits' => ['Kits', '/app/admin/kits'],
         'auditoria' => ['Auditoria', '/app/admin/auditoria'],
         'pendencias' => ['Pendências', '/app/admin/pendencias'],

@@ -40,9 +40,16 @@ it('deriva regime_tributario real (MEI > Simples > forma RFB > Não informado)',
     expect($f->normalizar([])['regime_tributario'])->toBe('Não informado');
 });
 
-it('fornece regime_tributario e historico_simples (plano Validação)', function () {
+it('cadastro (gratis) fornece so identidade/endereco; regime migrou pra AnaliseFiscalFonte (paga)', function () {
     $fornece = (new CadastroFonte)->fornece();
-    expect($fornece)->toContain('regime_tributario')->toContain('historico_simples');
+    // Grátis: identidade + endereço + situação. Regime/Simples/parecer NÃO — viraram análise paga.
+    expect($fornece)->toContain('situacao_cadastral')->toContain('endereco')
+        ->not->toContain('regime_tributario')
+        ->not->toContain('historico_simples');
+
+    // O raio-X tributário é fornecido pela fonte derivada paga.
+    $analise = (new \App\Services\Consultas\Fontes\AnaliseFiscalFonte)->fornece();
+    expect($analise)->toContain('regime_tributario')->toContain('historico_simples')->toContain('parecer_fiscal');
 });
 
 it('expõe chave/provider/custo da fonte cadastro', function () {

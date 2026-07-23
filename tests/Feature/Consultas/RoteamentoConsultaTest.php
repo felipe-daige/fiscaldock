@@ -81,9 +81,9 @@ it('executa de verdade o Gratuito (batch real + then) e fecha o lote', function 
     $r = App\Models\ConsultaResultado::where('consulta_lote_id', $loteId)->first();
     expect($r->status)->toBe('sucesso');
     expect($r->resultado_dados['razao_social'])->toBe('EMPRESA REAL');
-    // RFB não publica regime deste CNPJ → sistema estima (nunca fica "Não informado").
-    expect($r->resultado_dados['regime_tributario'])->toBe('Lucro Presumido');
-    expect($r->resultado_dados['regime_tributario_origem'])->toBe('estimado');
+    // Migração à la carte: o plano Gratuito (sem regime em consultas_incluidas) NÃO expõe mais
+    // regime — o raio-X tributário virou a Análise Fiscal paga. Só identidade/situação/endereço.
+    expect($r->resultado_dados)->not->toHaveKey('regime_tributario');
 });
 
 it('seleção combinada: participantes + clientes geram jobs com alvoTipo correto', function () {

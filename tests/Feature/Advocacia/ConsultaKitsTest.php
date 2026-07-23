@@ -38,9 +38,10 @@ it('precificar aplica desconto POR FONTE na selecao exata do kit; selecao ajusta
     expect($ajustada['kit'])->toBeNull()
         ->and($ajustada['total'])->toBe(3.00);
 
-    // Kit inativo nunca precifica.
+    // Kit inativo nunca precifica. Instância nova: o catálogo memoiza os kits ativos por
+    // request (produção), então mutar o BD exige um catálogo fresco.
     ConsultaKit::query()->update(['ativo' => false]);
-    expect($catalogo->precificar(['certidao_stj', 'certidao_trf'])['kit'])->toBeNull();
+    expect(app(CatalogoFontesAvulsas::class)->precificar(['certidao_stj', 'certidao_trf'])['kit'])->toBeNull();
 });
 
 it('calcular-custo devolve kit e desconto; executar debita o total COM desconto e precosVenda descontado', function () {
@@ -81,16 +82,23 @@ it('calcular-custo devolve kit e desconto; executar debita o total COM desconto 
     });
 });
 
-it('tela de fontes renderiza os kits com preco riscado e desconto', function () {
+it('tela de fontes mostra na vitrine SO os planos do sistema; kit nao-sistema fica fora', function () {
+    // Kit global mas NÃO sistema (advocacia) → não entra na vitrine "Planos do contador".
     kitContencioso(10);
+    // Plano do sistema (sistema=true) → entra na vitrine.
+    ConsultaKit::create([
+        'nome' => 'Validação Fiscal', 'slug' => 'sys-validacao',
+        'fontes' => ['analise_fiscal'], 'desconto_percentual' => 0,
+        'sistema' => true, 'ativo' => true, 'ordem' => 1,
+    ]);
     $user = User::factory()->create(['credits' => 5.0]);
 
-    $this->actingAs($user)->get('/app/consulta/fontes')
+    $this->actingAs($user)->get('/app/consulta/painel')
         ->assertOk()
-        ->assertSee('Kits prontos')
-        ->assertSee('Kit Contencioso')
-        ->assertViewHas('kits', fn ($kits) => count($kits) === 1
-            && $kits[0]['preco_bruto'] === 2.00 && $kits[0]['preco_total'] === 1.80);
+        ->assertSee('Planos do contador')
+        ->assertSee('Validação Fiscal')
+        ->assertDontSee('Kit Contencioso') // não-sistema não aparece na vitrine
+        ->assertViewHas('kits', fn ($kits) => count($kits) === 1 && $kits[0]['slug'] === 'sys-validacao');
 });
 
 it('admin CRUD de kits: cria, edita, exclui; nao-admin bloqueado', function () {

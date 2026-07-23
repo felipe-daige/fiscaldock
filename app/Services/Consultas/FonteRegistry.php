@@ -29,6 +29,21 @@ class FonteRegistry
     }
 
     /**
+     * Fonte PAUSADA na origem (`consultas.fontes_pausadas`, env CONSULTAS_FONTES_PAUSADAS): a
+     * InfoSimples despausa/pausa endpoints globalmente quando o site oficial está instável.
+     *
+     * O gate vive AQUI, no registry, e não numa classe base de provedor: pausa é decisão
+     * OPERACIONAL sobre a chave da fonte, não característica do provedor. Enquanto morou em
+     * `FonteInfoSimplesBase::pronta()`, toda fonte fora daquela hierarquia (ex.: AnaliseFiscalFonte,
+     * derivada) ignorava o kill-switch em silêncio — o operador achava que tinha desligado a fonte
+     * e ela seguia sendo vendida e executada.
+     */
+    public function pausada(string $chave): bool
+    {
+        return in_array($chave, (array) config('consultas.fontes_pausadas', []), true);
+    }
+
+    /**
      * True se TODOS os sub-atributos do plano (consultas_incluidas) são fornecidos
      * por uma fonte registrada E PRONTA (gate de liga/desliga do provider).
      */

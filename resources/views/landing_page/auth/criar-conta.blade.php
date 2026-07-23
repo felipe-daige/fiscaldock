@@ -135,6 +135,12 @@
                                         <p class="field-error empty:hidden mt-1 text-[11px] text-red-600" data-error="documento">@error('documento'){{ $message }}@enderror</p>
                                     </div>
                                     <div>
+                                        <label for="cpf" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">CPF do responsável</label>
+                                        <input type="text" id="cpf" name="cpf" value="{{ old('cpf') }}" inputmode="numeric" class="w-full border border-gray-300 rounded text-sm px-3 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400" placeholder="000.000.000-00">
+                                        <p id="cpf-ajuda" class="mt-1 text-[11px] text-gray-500">Solicitante das certidões judiciais. Obrigatório para escritórios de advocacia.</p>
+                                        <p class="field-error empty:hidden mt-1 text-[11px] text-red-600" data-error="cpf">@error('cpf'){{ $message }}@enderror</p>
+                                    </div>
+                                    <div>
                                         <label for="faturamento" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Faturamento anual</label>
                                         <select id="faturamento" name="faturamento" required class="w-full border border-gray-300 rounded text-sm px-3 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
                                             <option value="">Selecione</option>

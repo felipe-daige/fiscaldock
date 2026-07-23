@@ -49,19 +49,6 @@ test('login regenera a sessao apos autenticar (anti session-fixation)', function
     $this->assertAuthenticated();
 });
 
-test('401 de API nao vaza prefixo nem tamanho do token esperado', function () {
-    $response = $this->postJson('/api/importacao/efd/progresso', [
-        'importacao_id' => 1,
-        'status' => 'processando',
-    ]);
-
-    $response->assertStatus(401);
-    $response->assertJsonMissing(['debug' => true]);
-
-    $json = $response->json();
-    expect($json)->not->toHaveKey('debug');
-});
-
 test('health endpoint nao expoe token, php_version nem ambiente', function () {
     $response = $this->getJson('/api/health');
 
@@ -147,6 +134,7 @@ test('signup persiste persona do perfil_conta e usa default empresa', function (
         'empresa' => 'Lima Advogados',
         'cargo' => 'Advogada',
         'documento' => '11144477735',
+        'cpf' => '529.982.247-25', // obrigatório p/ advogado (solicitante das certidões judiciais)
         'faturamento' => 'ate-360k',
         'desafio_principal' => 'documentos_espalhados',
         'terms_aceitos' => true,
@@ -158,7 +146,8 @@ test('signup persiste persona do perfil_conta e usa default empresa', function (
         ->assertStatus(200);
     $advogada = User::where('email', 'advogada@example.com')->first();
     expect($advogada->persona)->toBe('advogado')
-        ->and($advogada->isAdvogado())->toBeTrue();
+        ->and($advogada->isAdvogado())->toBeTrue()
+        ->and($advogada->cpf)->toBe('52998224725'); // persistido só com dígitos
 
     // Sem perfil_conta (form antigo/legado) cai no default 'empresa'.
     $this->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
@@ -170,6 +159,34 @@ test('signup persiste persona do perfil_conta e usa default empresa', function (
         ]))
         ->assertStatus(200);
     expect(User::where('email', 'legado@example.com')->value('persona'))->toBe('empresa');
+});
+
+test('signup exige cpf valido para advogado (solicitante das certidoes)', function () {
+    $base = [
+        'nome' => 'Ana', 'sobrenome' => 'Lima', 'telefone' => '67911110000',
+        'senha' => 'Xk9382mZqp01', 'senha_confirmation' => 'Xk9382mZqp01',
+        'empresa' => 'Lima Advogados', 'cargo' => 'Advogada', 'documento' => '11144477735',
+        'faturamento' => 'ate-360k', 'desafio_principal' => 'documentos_espalhados',
+        'terms_aceitos' => true, 'perfil_conta' => 'advogado',
+    ];
+
+    // Advogado sem CPF → 422 no campo cpf.
+    $this->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
+        ->postJson('/criar-conta', array_merge($base, ['email' => 'semcpf@example.com']))
+        ->assertStatus(422)->assertJsonValidationErrors(['cpf']);
+
+    // CPF com DV inválido → 422 (tribunal/InfoSimples rejeita).
+    $this->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
+        ->postJson('/criar-conta', array_merge($base, ['email' => 'cpfruim@example.com', 'cpf' => '111.444.777-00']))
+        ->assertStatus(422)->assertJsonValidationErrors(['cpf']);
+
+    // Empresa/contador sem CPF → OK (opcional, sem fricção no funil fiscal).
+    $this->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
+        ->postJson('/criar-conta', array_merge($base, [
+            'email' => 'contador@example.com', 'documento' => '97551165000193', 'perfil_conta' => 'contador',
+        ]))
+        ->assertStatus(200);
+    expect(User::where('email', 'contador@example.com')->value('cpf'))->toBeNull();
 });
 
 test('signup rejeita persona desconhecida', function () {

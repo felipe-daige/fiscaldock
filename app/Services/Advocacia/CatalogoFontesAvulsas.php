@@ -14,7 +14,36 @@ use App\Services\Consultas\FonteRegistry;
  */
 class CatalogoFontesAvulsas
 {
+    /** @var list<string>|null Memo das chaves disponíveis (registry não muda durante a request). */
+    private ?array $chavesDisponiveisMemo = null;
+
+    /** @var \Illuminate\Support\Collection<int, \App\Models\ConsultaKit>|null Memo dos kits ativos. */
+    private ?\Illuminate\Support\Collection $kitsAtivosMemo = null;
+
+    /** @var \Illuminate\Support\Collection<string, \App\Models\FontePreco>|null Memo dos overrides de preço. */
+    private ?\Illuminate\Support\Collection $precosDbMemo = null;
+
     public function __construct(private FonteRegistry $registry) {}
+
+    /** Kits GLOBAIS ativos (user_id null) carregados UMA vez por instância (kitPara/kits/precificar reusam). */
+    private function kitsAtivos(): \Illuminate\Support\Collection
+    {
+        return $this->kitsAtivosMemo ??= \App\Models\ConsultaKit::globais()->ativos()->get();
+    }
+
+    /** Overrides de preço/ativo por fonte (tabela fonte_precos), UMA query por instância. */
+    private function precosDb(): \Illuminate\Support\Collection
+    {
+        return $this->precosDbMemo ??= \App\Models\FontePreco::all()->keyBy('chave');
+    }
+
+    /** True se o admin desativou a fonte comercialmente (linha fonte_precos com ativo=false). */
+    private function desativadaNoAdmin(string $chave): bool
+    {
+        $row = $this->precosDb()->get($chave);
+
+        return $row !== null && ! $row->ativo;
+    }
 
     /**
      * Fontes selecionáveis (registradas + prontas), agrupadas para a tela.
@@ -28,7 +57,7 @@ class CatalogoFontesAvulsas
             $fontes = [];
             foreach ((array) ($grupo['fontes'] ?? []) as $chave) {
                 $fonte = $this->registry->get($chave);
-                if (! $fonte || ! $fonte->pronta()) {
+                if (! $fonte || ! $fonte->pronta() || $this->desativadaNoAdmin($chave)) {
                     continue;
                 }
                 $fontes[] = [
@@ -45,21 +74,33 @@ class CatalogoFontesAvulsas
         return $out;
     }
 
-    /** Preço de venda da fonte em R$ (override em advocacia.precos, senão o default). */
+    /**
+     * Preço de venda da fonte em R$. Hierarquia: override no admin (tabela fonte_precos) →
+     * config('advocacia.precos.{chave}') → config('advocacia.preco_fonte_default').
+     */
     public function precoDe(string $chave): float
     {
+        $row = $this->precosDb()->get($chave);
+        if ($row !== null) {
+            return (float) $row->preco;
+        }
+
         return (float) (config("advocacia.precos.{$chave}") ?? config('advocacia.preco_fonte_default', 1.00));
     }
 
-    /** Chaves válidas para seleção avulsa (registradas + prontas). */
+    /** Chaves válidas para seleção avulsa (registradas + prontas). Memoizado por instância. */
     public function chavesDisponiveis(): array
     {
+        if ($this->chavesDisponiveisMemo !== null) {
+            return $this->chavesDisponiveisMemo;
+        }
+
         $chaves = [];
         foreach ($this->grupos() as $grupo) {
             $chaves = array_merge($chaves, array_column($grupo['fontes'], 'chave'));
         }
 
-        return $chaves;
+        return $this->chavesDisponiveisMemo = $chaves;
     }
 
     /** Preço total (R$) de uma seleção para UM alvo, SEM desconto de kit (soma bruta). */
@@ -69,7 +110,8 @@ class CatalogoFontesAvulsas
     }
 
     /**
-     * Kits ativos para a tela: fontes restritas às disponíveis, com preço bruto e com desconto.
+     * PLANOS DO SISTEMA para a tela (vitrine oficial do contador): só kits `sistema=true`.
+     * Demais kits globais (advocacia) ficam fora da vitrine — podem existir p/ desconto/admin.
      *
      * @return list<array{id: int, nome: string, slug: string, descricao: ?string, desconto_percentual: float, fontes: list<string>, preco_bruto: float, preco_total: float}>
      */
@@ -78,7 +120,7 @@ class CatalogoFontesAvulsas
         $disponiveis = $this->chavesDisponiveis();
 
         $out = [];
-        foreach (\App\Models\ConsultaKit::ativos()->get() as $kit) {
+        foreach ($this->kitsAtivos()->where('sistema', true) as $kit) {
             $fontes = array_values(array_intersect((array) $kit->fontes, $disponiveis));
             if ($fontes === []) {
                 continue;
@@ -100,6 +142,35 @@ class CatalogoFontesAvulsas
     }
 
     /**
+     * Presets PESSOAIS de um usuário (consulta_kits com user_id) para a tela: fontes restritas
+     * às disponíveis, preço = SOMA (sem desconto — desconto é exclusivo de kit global do admin).
+     *
+     * @return list<array{id: int, nome: string, slug: string, descricao: ?string, fontes: list<string>, preco_total: float}>
+     */
+    public function presets(int $userId): array
+    {
+        $disponiveis = $this->chavesDisponiveis();
+
+        $out = [];
+        foreach (\App\Models\ConsultaKit::doUsuario($userId)->ativos()->get() as $preset) {
+            $fontes = array_values(array_intersect((array) $preset->fontes, $disponiveis));
+            if ($fontes === []) {
+                continue;
+            }
+            $out[] = [
+                'id' => $preset->id,
+                'nome' => $preset->nome,
+                'slug' => $preset->slug,
+                'descricao' => $preset->descricao,
+                'fontes' => $fontes,
+                'preco_total' => $this->precoSelecao($fontes),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
      * Kit ativo cuja lista de fontes DISPONÍVEIS bate exatamente com a seleção (maior desconto
      * vence em empate de conjunto). Ajustou a seleção → sem desconto: kit é preset, não bundle.
      */
@@ -110,7 +181,7 @@ class CatalogoFontesAvulsas
 
         $disponiveis = $this->chavesDisponiveis();
         $match = null;
-        foreach (\App\Models\ConsultaKit::ativos()->get() as $kit) {
+        foreach ($this->kitsAtivos() as $kit) {
             $fontesKit = array_values(array_unique(array_intersect((array) $kit->fontes, $disponiveis)));
             sort($fontesKit);
             if ($fontesKit === $selecao

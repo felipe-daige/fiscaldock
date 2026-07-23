@@ -160,9 +160,10 @@ it('executa avulsa REAL (batch sync): persiste certidao judicial e passa pelo th
     $throttle->shouldHaveReceived('aguardar')->with('infosimples')->atLeast()->once();
 });
 
-it('CEAT recebe nome (razao social) e uf nos params — cadastro sobrescreve a razao do banco', function () {
-    // Regressao do smoke 606: CEAT exige `nome`. O cadastro (minhareceita) roda antes e injeta
-    // a razao oficial da RFB no alvo; o params da CEAT tem que sair com nome + cnpj.
+it('CEAT recebe nome (razao social), cnpj e cpf_solicitante do dono da conta nos params', function () {
+    // Regressao do smoke 606: CEAT exige `nome` (lote 260) + `cpf_solicitante` (lote 261, TRT24).
+    // O cadastro (minhareceita) injeta a razao oficial da RFB; o job injeta o CPF do DONO DA CONTA
+    // (users.cpf) como cpf_solicitante. Params tem que sair com nome + cnpj + cpf_solicitante do user.
     $capturado = [];
     Http::fake(function ($request) use (&$capturado) {
         $url = $request->url();
@@ -183,7 +184,7 @@ it('CEAT recebe nome (razao social) e uf nos params — cadastro sobrescreve a r
         ], 200);
     });
 
-    $user = User::factory()->create(['credits' => 10.0]);
+    $user = User::factory()->create(['credits' => 10.0, 'cpf' => '39053344705']);
     $pid = DB::table('participantes')->insertGetId([
         'user_id' => $user->id, 'documento' => '19131243000197', 'razao_social' => 'RAZAO DO BANCO',
         'uf' => 'SP', 'created_at' => now(), 'updated_at' => now(),
@@ -196,26 +197,28 @@ it('CEAT recebe nome (razao social) e uf nos params — cadastro sobrescreve a r
     ])->assertOk();
 
     expect($capturado['nome'] ?? null)->toBe('RAZAO OFICIAL RFB')
-        ->and($capturado['cnpj'] ?? null)->toBe('19131243000197');
+        ->and($capturado['cnpj'] ?? null)->toBe('19131243000197')
+        ->and($capturado['cpf_solicitante'] ?? null)->toBe('39053344705');
 });
 
-it('tela /app/consulta/fontes renderiza grupos, precos e saldo', function () {
+it('tela /app/consulta/painel renderiza grupos, precos e saldo', function () {
     [$user] = criarUserComParticipante(7.50);
 
-    $this->actingAs($user)->get('/app/consulta/fontes')
+    $this->actingAs($user)->get('/app/consulta/painel')
         ->assertOk()
-        ->assertSee('Consulta por Fontes')
+        ->assertSee('Nova Consulta')
         ->assertSee('CND Federal (Receita/PGFN)')
         ->assertSee('SINTEGRA')
-        ->assertSee("R\$\u{A0}1,00 por CNPJ") // Dinheiro::brl usa NBSP entre R$ e o número
-        ->assertViewHas('gruposFontes', fn ($g) => isset($g['fiscal']) && count($g['fiscal']['fontes']) === 6);
+        ->assertSee("R\$\u{A0}1,00") // Dinheiro::brl usa NBSP entre R$ e o número; "por CNPJ" em span à parte
+        ->assertSee('Situação Cadastral (grátis)') // cadastro grátis selecionável
+        ->assertViewHas('gruposFontes', fn ($g) => isset($g['fiscal']) && count($g['fiscal']['fontes']) === 8);
 });
 
 it('prefill de re-emissao: ?fonte=&documento= pre-marca fonte e alvo do usuario', function () {
     [$user, $pid] = criarUserComParticipante();
 
     $this->actingAs($user)
-        ->get('/app/consulta/fontes?fonte=certidao_stj&documento=19131243000197')
+        ->get('/app/consulta/painel?fonte=certidao_stj&documento=19131243000197')
         ->assertOk()
         ->assertViewHas('prefill', fn ($p) => $p['fontes'] === ['certidao_stj']
             && $p['alvo']['tipo'] === 'participante'
@@ -224,19 +227,19 @@ it('prefill de re-emissao: ?fonte=&documento= pre-marca fonte e alvo do usuario'
     // Documento de OUTRO usuário nunca resolve alvo.
     $outro = User::factory()->create();
     $this->actingAs($outro)
-        ->get('/app/consulta/fontes?fonte=certidao_stj&documento=19131243000197')
+        ->get('/app/consulta/painel?fonte=certidao_stj&documento=19131243000197')
         ->assertOk()
         ->assertViewHas('prefill', fn ($p) => $p['alvo'] === null);
 });
 
 it('sidebar CONTENCIOSO aparece para advogado e some para contador', function () {
     $advogado = User::factory()->create(['persona' => 'advogado']);
-    $this->actingAs($advogado)->get('/app/consulta/fontes')
+    $this->actingAs($advogado)->get('/app/consulta/painel')
         ->assertOk()
         ->assertSee('CONTENCIOSO');
 
     $contador = User::factory()->create(['persona' => 'contador']);
-    $this->actingAs($contador)->get('/app/consulta/fontes')
+    $this->actingAs($contador)->get('/app/consulta/painel')
         ->assertOk()
         ->assertDontSee('CONTENCIOSO');
 });

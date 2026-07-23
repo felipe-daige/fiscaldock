@@ -42,7 +42,7 @@ it('certidao judicial vencendo em 10 dias gera alerta certidao_vencendo com reem
         ->and($alerta->vence_em->format('Y-m-d'))->toBe(now()->addDays(10)->format('Y-m-d'))
         ->and($alerta->titulo)->toContain('Certidão')
         ->and($alerta->titulo)->toContain('ALVO SA')
-        ->and($alerta->detalhes['reemitir_url'])->toContain('/app/consulta/fontes')
+        ->and($alerta->detalhes['reemitir_url'])->toContain('/app/consulta/painel')
         ->and($alerta->detalhes['reemitir_url'])->toContain('fonte=certidao_stj')
         ->and($alerta->detalhes['reemitir_url'])->toContain('documento=19131243000197')
         ->and($alerta->detalhes['certidoes'][0]['label'])->toBe('Certidão STJ');
@@ -110,4 +110,47 @@ it('certidao vencida entra na faixa vencida com severidade alta', function () {
     expect($alerta->severidade)->toBe('alta')
         ->and($alerta->titulo)->toContain('venceu em')
         ->and($alerta->detalhes['certidoes'][0]['vencida'])->toBeTrue();
+});
+
+it('certidao vencida ha muito tempo (alem do piso) NAO gera alerta', function () {
+    // Sem piso, um alvo abandonado geraria "venceu em [data antiga]" pra sempre no diário.
+    Notification::fake();
+    $user = User::factory()->create();
+    $pid = participanteDe($user);
+    certidaoJudicial($user, $pid, 'ceat_trt', -config('certidoes.alerta_vencida_ate_dias', 30) - 5);
+
+    app(AlertaCentralService::class)->recalcular($user->id);
+
+    expect(Alerta::where('user_id', $user->id)->where('tipo', 'certidao_vencendo')->count())->toBe(0);
+});
+
+it('certidao POSITIVA (irregular) vencendo NAO entra no alerta de prazo', function () {
+    // O 3d é só de prazo: uma certidão Positiva já é problema próprio, não "vence, renove".
+    Notification::fake();
+    $user = User::factory()->create();
+    $pid = participanteDe($user);
+    $cert = certidaoJudicial($user, $pid, 'certidao_stj', 5);
+    $cert->update(['status' => 'Positiva']);
+
+    app(AlertaCentralService::class)->recalcular($user->id);
+    expect(Alerta::where('user_id', $user->id)->where('tipo', 'certidao_vencendo')->count())->toBe(0);
+
+    // "Positiva com efeito de negativa" é regular → continua alertando o prazo.
+    $cert->update(['status' => 'Positiva com efeito de negativa']);
+    app(AlertaCentralService::class)->recalcular($user->id);
+    expect(Alerta::where('user_id', $user->id)->where('tipo', 'certidao_vencendo')->where('status', 'ativo')->count())->toBe(1);
+});
+
+it('severidade da faixa mais larga deriva do config (nao do literal 15)', function () {
+    Notification::fake();
+    config()->set('certidoes.alerta_faixas', [30, 15, 7, 1]); // faixa mais larga vira 30
+    $user = User::factory()->create();
+    $pid = participanteDe($user);
+    certidaoJudicial($user, $pid, 'certidao_stj', 20); // dentro de 30, fora de 15 → faixa '30'
+
+    app(AlertaCentralService::class)->recalcular($user->id);
+
+    // Faixa mais larga (30) = média; se estivesse hardcoded '15', 30 viraria 'alta' erroneamente.
+    $alerta = Alerta::where('user_id', $user->id)->where('tipo', 'certidao_vencendo')->first();
+    expect($alerta->severidade)->toBe('media');
 });

@@ -13,6 +13,7 @@ use App\Models\Participante;
 use App\Models\ParticipanteGrupo;
 use App\Models\ParticipanteScore;
 use App\Services\ConsultaReportService;
+use App\Services\Consultas\HistoricoConsultaPresenter;
 use App\Services\ParecerFiscalService;
 use App\Services\PricingCatalogService;
 use App\Services\RiskScoreService;
@@ -42,7 +43,8 @@ class ConsultaController extends Controller
         protected ConsultaReportService $reportService,
         protected PricingCatalogService $pricingCatalogService,
         protected \App\Services\Entitlements\EntitlementService $entitlements,
-        protected RiskScoreService $riskScore
+        protected RiskScoreService $riskScore,
+        protected HistoricoConsultaPresenter $historicoConsultaPresenter
     ) {}
 
     private function getViewPrefix(): string
@@ -1042,8 +1044,12 @@ class ConsultaController extends Controller
         // Prefill de re-emissão (alerta de vencimento → 1 clique): ?fonte=chave&documento=CNPJ
         // pré-marca a fonte e o alvo correspondente do próprio usuário.
         $prefill = null;
-        $fontePrefill = trim((string) $request->query('fonte', ''));
-        $docPrefill = preg_replace('/\D/', '', (string) $request->query('documento', ''));
+        // Guard escalar: um param em array (?documento[]=) não pode ser coagido pra string
+        // ((string)$array = warning + 'Array'); nesse caso trata como vazio.
+        $fonteRaw = $request->query('fonte', '');
+        $docRaw = $request->query('documento', '');
+        $fontePrefill = is_string($fonteRaw) ? trim($fonteRaw) : '';
+        $docPrefill = preg_replace('/\D/', '', is_string($docRaw) ? $docRaw : '');
         if ($fontePrefill !== '' || $docPrefill !== '') {
             $alvoPrefill = null;
             if (strlen($docPrefill) === 14) {
@@ -1059,12 +1065,28 @@ class ConsultaController extends Controller
             ];
         }
 
+        // Opções dos filtros do painel "Ver todos" (UF/situação dos participantes PJ). Queries
+        // distintas baratas — mesmo recorte usado no picker da consulta por plano.
+        $participantesUfs = Participante::where('user_id', $user->id)
+            ->excludingEmpresaPropria()
+            ->whereNotNull('uf')->where('uf', '!=', '')
+            ->selectRaw('upper(uf) as uf')->distinct()->orderBy('uf')->pluck('uf');
+
+        $participantesSituacoes = Participante::where('user_id', $user->id)
+            ->excludingEmpresaPropria()
+            ->whereNotNull('situacao_cadastral')->where('situacao_cadastral', '!=', '')
+            ->selectRaw('upper(situacao_cadastral) as situacao_cadastral')->distinct()
+            ->orderBy('situacao_cadastral')->pluck('situacao_cadastral');
+
         $data = [
             'gruposFontes' => $catalogo->grupos(),
             'kits' => $catalogo->kits(),
+            'meusPlanos' => $catalogo->presets((int) $user->id),
             'prefill' => $prefill,
             'saldoReais' => $this->saldoService->getBalance($user),
             'totalParticipantes' => Participante::where('user_id', $user->id)->count(),
+            'participantesUfs' => $participantesUfs,
+            'participantesSituacoes' => $participantesSituacoes,
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -1305,6 +1327,140 @@ class ConsultaController extends Controller
                 'error' => 'Erro interno ao processar consulta.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    /**
+     * Salva a seleção atual de fontes como PRESET PESSOAL do usuário ("meu plano") — reusa
+     * consulta_kits com user_id. Sem desconto (preço = soma); o desconto é privilégio do kit
+     * global do admin. Um clique na tela repõe a seleção salva.
+     */
+    public function salvarPlano(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        $catalogo = app(\App\Services\Advocacia\CatalogoFontesAvulsas::class);
+
+        $validated = $request->validate([
+            'nome' => 'required|string|max:120',
+            'fontes' => 'required|array|min:1|max:40',
+            'fontes.*' => 'string|max:40',
+        ]);
+
+        $fontes = array_values(array_unique($validated['fontes']));
+        $invalidas = array_diff($fontes, $catalogo->chavesDisponiveis());
+        if ($invalidas !== []) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Consultas indisponíveis: '.implode(', ', $invalidas),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $preset = \App\Models\ConsultaKit::create([
+            'user_id' => $user->id,
+            'nome' => $validated['nome'],
+            'slug' => $this->slugPresetDisponivel($validated['nome'], (int) $user->id),
+            'fontes' => $fontes,
+            'desconto_percentual' => 0,
+            'ativo' => true,
+            'ordem' => 0,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'preset' => [
+                'id' => $preset->id,
+                'nome' => $preset->nome,
+                'fontes' => $fontes,
+                'preco_total' => $catalogo->precoSelecao($fontes),
+            ],
+        ]);
+    }
+
+    /** Exclui um preset pessoal do próprio usuário (nunca kit global — esses têm user_id null). */
+    public function excluirPlano(Request $request, int $id): JsonResponse
+    {
+        $user = Auth::user();
+
+        $preset = \App\Models\ConsultaKit::doUsuario((int) $user->id)->find($id);
+        if ($preset === null) {
+            return response()->json(['success' => false, 'error' => 'Plano não encontrado.'], Response::HTTP_NOT_FOUND);
+        }
+
+        $preset->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Detalhe expansível de UM alvo (participante/cliente) na tela de seleção: renderiza o partial
+     * `detalhe-blocos` (as MESMAS certidões/fontes da última consulta que a ficha mostra), a partir
+     * do snapshot canônico por documento. Sem consulta anterior → devolve HTML vazio (o front
+     * mostra fallback). Só dados do próprio usuário.
+     */
+    public function certidoesAlvo(Request $request, string $tipo, int $id)
+    {
+        if (! Auth::check()) {
+            return response()->json(['success' => false, 'error' => 'Usuário não autenticado.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $user = Auth::user();
+
+        if (! in_array($tipo, ['participante', 'cliente'], true)) {
+            return response()->json(['success' => false, 'error' => 'Tipo de alvo inválido.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        // Ownership do alvo.
+        if ($tipo === 'participante') {
+            $entidade = Participante::where('user_id', $user->id)->find($id);
+        } else {
+            $entidade = \App\Models\Cliente::where('user_id', $user->id)->find($id);
+        }
+        if ($entidade === null) {
+            return response()->json(['success' => false, 'error' => 'Alvo não encontrado.'], Response::HTTP_NOT_FOUND);
+        }
+
+        $presenter = app(\App\Services\Consultas\ResultadoDetalhePresenter::class);
+        $catalogo = app(\App\Services\Advocacia\CatalogoFontesAvulsas::class);
+
+        // "TODAS as consultas possíveis": universo do presenter ∩ o que o catálogo oferece (prontas
+        // + à venda). Passado como `esperadas` → o MESMO partial do resultado de consulta mostra
+        // cada consulta possível (consultada com dado; não-consultada como placeholder disponível).
+        $esperadas = $presenter->esperadasTodas($catalogo->chavesDisponiveis());
+
+        // FONTE ÚNICA: reusa o mesmo montador do "Ver detalhes" da Consulta CNPJ / Score Fiscal.
+        $detalhe = $tipo === 'participante'
+            ? $presenter->detalheDoParticipante($entidade, esperadasOverride: $esperadas)
+            : $presenter->detalheDoCliente($entidade, esperadasOverride: $esperadas);
+
+        if ($detalhe === null) {
+            return response()->json(['success' => true, 'tem_consulta' => false, 'html' => '']);
+        }
+
+        $html = view('autenticado.consulta.partials.detalhe-blocos', [
+            'blocos' => $detalhe['blocos'],
+            'certidoes' => $detalhe['certidoes'],
+            'resumo' => $detalhe['resumo'] ?? null,
+            'cabecalho' => $detalhe['cabecalho'] ?? [],
+        ])->render();
+
+        return response()->json([
+            'success' => true,
+            'tem_consulta' => true,
+            'consultado_em' => ($detalhe['consultado_em'] ?? null)?->format('d/m/Y H:i'),
+            'html' => $html,
+        ]);
+    }
+
+    /** Slug globalmente único p/ preset pessoal (consulta_kits.slug é UNIQUE). */
+    private function slugPresetDisponivel(string $nome, int $userId): string
+    {
+        $base = \Illuminate\Support\Str::slug(\Illuminate\Support\Str::limit($nome, 40, '')) ?: 'plano';
+        $base = "{$base}-u{$userId}";
+        $slug = $base;
+        for ($i = 2; \App\Models\ConsultaKit::where('slug', $slug)->exists(); $i++) {
+            $slug = "{$base}-{$i}";
+        }
+
+        return $slug;
     }
 
     /**
@@ -1901,10 +2057,50 @@ class ConsultaController extends Controller
         ];
 
         $lotes = (clone $baseQuery)
+            ->with([
+                'plano:id,codigo,nome',
+                'resultados' => fn ($query) => $query
+                    ->select([
+                        'id',
+                        'consulta_lote_id',
+                        'participante_id',
+                        'cliente_id',
+                        'resultado_dados',
+                        'status',
+                    ])
+                    ->with([
+                        'participante:id,documento,razao_social,nome_fantasia',
+                        'cliente:id,documento,razao_social,nome_fantasia',
+                    ])
+                    ->orderBy('id')
+                    ->limit(3),
+                'participantes' => fn ($query) => $query
+                    ->select([
+                        'participantes.id',
+                        'participantes.documento',
+                        'participantes.razao_social',
+                        'participantes.nome_fantasia',
+                    ])
+                    ->orderBy('consulta_lote_participantes.created_at')
+                    ->orderBy('participantes.id')
+                    ->limit(3),
+            ])
+            ->withCount([
+                'resultados',
+                'resultados as resultados_sucesso_count' => fn ($query) => $query
+                    ->where('status', ConsultaResultado::STATUS_SUCESSO),
+                'resultados as resultados_falha_count' => fn ($query) => $query
+                    ->whereIn('status', [ConsultaResultado::STATUS_ERRO, ConsultaResultado::STATUS_TIMEOUT]),
+            ])
             ->withCount(['monitoramentoConsulta as eh_monitoramento'])
             ->orderBy('created_at', 'desc')
             ->paginate(20)
             ->withQueryString();
+
+        $previewsLotes = $lotes->getCollection()
+            ->mapWithKeys(fn (ConsultaLote $lote) => [
+                $lote->id => $this->historicoConsultaPresenter->paraLote($lote),
+            ]);
 
         $planosFiltro = MonitoramentoPlano::ativos()
             ->sortBy('nome')
@@ -1920,6 +2116,7 @@ class ConsultaController extends Controller
 
         $data = [
             'lotes' => $lotes,
+            'previewsLotes' => $previewsLotes,
             'kpis' => $kpis,
             'filtros' => $filtros,
             'filtrosAtivos' => count(array_filter($filtros, fn ($value) => $value !== null && $value !== '')),
