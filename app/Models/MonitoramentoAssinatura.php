@@ -27,6 +27,7 @@ class MonitoramentoAssinatura extends Model
         'cliente_id',
         'grupo_id',
         'plano_id',
+        'fontes',
         'status',
         'pausada_motivo',
         'frequencia_dias',
@@ -35,10 +36,30 @@ class MonitoramentoAssinatura extends Model
     ];
 
     protected $casts = [
+        'fontes' => 'array',
         'frequencia_dias' => 'integer',
         'proxima_execucao_em' => 'datetime',
         'ultima_execucao_em' => 'datetime',
     ];
+
+    /**
+     * Assinatura à la carte (migração por-fonte, backward-compat): a seleção de fontes vive em
+     * `fontes` e o plano é null. Legado (escada) usa `plano_id` e `fontes` fica null.
+     */
+    public function usaAlaCarte(): bool
+    {
+        return ! empty($this->fontes);
+    }
+
+    /**
+     * Fontes à la carte válidas (chaves), ou lista vazia no legado por plano.
+     *
+     * @return list<string>
+     */
+    public function fontesSelecionadas(): array
+    {
+        return array_values(array_filter((array) $this->fontes));
+    }
 
     /**
      * Converte frequencia_dias para texto legível.
@@ -115,7 +136,12 @@ class MonitoramentoAssinatura extends Model
      */
     public function custoCiclo(): float
     {
-        $unit = (float) ($this->plano->custo_creditos ?? 0);
+        // À la carte: custo unitário = total da seleção precificada (com kit/preset do dono),
+        // fonte única de verdade que o disparo e o estorno também usam. Legado: custo do plano.
+        $unit = $this->usaAlaCarte()
+            ? (float) app(\App\Services\Advocacia\CatalogoFontesAvulsas::class)
+                ->precificar($this->fontesSelecionadas(), (int) $this->user_id)['total']
+            : (float) ($this->plano->custo_creditos ?? 0);
 
         if ($this->grupo_id) {
             return round($this->membrosDoGrupo()->count() * $unit, 2);

@@ -154,7 +154,8 @@ class MonitoramentoController extends Controller
                     'alvo_nome' => $a->grupo_id ? ($a->grupo?->nome ?? '—') : ($a->alvo()?->razao_social ?? '—'),
                     'alvo_doc' => $a->grupo_id ? null : \App\Support\Cnpj::formatar((string) ($a->alvo()?->documento ?? '')),
                     'membros' => $a->grupo_id ? $a->membrosDoGrupo()->count() : null,
-                    'plano_nome' => $a->plano?->nome,
+                    'plano_nome' => $a->plano?->nome
+                        ?? ($a->usaAlaCarte() ? count($a->fontesSelecionadas()).' consulta(s) selecionada(s)' : null),
                     'frequencia' => $a->frequencia,
                     'status' => $a->status,
                     'pausada_motivo' => $a->pausada_motivo,
@@ -196,8 +197,26 @@ class MonitoramentoController extends Controller
                 'nome' => $p->nome,
                 'custo' => round((float) $p->custo_creditos, 2),
                 'gratuito' => (bool) $p->is_gratuito || (float) $p->custo_creditos <= 0,
+                'fontes' => null,
             ])
             ->all();
+
+        // Opções à la carte (migração por-fonte, backward-compat): os kits fiscais do sistema
+        // aparecem no MESMO seletor, mas submetem como `fontes[]` (plano_id null). Só os PAGOS —
+        // o monitor cadastral grátis segue no plano Gratuito legado.
+        $catalogo = app(\App\Services\Advocacia\CatalogoFontesAvulsas::class);
+        foreach ($catalogo->kits($user->id) as $kit) {
+            if (($kit['preco_total'] ?? 0) <= 0 || empty($kit['fontes'])) {
+                continue;
+            }
+            $planos[] = [
+                'id' => 'alacarte:'.$kit['slug'],
+                'nome' => $kit['nome'],
+                'custo' => round((float) $kit['preco_total'], 2),
+                'gratuito' => false,
+                'fontes' => array_values($kit['fontes']),
+            ];
+        }
 
         $data = [
             'assinaturas' => $assinaturas,
@@ -498,11 +517,33 @@ class MonitoramentoController extends Controller
         // Grupo como alvo (monitoramento contínuo de grupo — dinâmico: membros avaliados a cada ciclo).
         $grupoId = $request->input('grupo_id');
 
-        if ((empty($participanteIds) && empty($clienteIds) && empty($grupoId)) || empty($planoId)) {
+        // Modo à la carte (migração por-fonte, backward-compat): quando o request traz `fontes[]`
+        // em vez de `plano_id`, a assinatura guarda a seleção de fontes (plano_id null) e o custo
+        // vem do catálogo. Só seleção PAGA — o monitor cadastral GRÁTIS segue no plano legado.
+        $catalogo = app(\App\Services\Advocacia\CatalogoFontesAvulsas::class);
+        $fontesInput = array_values(array_intersect(
+            array_map('strval', (array) $request->input('fontes', [])),
+            $catalogo->chavesDisponiveis()
+        ));
+        $alaCarte = $fontesInput !== [];
+
+        if ((empty($participanteIds) && empty($clienteIds) && empty($grupoId)) || (empty($planoId) && ! $alaCarte)) {
             return response()->json([
                 'success' => false,
-                'error' => 'Dados incompletos. Selecione participantes ou clientes e um plano.',
+                'error' => 'Dados incompletos. Selecione participantes ou clientes e um plano ou consultas.',
             ], Response::HTTP_BAD_REQUEST);
+        }
+
+        // À la carte só cobre seleção paga: seleção sem custo (só `cadastro`) usaria o produto
+        // gratuito sem o teto do plano legado — barra e aponta o monitor cadastral gratuito.
+        if ($alaCarte) {
+            $custoUnitAlaCarte = (float) $catalogo->precificar($fontesInput, (int) $user->id)['total'];
+            if ($custoUnitAlaCarte <= 0) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Selecione ao menos uma consulta paga. Para o monitoramento cadastral gratuito, use o plano Gratuito.',
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
         }
 
         // Validar frequência
@@ -514,13 +555,16 @@ class MonitoramentoController extends Controller
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        // Buscar plano
-        $plano = MonitoramentoPlano::find($planoId);
-        if (! $plano || ! $plano->is_active) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Plano não encontrado ou inativo.',
-            ], Response::HTTP_NOT_FOUND);
+        // Buscar plano (só no modo legado — à la carte não tem plano)
+        $plano = null;
+        if (! $alaCarte) {
+            $plano = MonitoramentoPlano::find($planoId);
+            if (! $plano || ! $plano->is_active) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Plano não encontrado ou inativo.',
+                ], Response::HTTP_NOT_FOUND);
+            }
         }
 
         // Ownership dos clientes — backend nunca confia no front (403 se algum não for do usuário)
@@ -558,7 +602,8 @@ class MonitoramentoController extends Controller
         // Produtos pagos não têm teto comercial: cada ciclo consome saldo. A única proteção de
         // quantidade/frequência é do produto cadastral gratuito, para evitar automação sem custo
         // em escala. Grupos não podem usar o produto gratuito (contornariam o teto com N membros).
-        $produtoGratuito = (bool) $plano->is_gratuito || (float) $plano->custo_creditos <= 0;
+        // À la carte é sempre pago (barrado acima se custo 0), então nunca cai no produto gratuito.
+        $produtoGratuito = ! $alaCarte && ((bool) $plano->is_gratuito || (float) $plano->custo_creditos <= 0);
         if ($produtoGratuito && $grupo !== null) {
             return response()->json([
                 'success' => false,
@@ -638,7 +683,8 @@ class MonitoramentoController extends Controller
                 $nova = MonitoramentoAssinatura::create([
                     'user_id' => $user->id,
                     'participante_id' => $participante->id,
-                    'plano_id' => $plano->id,
+                    'plano_id' => $alaCarte ? null : $plano->id,
+                    'fontes' => $alaCarte ? $fontesInput : null,
                     'frequencia_dias' => $frequenciaDias,
                     'status' => 'ativo',
                     'proxima_execucao_em' => $proximaExecucao,
@@ -675,7 +721,8 @@ class MonitoramentoController extends Controller
                 $nova = MonitoramentoAssinatura::create([
                     'user_id' => $user->id,
                     'cliente_id' => $cliente->id,
-                    'plano_id' => $plano->id,
+                    'plano_id' => $alaCarte ? null : $plano->id,
+                    'fontes' => $alaCarte ? $fontesInput : null,
                     'frequencia_dias' => $frequenciaDias,
                     'status' => 'ativo',
                     'proxima_execucao_em' => Carbon::now()->addDays($frequenciaDias)->setTime(8, 0, 0),
@@ -705,7 +752,8 @@ class MonitoramentoController extends Controller
                     $nova = MonitoramentoAssinatura::create([
                         'user_id' => $user->id,
                         'grupo_id' => $grupo->id,
-                        'plano_id' => $plano->id,
+                        'plano_id' => $alaCarte ? null : $plano->id,
+                        'fontes' => $alaCarte ? $fontesInput : null,
                         'frequencia_dias' => $frequenciaDias,
                         'status' => 'ativo',
                         'proxima_execucao_em' => Carbon::now()->addDays($frequenciaDias)->setTime(8, 0, 0),

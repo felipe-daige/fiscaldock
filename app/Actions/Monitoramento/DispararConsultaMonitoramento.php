@@ -6,6 +6,7 @@ use App\Jobs\ProcessarConsultaJob;
 use App\Models\ConsultaLote;
 use App\Models\MonitoramentoAssinatura;
 use App\Models\MonitoramentoConsulta;
+use App\Services\Advocacia\CatalogoFontesAvulsas;
 use App\Services\Consultas\FecharLoteService;
 use App\Services\SaldoService;
 use Illuminate\Support\Facades\Bus;
@@ -19,12 +20,16 @@ use Illuminate\Support\Str;
  */
 class DispararConsultaMonitoramento
 {
-    public function __construct(private SaldoService $saldoService) {}
+    public function __construct(
+        private SaldoService $saldoService,
+        private CatalogoFontesAvulsas $catalogo,
+    ) {}
 
     public function execute(MonitoramentoAssinatura $assinatura, ?MonitoramentoConsulta $parent = null): MonitoramentoConsulta
     {
         $plano = $assinatura->plano;
         $user = $assinatura->user;
+        $alaCarte = $assinatura->usaAlaCarte();
 
         // Grupo é DINÂMICO: membros avaliados agora; custo do ciclo = N × plano (custoCiclo).
         $ehGrupo = $assinatura->alvoTipo() === 'grupo';
@@ -73,11 +78,19 @@ class DispararConsultaMonitoramento
                 'crt' => $assinatura->participante_id ? ($assinatura->alvo()->crt ?? null) : null,
             ]]);
 
+        // Derivação por modo. À la carte: fontes/etapas/preço vêm do catálogo (fonte única, com
+        // kit/preset do dono); estorno de falha devolve o unitário via precosVenda. Legado: plano.
+        $fontesSelecionadas = $alaCarte ? $assinatura->fontesSelecionadas() : [];
+        $consultasIncluidas = $alaCarte ? $this->catalogo->atributosDe($fontesSelecionadas) : $plano->consultas_incluidas;
+        $etapas = $alaCarte ? $this->catalogo->etapasDe($fontesSelecionadas) : $plano->resolvedEtapas();
+        $precosVenda = $alaCarte ? $this->catalogo->precificar($fontesSelecionadas, (int) $user->id)['precos'] : null;
+
         $tabId = (string) Str::uuid();
         $lote = ConsultaLote::create([
             'user_id' => $user->id,
             'cliente_id' => $assinatura->cliente_id,
-            'plano_id' => $plano->id,
+            'plano_id' => $alaCarte ? null : $plano->id,
+            'fontes_selecionadas' => $alaCarte ? $fontesSelecionadas : null,
             'status' => ConsultaLote::STATUS_PROCESSANDO,
             'total_participantes' => $alvos->count(),
             'creditos_cobrados' => $custo,
@@ -96,11 +109,12 @@ class DispararConsultaMonitoramento
             alvoId: $alvo['id'],
             userId: $user->id,
             tabId: $tabId,
-            consultasIncluidas: $plano->consultas_incluidas,
+            consultasIncluidas: $consultasIncluidas,
             alvo: ['cnpj' => $alvo['cnpj'], 'uf' => $alvo['uf'], 'crt' => $alvo['crt']],
-            etapas: $plano->resolvedEtapas(),
+            etapas: $etapas,
             alvoIndice: $i + 1,
             totalAlvos: $totalAlvos,
+            precosVenda: $precosVenda,
         ))->all();
 
         $consultaId = $consulta->id;

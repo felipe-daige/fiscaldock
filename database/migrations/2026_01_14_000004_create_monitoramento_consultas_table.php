@@ -18,7 +18,8 @@ return new class extends Migration
             $table->foreignId('cliente_id')->nullable()->constrained('clientes')->onDelete('cascade');
             // Ciclo de assinatura de GRUPO registra o grupo consultado (membros ficam no lote).
             $table->foreignId('grupo_id')->nullable()->constrained('participantes_grupos')->onDelete('cascade');
-            $table->foreignId('plano_id')->constrained('monitoramento_planos');
+            // Nullable: ciclo de assinatura à la carte (sem plano). Legado mantém plano_id set.
+            $table->foreignId('plano_id')->nullable()->constrained('monitoramento_planos');
             $table->foreignId('assinatura_id')->nullable()->constrained('monitoramento_assinaturas')->onDelete('set null');
             $table->foreignId('parent_consulta_id')->nullable()->constrained('monitoramento_consultas')->onDelete('set null');
             // FK p/ consulta_lotes é adicionada via ALTER (essa tabela é criada numa migration posterior)

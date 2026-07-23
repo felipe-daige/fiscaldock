@@ -430,7 +430,7 @@
                         <label class="text-[11px] text-gray-500 block mb-1">Plano</label>
                         <select id="mon-plano" class="w-full text-[13px] py-2.5 px-3 border border-gray-300 rounded" onchange="monPlanoMudou()">
                             @foreach($planos as $pl)
-                                <option value="{{ $pl['id'] }}" data-custo="{{ $pl['custo'] }}" data-gratuito="{{ $pl['gratuito'] ? '1' : '0' }}">{{ $pl['nome'] }} — {{ \App\Support\Dinheiro::brl(($pl['custo'])) }}/CNPJ</option>
+                                <option value="{{ $pl['id'] }}" data-custo="{{ $pl['custo'] }}" data-gratuito="{{ $pl['gratuito'] ? '1' : '0' }}" @if(!empty($pl['fontes'])) data-fontes="{{ json_encode($pl['fontes']) }}" @endif>{{ $pl['nome'] }} — {{ \App\Support\Dinheiro::brl(($pl['custo'])) }}/CNPJ</option>
                             @endforeach
                         </select>
                     </div>
@@ -755,7 +755,14 @@
             var pIds = monSelecionados.filter(function (s) { return s.tipo === 'participante'; }).map(function (s) { return s.id; });
             var cIds = monSelecionados.filter(function (s) { return s.tipo !== 'participante'; }).map(function (s) { return s.id; });
             var assinatura = function (extra) {
-                extra.plano_id = parseInt(document.getElementById('mon-plano').value, 10);
+                // À la carte (data-fontes na opção) submete a seleção de fontes; senão, plano legado.
+                var opt = document.getElementById('mon-plano').selectedOptions[0];
+                var fontesAttr = opt && opt.getAttribute('data-fontes');
+                if (fontesAttr) {
+                    extra.fontes = JSON.parse(fontesAttr);
+                } else {
+                    extra.plano_id = parseInt(opt.value, 10);
+                }
                 extra.frequencia = document.getElementById('mon-frequencia').value;
                 return painelPost('{{ route('app.monitoramento.assinatura.criar') }}', 'POST', extra).then(function (j) {
                     if (j && j.aviso) { alert(j.aviso); }

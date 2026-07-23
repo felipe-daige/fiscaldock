@@ -256,15 +256,25 @@ class RetryConsultaService
 
     private function montarJob(ConsultaLote $lote, string $tipo, int $id, array $fontes, int $alvoIndice = 1, int $totalAlvos = 1): ProcessarConsultaJob
     {
+        // Lote à la carte (plano null + fontes_selecionadas) deriva do catálogo; legado usa o plano.
+        // `somenteFontes` restringe o que roda de fato — consultasIncluidas/etapas são só o envelope.
+        $catalogo = app(\App\Services\Advocacia\CatalogoFontesAvulsas::class);
+        $consultasIncluidas = $lote->plano
+            ? $lote->plano->resolvedConsultasIncluidas()
+            : $catalogo->atributosDe((array) $lote->fontes_selecionadas);
+        $etapas = $lote->plano
+            ? $lote->plano->resolvedEtapas()
+            : $catalogo->etapasDe((array) $lote->fontes_selecionadas);
+
         return new ProcessarConsultaJob(
             loteId: $lote->id,
             alvoTipo: $tipo,
             alvoId: $id,
             userId: $lote->user_id,
             tabId: (string) $lote->tab_id,
-            consultasIncluidas: $lote->plano->resolvedConsultasIncluidas(),
+            consultasIncluidas: $consultasIncluidas,
             alvo: $this->resolverAlvo($lote->id, $tipo, $id),
-            etapas: $lote->plano->resolvedEtapas(),
+            etapas: $etapas,
             alvoIndice: $alvoIndice,
             totalAlvos: $totalAlvos,
             somenteFontes: $fontes,
