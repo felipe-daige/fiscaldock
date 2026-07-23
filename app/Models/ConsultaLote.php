@@ -59,6 +59,27 @@ class ConsultaLote extends Model
     }
 
     /**
+     * Lotes que o usuário consultou SEM PAGAR — o que o cap de consultas gratuitas conta.
+     *
+     * São duas formas, e contar só uma torna o cap contornável trocando de tela:
+     *   1. lote do plano `gratuito` (escada antiga);
+     *   2. lote à la carte cujo total cobrado foi zero (seleção só de fontes grátis, hoje
+     *      `cadastro`) — daí o `ehAvulsoPorFontes` em SQL, que também exclui o clearance
+     *      (plano_id null + fontes null) de cair aqui por engano.
+     * Lote em erro não conta (não houve consulta).
+     */
+    public function scopeGratuitos($query, ?int $planoGratuitoId)
+    {
+        return $query->where('status', '!=', self::STATUS_ERRO)
+            ->where(fn ($q) => $q
+                ->when($planoGratuitoId !== null, fn ($p) => $p->orWhere('plano_id', $planoGratuitoId))
+                ->orWhere(fn ($avulso) => $avulso
+                    ->whereNull('plano_id')
+                    ->whereNotNull('fontes_selecionadas')
+                    ->where('creditos_cobrados', '<=', 0)));
+    }
+
+    /**
      * Usuário dono do lote.
      */
     public function user(): BelongsTo

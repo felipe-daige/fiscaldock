@@ -35,7 +35,6 @@ return [
         ],
     ],
 
-
     'receitaws' => [
         'url' => env('RECEITAWS_API_URL', 'https://www.receitaws.com.br/v1'),
     ],

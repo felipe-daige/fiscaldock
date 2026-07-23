@@ -292,3 +292,53 @@ it('retry manual bloqueado em lote avulso (auto-retry in-job cobre transitorio)'
     $this->actingAs($user)->postJson("/app/consulta/lote/{$lote->id}/retry")
         ->assertStatus(422);
 });
+
+it('seleção só de fontes gratuitas respeita o cap de consultas grátis (sem 1ª compra)', function () {
+    Bus::fake();
+    Http::fake();
+    config()->set('trial.limite_consultas_gratuito', 3);
+
+    [$user, $pid] = criarUserComParticipante(0.0);
+    $outros = collect(range(1, 3))->map(fn ($i) => DB::table('participantes')->insertGetId([
+        'user_id' => $user->id, 'documento' => '1913124300019'.$i, 'razao_social' => "P{$i}",
+        'uf' => 'SP', 'created_at' => now(), 'updated_at' => now(),
+    ]))->all();
+
+    // `cadastro` custa R$ 0,00, então `hasEnough($user, 0)` é sempre true: sem o cap, a consulta
+    // cadastral seria ILIMITADA e grátis pra quem nunca comprou — e esta é a tela principal.
+    $this->actingAs($user)->postJson('/app/consulta/nova/fontes/executar', [
+        'participante_ids' => array_merge([$pid], $outros), // 4 alvos > limite 3
+        'fontes' => ['cadastro'],
+        'tab_id' => 'tab-gratis',
+    ])->assertStatus(402)->assertJsonPath('cap_gratuito.limite', 3);
+
+    expect(ConsultaLote::where('user_id', $user->id)->count())->toBe(0);
+
+    // Dentro do limite passa, e o lote grátis PASSA A CONTAR no cap (creditos_cobrados = 0).
+    $this->actingAs($user)->postJson('/app/consulta/nova/fontes/executar', [
+        'participante_ids' => [$pid],
+        'fontes' => ['cadastro'],
+        'tab_id' => 'tab-gratis-2',
+    ])->assertOk();
+
+    $cap = app(\App\Services\PricingCatalogService::class)->gratuitoCapStatus($user->fresh());
+    expect($cap['usados'])->toBe(1)->and($cap['restantes'])->toBe(2);
+});
+
+it('cap grátis não se aplica a seleção paga nem a quem já comprou', function () {
+    Bus::fake();
+    Http::fake();
+    config()->set('trial.limite_consultas_gratuito', 1);
+
+    [$user, $pid] = criarUserComParticipante(10.0);
+
+    // Seleção PAGA passa pelo saldo, não pelo cap — o cap é só do caminho sem custo.
+    $this->actingAs($user)->postJson('/app/consulta/nova/fontes/executar', [
+        'participante_ids' => [$pid],
+        'fontes' => ['cnd_federal'],
+        'tab_id' => 'tab-paga',
+    ])->assertOk();
+
+    // Lote pago (creditos_cobrados > 0) não entra na conta das gratuitas.
+    expect(app(\App\Services\PricingCatalogService::class)->gratuitoCapStatus($user->fresh())['usados'])->toBe(0);
+});

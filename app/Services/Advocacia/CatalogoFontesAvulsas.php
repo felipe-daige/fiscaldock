@@ -17,18 +17,24 @@ class CatalogoFontesAvulsas
     /** @var list<string>|null Memo das chaves disponíveis (registry não muda durante a request). */
     private ?array $chavesDisponiveisMemo = null;
 
-    /** @var \Illuminate\Support\Collection<int, \App\Models\ConsultaKit>|null Memo dos kits ativos. */
-    private ?\Illuminate\Support\Collection $kitsAtivosMemo = null;
+    /** @var array<int, \Illuminate\Support\Collection<int, \App\Models\ConsultaKit>> Memo dos kits ativos por usuário. */
+    private array $kitsAtivosMemo = [];
 
     /** @var \Illuminate\Support\Collection<string, \App\Models\FontePreco>|null Memo dos overrides de preço. */
     private ?\Illuminate\Support\Collection $precosDbMemo = null;
 
     public function __construct(private FonteRegistry $registry) {}
 
-    /** Kits GLOBAIS ativos (user_id null) carregados UMA vez por instância (kitPara/kits/precificar reusam). */
-    private function kitsAtivos(): \Illuminate\Support\Collection
+    /**
+     * Kits GLOBAIS ativos VISÍVEIS pro usuário (publico='todos' + os 'selecionados' atribuídos a
+     * ele), carregados UMA vez por usuário/instância. Fonte única da segmentação — vitrine
+     * (kits) e precificação (kitPara/precificar) leem daqui, então quem não recebeu o kit
+     * segmentado nem vê o card nem leva o preço/desconto dele.
+     */
+    private function kitsAtivosPara(int $userId): \Illuminate\Support\Collection
     {
-        return $this->kitsAtivosMemo ??= \App\Models\ConsultaKit::globais()->ativos()->get();
+        return $this->kitsAtivosMemo[$userId] ??= \App\Models\ConsultaKit::globais()->ativos()
+            ->paraUsuario($userId)->get();
     }
 
     /** Overrides de preço/ativo por fonte (tabela fonte_precos), UMA query por instância. */
@@ -57,7 +63,10 @@ class CatalogoFontesAvulsas
             $fontes = [];
             foreach ((array) ($grupo['fontes'] ?? []) as $chave) {
                 $fonte = $this->registry->get($chave);
-                if (! $fonte || ! $fonte->pronta() || $this->desativadaNoAdmin($chave)) {
+                if (! $fonte
+                    || ! $fonte->pronta()
+                    || $this->registry->pausada($chave)      // pausa OPERACIONAL (origem fora do ar)
+                    || $this->desativadaNoAdmin($chave)) {   // desligamento COMERCIAL (admin)
                     continue;
                 }
                 $fontes[] = [
@@ -110,31 +119,66 @@ class CatalogoFontesAvulsas
     }
 
     /**
-     * PLANOS DO SISTEMA para a tela (vitrine oficial do contador): só kits `sistema=true`.
-     * Demais kits globais (advocacia) ficam fora da vitrine — podem existir p/ desconto/admin.
-     *
-     * @return list<array{id: int, nome: string, slug: string, descricao: ?string, desconto_percentual: float, fontes: list<string>, preco_bruto: float, preco_total: float}>
+     * Custo do PROVEDOR (InfoSimples) por fonte, em R$ — o que pagamos por consulta. Fonte única:
+     * config('consultas.fontes.{chave}'), a mesma que o gate de preço por fonte do admin usa; 0
+     * quando a fonte não tem custo externo (cadastro/derivadas). Serve pra barrar venda abaixo do
+     * custo (kit e fonte avulsa leem daqui — a regra do custo mora com quem conhece o preço).
      */
-    public function kits(): array
+    public function custoDe(string $chave): float
     {
-        $disponiveis = $this->chavesDisponiveis();
+        return (float) config("consultas.fontes.{$chave}", 0);
+    }
 
+    /** Custo total do provedor (R$) de uma seleção de fontes — piso de preço de um kit. */
+    public function custoSelecao(array $chaves): float
+    {
+        return round(array_sum(array_map(fn ($c) => $this->custoDe($c), array_unique($chaves))), 2);
+    }
+
+    /**
+     * Resumo de preço de um kit para o PAINEL ADMIN: fontes válidas, preço cheio (bruto) e preço
+     * final do kit (fixo ou com desconto%). INDEPENDE de segmentação/usuário — o admin vê o preço
+     * do kit em si, não o preço escopado a um comprador.
+     *
+     * @return array{fontes: list<string>, bruto: float, total: float}
+     */
+    public function resumoKit(\App\Models\ConsultaKit $kit): array
+    {
+        $fontes = array_values(array_intersect((array) $kit->fontes, $this->chavesDisponiveis()));
+        $bruto = $this->precoSelecao($fontes);
+
+        return ['fontes' => $fontes, 'bruto' => $bruto, 'total' => $this->totalDoKit($kit, $bruto)];
+    }
+
+    /**
+     * Kits da vitrine VISÍVEIS pro usuário: todos os globais ativos de `publico='todos'` mais os
+     * `selecionados` atribuídos a ele. `ativo` (+`publico`) decide a visibilidade — `sistema` não
+     * gate mais nada aqui (é só proteção de exclusão no admin).
+     *
+     * @return list<array{id: int, nome: string, slug: string, descricao: ?string, desconto_percentual: float, preco_fixo: ?float, fontes: list<string>, preco_bruto: float, preco_total: float}>
+     */
+    public function kits(int $userId): array
+    {
         $out = [];
-        foreach ($this->kitsAtivos()->where('sistema', true) as $kit) {
-            $fontes = array_values(array_intersect((array) $kit->fontes, $disponiveis));
-            if ($fontes === []) {
+        foreach ($this->kitsAtivosPara($userId) as $kit) {
+            // Preço do PRÓPRIO kit (resumoKit = totalDoKit), nunca via precificar/kitPara: dois kits
+            // visíveis com o mesmo conjunto de fontes fariam o kitPara devolver o de menor total, e
+            // o card do mais caro exibiria o preço do mais barato. O admin (resumoKit) já mostra o
+            // preço de cada kit — a vitrine tem de bater com ele.
+            $resumo = $this->resumoKit($kit);
+            if ($resumo['fontes'] === []) {
                 continue;
             }
-            $preco = $this->precificar($fontes);
             $out[] = [
                 'id' => $kit->id,
                 'nome' => $kit->nome,
                 'slug' => $kit->slug,
                 'descricao' => $kit->descricao,
                 'desconto_percentual' => (float) $kit->desconto_percentual,
-                'fontes' => $fontes,
-                'preco_bruto' => $preco['bruto'],
-                'preco_total' => $preco['total'],
+                'preco_fixo' => $kit->preco_fixo !== null ? (float) $kit->preco_fixo : null,
+                'fontes' => $resumo['fontes'],
+                'preco_bruto' => $resumo['bruto'],
+                'preco_total' => $resumo['total'],
             ];
         }
 
@@ -171,58 +215,133 @@ class CatalogoFontesAvulsas
     }
 
     /**
-     * Kit ativo cuja lista de fontes DISPONÍVEIS bate exatamente com a seleção (maior desconto
-     * vence em empate de conjunto). Ajustou a seleção → sem desconto: kit é preset, não bundle.
+     * Kit VISÍVEL pro usuário cuja lista de fontes DISPONÍVEIS bate exatamente com a seleção
+     * (menor preço efetivo pro comprador vence em empate de conjunto — cobre kit fixo e kit %).
+     * Ajustou a seleção → sem kit: kit é preset, não bundle.
      */
-    public function kitPara(array $chaves): ?\App\Models\ConsultaKit
+    public function kitPara(array $chaves, int $userId): ?\App\Models\ConsultaKit
     {
         $selecao = array_values(array_unique($chaves));
         sort($selecao);
 
         $disponiveis = $this->chavesDisponiveis();
+        $bruto = $this->precoSelecao($selecao);
         $match = null;
-        foreach ($this->kitsAtivos() as $kit) {
+        $melhorTotal = null;
+        foreach ($this->kitsAtivosPara($userId) as $kit) {
             $fontesKit = array_values(array_unique(array_intersect((array) $kit->fontes, $disponiveis)));
             sort($fontesKit);
-            if ($fontesKit === $selecao
-                && ($match === null || (float) $kit->desconto_percentual > (float) $match->desconto_percentual)) {
+            if ($fontesKit !== $selecao) {
+                continue;
+            }
+            $total = $this->totalDoKit($kit, $bruto);
+            if ($melhorTotal === null || $total < $melhorTotal) {
                 $match = $kit;
+                $melhorTotal = $total;
             }
         }
 
         return $match;
     }
 
+    /** Preço final (R$) que o kit cobra por alvo: fixo quando definido, senão soma bruta com desconto%. */
+    private function totalDoKit(\App\Models\ConsultaKit $kit, float $bruto): float
+    {
+        if ($kit->preco_fixo !== null) {
+            return round((float) $kit->preco_fixo, 2);
+        }
+
+        return round($bruto * max(0, 100 - (float) $kit->desconto_percentual) / 100, 2);
+    }
+
     /**
-     * Precificação autoritativa de uma seleção para UM alvo, com desconto de kit aplicado POR
-     * FONTE (o estorno de falha devolve o preço unitário efetivamente cobrado — precosVenda).
+     * Precificação autoritativa de uma seleção para UM alvo. O preço de kit é aplicado POR FONTE
+     * (o estorno de falha devolve o preço unitário efetivamente cobrado — precosVenda): kit por %
+     * escala cada fonte pelo fator; kit por preço FIXO rateia o valor entre as fontes proporcional
+     * ao unitário (resto de arredondamento cai na fonte mais cara).
      *
-     * @return array{precos: array<string, float>, bruto: float, total: float, desconto_reais: float, kit: ?array{id: int, nome: string, desconto_percentual: float}}
+     * @return array{precos: array<string, float>, bruto: float, total: float, desconto_reais: float, kit: ?array{id: int, nome: string, desconto_percentual: float, preco_fixo: ?float}}
      */
-    public function precificar(array $chaves): array
+    public function precificar(array $chaves, int $userId): array
     {
         $chaves = array_values(array_unique($chaves));
-        $kit = $this->kitPara($chaves);
-        $fator = $kit !== null ? max(0, 100 - (float) $kit->desconto_percentual) / 100 : 1.0;
+        $kit = $this->kitPara($chaves, $userId);
 
-        $precos = [];
+        $unitarios = [];
         $bruto = 0.0;
         foreach ($chaves as $chave) {
-            $unitario = $this->precoDe($chave);
-            $bruto += $unitario;
-            $precos[$chave] = round($unitario * $fator, 2);
+            $unitarios[$chave] = $this->precoDe($chave);
+            $bruto += $unitarios[$chave];
+        }
+        $bruto = round($bruto, 2);
+
+        if ($kit !== null && $kit->preco_fixo !== null) {
+            $precos = $this->ratearFixo($unitarios, $bruto, round((float) $kit->preco_fixo, 2));
+        } else {
+            $fator = $kit !== null ? max(0, 100 - (float) $kit->desconto_percentual) / 100 : 1.0;
+            $precos = [];
+            foreach ($unitarios as $chave => $unitario) {
+                $precos[$chave] = round($unitario * $fator, 2);
+            }
         }
         $total = round(array_sum($precos), 2);
 
         return [
             'precos' => $precos,
-            'bruto' => round($bruto, 2),
+            'bruto' => $bruto,
             'total' => $total,
+            // Economia do kit (positiva). Kit por preço fixo ACIMA da soma é um acréscimo válido
+            // (admin precifica como quer), então isto pode ser negativo — a UI só mostra a linha
+            // quando > 0 (JS: `desconto_por_alvo_reais > 0`; vitrine: `preco_total < preco_bruto`).
             'desconto_reais' => round($bruto - $total, 2),
             'kit' => $kit !== null
-                ? ['id' => $kit->id, 'nome' => $kit->nome, 'desconto_percentual' => (float) $kit->desconto_percentual]
+                ? [
+                    'id' => $kit->id,
+                    'nome' => $kit->nome,
+                    'desconto_percentual' => (float) $kit->desconto_percentual,
+                    'preco_fixo' => $kit->preco_fixo !== null ? (float) $kit->preco_fixo : null,
+                ]
                 : null,
         ];
+    }
+
+    /**
+     * Rateia um preço fixo de kit entre as fontes proporcional ao unitário, garantindo que a soma
+     * dos preços por fonte fecha EXATO no alvo (o resto de arredondamento vai pra fonte mais cara).
+     * Base bruta zero (só fontes grátis) → divide igual. Preserva o contrato de precosVenda usado
+     * no estorno por fonte.
+     *
+     * @param  array<string, float>  $unitarios
+     * @return array<string, float>
+     */
+    private function ratearFixo(array $unitarios, float $bruto, float $alvo): array
+    {
+        $precos = [];
+        $n = count($unitarios);
+        if ($n === 0) {
+            return $precos;
+        }
+
+        if ($bruto <= 0.0) {
+            $fatia = round($alvo / $n, 2);
+            foreach ($unitarios as $chave => $_) {
+                $precos[$chave] = $fatia;
+            }
+        } else {
+            foreach ($unitarios as $chave => $unitario) {
+                $precos[$chave] = round($unitario / $bruto * $alvo, 2);
+            }
+        }
+
+        // Ajuste do resto de arredondamento na fonte mais cara (maior unitário) — comparação ESTRITA
+        // (o 4º arg) pra casar o float exato e não pegar uma chave por coerção frouxa.
+        $resto = round($alvo - array_sum($precos), 2);
+        if ($resto !== 0.0) {
+            $maisCara = array_keys($unitarios, max($unitarios), true)[0];
+            $precos[$maisCara] = round($precos[$maisCara] + $resto, 2);
+        }
+
+        return $precos;
     }
 
     /**

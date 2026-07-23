@@ -95,9 +95,10 @@ class PricingCatalogService
     }
 
     /**
-     * Status do cap de consultas do plano Gratuito.
+     * Status do cap de consultas GRÁTIS.
      * Sem a 1ª compra confirmada, o usuário tem no máximo `trial.limite_consultas_gratuito`
-     * participantes consultados neste plano. Após a 1ª compra o cap desaparece.
+     * CNPJs consultados sem pagar. Após a 1ª compra o cap desaparece. O que conta como consulta
+     * sem pagar é decisão do próprio lote — `ConsultaLote::scopeGratuitos`.
      *
      * @return array{limite: int, usados: int, restantes: int, bloqueado: bool}
      */
@@ -109,11 +110,8 @@ class PricingCatalogService
             return ['limite' => $limite, 'usados' => 0, 'restantes' => $limite, 'bloqueado' => false];
         }
 
-        $gratuitoId = \App\Models\MonitoramentoPlano::where('codigo', 'gratuito')->value('id');
-        $usados = (int) \App\Models\ConsultaLote::query()
-            ->where('user_id', $user->id)
-            ->where('plano_id', $gratuitoId)
-            ->where('status', '!=', \App\Models\ConsultaLote::STATUS_ERRO)
+        $usados = (int) \App\Models\ConsultaLote::where('user_id', $user->id)
+            ->gratuitos(\App\Models\MonitoramentoPlano::where('codigo', 'gratuito')->value('id'))
             ->sum('total_participantes');
 
         return [

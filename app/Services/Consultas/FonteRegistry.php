@@ -61,7 +61,7 @@ class FonteRegistry
                 continue;
             }
             $fonte = $this->porAtributo[$atributo] ?? null;
-            if (! $fonte || ! $fonte->pronta()) {
+            if (! $fonte || ! $fonte->pronta() || $this->pausada($fonte->chave())) {
                 return false;
             }
         }
@@ -79,7 +79,10 @@ class FonteRegistry
         $out = [];
         foreach ($atributos as $atributo) {
             $fonte = $this->porAtributo[$atributo] ?? null;
-            if ($fonte) {
+            // Pausada na origem não roda nem cobra, mesmo que o atributo venha de um lote/plano
+            // criado antes da pausa (`get()` segue devolvendo a fonte: o follow-up de 2 etapas
+            // precisa resolver pedidos já pagos e em voo).
+            if ($fonte && ! $this->pausada($fonte->chave())) {
                 $out[$fonte->chave()] = $fonte;
             }
         }

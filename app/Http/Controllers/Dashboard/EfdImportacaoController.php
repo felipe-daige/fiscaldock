@@ -450,7 +450,6 @@ class EfdImportacaoController extends Controller
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-
         // EFD sem cliente vinculado: o CNPJ do arquivo É a empresa-sujeito. Resolvido
         // APÓS o dedup (que escopa pelo cliente_id do request) pra não mudar o contrato
         // de duplicidade. Vincula ao cliente existente ou registra um novo (cap-checked)

@@ -44,9 +44,15 @@ class AdminKitsController extends Controller
     public function edit(Request $request, ?int $id = null)
     {
         $view = 'autenticado.admin.kits-editar';
+        $kit = $id !== null ? ConsultaKit::globais()->findOrFail($id) : null;
         $data = [
-            'kit' => $id !== null ? ConsultaKit::findOrFail($id) : null,
+            // `globais()`: o admin cura a vitrine, nunca o preset PESSOAL de um usuário (user_id
+            // preenchido) — sem o escopo, um id qualquer abriria o "meu plano" de um cliente.
+            'kit' => $kit,
             'gruposFontes' => $this->catalogo->grupos(),
+            // Picker de segmentação (publico='selecionados'). Base é pequena — lista completa.
+            'usuarios' => \App\Models\User::orderBy('name')->get(['id', 'name', 'email']),
+            'usuariosSelecionados' => $kit !== null ? $kit->usuarios()->pluck('users.id')->all() : [],
         ];
 
         if ($this->isAjaxRequest($request)) {
@@ -58,7 +64,7 @@ class AdminKitsController extends Controller
 
     public function save(Request $request, ?int $id = null)
     {
-        $kit = $id !== null ? ConsultaKit::findOrFail($id) : new ConsultaKit;
+        $kit = $id !== null ? ConsultaKit::globais()->findOrFail($id) : new ConsultaKit;
 
         $dados = $request->validate([
             'nome' => ['required', 'string', 'max:120'],
@@ -66,12 +72,28 @@ class AdminKitsController extends Controller
             'fontes' => ['required', 'array', 'min:1'],
             'fontes.*' => ['string', 'in:'.implode(',', $this->catalogo->chavesDisponiveis())],
             'desconto_percentual' => ['required', 'numeric', 'min:0', 'max:100'],
+            // Preço fixo do kit inteiro (R$). Vazio = precifica pela soma das fontes com desconto%.
+            'preco_fixo' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+            'publico' => ['required', 'in:todos,selecionados'],
+            'usuarios' => ['array'],
+            'usuarios.*' => ['integer', 'exists:users,id'],
             'ordem' => ['required', 'integer', 'min:0'],
             'ativo' => ['nullable', 'boolean'],
         ]);
 
+        // publico='selecionados' sem nenhum usuário esconderia o kit de todos — provável engano.
+        if ($dados['publico'] === 'selecionados' && empty($dados['usuarios'])) {
+            return back()->withInput()->withErrors([
+                'usuarios' => 'Selecione ao menos um usuário ou marque "Todos os usuários".',
+            ]);
+        }
+
+        $precoFixo = ($dados['preco_fixo'] ?? '') === '' || $dados['preco_fixo'] === null
+            ? null
+            : round((float) $dados['preco_fixo'], 2);
+
         $anterior = $kit->exists
-            ? $kit->only(['nome', 'descricao', 'fontes', 'desconto_percentual', 'ativo', 'ordem'])
+            ? $kit->only(['nome', 'descricao', 'fontes', 'desconto_percentual', 'preco_fixo', 'publico', 'ativo', 'ordem'])
             : null;
 
         $kit->fill([
@@ -79,20 +101,40 @@ class AdminKitsController extends Controller
             'descricao' => $dados['descricao'] ?? null,
             'fontes' => array_values(array_unique($dados['fontes'])),
             'desconto_percentual' => round((float) $dados['desconto_percentual'], 2),
+            'preco_fixo' => $precoFixo,
+            'publico' => $dados['publico'],
             'ativo' => (bool) ($dados['ativo'] ?? false),
             'ordem' => (int) $dados['ordem'],
         ]);
+
+        // Piso de preço: o total do kit (fixo OU com desconto%) não pode ficar abaixo do custo do
+        // provedor das fontes — mesma regra que o gate por fonte do admin aplica (fontesAbaixoDoCusto).
+        // Pega tanto preco_fixo irrisório quanto desconto=100. Fontes de custo zero podem dar kit R$0.
+        $resumo = $this->catalogo->resumoKit($kit);
+        $custo = $this->catalogo->custoSelecao($resumo['fontes']);
+        if ($resumo['total'] < $custo) {
+            $campo = $precoFixo !== null ? 'preco_fixo' : 'desconto_percentual';
+
+            return back()->withInput()->withErrors([
+                $campo => 'Preço do kit (R$ '.number_format($resumo['total'], 2, ',', '.')
+                    .') abaixo do custo do provedor (R$ '.number_format($custo, 2, ',', '.').').',
+            ]);
+        }
+
         if (! $kit->exists) {
             $kit->slug = $this->slugDisponivel($dados['nome']);
         }
         $kit->save();
+
+        // Pivot de segmentação: 'todos' zera a lista (kit vale pra todos), 'selecionados' grava a seleção.
+        $kit->usuarios()->sync($dados['publico'] === 'selecionados' ? ($dados['usuarios'] ?? []) : []);
 
         AdminActionLog::create([
             'admin_user_id' => (int) Auth::id(),
             'target_user_id' => null,
             'acao' => $anterior === null ? 'kit_criar' : 'kit_editar',
             'motivo' => ($anterior === null ? 'Criação' : 'Edição')." do kit {$kit->slug}",
-            'detalhe' => ['kit_id' => $kit->id, 'antes' => $anterior, 'depois' => $kit->only(['nome', 'descricao', 'fontes', 'desconto_percentual', 'ativo', 'ordem'])],
+            'detalhe' => ['kit_id' => $kit->id, 'antes' => $anterior, 'depois' => $kit->only(['nome', 'descricao', 'fontes', 'desconto_percentual', 'preco_fixo', 'publico', 'ativo', 'ordem']), 'usuarios' => $dados['publico'] === 'selecionados' ? ($dados['usuarios'] ?? []) : 'todos'],
             'ip' => $request->ip(),
             'created_at' => now(),
         ]);
@@ -102,7 +144,16 @@ class AdminKitsController extends Controller
 
     public function destroy(Request $request, int $id)
     {
-        $kit = ConsultaKit::findOrFail($id);
+        $kit = ConsultaKit::globais()->findOrFail($id);
+
+        // Plano DO SISTEMA (vitrine oficial do contador) não se exclui pelo CRUD: some na hora da
+        // tela de consulta e o ConsultaKitSeeder usa firstOrCreate por slug, então só voltaria
+        // rodando seeder em produção. Para tirar da vitrine, desative (`ativo=false`) na edição.
+        if ($kit->sistema) {
+            return redirect()->route('app.admin.kits.index')
+                ->with('error', "\"{$kit->nome}\" é um plano do sistema e não pode ser excluído — desative-o na edição para tirá-lo da vitrine.");
+        }
+
         $kit->delete();
 
         AdminActionLog::create([

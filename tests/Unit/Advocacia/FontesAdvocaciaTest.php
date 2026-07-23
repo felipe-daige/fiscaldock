@@ -243,7 +243,33 @@ test('TRF unificada manda tipo+email e deriva status da conjuncao dos TRFs', fun
         ->and($and['certidao_trf']['mensagem'])->toContain('CJF');
 });
 
-test('fonte pausada na origem some da tela e da selecao (pronta=false), sem cobrar', function () {
+test('TRF: certidao EMITIDA nunca vira "Em andamento", mesmo com frase parecida', function () {
+    $fonte = new \App\Services\Consultas\Fontes\Advocacia\CertidaoTrfFonte;
+
+    // Marcar como pendente uma certidão que SAIU é caro: cobra, o CertidaoRegistro pula o registro
+    // (EM ANDAMENTO está em STATUS_NAO_EMITIDA), não nasce valida_ate/alerta e o card fica pendente
+    // pra sempre — não há polling no TRF. 'disponibiliza' é a redação de SUCESSO do CJF e por isso
+    // saiu da lista de gatilhos; qualquer marca de emissão também desqualifica.
+    $emitida = $fonte->normalizar(['data' => [[
+        'mensagem' => 'Certidão negativa disponibilizada para download.',
+        'detalhes_certidao' => [
+            'numero_certidao' => 'TRF-999',
+            'normalizado_data_hora_emissao' => '20/07/2026 10:00:00',
+        ],
+    ]]], 'sucesso');
+    expect($emitida['certidao_trf']['status'])->not->toBe('Em andamento')
+        ->and($emitida['certidao_trf']['certidao_codigo'])->toBe('TRF-999');
+
+    // Sem `tribunais` e sem QUALQUER marca de emissão, a frase de pendência ainda vale.
+    $pendente = $fonte->normalizar(['data' => [[
+        'conseguiu_emitir' => false,
+        'mensagem' => 'Solicitação aguardando processamento.',
+        'detalhes_certidao' => [],
+    ]]], 'sucesso');
+    expect($pendente['certidao_trf']['status'])->toBe('Em andamento');
+});
+
+test('fonte pausada na origem some da tela e da selecao, sem cobrar', function () {
     $catalogo = app(\App\Services\Advocacia\CatalogoFontesAvulsas::class);
 
     config()->set('consultas.fontes_pausadas', []);
@@ -257,6 +283,29 @@ test('fonte pausada na origem some da tela e da selecao (pronta=false), sem cobr
         ->and($disp)->not->toContain('protestos')
         ->and($disp)->toContain('certidao_stj') // as demais seguem disponíveis
         ->and(array_key_exists('passivo', $catalogo->grupos()))->toBeFalse(); // grupo vazio some
+});
+
+test('pausa na origem vale pra QUALQUER fonte e barra a execucao, nao so a vitrine', function () {
+    $registry = app(FonteRegistry::class);
+
+    // O gate mora no registry (não numa base de provedor), então alcança até a fonte DERIVADA
+    // `analise_fiscal`, que não herda de FonteInfoSimplesBase — era o buraco: o operador pausava
+    // e ela continuava sendo vendida e executada.
+    config()->set('consultas.fontes_pausadas', ['analise_fiscal']);
+    expect($registry->pausada('analise_fiscal'))->toBeTrue()
+        ->and(app(\App\Services\Advocacia\CatalogoFontesAvulsas::class)->chavesDisponiveis())
+        ->not->toContain('analise_fiscal');
+
+    // E a pausa barra a EXECUÇÃO, não só a tela: o job deriva as fontes de fontesDe(), então um
+    // lote/plano criado ANTES da pausa não faz a chamada paga mesmo assim.
+    config()->set('consultas.fontes_pausadas', ['protestos']);
+    $chaves = array_map(fn ($f) => $f->chave(), $registry->fontesDe(['protestos', 'certidao_stj']));
+    expect($chaves)->toContain('certidao_stj')->not->toContain('protestos')
+        ->and($registry->cobre(['protestos']))->toBeFalse();
+
+    // `get()` continua devolvendo a fonte pausada: o follow-up das 2 etapas precisa resolver
+    // pedidos JÁ PAGOS e em voo (CertidaoPedidoService::verificar).
+    expect($registry->get('protestos'))->not->toBeNull();
 });
 
 test('badge classifica "Em andamento" como pendente ambar (nao indeterminado)', function () {

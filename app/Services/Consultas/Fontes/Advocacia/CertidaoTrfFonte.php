@@ -13,6 +13,17 @@ use App\Services\Consultas\Fontes\FonteCertidaoInfoSimples;
  */
 class CertidaoTrfFonte extends FonteCertidaoInfoSimples
 {
+    /**
+     * Frases que indicam pedido ACEITO mas ainda não emitido. Note o que NÃO está aqui:
+     * "disponibiliza" é a redação de SUCESSO do CJF ("certidão disponibilizada para download") e,
+     * como gatilho, marcava certidão real como pendente — o usuário pagava, o CertidaoRegistro
+     * pulava o registro e o card ficava pendente pra sempre (não há polling no TRF).
+     */
+    private const FRASES_PENDENTE = ['andamento', 'aguarde', 'aguardando', 'em processamento'];
+
+    /** Campos de `detalhes_certidao` cuja presença prova que a certidão SAIU. */
+    private const CAMPOS_EMISSAO = ['numero_certidao', 'codigo_validacao', 'normalizado_data_hora_emissao'];
+
     public function chave(): string
     {
         return 'certidao_trf';
@@ -65,7 +76,7 @@ class CertidaoTrfFonte extends FonteCertidaoInfoSimples
         // marcamos EM_ANDAMENTO (estado pendente, não emitida) em vez de status nulo/silencioso. A
         // mensagem original cita "por e-mail" (que é a caixa de SISTEMA, não a do usuário) — trocamos
         // por uma frase honesta pro usuário; o PDF chega no e-mail de sistema e é repassado (MVP).
-        if ($status === null && $tribunais === [] && $this->ehEmAndamento($mensagem, $data, $detalhes)) {
+        if ($status === null && $tribunais === [] && $this->ehEmAndamento($data)) {
             $status = \App\Support\CertidaoBadge::STATUS_EM_ANDAMENTO;
             $mensagem = 'Certidão solicitada ao sistema unificado do CJF. A emissão pode levar '
                 .'algumas horas; assim que o CJF responder, a certidão é processada e disponibilizada.';
@@ -86,37 +97,41 @@ class CertidaoTrfFonte extends FonteCertidaoInfoSimples
 
     /**
      * True se o retorno indica pedido aceito mas ainda não emitido (entrega assíncrona por e-mail).
-     *
-     * DOIS filtros antes da frase, porque marcar como pendente uma certidão que de fato saiu é
-     * caro: o usuário paga, o `CertidaoRegistro` pula o registro (EM ANDAMENTO está em
-     * STATUS_NAO_EMITIDA), a certidão nunca ganha `valida_ate`/alerta e o card fica pendente para
-     * sempre — não há polling no TRF que resolva depois.
-     *   1. Qualquer marca de certidão EMITIDA (numero_certidao / codigo_validacao / data de
-     *      emissão / conseguiu_emitir=true) desqualifica: emitiu, não está em andamento.
-     *   2. A frase precisa dizer PENDÊNCIA. 'disponibiliza' saiu da lista: é a redação de SUCESSO
-     *      do próprio CJF ("certidão disponibilizada para download") e capturava emissão real.
+     * Emissão sempre vence a frase: marcar como pendente uma certidão que saiu é caro (cobra, não
+     * registra em `certidoes`, não gera validade/alerta e o card fica pendente pra sempre).
      */
-    private function ehEmAndamento(?string $mensagem, array $data, array $detalhes): bool
+    private function ehEmAndamento(array $data): bool
+    {
+        if ($this->emitiu($data)) {
+            return false;
+        }
+
+        $mensagem = mb_strtolower((string) ($data['mensagem'] ?? ''));
+
+        foreach (self::FRASES_PENDENTE as $frase) {
+            if ($mensagem !== '' && str_contains($mensagem, $frase)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Qualquer marca de certidão EMITIDA no retorno (flag da API ou dado do documento). */
+    private function emitiu(array $data): bool
     {
         if (($data['conseguiu_emitir'] ?? null) === true) {
-            return false;
+            return true;
         }
 
-        $emitiu = filled($detalhes['numero_certidao'] ?? null)
-            || filled($detalhes['codigo_validacao'] ?? null)
-            || filled($detalhes['normalizado_data_hora_emissao'] ?? null);
+        $detalhes = is_array($data['detalhes_certidao'] ?? null) ? $data['detalhes_certidao'] : [];
 
-        if ($emitiu) {
-            return false;
+        foreach (self::CAMPOS_EMISSAO as $campo) {
+            if (filled($detalhes[$campo] ?? null)) {
+                return true;
+            }
         }
 
-        $m = mb_strtolower((string) $mensagem);
-
-        return $m !== '' && (
-            str_contains($m, 'andamento')
-            || str_contains($m, 'aguarde')
-            || str_contains($m, 'aguardando')
-            || str_contains($m, 'em processamento')
-        );
+        return false;
     }
 }

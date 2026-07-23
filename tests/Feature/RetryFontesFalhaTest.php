@@ -735,3 +735,29 @@ it('reconsulta escopada conta só as fontes do retry no progresso (não o plano 
     expect($p['fonte_indice'])->toBe(1);
     expect($p['mensagem'])->toContain('(1 de 1)');
 });
+
+it('reconsulta leva UF e MUNICÍPIO no alvo (fontes que resolvem endpoint por cidade)', function () {
+    Bus::fake();
+    [$lote, $p, $user] = montarLoteComPlano('compliance');
+    app(SaldoService::class)->add($user, 100);
+    $p->update(['uf' => 'SP', 'municipio' => 'RIBEIRAO PRETO']);
+    gravarFontesErro($lote->id, $p->id, [
+        'cnd_municipal' => ['origem' => 'integracao', 'status' => 'retry', 'codigo' => 615, 'tentativas' => 0],
+    ]);
+
+    app(RetryConsultaService::class)->executar($lote->fresh());
+
+    // O retry NÃO roda o cadastro de novo, então o município tem que vir do cadastro do alvo:
+    // sem ele, toda fonte que resolve endpoint por cidade fica INDISPONÍVEL só na reconsulta —
+    // CndMunicipalFonte (slug UF+cidade) e CeatTrtFonte (em SP, TRT2 × TRT15).
+    Bus::assertBatched(function ($batch) {
+        $job = collect($batch->jobs)->first();
+
+        return $job->alvo['uf'] === 'SP' && $job->alvo['municipio'] === 'RIBEIRAO PRETO';
+    });
+
+    // Prova do efeito: com o alvo do retry, a CEAT de Ribeirão Preto roteia pro TRT15 (interior),
+    // não pro TRT2 (capital) nem pro fallback de "sem município".
+    $ceat = new \App\Services\Consultas\Fontes\Advocacia\CeatTrtFonte;
+    expect($ceat->slugPara(['uf' => 'SP', 'municipio' => 'RIBEIRAO PRETO']))->toBe('tribunal/trt15/ceat');
+});

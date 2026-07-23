@@ -31,12 +31,10 @@ abstract class FonteInfoSimplesBase implements Fonte
 
     public function pronta(): bool
     {
-        // Fonte pausada na origem (InfoSimples despausou o endpoint globalmente): some da tela e do
-        // registry, não roda nem cobra. Reabrir = tirar da lista config('consultas.fontes_pausadas').
-        if (in_array($this->chave(), (array) config('consultas.fontes_pausadas', []), true)) {
-            return false;
-        }
-
+        // Pausa na origem NÃO mora aqui: é decisão operacional por CHAVE, válida pra qualquer
+        // fonte (inclusive as que não usam InfoSimples) — vive em FonteRegistry::pausada().
+        // Este gate é o que de fato pertence ao provedor: liga/desliga + token.
+        //
         // Só consulta o InfoSimples quando estiver explicitamente ativado
         // (pago/validado) E houver token. Enquanto false, as fontes InfoSimples não rodam.
         return (bool) config('consultas.infosimples_ativo', false)

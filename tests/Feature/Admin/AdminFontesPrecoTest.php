@@ -50,3 +50,31 @@ it('admin salva preco e desativa fonte; nao-admin bloqueado', function () {
     $cndt = FontePreco::where('chave', 'cndt')->first();
     expect($cndt)->not->toBeNull()->and($cndt->ativo)->toBeFalse();
 });
+
+it('rejeita preco abaixo do custo do provedor (guarda de margem)', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    config()->set('consultas.fontes.cnd_federal', 0.40);
+
+    // R$ 0,00 é o caso mais grave: além do prejuízo por consulta, custo zero derruba o gate de
+    // saldo (`hasEnough($user, 0)` é sempre true) e a fonte PAGA vira ilimitada e gratuita.
+    $this->actingAs($admin)->post('/app/admin/fontes', [
+        'precos' => ['cnd_federal' => '0'],
+        'ativos' => ['cnd_federal' => '1'],
+    ])->assertSessionHasErrors('precos');
+
+    expect(FontePreco::where('chave', 'cnd_federal')->exists())->toBeFalse();
+
+    // Igual ao custo passa (margem zero é decisão comercial, prejuízo não).
+    $this->actingAs($admin)->post('/app/admin/fontes', [
+        'precos' => ['cnd_federal' => '0.40'],
+        'ativos' => ['cnd_federal' => '1'],
+    ])->assertRedirect(route('app.admin.fontes.index'));
+
+    expect((float) FontePreco::where('chave', 'cnd_federal')->first()->preco)->toBe(0.40);
+
+    // Fonte de custo ZERO (cadastro/minhareceita) segue podendo ser R$ 0,00.
+    $this->actingAs($admin)->post('/app/admin/fontes', [
+        'precos' => ['cadastro' => '0', 'cnd_federal' => '1.00'],
+        'ativos' => ['cadastro' => '1', 'cnd_federal' => '1'],
+    ])->assertRedirect(route('app.admin.fontes.index'));
+});

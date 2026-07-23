@@ -155,10 +155,10 @@
             </div>
 
             <div class="overflow-y-auto px-5 py-4 space-y-6 flex-1">
-                {{-- Planos do sistema (contador) --}}
+                {{-- Planos (kits da vitrine visíveis pro usuário: publico=todos + os atribuídos a ele) --}}
                 @if(!empty($kits))
                     <div>
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">Planos do contador</p>
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">Planos</p>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             @foreach($kits as $kit)
                                 <button type="button" class="kit-preset group text-left rounded-lg border border-gray-300 p-3 transition-colors hover:border-gray-800 hover:bg-gray-50" data-fontes='@json($kit['fontes'])'>

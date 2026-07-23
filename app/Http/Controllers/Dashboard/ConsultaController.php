@@ -1080,7 +1080,7 @@ class ConsultaController extends Controller
 
         $data = [
             'gruposFontes' => $catalogo->grupos(),
-            'kits' => $catalogo->kits(),
+            'kits' => $catalogo->kits((int) $user->id),
             'meusPlanos' => $catalogo->presets((int) $user->id),
             'prefill' => $prefill,
             'saldoReais' => $this->saldoService->getBalance($user),
@@ -1119,7 +1119,7 @@ class ConsultaController extends Controller
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $preco = $catalogo->precificar($validated['fontes']);
+        $preco = $catalogo->precificar($validated['fontes'], (int) $user->id);
         $custoTotal = round($preco['total'] * $validated['quantidade'], 2);
 
         return response()->json([
@@ -1131,6 +1131,11 @@ class ConsultaController extends Controller
             'custo_total_reais' => $custoTotal,
             'saldo_disponivel_reais' => $this->saldoService->getBalance($user),
             'saldo_suficiente' => $this->saldoService->hasEnough($user, $custoTotal),
+            // Seleção sem custo passa pelo cap de gratuitas, não pelo saldo — devolvido aqui pra
+            // a tela avisar ANTES do submit, em vez de o usuário levar 402 ao executar.
+            'cap_gratuito' => $custoTotal <= 0
+                ? $this->pricingCatalogService->gratuitoCapStatus($user, (int) $validated['quantidade'])
+                : null,
         ]);
     }
 
@@ -1218,8 +1223,23 @@ class ConsultaController extends Controller
         $totalAlvos = $alvos->count();
         // Precificação com kit (desconto aplicado por fonte): o mapa `precos` vira precosVenda —
         // o estorno devolve exatamente o unitário cobrado, com ou sem desconto.
-        $preco = $catalogo->precificar($fontesSelecionadas);
+        $preco = $catalogo->precificar($fontesSelecionadas, (int) $user->id);
         $custoTotal = round($preco['total'] * $totalAlvos, 2);
+
+        // Seleção sem custo (só fontes grátis — hoje `cadastro`) NÃO passa pelo gate de saldo:
+        // `hasEnough($user, 0)` é sempre true. Sem o cap aqui, a consulta cadastral vira ilimitada
+        // pra quem nunca comprou — e esta tela é a porta principal (/app/consulta/painel).
+        if ($custoTotal <= 0) {
+            $cap = $this->pricingCatalogService->gratuitoCapStatus($user, $totalAlvos);
+            if ($cap['bloqueado']) {
+                return response()->json([
+                    'success' => false,
+                    'error' => "Limite de {$cap['limite']} consultas gratuitas atingido"
+                        .' — adicione saldo para continuar consultando.',
+                    'cap_gratuito' => $cap,
+                ], Response::HTTP_PAYMENT_REQUIRED);
+            }
+        }
 
         if (! $this->saldoService->hasEnough($user, $custoTotal)) {
             return response()->json([
@@ -1354,15 +1374,44 @@ class ConsultaController extends Controller
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $preset = \App\Models\ConsultaKit::create([
+        // Teto por usuário: `presets()` carrega TODOS a cada render da tela de consulta, então
+        // uma lista sem limite degrada a página (e um script encheria consulta_kits).
+        $maximo = (int) config('advocacia.max_presets_por_usuario', 30);
+        if (\App\Models\ConsultaKit::doUsuario((int) $user->id)->count() >= $maximo) {
+            return response()->json([
+                'success' => false,
+                'error' => "Você já tem {$maximo} planos salvos — exclua um antes de salvar outro.",
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $atributos = [
             'user_id' => $user->id,
             'nome' => $validated['nome'],
-            'slug' => $this->slugPresetDisponivel($validated['nome'], (int) $user->id),
             'fontes' => $fontes,
             'desconto_percentual' => 0,
             'ativo' => true,
             'ordem' => 0,
-        ]);
+        ];
+
+        // `slug` é UNIQUE global e é resolvido por sondagem (SELECT exists + INSERT), então dois
+        // submits simultâneos com o mesmo nome escolhem o mesmo slug livre e o 2º INSERT viola a
+        // constraint. Re-sonda e tenta de novo em vez de estourar 500 na cara do usuário.
+        $preset = null;
+        for ($tentativa = 1; $tentativa <= 3; $tentativa++) {
+            try {
+                $preset = \App\Models\ConsultaKit::create($atributos + [
+                    'slug' => $this->slugPresetDisponivel($validated['nome'], (int) $user->id),
+                ]);
+                break;
+            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                if ($tentativa === 3) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Não foi possível salvar o plano agora. Tente de novo.',
+                    ], Response::HTTP_CONFLICT);
+                }
+            }
+        }
 
         return response()->json([
             'success' => true,

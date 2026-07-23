@@ -31,6 +31,38 @@
             </div>
 
             <label class="block">
+                <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Preço fixo (R$) — opcional</span>
+                <input type="number" name="preco_fixo" value="{{ old('preco_fixo', isset($kit->preco_fixo) ? $kit->preco_fixo : '') }}" min="0" max="999999.99" step="0.01" placeholder="deixe vazio para usar o desconto"
+                       class="mt-1 w-full border border-gray-300 rounded text-sm px-3 py-2 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                <span class="text-[11px] text-gray-400 mt-1 block">Se preenchido, o kit cobra este valor por alvo (rateado entre as fontes) e o desconto (%) é ignorado.</span>
+            </label>
+
+            <div>
+                <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Quem vê e paga por este kit</span>
+                @php($_publico = old('publico', $kit->publico ?? 'todos'))
+                <div class="mt-2 flex flex-col gap-1.5">
+                    <label class="flex items-center gap-2 text-[13px] text-gray-800 cursor-pointer">
+                        <input type="radio" name="publico" value="todos" @checked($_publico === 'todos') class="h-4 w-4 border-gray-300 text-gray-800 focus:ring-gray-500" onchange="document.getElementById('kit-usuarios').classList.add('hidden')">
+                        <span>Todos os usuários</span>
+                    </label>
+                    <label class="flex items-center gap-2 text-[13px] text-gray-800 cursor-pointer">
+                        <input type="radio" name="publico" value="selecionados" @checked($_publico === 'selecionados') class="h-4 w-4 border-gray-300 text-gray-800 focus:ring-gray-500" onchange="document.getElementById('kit-usuarios').classList.remove('hidden')">
+                        <span>Somente usuários selecionados</span>
+                    </label>
+                </div>
+                @php($_usuariosSel = array_map('intval', (array) old('usuarios', $usuariosSelecionados ?? [])))
+                <div id="kit-usuarios" class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5 {{ $_publico === 'selecionados' ? '' : 'hidden' }}">
+                    @foreach($usuarios as $u)
+                        <label class="flex items-center gap-2 rounded border border-gray-200 px-2.5 py-1.5 text-[13px] text-gray-800 cursor-pointer hover:bg-gray-50">
+                            <input type="checkbox" name="usuarios[]" value="{{ $u->id }}" @checked(in_array((int) $u->id, $_usuariosSel, true))
+                                   class="h-4 w-4 rounded border-gray-300 text-gray-800 focus:ring-gray-500">
+                            <span class="min-w-0 flex-1 truncate">{{ $u->name }}<span class="text-[11px] text-gray-400"> · {{ $u->email }}</span></span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+
+            <label class="block">
                 <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Descrição (opcional)</span>
                 <input type="text" name="descricao" value="{{ old('descricao', $kit->descricao ?? '') }}" maxlength="255"
                        class="mt-1 w-full border border-gray-300 rounded text-sm px-3 py-2 focus:ring-1 focus:ring-gray-400 focus:border-gray-400">

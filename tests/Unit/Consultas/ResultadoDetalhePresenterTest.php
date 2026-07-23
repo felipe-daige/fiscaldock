@@ -274,14 +274,27 @@ it('certidoes() classifica fontes presentes com sigla e badge', function () {
     expect($cndt['hex'])->toBe(\App\Support\CertidaoBadge::HEX_IRREGULAR);
 });
 
-it('certidoes() marca erro do provedor (default) fonte esperada ausente sem marcador', function () {
-    // cnd_federal pedido pelo plano mas sem blob (fonte externa falhou → chave ausente)
-    $certs = (new ResultadoDetalhePresenter)->certidoes(resultadoComDados([
+it('certidoes() separa "não consultada" (sem marcador) de erro do provedor (com marcador)', function () {
+    // Semântica da migração escada→à la carte (4664d05): ESPERADA e ausente SEM `_fontes_erro`
+    // não é falha — é consulta que nunca foi pedida. A tela de seleção passa "todas as consultas
+    // possíveis" como esperadas, então tratar ausência como erro pintaria de vermelho tudo que o
+    // usuário simplesmente não comprou.
+    $naoConsultada = (new ResultadoDetalhePresenter)->certidoes(resultadoComDados([
         'crf_fgts' => ['status' => 'Regular'],
     ]), ['cnd_federal', 'crf_fgts']);
 
-    $fed = collect($certs)->firstWhere('chave', 'cnd_federal');
+    $fed = collect($naoConsultada)->firstWhere('chave', 'cnd_federal');
     expect($fed)->not->toBeNull();
+    expect($fed['estado'])->toBe('neutro');
+    expect($fed['label'])->toBe('Não consultada');
+
+    // COM marcador de erro (a fonte foi pedida e o provedor falhou) segue erro de integração.
+    $comErro = (new ResultadoDetalhePresenter)->certidoes(resultadoComDados([
+        'crf_fgts' => ['status' => 'Regular'],
+        '_fontes_erro' => ['cnd_federal' => 'integracao'],
+    ]), ['cnd_federal', 'crf_fgts']);
+
+    $fed = collect($comErro)->firstWhere('chave', 'cnd_federal');
     expect($fed['estado'])->toBe('erro_integracao');
     expect($fed['label'])->toBe('Erro com o site de consultas do provedor');
     expect($fed['hex'])->toBe(\App\Support\CertidaoBadge::HEX_FALHOU);
@@ -311,16 +324,24 @@ it('certidoes() omite fonte fora do plano e ausente', function () {
     expect($chaves)->not->toContain('sintegra');
 });
 
-it('blocos() injeta placeholder "Falhou" para certidão esperada ausente', function () {
+it('blocos() injeta placeholder "Falhou" só com marcador de erro; sem ele é "não consultada"', function () {
     $presenter = new ResultadoDetalhePresenter;
     $dados = ['situacao_cadastral' => 'ATIVA', 'crf_fgts' => ['status' => 'Regular']];
 
-    $comEsperadas = $presenter->blocos(resultadoComDados($dados), ['cnd_federal', 'crf_fgts']);
-    $fed = bloco($comEsperadas, 'cnd_federal');
+    // Esperada + ausente + COM `_fontes_erro` → placeholder de falha.
+    $comErro = $presenter->blocos(
+        resultadoComDados($dados + ['_fontes_erro' => ['cnd_federal' => 'integracao']]),
+        ['cnd_federal', 'crf_fgts']
+    );
+    $fed = bloco($comErro, 'cnd_federal');
     expect($fed)->not->toBeNull();
     expect($fed['badge']['label'])->toBe('Erro com o site de consultas do provedor');
 
-    // back-compat: sem esperadas não inventa Falhou
+    // Sem marcador → card neutro "não consultada" (a fonte nunca chegou a ser pedida).
+    $semErro = $presenter->blocos(resultadoComDados($dados), ['cnd_federal', 'crf_fgts']);
+    expect(bloco($semErro, 'cnd_federal'))->not->toBeNull();
+
+    // back-compat: sem esperadas não inventa bloco nenhum
     $semEsperadas = $presenter->blocos(resultadoComDados($dados));
     expect(bloco($semEsperadas, 'cnd_federal'))->toBeNull();
 });
@@ -331,6 +352,9 @@ it('analiseLote conta fonte que falhou no bucket falha (distinto de não consult
         ['detalhe_blocos' => $presenter->blocos(resultadoComDados([
             'situacao_cadastral' => 'ATIVA',
             'crf_fgts' => ['status' => 'Regular'],
+            // O marcador é o que distingue FALHA de "nunca consultada" — sem ele o bucket certo
+            // passa a ser `neutro` (semântica da migração à la carte).
+            '_fontes_erro' => ['cnd_federal' => 'integracao'],
         ]), ['cnd_federal', 'crf_fgts'])],
     ];
 

@@ -56,6 +56,13 @@ class AdminFontesController extends Controller
         $precos = $dados['precos'] ?? [];
         $ativos = $dados['ativos'] ?? [];
 
+        if ($abaixoDoCusto = $this->fontesAbaixoDoCusto($precos, $chavesValidas)) {
+            return back()->withInput()->withErrors([
+                'precos' => 'Preço abaixo do custo do provedor em: '.implode(', ', $abaixoDoCusto)
+                    .'. Ajuste o preço ou desative a consulta.',
+            ]);
+        }
+
         $existentes = FontePreco::all()->keyBy('chave');
         $antes = $existentes->map(fn ($f) => ['preco' => (float) $f->preco, 'ativo' => (bool) $f->ativo])->all();
 
@@ -93,6 +100,35 @@ class AdminFontesController extends Controller
         ]);
 
         return redirect()->route('app.admin.fontes.index')->with('status', 'Preços das consultas salvos.');
+    }
+
+    /**
+     * Fontes cujo preço informado ficaria ABAIXO do custo do provedor, já rotuladas pro erro.
+     *
+     * Preço < custo é prejuízo por consulta; a R$ 0,00 é pior, porque o gate de saldo some
+     * (`hasEnough($user, 0)` é sempre true) e a fonte paga vira ilimitada e gratuita. Fonte de
+     * custo zero (cadastro/minhareceita) segue podendo ser R$ 0,00.
+     *
+     * @param  array<string, mixed>  $precos  preço informado por chave (string do form)
+     * @param  list<string>  $chavesValidas
+     * @return list<string>
+     */
+    private function fontesAbaixoDoCusto(array $precos, array $chavesValidas): array
+    {
+        $out = [];
+        foreach ($chavesValidas as $chave) {
+            if (! isset($precos[$chave]) || $precos[$chave] === '') {
+                continue; // sem preço informado → mantém o vigente, nada a validar
+            }
+
+            $custo = $this->catalogo->custoDe($chave); // custo do provedor: fonte única no catálogo
+            if ($custo > 0 && round((float) $precos[$chave], 2) < $custo) {
+                $out[] = (string) config("consultas.fonte_nome.{$chave}", $chave)
+                    .' (custo R$ '.number_format($custo, 2, ',', '.').')';
+            }
+        }
+
+        return $out;
     }
 
     /** Chaves de fonte do catálogo comercial (todos os grupos de advocacia.grupos). */

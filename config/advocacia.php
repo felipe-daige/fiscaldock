@@ -16,6 +16,10 @@ return [
     // conta — users.cpf, injetado no alvo pelo job. Um CPF de sistema como requerente emitiria
     // certidão em nome de terceiro, PII. Sem CPF do dono → CEAT INDISPONÍVEL, não cobra.)
 
+    // Teto de presets pessoais ("meus planos") por usuário — a tela de consulta carrega todos a
+    // cada render, então a lista precisa de fim.
+    'max_presets_por_usuario' => (int) env('ADVOCACIA_MAX_PRESETS', 30),
+
     'precos' => [
         // Consulta cadastral (situação) é GRÁTIS (minhareceita, custo zero) — plano Gratuito.
         'cadastro' => 0.00,

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\FontePreco;
 use App\Models\User;
 use App\Services\Admin\ComercialParametroService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -29,12 +30,24 @@ it('a landing /precos reflete o depósito mínimo e o preço de produto do overr
         ->assertDontSee('R$&nbsp;5,00', false);
 });
 
-it('a tela /app/consulta/nova reflete o preço de produto do override', function () {
+/**
+ * A escada de planos saiu de /app/consulta/painel na migração escada→à la carte (2026-07-22): a
+ * tela virou o seletor por FONTE, e o preço que ela mostra vem de `fonte_precos` (admin), não do
+ * `preco_compliance` do painel comercial. O teste antigo assertava "R$ 6,00"/data-custo=6 nesta
+ * mesma URL e passou a falhar por premissa morta — reescrito para o preço que a tela hoje exibe.
+ * O override comercial segue coberto na landing /precos (teste acima).
+ */
+it('a tela /app/consulta/painel reflete o preço por fonte do override do admin', function () {
+    config()->set('consultas.infosimples_ativo', true);
+    config()->set('consultas.providers.infosimples.token', 'test-token');
+
+    FontePreco::create(['chave' => 'cnd_federal', 'preco' => 2.50, 'ativo' => true]);
+
     actingAs(User::factory()->create())
         ->get('/app/consulta/painel')
         ->assertOk()
-        ->assertSee("R$\u{A0}6,00")
-        ->assertSee('data-custo="6"', false);
+        ->assertSee('data-preco="2.5"', false)
+        ->assertSee("R$\u{A0}2,50");
 });
 
 it('a tela /app/planos mostra o saldo incluso em R$ (ledger é em reais)', function () {

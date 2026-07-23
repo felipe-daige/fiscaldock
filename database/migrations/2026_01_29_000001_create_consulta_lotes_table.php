@@ -54,15 +54,33 @@ return new class extends Migration
             $table->string('descricao', 255)->nullable();
             $table->jsonb('fontes'); // chaves de fonte (mesmo vocabulário do FonteRegistry)
             $table->decimal('desconto_percentual', 5, 2)->default(0);
+            // Preço FIXO em R$ do kit inteiro (override). NULL = precifica pela soma das fontes com
+            // desconto_percentual. Preenchido = venc; rateado por fonte proporcional ao unitário no
+            // precificar (estorno de falha continua devolvendo o preço efetivo por fonte).
+            $table->decimal('preco_fixo', 8, 2)->nullable();
             // Kit DO SISTEMA (planos oficiais recriados da escada: Gratuito/Validação/Licitação/
-            // Compliance). Só estes aparecem na vitrine "Planos do contador"; demais kits globais
-            // ficam fora dela (existem p/ desconto/admin). Preset pessoal (user_id) nunca é sistema.
+            // Compliance). Hoje serve só como proteção de exclusão no CRUD — NÃO gate mais a vitrine
+            // (quem decide visibilidade é `ativo` + `publico`). Preset pessoal (user_id) nunca é sistema.
             $table->boolean('sistema')->default(false);
+            // Alcance da vitrine (só p/ kit global): 'todos' = todo usuário vê e é cobrado pelo kit;
+            // 'selecionados' = só os usuários em consulta_kit_usuarios veem e levam o preço.
+            $table->string('publico', 20)->default('todos');
             $table->boolean('ativo')->default(true);
             $table->integer('ordem')->default(0);
             $table->timestamps();
 
             $table->index(['user_id', 'ativo']);
+        });
+
+        // Segmentação de kit global por usuário (publico='selecionados'): kit só aparece e cobra
+        // pros usuários listados aqui. Vazio + publico='selecionados' = kit não aparece pra ninguém.
+        Schema::create('consulta_kit_usuarios', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('kit_id')->constrained('consulta_kits')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->timestamps();
+
+            $table->unique(['kit_id', 'user_id']);
         });
 
         // Preço de venda por FONTE (R$), editável no admin (/app/admin/fontes). Vazia = cai no
@@ -83,6 +101,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('fonte_precos');
+        Schema::dropIfExists('consulta_kit_usuarios');
         Schema::dropIfExists('consulta_kits');
         Schema::dropIfExists('consulta_lote_participantes');
         Schema::dropIfExists('consulta_lotes');
