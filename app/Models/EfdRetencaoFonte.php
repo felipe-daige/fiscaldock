@@ -57,14 +57,37 @@ class EfdRetencaoFonte extends Model
 
     // Acessores
 
+    /**
+     * Natureza da retenção (F600 IND_NAT_RET) = QUEM reteve, não qual tributo. O tributo vem
+     * do código de receita (ver tributoFormatado). Tabela 5.1.16 do Guia EFD Contribuições.
+     */
     public function getNaturezaFormatadaAttribute(): string
     {
         return match ($this->natureza) {
-            '01' => 'Previdenciária',
-            '02' => 'Imposto de Renda',
-            '03' => 'CSLL/PIS/COFINS',
-            '99' => 'Outros',
-            default => $this->natureza,
+            '01' => 'Órgão/Autarquia/Fundação Federal',
+            '02' => 'Outras Entidades da Adm. Pública Federal',
+            '03' => 'PJ de Direito Privado',
+            '04' => 'Sociedade Cooperativa',
+            '05' => 'Fabricante de Máquinas/Veículos',
+            '99' => 'Outras Retenções',
+            default => $this->natureza ?: '—',
+        };
+    }
+
+    /**
+     * Tributos retidos, derivados do código de receita (DARF). É o que a coluna "Natureza"
+     * mostrava antes (mas via `natureza`, que é outra coisa). Ex.: 5952 = CSRF + IRRF
+     * (IRRF 1,5% + CSLL 1% + COFINS 3% + PIS 0,65%). O EFD Contribuições só detalha PIS e
+     * COFINS; IRRF/CSLL ficam embutidos no valor_total.
+     */
+    public function getTributoFormatadoAttribute(): string
+    {
+        return match ($this->cod_receita) {
+            '5952' => 'IRRF/CSLL/PIS/COFINS',
+            '5979' => 'CSLL/PIS/COFINS',
+            '5960' => 'PIS/COFINS',
+            '1708' => 'IRRF',
+            default => $this->cod_receita ? 'Cód. '.$this->cod_receita : '—',
         };
     }
 

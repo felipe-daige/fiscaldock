@@ -22,9 +22,15 @@ class HandlerApuracaoM implements HandlerAgregador
     /** @var array<string, array<int, array<string, mixed>>> registros nomeados por REG */
     private array $registros = [];
 
+    /** CST-pai corrente das receitas não tributadas (M400→M410 e M800→M810 são pai→filho). */
+    private ?string $cstPisNaoTrib = null;
+
+    private ?string $cstCofinsNaoTrib = null;
+
     public function registros(): array
     {
-        return ['0110', 'M200', 'M210', 'M400', 'M410', 'M600', 'M605', 'M610'];
+        // M800/M810 = receitas não tributadas de COFINS (espelho de M400/M410 do PIS).
+        return ['0110', 'M200', 'M210', 'M400', 'M410', 'M600', 'M605', 'M610', 'M800', 'M810'];
     }
 
     public function tabela(): string
@@ -34,7 +40,20 @@ class HandlerApuracaoM implements HandlerAgregador
 
     public function mapear(SpedRecord $rec, ?Contexto $pai): ?array
     {
-        $this->registros[$rec->reg][] = $this->nomear($rec);
+        $nomeado = $this->nomear($rec);
+
+        // Receitas não tributadas: M400/M800 são o cabeçalho por CST, M410/M810 o detalhe por
+        // natureza da receita DENTRO daquele CST. Como guardo por-REG (perco o interleave),
+        // carimbo o CST-pai corrente no filho pra a tela poder mostrar CST + natureza juntos.
+        match ($rec->reg) {
+            'M400' => $this->cstPisNaoTrib = $nomeado['CST_PIS'] ?? null,
+            'M410' => $nomeado['CST_PIS'] = $this->cstPisNaoTrib,
+            'M800' => $this->cstCofinsNaoTrib = $nomeado['CST_COFINS'] ?? null,
+            'M810' => $nomeado['CST_COFINS'] = $this->cstCofinsNaoTrib,
+            default => null,
+        };
+
+        $this->registros[$rec->reg][] = $nomeado;
 
         return null; // agregador: linha só em finalizar()
     }
@@ -91,12 +110,48 @@ class HandlerApuracaoM implements HandlerAgregador
             // Detalhamentos (jsonb)
             'pis_detalhes' => ['items' => $this->registros['M210'] ?? []],
             'cofins_detalhes' => ['items' => $this->registros['M610'] ?? []],
-            'pis_nao_tributado' => ['items' => array_merge($this->registros['M400'] ?? [], $this->registros['M410'] ?? [])],
+            // Receitas não tributadas: 1 linha por natureza da receita, com PIS (M410) e
+            // COFINS (M810 casado por NAT_REC) lado a lado + o CST-pai carimbado.
+            'pis_nao_tributado' => ['items' => $this->receitasNaoTributadas()],
             'cofins_recolher_detalhe' => ['items' => $this->registros['M605'] ?? []],
 
             // Backup cru
             'dados_brutos' => $this->registros,
         ];
+    }
+
+    /**
+     * Receitas não tributadas/isentas por natureza da receita: cada M410 (PIS) casado com o
+     * M810 (COFINS) de MESMA NAT_REC, mais o CST-pai. Shape que a tela lê direto
+     * (CST_PIS/NAT_REC/VL_REC/VL_REC_COFINS). Sem M410/M810 → lista vazia.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function receitasNaoTributadas(): array
+    {
+        $cofinsPorNat = [];
+        foreach ($this->registros['M810'] ?? [] as $m) {
+            $cofinsPorNat[(string) ($m['NAT_REC'] ?? '')] = $m['VL_REC'] ?? '0';
+        }
+
+        $items = [];
+        foreach ($this->registros['M410'] ?? [] as $m) {
+            $nat = (string) ($m['NAT_REC'] ?? '');
+            $items[] = [
+                'CST_PIS' => $m['CST_PIS'] ?? null,
+                'NAT_REC' => $m['NAT_REC'] ?? null,
+                'VL_REC' => $m['VL_REC'] ?? '0',
+                'VL_REC_COFINS' => $cofinsPorNat[$nat] ?? '0',
+            ];
+            unset($cofinsPorNat[$nat]);
+        }
+
+        // COFINS não tributado cuja natureza não apareceu no PIS (raro, mas não perder).
+        foreach ($cofinsPorNat as $nat => $vlCofins) {
+            $items[] = ['CST_PIS' => null, 'NAT_REC' => $nat, 'VL_REC' => '0', 'VL_REC_COFINS' => $vlCofins];
+        }
+
+        return $items;
     }
 
     /** Nomeia os campos de um registro do bloco M / 0110 (Guia EFD Contribuições). */
@@ -126,8 +181,30 @@ class HandlerApuracaoM implements HandlerAgregador
                 'COD_INC_TRIB' => $c(2), 'IND_APRO_CRED' => $c(3),
                 'COD_TIPO_CONT' => $c(4), 'IND_REG_CUM' => $c(5),
             ],
-            // Detalhamentos (M210/M610/M400/M410/M605): layout varia por versão; preserva
-            // o registro cru pra não perder dado (consumido como jsonb, não em coluna tipada).
+            // M210/M610 — apuração da contribuição por CST (base, alíquota, valor). CST é
+            // texto (zeros à esquerda); valores viram dot-decimal pro number_format da tela.
+            'M210' => [
+                'COD_CONT' => Campos::texto($c(2)), 'VL_REC_BRT' => Campos::dec($c(3)),
+                'VL_BC_CONT' => Campos::dec($c(4)), 'VL_BC_CONT_AJUS' => Campos::dec($c(7)),
+                'ALIQ_PIS' => Campos::dec($c(8)), 'VL_CONT_APUR' => Campos::dec($c(11)),
+                'VL_CONT' => Campos::dec($c(16)),
+            ],
+            'M610' => [
+                'COD_CONT' => Campos::texto($c(2)), 'VL_REC_BRT' => Campos::dec($c(3)),
+                'VL_BC_CONT' => Campos::dec($c(4)), 'VL_BC_CONT_AJUS' => Campos::dec($c(7)),
+                'ALIQ_COFINS' => Campos::dec($c(8)), 'VL_CONT_APUR' => Campos::dec($c(11)),
+                'VL_CONT' => Campos::dec($c(16)),
+            ],
+            // M400/M800 — receita não tributada por CST (PIS / COFINS). M410/M810 — o detalhe
+            // por natureza da receita dentro do CST. CST/NAT_REC texto; valores dot-decimal.
+            'M400' => ['CST_PIS' => Campos::texto($c(2)), 'VL_TOT_REC' => Campos::dec($c(3))],
+            'M410' => ['NAT_REC' => Campos::texto($c(2)), 'VL_REC' => Campos::dec($c(3))],
+            'M800' => ['CST_COFINS' => Campos::texto($c(2)), 'VL_TOT_REC' => Campos::dec($c(3))],
+            'M810' => ['NAT_REC' => Campos::texto($c(2)), 'VL_REC' => Campos::dec($c(3))],
+            'M605' => [
+                'NUM_CAMPO' => Campos::texto($c(2)), 'COD_REC' => Campos::texto($c(3)),
+                'VL_DEBITO' => Campos::dec($c(4)),
+            ],
             default => ['_campos' => array_slice($rec->campos, 2)],
         };
     }

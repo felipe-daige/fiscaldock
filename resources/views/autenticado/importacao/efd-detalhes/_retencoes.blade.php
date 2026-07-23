@@ -47,7 +47,10 @@
  <tr class="hover:bg-gray-50 transition-colors">
  <td class="px-4 py-2.5 text-xs font-mono text-gray-900 whitespace-nowrap">{{ $ret->cnpj_formatado }}</td>
  <td class="px-4 py-2.5 text-xs text-gray-700">{{ $ret->data_retencao?->format('d/m/Y') ?? '—' }}</td>
- <td class="px-4 py-2.5 text-xs text-gray-700">{{ $ret->natureza_formatada }}</td>
+ <td class="px-4 py-2.5 text-xs text-gray-700">
+ <span class="font-medium">{{ $ret->tributo_formatado }}</span>
+ <span class="block text-[10px] text-gray-400">{{ $ret->natureza_formatada }}</span>
+ </td>
  <td class="px-4 py-2.5 text-xs text-right text-gray-700 font-mono">R$&nbsp;{{ number_format($ret->base_calculo ?? 0, 2, ',', '.') }}</td>
  <td class="px-4 py-2.5 text-xs text-right text-gray-700 font-mono">R$&nbsp;{{ number_format($ret->valor_pis ?? 0, 2, ',', '.') }}</td>
  <td class="px-4 py-2.5 text-xs text-right text-gray-700 font-mono">R$&nbsp;{{ number_format($ret->valor_cofins ?? 0, 2, ',', '.') }}</td>
@@ -67,7 +70,7 @@
  <span class="text-xs text-gray-500">{{ $ret->data_retencao?->format('d/m/Y') ?? '—' }}</span>
  </div>
  <div class="flex justify-between items-center text-xs">
- <span class="text-gray-600">{{ $ret->natureza_formatada }}</span>
+ <span class="text-gray-600">{{ $ret->tributo_formatado }} <span class="text-gray-400">· {{ $ret->natureza_formatada }}</span></span>
  <span class="font-semibold text-gray-900">R$&nbsp;{{ number_format($ret->valor_total ?? 0, 2, ',', '.') }}</span>
  </div>
  <div class="flex gap-4 text-xs">

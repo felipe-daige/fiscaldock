@@ -143,7 +143,7 @@ class PersistenciaEngine
             }
 
             // ── Passada 3: itens + consolidados, ligados via o mapa relido, em chunks ──
-            $mapa = $this->mapaLinkagem($imp);
+            $mapa = $this->mapaLinkagem($imp, $driver->origemArquivo());
             $bufItem = [];
             $bufCons = [];
 
@@ -361,17 +361,21 @@ class PersistenciaEngine
     }
 
     /**
-     * link_key → efd_nota_id. Escopo por CLIENTE (não por importação): o dedup de efd_notas
-     * é global por (cliente_id, chave, …), então uma nota escriturada extemporaneamente numa
-     * importação ANTERIOR não é reinserida — e seus C170/C190 desta importação precisam achar
-     * o id existente pra não serem descartados como órfãos (bug real: imports 48/49). Sem
-     * cliente_id (raro em EFD), cai no escopo da própria importação.
+     * link_key → efd_nota_id. Escopo por CLIENTE + ORIGEM_ARQUIVO. Cliente (não importação)
+     * porque o dedup é global e uma nota escriturada extemporaneamente numa importação
+     * ANTERIOR do mesmo tipo não é reinserida — seus filhos desta importação precisam achar
+     * o id existente (bug real: imports 48/49). E FILTRADO por origem_arquivo porque a MESMA
+     * NF-e (chave) é escriturada no EFD fiscal E no PIS/COFINS como linhas separadas (o índice
+     * único inclui origem_arquivo): sem o filtro, a linkKey `C:chave` colidia entre as duas e
+     * os C170 do contrib linkavam na nota fiscal (batendo no numero_item dela → dropados, bug
+     * real da importação 423). O filho pertence à nota da MESMA origem que o driver corrente.
      */
-    private function mapaLinkagem(EfdImportacao $imp): array
+    private function mapaLinkagem(EfdImportacao $imp, string $origemArquivo): array
     {
         $map = [];
         $rows = DB::table('efd_notas')
             ->where('user_id', $imp->user_id)
+            ->where('origem_arquivo', $origemArquivo)
             ->when(
                 $imp->cliente_id,
                 fn ($q) => $q->where('cliente_id', $imp->cliente_id),

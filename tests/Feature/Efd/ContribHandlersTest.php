@@ -119,6 +119,38 @@ it('HandlerApuracaoM devolve null sem bloco M nem 0110', function () {
     expect((new HandlerApuracaoM)->finalizar())->toBeNull();
 });
 
+it('HandlerApuracaoM nomeia M210/M610 e casa receita não tributada PIS(M410)+COFINS(M810)', function () {
+    $handler = new HandlerApuracaoM;
+    $handler->mapear(spedRecContrib('|M200|1|0|0|1|0|0|1|0|0|0|0|100,00|'), null);
+    $handler->mapear(spedRecContrib('|M600|1|0|0|1|0|0|1|0|0|0|0|500,00|'), null);
+    // M210 PIS por CST 51: base 1509119,83 · aliq 0,65 · valor 9797,32 ($p[4],[8],[11])
+    $handler->mapear(spedRecContrib('|M210|51|1537009,17|1509119,83|0|1839,82|1507280,01|0,65|0||9797,32|0|0|0|0|9797,32||'), null);
+    $handler->mapear(spedRecContrib('|M610|51|1537009,17|1509119,83|0|1839,82|1507280,01|3|0||45218,40|0|0|0|0|45218,40||'), null);
+    // Receita não tributada: M400/M410 (PIS) + M800/M810 (COFINS), mesma natureza 302
+    $handler->mapear(spedRecContrib('|M400|04|710356,89|||'), null);
+    $handler->mapear(spedRecContrib('|M410|302|710356,89|||'), null);
+    $handler->mapear(spedRecContrib('|M800|04|710356,89|||'), null);
+    $handler->mapear(spedRecContrib('|M810|302|710356,89|||'), null);
+
+    $row = $handler->finalizar();
+
+    // M210/M610 nomeados (não _campos cru) e com dot-decimal pra tela.
+    $m210 = $row['pis_detalhes']['items'][0];
+    expect($m210['COD_CONT'])->toBe('51')
+        ->and($m210['VL_BC_CONT'])->toBe('1509119.83')
+        ->and($m210['ALIQ_PIS'])->toBe('0.65')
+        ->and($m210['VL_CONT_APUR'])->toBe('9797.32');
+    expect($row['cofins_detalhes']['items'][0]['ALIQ_COFINS'])->toBe('3');
+
+    // Receita não tributada: 1 linha, PIS e COFINS casados por natureza + CST-pai.
+    expect($row['pis_nao_tributado']['items'])->toHaveCount(1);
+    $nt = $row['pis_nao_tributado']['items'][0];
+    expect($nt['CST_PIS'])->toBe('04')
+        ->and($nt['NAT_REC'])->toBe('302')
+        ->and($nt['VL_REC'])->toBe('710356.89')
+        ->and($nt['VL_REC_COFINS'])->toBe('710356.89'); // M810 casado (antes era dropado)
+});
+
 // ── 0150 contrib (reuso com origem própria) ─────────────────────────────────
 it('Handler0150 com origem contrib marca SPED_EFD_CONTRIB (CNPJ ainda em $p[5])', function () {
     $linha = '|0150|FOR7|Fornecedor Servico|01058|11222333000181||123456||rua x|10||centro|';
