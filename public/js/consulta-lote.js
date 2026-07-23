@@ -123,7 +123,7 @@
         restoreFiltros();
         renderChips();
 
-        // Pre-selecionar participantes da URL (vindos da lista de participantes)
+        // Pré-selecionar a identidade na aba correta.
         const urlParams = new URLSearchParams(window.location.search);
         const participantesParam = urlParams.get('participantes');
         if (participantesParam) {
@@ -134,6 +134,17 @@
                 }
             });
             console.log('[Consulta Lote] Pre-selecionados da URL:', state.selectedIds.size, 'participantes');
+        }
+
+        const clientesParam = urlParams.get('clientes');
+        if (clientesParam) {
+            clientesParam.split(',').forEach(function(id) {
+                const numId = parseInt(id, 10);
+                if (!isNaN(numId)) {
+                    state.selectedClienteIds.add(numId);
+                }
+            });
+            switchTab('clientes');
         }
 
         loadParticipantes();

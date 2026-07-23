@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * Persiste uma NF-e parseada: dedup por (user_id, chave_acesso), grava
  * xml_notas + xml_notas_itens, classifica entrada/saída pela perspectiva do
- * dono e liga emit/dest a participantes (find-or-create) e clientes (match).
+ * dono e liga cada lado à sua identidade exclusiva: Cliente ou Participante.
  */
 class XmlNotaImporter
 {
@@ -27,7 +27,8 @@ class XmlNotaImporter
      * @param  string|null  $ownerDoc  CNPJ do dono FORÇADO (override manual). Vazio/null = modo
      *                                 AUTO: infere o dono pelo cliente cadastrado que casa.
      * @param  string|null  $ownerLado  'emit'|'dest' = modo CRIAR CLIENTE PELO LADO: esse lado é o
-     *                                  dono e vira Cliente (criado se novo); o outro é participante.
+     *                                  dono e vira Cliente (criado se novo); o outro é Cliente
+     *                                  existente ou Participante.
      * @return 'novo'|'duplicado'|'duplicado_atualizado'|'sem_dono'
      */
     public function importar(array $parsed, ?string $ownerDoc, XmlImportacao $imp, ?string $ownerLado = null): string
@@ -209,6 +210,13 @@ class XmlNotaImporter
         if (empty($doc)) {
             return null; // dest exterior / sem documento
         }
+
+        // Uma empresa administrada é Cliente em qualquer papel da nota; nunca ganha
+        // uma segunda ficha como Participante.
+        if (Cliente::where('user_id', $userId)->where('documento', $doc)->exists()) {
+            return null;
+        }
+
         $tipoDoc = strlen($doc) === 11 ? 'CPF' : 'CNPJ';
 
         $participante = Participante::firstOrNew(['user_id' => $userId, 'documento' => $doc]);

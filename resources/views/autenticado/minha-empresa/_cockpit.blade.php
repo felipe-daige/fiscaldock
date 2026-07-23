@@ -37,13 +37,11 @@
     $acoes = [
         [
             'label' => $ultimaConsulta ? 'Atualizar Consultas' : 'Fazer 1ª consulta',
-            'href' => '/app/consulta/painel'.($participante ? '?participante='.$participante->id : ''),
+            'href' => '/app/consulta/painel?clientes='.$empresa->id,
         ],
         ['label' => 'Histórico', 'href' => '/app/minha-empresa/historico', 'icon' => 'history'],
     ];
-    if ($participante) {
-        $acoes[] = ['label' => 'Score Fiscal', 'href' => '/app/score-fiscal/participante/'.$participante->id, 'icon' => 'chart'];
-    }
+    $acoes[] = ['label' => 'Score Fiscal', 'href' => '/app/score-fiscal?cliente_id='.$empresa->id, 'icon' => 'chart'];
     if ($ultimaConsulta) {
         $acoes[] = [
             'label' => 'Baixar Dossiê',

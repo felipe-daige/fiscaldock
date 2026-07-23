@@ -259,12 +259,14 @@ class RetryConsultaService
         // Lote à la carte (plano null + fontes_selecionadas) deriva do catálogo; legado usa o plano.
         // `somenteFontes` restringe o que roda de fato — consultasIncluidas/etapas são só o envelope.
         $catalogo = app(\App\Services\Advocacia\CatalogoFontesAvulsas::class);
+        $alvo = $this->resolverAlvo($lote->id, $tipo, $id);
+        $tipoPessoa = (string) ($alvo['tipo_pessoa'] ?? 'PJ');
         $consultasIncluidas = $lote->plano
             ? $lote->plano->resolvedConsultasIncluidas()
-            : $catalogo->atributosDe((array) $lote->fontes_selecionadas);
+            : $catalogo->atributosDe((array) $lote->fontes_selecionadas, $tipoPessoa);
         $etapas = $lote->plano
             ? $lote->plano->resolvedEtapas()
-            : $catalogo->etapasDe((array) $lote->fontes_selecionadas);
+            : $catalogo->etapasDe((array) $lote->fontes_selecionadas, $tipoPessoa);
 
         return new ProcessarConsultaJob(
             loteId: $lote->id,
@@ -273,7 +275,7 @@ class RetryConsultaService
             userId: $lote->user_id,
             tabId: (string) $lote->tab_id,
             consultasIncluidas: $consultasIncluidas,
-            alvo: $this->resolverAlvo($lote->id, $tipo, $id),
+            alvo: $alvo,
             etapas: $etapas,
             alvoIndice: $alvoIndice,
             totalAlvos: $totalAlvos,
@@ -290,10 +292,12 @@ class RetryConsultaService
         // oficial (RFB) de matriz/filial vem do resultado já persistido nesse lote — sem ele,
         // CndFederalFonte::params() cairia de volta na ORDEM do CNPJ (heurística que já
         // mandou consulta pro CNPJ errado num caso real: ver lote #220).
-        $matrizFilial = ConsultaResultado::where('consulta_lote_id', $loteId)
+        $dadosResultado = ConsultaResultado::where('consulta_lote_id', $loteId)
             ->where($tipo === 'cliente' ? 'cliente_id' : 'participante_id', $id)
             ->value('resultado_dados');
-        $matrizFilial = is_array($matrizFilial) ? ($matrizFilial['matriz_filial'] ?? null) : null;
+        $dadosResultado = is_array($dadosResultado) ? $dadosResultado : [];
+        $matrizFilial = $dadosResultado['matriz_filial'] ?? null;
+        $contexto = (array) ($dadosResultado['_alvo_contexto'] ?? []);
 
         // `municipio` pela mesma razão: sem o cadastro pra injetar o município autoritativo, as
         // fontes que resolvem endpoint POR CIDADE ficariam INDISPONÍVEIS só na reconsulta —
@@ -301,13 +305,43 @@ class RetryConsultaService
         // do próprio alvo é o melhor substituto disponível aqui.
         if ($tipo === 'cliente') {
             $c = Cliente::find($id);
+            $documento = preg_replace('/[^0-9]/', '', (string) $c?->documento);
+            $tipoPessoa = strlen($documento) === 11 ? 'PF' : 'PJ';
 
-            return ['cnpj' => preg_replace('/[^0-9]/', '', (string) $c?->documento), 'uf' => $c?->uf, 'municipio' => $c?->municipio, 'crt' => null, 'matriz_filial' => $matrizFilial, 'razao_social' => $c?->razao_social];
+            return array_merge($contexto, [
+                'documento' => $documento,
+                'tipo_pessoa' => $tipoPessoa,
+                'cpf' => $tipoPessoa === 'PF' ? $documento : null,
+                'cnpj' => $tipoPessoa === 'PJ' ? $documento : null,
+                'uf' => $c?->uf,
+                'municipio' => $c?->municipio,
+                'crt' => null,
+                'matriz_filial' => $matrizFilial,
+                'razao_social' => $c?->razao_social ?? $c?->nome,
+                'nome' => $contexto['nome'] ?? $c?->razao_social ?? $c?->nome,
+                'data_inicio_atividade' => $contexto['data_inicio_atividade']
+                    ?? $c?->data_inicio_atividade?->format('Y-m-d'),
+            ]);
         }
 
         $p = Participante::find($id);
+        $documento = preg_replace('/[^0-9]/', '', (string) $p?->documento);
+        $tipoPessoa = strlen($documento) === 11 ? 'PF' : 'PJ';
 
-        return ['cnpj' => preg_replace('/[^0-9]/', '', (string) $p?->documento), 'uf' => $p?->uf, 'municipio' => $p?->municipio, 'crt' => $p?->crt, 'matriz_filial' => $matrizFilial, 'razao_social' => $p?->razao_social];
+        return array_merge($contexto, [
+            'documento' => $documento,
+            'tipo_pessoa' => $tipoPessoa,
+            'cpf' => $tipoPessoa === 'PF' ? $documento : null,
+            'cnpj' => $tipoPessoa === 'PJ' ? $documento : null,
+            'uf' => $p?->uf,
+            'municipio' => $p?->municipio,
+            'crt' => $p?->crt,
+            'matriz_filial' => $matrizFilial,
+            'razao_social' => $p?->razao_social,
+            'nome' => $contexto['nome'] ?? $p?->razao_social,
+            'data_inicio_atividade' => $contexto['data_inicio_atividade']
+                ?? $p?->data_inicio_atividade?->format('Y-m-d'),
+        ]);
     }
 
     /**

@@ -35,7 +35,12 @@ it('admin salva preco e desativa fonte; nao-admin bloqueado', function () {
     $this->actingAs($comum)->get('/app/admin/fontes')->assertStatus(403);
 
     $admin = User::factory()->create(['is_admin' => true]);
-    $this->actingAs($admin)->get('/app/admin/fontes')->assertOk()->assertSee('Preço das Consultas');
+    $this->actingAs($admin)->get('/app/admin/fontes')
+        ->assertOk()
+        ->assertSee('Catálogo de Consultas')
+        ->assertSee('Dívida Ativa — Lista de Devedores PGFN')
+        ->assertSee('Em manutenção')
+        ->assertSee('GOV.BR, A1 ou conta externa');
 
     $this->actingAs($admin)->post('/app/admin/fontes', [
         'precos' => ['cnd_federal' => '3.00', 'cndt' => ''],
@@ -77,4 +82,21 @@ it('rejeita preco abaixo do custo do provedor (guarda de margem)', function () {
         'precos' => ['cadastro' => '0', 'cnd_federal' => '1.00'],
         'ativos' => ['cadastro' => '1', 'cnd_federal' => '1'],
     ])->assertRedirect(route('app.admin.fontes.index'));
+});
+
+it('admin precifica e oculta fonte futura sem torna-la executavel', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    $this->actingAs($admin)->post('/app/admin/fontes', [
+        'precos' => ['pgfn_devedores' => '2.90'],
+        // pgfn ausente em ativos => publicada=false
+        'ativos' => ['cadastro' => '1'],
+    ])->assertRedirect(route('app.admin.fontes.index'));
+
+    $linha = FontePreco::where('chave', 'pgfn_devedores')->first();
+    expect($linha)->not->toBeNull()
+        ->and((float) $linha->preco)->toBe(2.90)
+        ->and($linha->ativo)->toBeFalse()
+        ->and(app(CatalogoFontesAvulsas::class)->chavesDisponiveis())
+        ->not->toContain('pgfn_devedores');
 });

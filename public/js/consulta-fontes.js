@@ -29,7 +29,7 @@
         if (!container || container.dataset.initialized === '1') return;
         container.dataset.initialized = '1';
 
-        // Alvos selecionados: chave "tipo:id" → {tipo, id, label}
+        // Alvos selecionados: chave "tipo:id" → dados canônicos + metadados PF transitórios.
         var alvos = {};
 
         var busca = document.getElementById('fontes-busca-alvo');
@@ -43,18 +43,128 @@
         var chipsVazio = document.getElementById('consultas-selecao-vazia');
         var chipsBox = document.getElementById('consultas-selecao-chips');
         var salvarBloco = document.getElementById('salvar-plano-bloco');
+        var avisoCompat = document.getElementById('fontes-compat-aviso');
+
+        function jsonData(el, nome, fallback) {
+            try { return JSON.parse((el && el.dataset[nome]) || JSON.stringify(fallback)); } catch (e) { return fallback; }
+        }
+
+        function tiposAlvos() {
+            return Object.keys(alvos).map(function (chave) { return alvos[chave].tipoPessoa; })
+                .filter(function (tipo, i, arr) { return tipo && arr.indexOf(tipo) === i; });
+        }
+
+        function fonteAceitaAlvos(cb) {
+            var tipos = tiposAlvos();
+            if (!tipos.length) return true;
+            var aceitos = jsonData(cb, 'tiposPessoa', ['PJ']);
+            return tipos.every(function (tipo) { return aceitos.indexOf(tipo) !== -1; });
+        }
+
+        function requisitosPfSelecionados() {
+            var requisitos = [];
+            fontesMarcadas().forEach(function (cb) {
+                jsonData(cb, 'requisitosPf', []).forEach(function (campo) {
+                    if (requisitos.indexOf(campo) === -1) requisitos.push(campo);
+                });
+            });
+            return requisitos;
+        }
+
+        function requisitosAlvoSelecionados() {
+            var requisitos = [];
+            fontesMarcadas().forEach(function (cb) {
+                jsonData(cb, 'requisitosAlvo', []).forEach(function (campo) {
+                    if (requisitos.indexOf(campo) === -1) requisitos.push(campo);
+                });
+            });
+            return requisitos;
+        }
+
+        function dadosPfCompletos() {
+            var requisitosPf = requisitosPfSelecionados();
+            var requisitosAlvo = requisitosAlvoSelecionados();
+            return Object.keys(alvos).every(function (chave) {
+                var alvo = alvos[chave];
+                var dados = alvo.dadosPf || {};
+                var comunsCompletos = requisitosAlvo.every(function (campo) {
+                    return String(dados[campo] || '').trim() !== '';
+                });
+                if (!comunsCompletos || alvo.tipoPessoa !== 'PF') return comunsCompletos;
+
+                return requisitosPf.every(function (campo) {
+                    return String((alvo.dadosPf && alvo.dadosPf[campo]) || '').trim() !== '';
+                });
+            });
+        }
+
+        function atualizarCompatibilidade() {
+            var removidas = 0;
+            container.querySelectorAll('label.fonte-opt').forEach(function (label) {
+                var cb = label.querySelector('input[name="fontes[]"]');
+                if (!cb) return;
+
+                var tipos = tiposAlvos();
+                var operacionais = jsonData(label, 'tiposPessoa', []);
+                var planejados = jsonData(label, 'tiposPlanejados', operacionais);
+                var aceitaOperacional = tipos.length === 0 || tipos.every(function (tipo) {
+                    return operacionais.indexOf(tipo) !== -1;
+                });
+                var aceitaPlanejado = tipos.length === 0 || tipos.every(function (tipo) {
+                    return planejados.indexOf(tipo) !== -1;
+                });
+                var selecionavelBase = label.dataset.selecionavelBase === '1';
+
+                // Capacidade planejada continua visível como manutenção; capacidade fora do
+                // escopo da fonte some. O backend ainda valida chavesDisponiveis(), portanto
+                // nunca confiamos só neste disabled.
+                label.classList.toggle('hidden', !aceitaPlanejado);
+                cb.disabled = !selecionavelBase || !aceitaOperacional;
+                if (cb.disabled && cb.checked) {
+                    cb.checked = false;
+                    removidas++;
+                }
+            });
+
+            container.querySelectorAll('details.grupo-consultas').forEach(function (grupo) {
+                var visiveis = Array.prototype.slice.call(grupo.querySelectorAll('label.fonte-opt'))
+                    .some(function (label) { return !label.classList.contains('hidden'); });
+                grupo.classList.toggle('hidden', !visiveis);
+            });
+
+            container.querySelectorAll('.kit-preset, .preset-pessoal').forEach(function (card) {
+                var chaves = jsonData(card, 'fontes', []);
+                var compativel = chaves.length > 0 && chaves.every(function (chave) {
+                    var cb = container.querySelector('input[name="fontes[]"][value="' + chave + '"]');
+                    return cb && fonteAceitaAlvos(cb);
+                });
+                card.classList.toggle('hidden', tiposAlvos().length > 0 && !compativel);
+            });
+
+            if (avisoCompat) {
+                if (removidas > 0) {
+                    avisoCompat.textContent = removidas + ' consulta(s) incompatível(is) com o tipo do alvo foram desmarcadas.';
+                    avisoCompat.classList.remove('hidden');
+                } else if (tiposAlvos().length > 1) {
+                    avisoCompat.textContent = 'Lote misto PF/PJ: somente fontes compatíveis com os dois tipos ficam disponíveis. Separe os alvos se precisar de fontes específicas.';
+                    avisoCompat.classList.remove('hidden');
+                } else {
+                    avisoCompat.classList.add('hidden');
+                }
+            }
+        }
 
         function fontesMarcadas() {
             return Array.prototype.slice.call(container.querySelectorAll('input[name="fontes[]"]:checked'));
         }
 
         function todasCheckboxes() {
-            return Array.prototype.slice.call(container.querySelectorAll('input[name="fontes[]"]'));
+            return Array.prototype.slice.call(container.querySelectorAll('label.fonte-opt:not(.hidden) input[name="fontes[]"]:not(:disabled)'));
         }
 
         function checkboxesDoGrupo(chave) {
             var det = container.querySelector('details.grupo-consultas[data-grupo="' + chave + '"]');
-            return det ? Array.prototype.slice.call(det.querySelectorAll('input[name="fontes[]"]')) : [];
+            return det ? Array.prototype.slice.call(det.querySelectorAll('label.fonte-opt:not(.hidden) input[name="fontes[]"]:not(:disabled)')) : [];
         }
 
         function abrirModal() { if (modal) { modal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; } }
@@ -81,6 +191,14 @@
                 var nome = document.createElement('span');
                 nome.textContent = cb.dataset.nome || cb.value;
                 chip.appendChild(nome);
+                var documentos = document.createElement('span');
+                var documentosLabel = cb.dataset.documentosLabel || 'CNPJ';
+                documentos.className = 'inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white';
+                documentos.style.backgroundColor = documentosLabel === 'CPF e CNPJ'
+                    ? '#0f766e'
+                    : (documentosLabel === 'CPF' ? '#6b7280' : '#374151');
+                documentos.textContent = documentosLabel;
+                chip.appendChild(documentos);
                 var preco = document.createElement('span');
                 preco.className = 'text-gray-400';
                 preco.textContent = brl(cb.dataset.preco);
@@ -155,9 +273,11 @@
 
         // Sincroniza TODAS as superfícies após qualquer mudança de seleção de consultas.
         function sincronizar() {
+            atualizarCompatibilidade();
             renderConsultasSelecionadas();
             atualizarModalFooter();
             pintarCards();
+            renderSelecionados();
             atualizarResumo();
         }
 
@@ -172,7 +292,8 @@
             document.getElementById('fontes-resumo-unitario').textContent = brl(precoUnitario);
             document.getElementById('fontes-resumo-total').textContent = brl(total);
 
-            btnExecutar.disabled = !(fontes.length > 0 && nAlvos > 0);
+            var pfCompleto = dadosPfCompletos();
+            btnExecutar.disabled = !(fontes.length > 0 && nAlvos > 0 && pfCompleto);
             avisoSaldo.classList.add('hidden');
             document.getElementById('fontes-resumo-desconto-linha').classList.add('hidden');
 
@@ -181,9 +302,13 @@
                 fetch('/app/consulta/nova/fontes/calcular-custo', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf(), 'X-Requested-With': 'XMLHttpRequest' },
-                    body: JSON.stringify({ fontes: fontes.map(function (cb) { return cb.value; }), quantidade: nAlvos })
+                    body: JSON.stringify({
+                        fontes: fontes.map(function (cb) { return cb.value; }),
+                        quantidade: nAlvos,
+                        tipos_pessoa: tiposAlvos()
+                    })
                 }).then(function (r) { return r.json(); }).then(function (data) {
-                    if (!data.success) return;
+                    if (!data.success) { btnExecutar.disabled = true; return; }
                     document.getElementById('fontes-resumo-unitario').textContent = brl(data.preco_bruto_por_alvo_reais || data.preco_por_alvo_reais);
                     document.getElementById('fontes-resumo-total').textContent = brl(data.custo_total_reais);
 
@@ -207,21 +332,111 @@
 
         function renderSelecionados() {
             selecionados.innerHTML = '';
+            var requisitos = requisitosPfSelecionados();
+            var requisitosAlvo = requisitosAlvoSelecionados();
             Object.keys(alvos).forEach(function (chave) {
                 var a = alvos[chave];
-                var chip = document.createElement('span');
-                chip.className = 'inline-flex items-center gap-1 rounded border border-gray-300 bg-gray-50 px-2 py-1 text-[11px] text-gray-700';
-                chip.appendChild(document.createTextNode(a.label));
+                a.dadosPf = a.dadosPf || {};
+                var chip = document.createElement('div');
+                chip.className = 'rounded border border-gray-300 bg-gray-50 px-3 py-2 text-[11px] text-gray-700';
+
+                var cabecalho = document.createElement('div');
+                cabecalho.className = 'flex items-center gap-2';
+                var titulo = document.createElement('strong');
+                titulo.className = 'min-w-0 flex-1 truncate text-[12px] text-gray-800';
+                titulo.textContent = a.label;
+                cabecalho.appendChild(titulo);
+                var tipo = document.createElement('span');
+                tipo.className = 'rounded px-1.5 py-0.5 text-[9px] font-bold text-white';
+                tipo.style.backgroundColor = a.tipoPessoa === 'PF' ? '#6b7280' : '#374151';
+                tipo.textContent = a.tipoPessoa;
+                cabecalho.appendChild(tipo);
                 var x = document.createElement('button');
                 x.type = 'button';
                 x.className = 'text-gray-400 hover:text-gray-700 font-bold';
                 x.textContent = '×';
                 x.addEventListener('click', function () {
                     delete alvos[chave];
-                    renderSelecionados();
-                    atualizarResumo();
+                    sincronizar();
                 });
-                chip.appendChild(x);
+                cabecalho.appendChild(x);
+                chip.appendChild(cabecalho);
+
+                if (requisitosAlvo.indexOf('ano') !== -1) {
+                    var anoWrap = document.createElement('label');
+                    anoWrap.className = 'mt-2 block';
+                    var anoRotulo = document.createElement('span');
+                    anoRotulo.className = 'mb-0.5 block text-[10px] text-gray-500';
+                    anoRotulo.textContent = 'Ano consultado *';
+                    var anoInput = document.createElement('input');
+                    anoInput.type = 'number';
+                    anoInput.min = '1900';
+                    anoInput.max = String(new Date().getFullYear());
+                    anoInput.value = a.dadosPf.ano || '';
+                    anoInput.className = 'w-full rounded border border-gray-300 bg-white px-2 py-1.5 text-[12px] focus:border-gray-500 focus:outline-none sm:max-w-[180px]';
+                    anoInput.addEventListener('input', function () {
+                        a.dadosPf.ano = anoInput.value;
+                        atualizarResumo();
+                    });
+                    anoWrap.appendChild(anoRotulo);
+                    anoWrap.appendChild(anoInput);
+                    chip.appendChild(anoWrap);
+                }
+
+                if (a.tipoPessoa === 'PF') {
+                    var campos = [
+                        { chave: 'nome', label: 'Nome completo', tipo: 'text', largura: 'sm:col-span-2' },
+                        { chave: 'birthdate', label: 'Nascimento', tipo: 'date' },
+                        { chave: 'uf_nascimento', label: 'UF nascimento', tipo: 'text', max: 2 },
+                        { chave: 'nome_mae', label: 'Nome da mãe', tipo: 'text', largura: 'sm:col-span-2' },
+                        { chave: 'nome_pai', label: 'Nome do pai', tipo: 'text', largura: 'sm:col-span-2' },
+                        { chave: 'titulo_eleitoral', label: 'Título eleitoral', tipo: 'text' }
+                    ];
+                    var grid = document.createElement('div');
+                    grid.className = 'mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2';
+                    campos.forEach(function (campo) {
+                        var wrap = document.createElement('label');
+                        wrap.className = campo.largura || '';
+                        var rotulo = document.createElement('span');
+                        rotulo.className = 'mb-0.5 block text-[10px] text-gray-500';
+                        rotulo.textContent = campo.label + (requisitos.indexOf(campo.chave) !== -1 ? ' *' : '');
+                        var input = document.createElement('input');
+                        input.type = campo.tipo;
+                        if (campo.tipo === 'text') input.maxLength = campo.max || 200;
+                        input.value = a.dadosPf[campo.chave] || '';
+                        input.className = 'w-full rounded border border-gray-300 bg-white px-2 py-1.5 text-[12px] focus:border-gray-500 focus:outline-none';
+                        input.addEventListener('input', function () {
+                            a.dadosPf[campo.chave] = input.value;
+                            atualizarResumo();
+                        });
+                        wrap.appendChild(rotulo);
+                        wrap.appendChild(input);
+                        grid.appendChild(wrap);
+                    });
+                    chip.appendChild(grid);
+
+                    var faltantes = requisitos.filter(function (campo) {
+                        return String(a.dadosPf[campo] || '').trim() === '';
+                    });
+                    if (faltantes.length) {
+                        var alerta = document.createElement('p');
+                        alerta.className = 'mt-2 text-[10px]';
+                        alerta.style.color = '#b45309';
+                        alerta.textContent = 'Complete os campos com * para executar as fontes escolhidas.';
+                        chip.appendChild(alerta);
+                    }
+                }
+
+                var faltantesAlvo = requisitosAlvo.filter(function (campo) {
+                    return String(a.dadosPf[campo] || '').trim() === '';
+                });
+                if (faltantesAlvo.length) {
+                    var alertaAlvo = document.createElement('p');
+                    alertaAlvo.className = 'mt-2 text-[10px]';
+                    alertaAlvo.style.color = '#b45309';
+                    alertaAlvo.textContent = 'Complete os campos com * para executar as fontes escolhidas.';
+                    chip.appendChild(alertaAlvo);
+                }
                 selecionados.appendChild(chip);
             });
         }
@@ -234,6 +449,7 @@
         var filtroUf = document.getElementById('filtro-uf');
         var filtroSituacao = document.getElementById('filtro-situacao');
         var filtroRelacao = document.getElementById('filtro-relacao');
+        var filtroTipoPessoa = document.getElementById('filtro-tipo-pessoa');
 
         // ---- Badges/indicadores da linha rica (mesma semântica/hex do layout antigo de consultas) ----
         function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
@@ -248,9 +464,10 @@
             var label = nome + ' · ' + doc;
             var chave = tipo + ':' + item.id;
             var jaSel = !!alvos[chave];
-            // CPF ainda não é consultável no back (à la carte CNPJ-only até a task CPF landar).
-            var ehCpf = item.is_cpf === true;
-            var selecionavel = item.pode_consultar !== false && !ehCpf;
+            var documento = String(item.documento || '').replace(/\D/g, '');
+            var ehCpf = item.is_cpf === true || item.tipo_documento === 'PF'
+                || item.tipo_pessoa === 'PF' || documento.length === 11;
+            var selecionavel = item.pode_consultar !== false && (documento.length === 11 || documento.length === 14);
 
             // Badges inline: risco (alerta), relação fiscal, CPF/CNPJ.
             var badges = '';
@@ -293,12 +510,23 @@
             var check = row.querySelector('.alvo-check');
             function toggleAlvo() {
                 if (!selecionavel) return;
-                if (alvos[chave]) { delete alvos[chave]; } else { alvos[chave] = { tipo: tipo, id: item.id, label: label }; }
+                if (alvos[chave]) {
+                    delete alvos[chave];
+                } else {
+                    alvos[chave] = {
+                        tipo: tipo,
+                        id: item.id,
+                        label: label,
+                        documento: documento,
+                        tipoPessoa: ehCpf ? 'PF' : 'PJ',
+                        nome: nome,
+                        dadosPf: ehCpf ? { nome: nome } : {}
+                    };
+                }
                 var on = !!alvos[chave];
                 check.checked = on;
                 row.className = 'px-3 py-2.5' + (on ? ' bg-gray-50' : '');
-                renderSelecionados();
-                atualizarResumo();
+                sincronizar();
                 if (!modoTodos) { resultados.classList.add('hidden'); busca.value = ''; }
             }
             // Clique no nome/corpo alterna a seleção; a própria checkbox também.
@@ -330,7 +558,7 @@
                     if (data && data.success && data.tem_consulta && data.html) {
                         detalhe.innerHTML = '<div class="mt-2 rounded border border-gray-200 overflow-hidden">' + data.html + '</div>';
                     } else {
-                        detalhe.innerHTML = '<p class="mt-2 text-[12px] text-gray-400 rounded border border-dashed border-gray-200 px-3 py-3 text-center">Sem consulta anterior — nenhuma certidão emitida ainda para este CNPJ.</p>';
+                        detalhe.innerHTML = '<p class="mt-2 text-[12px] text-gray-400 rounded border border-dashed border-gray-200 px-3 py-3 text-center">Sem consulta anterior — nenhuma certidão emitida ainda para este documento.</p>';
                     }
                 }).catch(function () {
                     detalhe.innerHTML = '<p class="mt-2 text-[12px] text-red-500">Falha ao carregar certidões.</p>';
@@ -346,7 +574,8 @@
             var uf = filtroUf ? filtroUf.value : '';
             var situacao = filtroSituacao ? filtroSituacao.value : '';
             var relacao = filtroRelacao ? filtroRelacao.value : '';
-            var temFiltro = uf || situacao || relacao;
+            var tipoPessoa = filtroTipoPessoa ? filtroTipoPessoa.value : '';
+            var temFiltro = uf || situacao || relacao || tipoPessoa;
 
             if (!modoTodos && !temFiltro && (!termo || termo.length < 2)) {
                 resultados.classList.add('hidden');
@@ -355,7 +584,8 @@
 
             var headers = { 'X-Requested-With': 'XMLHttpRequest' };
             var perPage = modoTodos ? 100 : 10;
-            var qs = 'tipo_documento=PJ&per_page=' + perPage;
+            var qs = 'permitir_cpf=1&per_page=' + perPage;
+            if (tipoPessoa) qs += '&tipo_documento=' + encodeURIComponent(tipoPessoa);
             if (termo) qs += '&busca=' + encodeURIComponent(termo);
             if (uf) qs += '&uf=' + encodeURIComponent(uf);
             if (situacao) qs += '&situacao_cadastral=' + encodeURIComponent(situacao);
@@ -369,6 +599,7 @@
             ];
             if (!relacao) {
                 var cqs = termo ? 'busca=' + encodeURIComponent(termo) : '';
+                if (tipoPessoa) cqs += (cqs ? '&' : '') + 'tipo_pessoa=' + encodeURIComponent(tipoPessoa);
                 pedidos.push(fetch('/app/consulta/nova/clientes?' + cqs, { headers: headers })
                     .then(function (r) { return r.json(); }).catch(function () { return { data: [] }; }));
             } else {
@@ -381,7 +612,8 @@
             Promise.all(pedidos).then(function (res) {
                 var participantes = (res[0].data || []).filter(function (p) { return p.pode_consultar !== false; });
                 var clientes = (res[1].data || res[1].clientes || []).filter(function (c) {
-                    return String(c.documento || '').replace(/\D/g, '').length === 14;
+                    var tamanho = String(c.documento || '').replace(/\D/g, '').length;
+                    return tamanho === 11 || tamanho === 14;
                 });
 
                 resultados.innerHTML = '';
@@ -391,7 +623,7 @@
                 if (!resultados.children.length) {
                     var vazio = document.createElement('p');
                     vazio.className = 'px-3 py-4 text-[13px] text-gray-500 text-center';
-                    vazio.textContent = termo ? ('Nenhum CNPJ encontrado para "' + termo + '".') : 'Nenhum CNPJ encontrado com esses filtros.';
+                    vazio.textContent = termo ? ('Nenhum CPF/CNPJ encontrado para "' + termo + '".') : 'Nenhum CPF/CNPJ encontrado com esses filtros.';
                     resultados.appendChild(vazio);
                 }
                 resultados.classList.remove('hidden');
@@ -416,7 +648,7 @@
             }
         });
 
-        [filtroUf, filtroSituacao, filtroRelacao].forEach(function (sel) {
+        [filtroUf, filtroSituacao, filtroRelacao, filtroTipoPessoa].forEach(function (sel) {
             if (sel) sel.addEventListener('change', function () { carregarAlvos(busca.value.trim()); });
         });
 
@@ -448,7 +680,7 @@
         // Aplica uma lista de chaves à seleção (substitui a atual). Usado por kits e presets.
         function aplicarSelecao(chaves) {
             container.querySelectorAll('input[name="fontes[]"]').forEach(function (cb) {
-                cb.checked = chaves.indexOf(cb.value) !== -1;
+                cb.checked = chaves.indexOf(cb.value) !== -1 && fonteAceitaAlvos(cb);
             });
             sincronizar();
         }
@@ -578,7 +810,7 @@
             aplicar.className = 'preset-aplicar text-left min-w-0 flex-1';
             aplicar.innerHTML = '<span class="block text-[13px] font-bold text-gray-900"></span>'
                 + '<span class="mt-1 flex items-baseline gap-1.5"><strong class="text-sm text-gray-900 font-mono">' + brl(preset.preco_total) + '</strong>'
-                + '<span class="text-[11px] text-gray-400">/CNPJ</span>'
+                + '<span class="text-[11px] text-gray-400">/alvo</span>'
                 + '<span class="ml-auto text-[10px] font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">' + preset.fontes.length + ' consultas</span></span>';
             aplicar.querySelector('span').textContent = preset.nome;
             aplicar.addEventListener('click', function () { aplicarSelecao(preset.fontes); });
@@ -606,8 +838,10 @@
                     if (cb) cb.checked = true;
                 });
                 if (prefill.alvo && prefill.alvo.id) {
+                    prefill.alvo.dadosPf = prefill.alvo.tipoPessoa === 'PF'
+                        ? { nome: prefill.alvo.nome || '' }
+                        : {};
                     alvos[prefill.alvo.tipo + ':' + prefill.alvo.id] = prefill.alvo;
-                    renderSelecionados();
                 }
             } catch (e) { /* prefill inválido: tela abre limpa */ }
         }
@@ -616,11 +850,23 @@
             var fontes = fontesMarcadas().map(function (cb) { return cb.value; });
             var participanteIds = [];
             var clienteIds = [];
+            var dadosPf = [];
             Object.keys(alvos).forEach(function (chave) {
                 var a = alvos[chave];
                 (a.tipo === 'participante' ? participanteIds : clienteIds).push(a.id);
+                dadosPf.push({
+                    tipo: a.tipo,
+                    id: a.id,
+                    nome: (a.dadosPf && a.dadosPf.nome) || a.nome || '',
+                    birthdate: (a.dadosPf && a.dadosPf.birthdate) || '',
+                    nome_mae: (a.dadosPf && a.dadosPf.nome_mae) || '',
+                    nome_pai: (a.dadosPf && a.dadosPf.nome_pai) || '',
+                    uf_nascimento: (a.dadosPf && a.dadosPf.uf_nascimento) || '',
+                    titulo_eleitoral: (a.dadosPf && a.dadosPf.titulo_eleitoral) || '',
+                    ano: (a.dadosPf && a.dadosPf.ano) || ''
+                });
             });
-            if (!fontes.length || (!participanteIds.length && !clienteIds.length)) return;
+            if (!fontes.length || (!participanteIds.length && !clienteIds.length) || !dadosPfCompletos()) return;
 
             btnExecutar.disabled = true;
             btnExecutar.textContent = 'Iniciando…';
@@ -634,6 +880,7 @@
                     participante_ids: participanteIds,
                     cliente_ids: clienteIds,
                     fontes: fontes,
+                    dados_pf: dadosPf,
                     tab_id: tabId
                 })
             }).then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })

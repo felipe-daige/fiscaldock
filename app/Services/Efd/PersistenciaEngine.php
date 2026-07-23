@@ -10,7 +10,7 @@ use App\Support\Efd\ModeloDocumento;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Persiste os registros de uma importação nas tabelas reais (schema NÃO muda) — L3,
+ * Persiste os registros de uma importação nas tabelas reais — L3,
  * 100% compartilhado entre EFD ICMS/IPI e PIS/COFINS. §L3/§10.5.
  *
  * STREAMING em 3 passadas sobre o arquivo (o parser é um generator; re-caminhar custa
@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
  * acumulado estourava o worker). Cada passada mantém só buffers de tamanho CHUNK + mapas
  * limitados (participantes/link), nunca os ~50k itens/consolidados de uma vez:
  *  1) participantes + catálogo (limitados: contrapartes/SKUs) + agregadores + COD_PART→doc;
- *  2) notas (com participante_id carimbado no insert) + retenções, em chunks;
+ *  2) notas (com Participante ou Cliente contraparte carimbado no insert) + retenções, em chunks;
  *  3) itens + consolidados, ligados via o mapa de linkagem relido, em chunks.
  * Tudo numa transação por importação, idempotente (reimportar não duplica).
  */
@@ -85,8 +85,8 @@ class PersistenciaEngine
             $progresso?->bloco('participantes', $participantes === [] ? 'skip' : 'concluido', 100);
             $participantes = [];
 
-            // Participantes já no banco: NFS-e carimba participante_id no insert das notas.
-            $codpartToId = $this->resolverCodpartId($imp, $codpartToDoc);
+            // Cada COD_PART aponta para exatamente uma identidade: Participante OU Cliente.
+            $codpartToAlvo = $this->resolverCodpartAlvo($imp, $codpartToDoc);
 
             $progresso?->bloco('catalogo', 'inicio');
             $stats['catalogo'] = $this->gravarCatalogo($imp, $catalogo);
@@ -115,7 +115,7 @@ class PersistenciaEngine
                     $presenca[ModeloDocumento::bucketAgrupado((string) ($row['modelo'] ?? ''))] = true;
                     $bufNota[] = $row;
                     if (count($bufNota) >= self::CHUNK) {
-                        $stats['notas'] += $this->inserirNotas($imp, $driver, $bufNota, $codpartToId);
+                        $stats['notas'] += $this->inserirNotas($imp, $driver, $bufNota, $codpartToAlvo);
                         $bufNota = [];
                     }
                 } elseif ($tabela === 'efd_retencoes_fonte') {
@@ -131,7 +131,7 @@ class PersistenciaEngine
                 }
             }
             if ($bufNota !== []) {
-                $stats['notas'] += $this->inserirNotas($imp, $driver, $bufNota, $codpartToId);
+                $stats['notas'] += $this->inserirNotas($imp, $driver, $bufNota, $codpartToAlvo);
             }
             if ($bufRet !== []) {
                 $stats['retencoes'] += $this->inserirRetencoes($imp, $bufRet);
@@ -238,6 +238,11 @@ class PersistenciaEngine
             'importacao_efd_id' => $imp->id,
         ]);
 
+        // Contraparte que TAMBÉM é cliente do usuário continua virando Participante: ela está no
+        // 0150 porque negociou, e é o `participante_id` que liga a nota a todas as superfícies
+        // analíticas (ficha, dossiê, BI, Score — todas filtram por essa coluna). O vínculo de
+        // cliente é ADITIVO, carimbado junto em `contraparte_cliente_id` por resolverCodpartAlvo.
+        // Filtrar aqui deixava a nota sem participante e o movimento sumia das telas.
         $total = 0;
         foreach (array_chunk($prep, self::CHUNK) as $chunk) {
             // Dedup por (user_id, documento): CNPJ já cadastrado de outra importação
@@ -249,21 +254,19 @@ class PersistenciaEngine
     }
 
     /**
-     * COD_PART → participante_id, no escopo do usuário. Alimentado após o insert dos 0150.
+     * COD_PART → Participante OU Cliente, no escopo do usuário.
      *
      * @param  array<string, string>  $codpartToDoc
-     * @return array<string, int>
+     * @return array<string, array{participante_id:?int,contraparte_cliente_id:?int}>
      */
-    private function resolverCodpartId(EfdImportacao $imp, array $codpartToDoc): array
+    private function resolverCodpartAlvo(EfdImportacao $imp, array $codpartToDoc): array
     {
         if ($codpartToDoc === []) {
             return [];
         }
 
-        // Normaliza os DOIS lados por dígitos: o COD_PART do arquivo já vem em dígitos, mas
-        // participantes.documento pode estar formatado (import via XML) — sem isso o stamp
-        // inline falha e a nota nasce sem participante_id.
-        $docToId = [];
+        // Normaliza os dois lados por dígitos: documentos legados podem estar formatados.
+        $participantePorDoc = [];
         foreach (
             DB::table('participantes')
                 ->where('user_id', $imp->user_id)
@@ -273,15 +276,38 @@ class PersistenciaEngine
         ) {
             $d = preg_replace('/\D/', '', (string) $p->documento);
             if ($d !== '') {
-                $docToId[$d] = (int) $p->id;
+                $participantePorDoc[$d] = (int) $p->id;
+            }
+        }
+
+        $clientePorDoc = [];
+        foreach (
+            DB::table('clientes')
+                ->where('user_id', $imp->user_id)
+                ->whereNotNull('documento')
+                ->select('id', 'documento')
+                ->get() as $cliente
+        ) {
+            $d = preg_replace('/\D/', '', (string) $cliente->documento);
+            if ($d !== '') {
+                $clientePorDoc[$d] = (int) $cliente->id;
             }
         }
 
         $map = [];
         foreach ($codpartToDoc as $codPart => $doc) {
             $d = preg_replace('/\D/', '', (string) $doc);
-            if ($d !== '' && isset($docToId[$d])) {
-                $map[$codPart] = $docToId[$d];
+            if ($d === '') {
+                continue;
+            }
+            // Os dois vínculos convivem: `participante_id` é o que as superfícies analíticas leem
+            // (nunca fica null quando há contraparte identificada), e `contraparte_cliente_id`
+            // marca, de forma aditiva, que essa contraparte também é cliente do usuário.
+            if (isset($participantePorDoc[$d]) || isset($clientePorDoc[$d])) {
+                $map[$codPart] = [
+                    'participante_id' => $participantePorDoc[$d] ?? null,
+                    'contraparte_cliente_id' => $clientePorDoc[$d] ?? null,
+                ];
             }
         }
 
@@ -327,9 +353,9 @@ class PersistenciaEngine
      * (uma vez por chunk, não por linha).
      *
      * @param  array<int, array<string, mixed>>  $rows
-     * @param  array<string, int>  $codpartToId
+     * @param  array<string, array{participante_id:?int,contraparte_cliente_id:?int}>  $codpartToAlvo
      */
-    private function inserirNotas(EfdImportacao $imp, SpedDriver $driver, array $rows, array $codpartToId): int
+    private function inserirNotas(EfdImportacao $imp, SpedDriver $driver, array $rows, array $codpartToAlvo): int
     {
         if ($rows === []) {
             return 0;
@@ -338,14 +364,16 @@ class PersistenciaEngine
         $agora = now();
         $prep = [];
         foreach ($rows as $row) {
-            // participante_id resolvido no insert: o índice único de NFS-e (sem chave)
-            // inclui participante_id — deixá-lo null colidiria 2 emitentes de mesmo número.
+            // Resolve a contraparte sem confundir o Cliente dono da escrituração.
             $codPart = $row['metadados']['cod_part'] ?? null;
-            $participanteId = ($codPart !== null && isset($codpartToId[$codPart])) ? $codpartToId[$codPart] : null;
+            $alvo = ($codPart !== null && isset($codpartToAlvo[$codPart]))
+                ? $codpartToAlvo[$codPart]
+                : ['participante_id' => null, 'contraparte_cliente_id' => null];
 
             $row['metadados'] = isset($row['metadados']) ? json_encode($row['metadados']) : null;
             $prep[] = $row + [
-                'participante_id' => $participanteId,
+                'participante_id' => $alvo['participante_id'],
+                'contraparte_cliente_id' => $alvo['contraparte_cliente_id'],
                 'user_id' => $imp->user_id,
                 'cliente_id' => $imp->cliente_id,
                 'importacao_id' => $imp->id,

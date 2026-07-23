@@ -14,8 +14,8 @@ use App\Services\Consultas\FonteRegistry;
  */
 class CatalogoFontesAvulsas
 {
-    /** @var list<string>|null Memo das chaves disponíveis (registry não muda durante a request). */
-    private ?array $chavesDisponiveisMemo = null;
+    /** @var array<string, list<string>> Memo por tipo (TODOS|PF|PJ). */
+    private array $chavesDisponiveisMemo = [];
 
     /** @var array<int, \Illuminate\Support\Collection<int, \App\Models\ConsultaKit>> Memo dos kits ativos por usuário. */
     private array $kitsAtivosMemo = [];
@@ -52,27 +52,66 @@ class CatalogoFontesAvulsas
     }
 
     /**
-     * Fontes selecionáveis (registradas + prontas), agrupadas para a tela.
+     * Catálogo público agrupado. Fontes futuras/pausadas continuam visíveis como manutenção, mas
+     * `selecionavel=false` impede checkbox, preço no carrinho e execução. `fonte_precos.ativo`
+     * controla a PUBLICAÇÃO: false oculta tanto fonte pronta quanto futura.
      *
-     * @return array<string, array{label: string, fontes: list<array{chave: string, nome: string, preco: float}>}>
+     * @return array<string, array{label: string, fontes: list<array<string, mixed>>}>
      */
-    public function grupos(): array
+    public function grupos(?string $tipoPessoa = null): array
     {
+        $tipoPessoa = $tipoPessoa !== null ? strtoupper($tipoPessoa) : null;
         $out = [];
         foreach ((array) config('advocacia.grupos', []) as $chaveGrupo => $grupo) {
             $fontes = [];
             foreach ((array) ($grupo['fontes'] ?? []) as $chave) {
                 $fonte = $this->registry->get($chave);
-                if (! $fonte
-                    || ! $fonte->pronta()
-                    || $this->registry->pausada($chave)      // pausa OPERACIONAL (origem fora do ar)
-                    || $this->desativadaNoAdmin($chave)) {   // desligamento COMERCIAL (admin)
+                if ($this->desativadaNoAdmin($chave)) {
                     continue;
                 }
+
+                $meta = (array) config("advocacia.catalogo_fontes.{$chave}", []);
+                $tiposOperacionais = $fonte
+                    ? array_values(array_unique(array_map('strtoupper', $fonte->aceitaPessoa())))
+                    : [];
+                $tiposPlanejados = array_values(array_unique(array_map(
+                    'strtoupper',
+                    (array) ($meta['tipos_pessoa'] ?? $tiposOperacionais),
+                )));
+
+                // Filtro da vitrine: uma fonte em construção continua aparecendo para o tipo que
+                // ela planeja atender. O checkbox só será habilitado quando o tipo também estiver
+                // no contrato OPERACIONAL da classe.
+                if ($tipoPessoa !== null && ! in_array($tipoPessoa, $tiposPlanejados, true)) {
+                    continue;
+                }
+
+                $pausada = $this->registry->pausada($chave);
+                $pronta = $fonte !== null && $fonte->pronta() && ! $pausada;
+                $selecionavel = $pronta
+                    && ($tipoPessoa === null || in_array($tipoPessoa, $tiposOperacionais, true));
+                $tiposEmManutencao = array_values(array_diff($tiposPlanejados, $tiposOperacionais));
+                $labelDocumentos = (string) ($meta['documentos_label']
+                    ?? $this->rotuloDocumentosAceitos(
+                        $tiposOperacionais !== [] ? $tiposOperacionais : $tiposPlanejados
+                    ));
+
                 $fontes[] = [
                     'chave' => $chave,
                     'nome' => (string) config("consultas.fonte_nome.{$chave}", $chave),
                     'preco' => $this->precoDe($chave),
+                    'tipos_pessoa' => $tiposOperacionais,
+                    'tipos_pessoa_planejados' => $tiposPlanejados,
+                    'tipos_pessoa_em_manutencao' => $tiposEmManutencao,
+                    'documentos_aceitos_label' => $labelDocumentos,
+                    'selecionavel' => $selecionavel,
+                    'em_manutencao' => ! $pronta,
+                    'pausada' => $pausada,
+                    'requer_autenticacao' => (bool) ($meta['requer_autenticacao'] ?? false),
+                    'motivo_manutencao' => $this->motivoManutencao($chave, $fonte, $meta, $pausada),
+                    'descricao' => $meta['descricao'] ?? null,
+                    'requisitos_pf' => (array) config("advocacia.requisitos_pf.{$chave}", []),
+                    'requisitos_alvo' => (array) config("advocacia.requisitos_alvo.{$chave}", []),
                 ];
             }
             if ($fontes !== []) {
@@ -81,6 +120,61 @@ class CatalogoFontesAvulsas
         }
 
         return $out;
+    }
+
+    /**
+     * Rótulo público do contrato efetivamente liberado no FiscalDock. Não representa apenas a
+     * capacidade teórica do endpoint: uma fonte só vira "CPF e CNPJ" depois de ambos os fluxos
+     * estarem implementados e validados.
+     *
+     * @param  list<string>  $tiposPessoa
+     */
+    public function rotuloDocumentosAceitos(array $tiposPessoa): string
+    {
+        $tipos = array_values(array_unique(array_map('strtoupper', $tiposPessoa)));
+        $aceitaPf = in_array('PF', $tipos, true);
+        $aceitaPj = in_array('PJ', $tipos, true);
+
+        if ($aceitaPf && $aceitaPj) {
+            return 'CPF e CNPJ';
+        }
+
+        if ($aceitaPf) {
+            return 'CPF';
+        }
+
+        return $aceitaPj ? 'CNPJ' : 'Identificador próprio';
+    }
+
+    /**
+     * Mensagem curta da vitrine. O detalhe técnico fica no admin; o usuário só precisa saber por
+     * que ainda não consegue marcar a consulta.
+     *
+     * @param  array<string, mixed>  $meta
+     */
+    private function motivoManutencao(
+        string $chave,
+        ?\App\Services\Consultas\Contracts\Fonte $fonte,
+        array $meta,
+        bool $pausada,
+    ): ?string {
+        if ($fonte !== null && $fonte->pronta() && ! $pausada) {
+            return null;
+        }
+
+        if (filled($meta['motivo_manutencao'] ?? null)) {
+            return (string) $meta['motivo_manutencao'];
+        }
+
+        if ($pausada) {
+            return 'A fonte oficial está temporariamente indisponível.';
+        }
+
+        if ((bool) ($meta['requer_autenticacao'] ?? false)) {
+            return 'Integração com GOV.BR, certificado digital ou conta externa prevista para a próxima etapa.';
+        }
+
+        return 'Integração em desenvolvimento.';
     }
 
     /**
@@ -97,19 +191,85 @@ class CatalogoFontesAvulsas
         return (float) (config("advocacia.precos.{$chave}") ?? config('advocacia.preco_fonte_default', 1.00));
     }
 
-    /** Chaves válidas para seleção avulsa (registradas + prontas). Memoizado por instância. */
-    public function chavesDisponiveis(): array
+    /**
+     * A fonte aceita este tipo de pessoa como alvo? (PF | PJ). Fonte inexistente/não registrada
+     * => false. Autoridade única do gate PF x PJ, lida pela validação do lote avulso e pela tela.
+     */
+    public function aceitaTipo(string $chave, string $tipoPessoa): bool
     {
-        if ($this->chavesDisponiveisMemo !== null) {
-            return $this->chavesDisponiveisMemo;
+        return $this->registry->aceitaTipo($chave, $tipoPessoa);
+    }
+
+    /**
+     * Fontes da seleção que NÃO aceitam o tipo do alvo — o lote avulso rejeita (422) quando
+     * não-vazio. Ex.: alvo CPF com `sintegra`/`cadastro` (PJ-only) na seleção.
+     *
+     * @return list<string>
+     */
+    public function fontesIncompativeis(array $chaves, string $tipoPessoa): array
+    {
+        return array_values(array_filter(
+            array_unique($chaves),
+            fn (string $c) => ! $this->aceitaTipo($c, $tipoPessoa),
+        ));
+    }
+
+    /**
+     * Campos complementares exigidos pelas fontes PF selecionadas. Esses dados viajam apenas no
+     * payload do lote; não criam uma segunda entidade de pessoa física.
+     *
+     * @return list<string>
+     */
+    public function requisitosPf(array $chaves): array
+    {
+        $requisitos = [];
+        foreach (array_unique($chaves) as $chave) {
+            $requisitos = array_merge(
+                $requisitos,
+                (array) config("advocacia.requisitos_pf.{$chave}", []),
+            );
+        }
+
+        return array_values(array_unique($requisitos));
+    }
+
+    /**
+     * Campos complementares exigidos de qualquer alvo pelas fontes selecionadas. Ex.: `ano` na
+     * consulta de autuações do IBAMA, independentemente de o documento ser CPF ou CNPJ.
+     *
+     * @return list<string>
+     */
+    public function requisitosAlvo(array $chaves): array
+    {
+        $requisitos = [];
+        foreach (array_unique($chaves) as $chave) {
+            $requisitos = array_merge(
+                $requisitos,
+                (array) config("advocacia.requisitos_alvo.{$chave}", []),
+            );
+        }
+
+        return array_values(array_unique($requisitos));
+    }
+
+    /** Chaves válidas para seleção avulsa (registradas + prontas). Memoizado por instância. */
+    public function chavesDisponiveis(?string $tipoPessoa = null): array
+    {
+        $memo = $tipoPessoa !== null ? strtoupper($tipoPessoa) : 'TODOS';
+        if (isset($this->chavesDisponiveisMemo[$memo])) {
+            return $this->chavesDisponiveisMemo[$memo];
         }
 
         $chaves = [];
-        foreach ($this->grupos() as $grupo) {
-            $chaves = array_merge($chaves, array_column($grupo['fontes'], 'chave'));
+        foreach ($this->grupos($tipoPessoa) as $grupo) {
+            foreach ($grupo['fontes'] as $fonte) {
+                if ($fonte['selecionavel']) {
+                    $chaves[] = $fonte['chave'];
+                }
+            }
         }
 
-        return $this->chavesDisponiveisMemo = $chaves;
+        return $this->chavesDisponiveisMemo[$memo] = $chaves;
     }
 
     /** Preço total (R$) de uma seleção para UM alvo, SEM desconto de kit (soma bruta). */
@@ -350,9 +510,14 @@ class CatalogoFontesAvulsas
      * entra SEMPRE: fornece UF/município autoritativos às fontes UF-dependentes e mantém a
      * ficha cadastral fresca.
      */
-    public function atributosDe(array $chaves): array
+    public function atributosDe(array $chaves, string $tipoPessoa = 'PJ'): array
     {
-        $atributos = $this->registry->get('cadastro')?->fornece() ?? [];
+        // Cadastral grátis auto-injetado SÓ em alvo PJ (minhareceita é CNPJ-only + grátis). Em alvo
+        // PF não há cadastral grátis: o `cadastro_pf` (receita-federal/cpf) é pago e só roda se o
+        // usuário o selecionar — não forçamos uma chamada paga como fazemos com o cadastro PJ.
+        $atributos = strtoupper($tipoPessoa) === 'PJ'
+            ? ($this->registry->get('cadastro')?->fornece() ?? [])
+            : [];
         foreach (array_unique($chaves) as $chave) {
             $fonte = $this->registry->get($chave);
             if ($fonte) {
@@ -366,18 +531,23 @@ class CatalogoFontesAvulsas
     /**
      * Etapas do progresso (contrato SSE) derivadas DINAMICAMENTE dos grupos de etapa das
      * fontes selecionadas — substitui o seeder fixo por plano só neste fluxo. Sempre inclui
-     * `inicializacao` e `cadastrais` (o cadastro sempre roda).
+     * `inicializacao`; `cadastrais` é fixa em PJ e só entra em PF quando uma fonte desse grupo
+     * foi selecionada.
      */
-    public function etapasDe(array $chaves): array
+    public function etapasDe(array $chaves, string $tipoPessoa = 'PJ'): array
     {
         // Ordem canônica dos grupos (espelha a progressão dos planos do seeder; os grupos
         // do vertical advocacia — judiciais/integridade/passivo — só existem em lote avulso).
         $ordem = ['cadastrais' => 'Dados cadastrais', 'certidoes_federais' => 'Certidões Federais',
             'certidoes_estaduais' => 'Certidões Estaduais/Municipais', 'sancoes' => 'Sanções',
             'certidoes_judiciais' => 'Certidões Judiciais', 'integridade' => 'Integridade e Sanções',
-            'passivo' => 'Passivo e Insolvência'];
+            'ambiental' => 'Regularidade Ambiental', 'passivo' => 'Passivo e Insolvência',
+            'patrimonio' => 'Patrimônio e Ativos', 'imoveis' => 'Imóveis e Propriedade Rural',
+            'processual' => 'Consultas Processuais'];
 
-        $presentes = ['cadastrais' => true];
+        // PJ: cadastral sempre roda => etapa 'cadastrais' fixa. PF: só aparece se uma fonte
+        // selecionada mapear pra 'cadastrais' (ex.: cadastro_pf), já que nada é auto-injetado.
+        $presentes = strtoupper($tipoPessoa) === 'PJ' ? ['cadastrais' => true] : [];
         foreach (array_unique($chaves) as $chave) {
             $grupo = (string) config("consultas.fonte_etapa.{$chave}", 'cadastrais');
             $presentes[$grupo] = true;

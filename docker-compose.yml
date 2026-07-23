@@ -250,7 +250,10 @@ services:
       # sumia do catálogo e derrubava testes que a esperavam disponível).
       CONSULTAS_INFOSIMPLES_ATIVO: "false"
       CONSULTAS_INFOSIMPLES_TESTE_CNPJS: ""
+      CONSULTAS_INFOSIMPLES_TESTE_CPFS: ""
       CONSULTAS_FONTES_PAUSADAS: ""
+      ADVOCACIA_ANTECEDENTES_PF_HABILITADO: "false"
+      ADVOCACIA_MANDADO_PRISAO_HABILITADO: "false"
     profiles:
       - test
 

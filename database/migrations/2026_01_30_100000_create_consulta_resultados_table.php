@@ -47,7 +47,7 @@ return new class extends Migration
             $table->foreignId('cliente_id')->nullable()->constrained('clientes')->nullOnDelete();
             $table->foreignId('participante_id')->nullable()->constrained('participantes')->nullOnDelete();
             $table->string('alvo_tipo', 20);        // participante | cliente
-            $table->string('alvo_documento', 14);   // CNPJ só dígitos
+            $table->string('alvo_documento', 14);   // CPF ou CNPJ, só dígitos
             $table->string('tipo', 40);             // chave da fonte (certidao_stj, cnd_federal, ...)
             $table->string('orgao', 160)->nullable();
             $table->string('status', 40);           // Negativa | Positiva | PEND (vocabulário das fontes)
@@ -59,7 +59,7 @@ return new class extends Migration
             $table->foreignId('consulta_lote_id')->nullable()->constrained('consulta_lotes')->nullOnDelete();
             $table->timestamps();
 
-            // alvo_tipo na chave: o mesmo CNPJ pode ser participante E cliente do usuário.
+            // alvo_tipo na chave: o mesmo CPF/CNPJ pode ser participante E cliente do usuário.
             $table->unique(['user_id', 'alvo_tipo', 'alvo_documento', 'tipo']);
             $table->index(['user_id', 'valida_ate']);
         });

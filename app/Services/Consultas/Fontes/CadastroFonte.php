@@ -55,6 +55,12 @@ class CadastroFonte implements Fonte
         return 0;
     }
 
+    /** minhareceita.org é CNPJ-only; o análogo PF é a fonte paga `cadastro_pf` (receita-federal/cpf). */
+    public function aceitaPessoa(): array
+    {
+        return ['PJ'];
+    }
+
     public function pronta(): bool
     {
         return true; // minhareceita: grátis e sempre disponível

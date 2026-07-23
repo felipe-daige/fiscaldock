@@ -62,6 +62,11 @@ it('acumula estorno no cache quando uma fonte paga falha (fatal)', function () {
     // cnd_federal custoCreditos (config, default 2) deve ir pro estorno
     expect((int) Cache::get("consulta_estorno:{$loteId}:participante:{$participanteId}"))
         ->toBe((int) config('consultas.fontes.cnd_federal', 2));
+
+    // Alvo cuja ÚNICA fonte falha termina 'erro', não 'pendente'. gravarContextoAlvo semeia o
+    // placeholder 'pendente' antes do loop; statusResolvido garante que a falha o sobrescreva
+    // (senão o alvo ficava preso em 'pendente' num lote já CONCLUIDO).
+    expect(ConsultaResultado::where('consulta_lote_id', $loteId)->first()->status)->toBe('erro');
 });
 
 it('CND Estadual em UF sem cobertura: não chama o provedor e marca INDISPONIVEL', function () {

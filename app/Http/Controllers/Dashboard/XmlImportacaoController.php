@@ -1374,48 +1374,53 @@ class XmlImportacaoController extends Controller
                         $clienteId = $cliente->id;
                     }
 
-                    // Criar participante (upsert para evitar conflitos)
-                    $participante = Participante::updateOrCreate(
-                        [
-                            'user_id' => $userId,
-                            'documento' => $cnpj,
-                        ],
-                        [
-                            'razao_social' => $cnpjData['razao_social'] ?? null,
-                            'nome_fantasia' => $cnpjData['nome_fantasia'] ?? null,
-                            'uf' => $cnpjData['uf'] ?? null,
-                            'cep' => $cnpjData['cep'] ?? null,
-                            'municipio' => $cnpjData['municipio'] ?? null,
-                            'telefone' => $cnpjData['telefone'] ?? null,
-                            'crt' => $cnpjData['crt'] ?? null,
-                            'cliente_id' => $clienteId,
-                            'importacao_xml_id' => $importacaoId,
-                            'origem_tipo' => $importacao->tipo_documento ?? 'NFE',
-                        ]
-                    );
+                    $clienteExistente = $clienteId
+                        ? Cliente::find($clienteId)
+                        : Cliente::where('user_id', $userId)->where('documento', $cnpj)->first();
+                    $participante = null;
 
-                    // Atualizar xml_notas: preencher FKs onde CNPJ coincide e participante_id e NULL
+                    if ($clienteExistente) {
+                        $clienteId = $clienteExistente->id;
+                    } else {
+                        $participante = Participante::updateOrCreate(
+                            [
+                                'user_id' => $userId,
+                                'documento' => $cnpj,
+                            ],
+                            [
+                                'razao_social' => $cnpjData['razao_social'] ?? null,
+                                'nome_fantasia' => $cnpjData['nome_fantasia'] ?? null,
+                                'uf' => $cnpjData['uf'] ?? null,
+                                'cep' => $cnpjData['cep'] ?? null,
+                                'municipio' => $cnpjData['municipio'] ?? null,
+                                'telefone' => $cnpjData['telefone'] ?? null,
+                                'crt' => $cnpjData['crt'] ?? null,
+                                'importacao_xml_id' => $importacaoId,
+                                'origem_tipo' => $importacao->tipo_documento ?? 'NFE',
+                            ]
+                        );
+                    }
+
+                    // Cada lado aponta para um único tipo de identidade.
                     XmlNota::where('importacao_xml_id', $importacaoId)
                         ->where('user_id', $userId)
                         ->where('emit_documento', $cnpj)
-                        ->whereNull('emit_participante_id')
                         ->update([
-                            'emit_participante_id' => $participante->id,
+                            'emit_participante_id' => $participante?->id,
                             'emit_cliente_id' => $clienteId,
                         ]);
 
                     XmlNota::where('importacao_xml_id', $importacaoId)
                         ->where('user_id', $userId)
                         ->where('dest_documento', $cnpj)
-                        ->whereNull('dest_participante_id')
                         ->update([
-                            'dest_participante_id' => $participante->id,
+                            'dest_participante_id' => $participante?->id,
                             'dest_cliente_id' => $clienteId,
                         ]);
 
                     $criados[] = [
                         'cnpj' => $cnpj,
-                        'participante_id' => $participante->id,
+                        'participante_id' => $participante?->id,
                         'cliente_id' => $clienteId,
                         'salvo_como' => $cnpjData['salvar_como'],
                     ];
@@ -1432,7 +1437,7 @@ class XmlImportacaoController extends Controller
             }
 
             // Atualizar participante_ids na importacao
-            $novosIds = array_column($criados, 'participante_id');
+            $novosIds = array_values(array_filter(array_column($criados, 'participante_id')));
             $idsAtuais = $importacao->participante_ids ?? [];
             $idsMerged = array_values(array_unique(array_merge($idsAtuais, $novosIds)));
             $importacao->update(['participante_ids' => $idsMerged]);

@@ -19,12 +19,12 @@ class InfoSimplesProvider implements ConsultaProvider
 
     public function consultar(string $slug, array $params): RespostaProvider
     {
-        // GUARD DE TESTE: bloqueia (sem chamar/cobrar) CNPJ fora da allowlist quando ela
-        // está configurada. Protege o saldo durante os testes pagos.
-        if (! $this->cnpjPermitido($params)) {
+        // GUARD DE TESTE: bloqueia (sem chamar/cobrar) CPF/CNPJ fora da allowlist do respectivo
+        // tipo quando ela está configurada. Protege o saldo durante os testes pagos.
+        if (! $this->documentoPermitido($params)) {
             return new RespostaProvider(
                 'nao_aplicavel', 0, [],
-                'Modo teste InfoSimples: CNPJ fora da allowlist — não consultado (sem cobrança).'
+                'Modo teste InfoSimples: documento fora da allowlist — não consultado (sem cobrança).'
             );
         }
 
@@ -44,9 +44,12 @@ class InfoSimplesProvider implements ConsultaProvider
         $status = $this->classificador->classificar($code);
 
         // Log de gasto: billable/price por chamada (acompanhar consumo real do saldo).
+        $cpf = preg_replace('/[^0-9]/', '', (string) ($params['cpf'] ?? ''));
         Log::info('InfoSimples consulta', [
             'slug' => $slug,
             'cnpj' => preg_replace('/[^0-9]/', '', (string) ($params['cnpj'] ?? '')),
+            // CPF é dado pessoal: o log operacional guarda só o final, suficiente para correlação.
+            'cpf_final' => $cpf !== '' ? substr($cpf, -4) : null,
             'code' => $code,
             'status' => $status,
             'billable' => $body['header']['billable'] ?? null,
@@ -65,16 +68,26 @@ class InfoSimplesProvider implements ConsultaProvider
         return new RespostaProvider($status, $code, is_array($body) ? $body : [], $mensagem ?: null);
     }
 
-    /** Allowlist de teste: vazia = todos liberados; só governa consultas com `cnpj` nos params. */
-    private function cnpjPermitido(array $params): bool
+    /** Allowlists de teste: vazias liberam o respectivo tipo de documento. */
+    private function documentoPermitido(array $params): bool
     {
-        $allowlist = (array) config('consultas.infosimples_teste_cnpjs', []);
-        if (empty($allowlist)) {
+        if (array_key_exists('cpf', $params)) {
+            $allowlistCpf = (array) config('consultas.infosimples_teste_cpfs', []);
+            if ($allowlistCpf === []) {
+                return true;
+            }
+
+            $cpf = preg_replace('/[^0-9]/', '', (string) $params['cpf']);
+
+            return in_array($cpf, $allowlistCpf, true);
+        }
+
+        if (! array_key_exists('cnpj', $params)) {
             return true;
         }
 
-        // Consultas sem `cnpj` (ex: clearance por chave_acesso) não são governadas pela allowlist.
-        if (! array_key_exists('cnpj', $params)) {
+        $allowlist = (array) config('consultas.infosimples_teste_cnpjs', []);
+        if ($allowlist === []) {
             return true;
         }
 

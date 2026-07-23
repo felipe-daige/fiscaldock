@@ -56,9 +56,52 @@ abstract class FonteInfoSimplesBase implements Fonte
         return 'Cobertura indisponível para este alvo no provedor.';
     }
 
+    /**
+     * Default: só PJ. Fontes PF-nativas (cadastro_pf, antecedentes, TSE...) sobrescrevem para
+     * ['PF']; as judiciais/sanções que a origem indexa por CPF e CNPJ retornam ['PF','PJ'].
+     */
+    public function aceitaPessoa(): array
+    {
+        return ['PJ'];
+    }
+
+    /**
+     * Para fontes historicamente PJ que já possuem branch CPF implementado, mas cuja liberação
+     * depende de smoke real autorizado. A metadata da vitrine pode anunciar "CPF em manutenção";
+     * a execução só passa a aceitar PF quando a chave entra em `advocacia.fontes_pf_liberadas`.
+     *
+     * @return list<string>
+     */
+    protected function tiposPessoaComPfValidado(): array
+    {
+        return in_array($this->chave(), (array) config('advocacia.fontes_pf_liberadas', []), true)
+            ? ['PF', 'PJ']
+            : ['PJ'];
+    }
+
+    /** Gate de fontes inteiramente novas: código registrado, vitrine em manutenção, zero cobrança. */
+    protected function validadaParaPublico(): bool
+    {
+        return in_array(
+            $this->chave(),
+            (array) config('advocacia.fontes_publicas_liberadas', []),
+            true,
+        );
+    }
+
+    /**
+     * Param do documento montado pelo TIPO do alvo: `cpf` (11 díg) quando `tipo_pessoa=PF`,
+     * senão `cnpj`. Lê o alias específico (`alvo['cpf']`/`alvo['cnpj']`) e cai no `documento`
+     * canônico — assim as fontes PJ existentes que fazem `parent::params()` seguem recebendo
+     * a chave `cnpj`, e as PF recebem `cpf`, sem cada classe saber do branch.
+     */
     public function params(array $alvo): array
     {
-        return ['cnpj' => preg_replace('/[^0-9]/', '', (string) ($alvo['cnpj'] ?? ''))];
+        if (strtoupper((string) ($alvo['tipo_pessoa'] ?? 'PJ')) === 'PF') {
+            return ['cpf' => preg_replace('/[^0-9]/', '', (string) ($alvo['cpf'] ?? $alvo['documento'] ?? ''))];
+        }
+
+        return ['cnpj' => preg_replace('/[^0-9]/', '', (string) ($alvo['cnpj'] ?? $alvo['documento'] ?? ''))];
     }
 
     /**

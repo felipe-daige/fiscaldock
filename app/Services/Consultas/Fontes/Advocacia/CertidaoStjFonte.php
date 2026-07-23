@@ -21,6 +21,11 @@ class CertidaoStjFonte extends FonteCertidaoInfoSimples
         return (float) config('consultas.fontes.certidao_stj', 1.00);
     }
 
+    public function aceitaPessoa(): array
+    {
+        return $this->tiposPessoaComPfValidado();
+    }
+
     protected function mapearSucesso(array $data): array
     {
         return [

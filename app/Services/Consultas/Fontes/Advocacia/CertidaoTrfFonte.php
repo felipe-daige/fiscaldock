@@ -47,6 +47,11 @@ class CertidaoTrfFonte extends FonteCertidaoInfoSimples
         return (float) config('consultas.fontes.certidao_trf', 1.00);
     }
 
+    public function aceitaPessoa(): array
+    {
+        return $this->tiposPessoaComPfValidado();
+    }
+
     protected function mapearSucesso(array $data): array
     {
         // Contrato real: sem `tipo`/`data_validade` — o veredito é a conjunção dos TRFs em

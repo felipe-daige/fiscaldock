@@ -170,6 +170,7 @@ class ConsultaController extends Controller
             'cliente_id' => 'nullable|integer|exists:clientes,id',
             'origem_tipo' => 'nullable|string|in:NFE,NFSE,CTE,SPED_EFD_FISCAL,SPED_EFD_CONTRIB,MANUAL',
             'tipo_documento' => 'nullable|string|in:PF,PJ',
+            'permitir_cpf' => 'nullable|boolean',
             'situacao_cadastral' => 'nullable|string|max:50',
             'uf' => 'nullable|string|size:2',
             'busca' => 'nullable|string|max:100',
@@ -384,9 +385,11 @@ class ConsultaController extends Controller
             ->get()
             ->keyBy('participante_id');
 
+        $permitirCpf = (bool) ($validated['permitir_cpf'] ?? false);
+
         return response()->json([
             'success' => true,
-            'data' => $participantes->getCollection()->map(function ($participante) use ($ultimosResultados, $agora, $fiscalResumos, $scoresPorParticipante) {
+            'data' => $participantes->getCollection()->map(function ($participante) use ($ultimosResultados, $agora, $fiscalResumos, $scoresPorParticipante, $permitirCpf) {
                 $ultimoResultado = $ultimosResultados->get($participante->id);
                 $score = $scoresPorParticipante->get($participante->id);
                 $alerta = $this->buildParticipanteAlertData($score, $ultimoResultado, $agora);
@@ -479,7 +482,7 @@ class ConsultaController extends Controller
                     'tipo_documento' => $participante->tipo_documento,
                     'is_cpf' => $participante->is_cpf,
                     'is_cnpj' => $participante->is_cnpj,
-                    'pode_consultar' => $participante->is_cnpj,
+                    'pode_consultar' => $participante->is_cnpj || ($permitirCpf && $participante->is_cpf),
                     'situacao_cadastral' => $participante->situacao_cadastral,
                     'ultima_consulta_em' => $ultimaConsultaEm?->toIso8601String(),
                     'consulta_status_label' => $consultaStatusLabel,
@@ -1041,7 +1044,7 @@ class ConsultaController extends Controller
         $user = Auth::user();
         $catalogo = app(\App\Services\Advocacia\CatalogoFontesAvulsas::class);
 
-        // Prefill de re-emissão (alerta de vencimento → 1 clique): ?fonte=chave&documento=CNPJ
+        // Prefill de re-emissão (alerta de vencimento → 1 clique): ?fonte=chave&documento=CPF|CNPJ
         // pré-marca a fonte e o alvo correspondente do próprio usuário.
         $prefill = null;
         // Guard escalar: um param em array (?documento[]=) não pode ser coagido pra string
@@ -1052,15 +1055,37 @@ class ConsultaController extends Controller
         $docPrefill = preg_replace('/\D/', '', is_string($docRaw) ? $docRaw : '');
         if ($fontePrefill !== '' || $docPrefill !== '') {
             $alvoPrefill = null;
-            if (strlen($docPrefill) === 14) {
+            if (in_array(strlen($docPrefill), [11, 14], true)) {
+                $tipoPessoa = strlen($docPrefill) === 11 ? 'PF' : 'PJ';
+                $formatar = fn (string $documento) => $tipoPessoa === 'PF'
+                    ? \App\Support\Cpf::formatar($documento)
+                    : \App\Support\Cnpj::formatar($documento);
                 if ($p = Participante::where('user_id', $user->id)->where('documento', $docPrefill)->first(['id', 'razao_social', 'documento'])) {
-                    $alvoPrefill = ['tipo' => 'participante', 'id' => $p->id, 'label' => ($p->razao_social ?: $p->documento).' · '.\App\Support\Cnpj::formatar($p->documento)];
+                    $alvoPrefill = [
+                        'tipo' => 'participante',
+                        'id' => $p->id,
+                        'label' => ($p->razao_social ?: $p->documento).' · '.$formatar($p->documento),
+                        'tipoPessoa' => $tipoPessoa,
+                        'documento' => $docPrefill,
+                        'nome' => $p->razao_social ?: '',
+                    ];
                 } elseif ($c = \App\Models\Cliente::where('user_id', $user->id)->whereRaw("regexp_replace(coalesce(documento, ''), '[^0-9]', '', 'g') = ?", [$docPrefill])->first(['id', 'nome', 'razao_social', 'documento'])) {
-                    $alvoPrefill = ['tipo' => 'cliente', 'id' => $c->id, 'label' => ($c->razao_social ?: $c->nome ?: $c->documento).' · '.\App\Support\Cnpj::formatar($c->documento)];
+                    $alvoPrefill = [
+                        'tipo' => 'cliente',
+                        'id' => $c->id,
+                        'label' => ($c->razao_social ?: $c->nome ?: $c->documento).' · '.$formatar($c->documento),
+                        'tipoPessoa' => $tipoPessoa,
+                        'documento' => $docPrefill,
+                        'nome' => $c->razao_social ?: $c->nome ?: '',
+                    ];
                 }
             }
+            $tipoPrefill = $alvoPrefill['tipoPessoa'] ?? null;
             $prefill = [
-                'fontes' => array_values(array_intersect(explode(',', $fontePrefill), $catalogo->chavesDisponiveis())),
+                'fontes' => array_values(array_intersect(
+                    explode(',', $fontePrefill),
+                    $catalogo->chavesDisponiveis($tipoPrefill),
+                )),
                 'alvo' => $alvoPrefill,
             ];
         }
@@ -1109,6 +1134,8 @@ class ConsultaController extends Controller
             'fontes' => 'required|array|min:1',
             'fontes.*' => 'string|max:40',
             'quantidade' => 'required|integer|min:1|max:1000',
+            'tipos_pessoa' => 'nullable|array|max:2',
+            'tipos_pessoa.*' => 'string|in:PF,PJ',
         ]);
 
         $invalidas = array_diff($validated['fontes'], $catalogo->chavesDisponiveis());
@@ -1117,6 +1144,16 @@ class ConsultaController extends Controller
                 'success' => false,
                 'error' => 'Fontes indisponíveis: '.implode(', ', $invalidas),
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        foreach (array_unique($validated['tipos_pessoa'] ?? []) as $tipoPessoa) {
+            $incompativeis = $catalogo->fontesIncompativeis($validated['fontes'], $tipoPessoa);
+            if ($incompativeis !== []) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Fontes incompatíveis com alvo '.$tipoPessoa.': '.implode(', ', $incompativeis),
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
         }
 
         $preco = $catalogo->precificar($validated['fontes'], (int) $user->id);
@@ -1144,7 +1181,8 @@ class ConsultaController extends Controller
      * explícita de fontes define escopo, etapas (dinâmicas por grupo) e preço (R$ por fonte,
      * CatalogoFontesAvulsas). Reusa o motor inteiro: ProcessarConsultaJob recebe
      * consultasIncluidas = atributosDe(seleção) e deriva as mesmas fontes de volta; estorno
-     * usa o PREÇO cobrado via precosVenda. Cadastro (grátis) sempre incluído.
+     * usa o PREÇO cobrado via precosVenda. O cadastro grátis é incluído automaticamente apenas
+     * para PJ; cadastro PF é pago e precisa ser selecionado explicitamente.
      */
     public function executarFontes(Request $request): JsonResponse
     {
@@ -1164,6 +1202,16 @@ class ConsultaController extends Controller
             'fontes.*' => 'string|max:40',
             'cliente_id' => 'nullable|integer|exists:clientes,id',
             'tab_id' => 'required|string|max:36',
+            'dados_pf' => 'nullable|array|max:1000',
+            'dados_pf.*.tipo' => 'required_with:dados_pf|string|in:participante,cliente',
+            'dados_pf.*.id' => 'required_with:dados_pf|integer',
+            'dados_pf.*.nome' => 'nullable|string|max:200',
+            'dados_pf.*.birthdate' => 'nullable|date_format:Y-m-d|before_or_equal:today',
+            'dados_pf.*.nome_mae' => 'nullable|string|max:200',
+            'dados_pf.*.nome_pai' => 'nullable|string|max:200',
+            'dados_pf.*.uf_nascimento' => 'nullable|string|size:2',
+            'dados_pf.*.titulo_eleitoral' => 'nullable|string|max:20',
+            'dados_pf.*.ano' => 'nullable|integer|min:1900|max:'.now()->year,
         ]);
 
         $fontesSelecionadas = array_values(array_unique($validated['fontes']));
@@ -1175,8 +1223,8 @@ class ConsultaController extends Controller
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $participanteIds = $validated['participante_ids'] ?? [];
-        $clienteIds = $validated['cliente_ids'] ?? [];
+        $participanteIds = array_values(array_unique($validated['participante_ids'] ?? []));
+        $clienteIds = array_values(array_unique($validated['cliente_ids'] ?? []));
 
         if (empty($participanteIds) && empty($clienteIds)) {
             return response()->json([
@@ -1185,11 +1233,12 @@ class ConsultaController extends Controller
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        // Ownership + CNPJ válido — mesmas regras do executar por plano.
+        // Ownership + documento de alvo (CPF ou CNPJ). A validade do CPF é checada abaixo antes
+        // de qualquer débito; CNPJ mantém o comportamento histórico (14 dígitos).
         $participantes = Participante::where('user_id', $user->id)
-            ->somenteCnpj()
             ->whereIn('id', $participanteIds)
-            ->get(['id', 'documento', 'razao_social', 'uf', 'crt']);
+            ->whereRaw("length(regexp_replace(coalesce(documento, ''), '[^0-9]', '', 'g')) in (11, 14)")
+            ->get(['id', 'documento', 'razao_social', 'uf', 'municipio', 'crt', 'data_inicio_atividade']);
 
         if ($participantes->count() !== count($participanteIds)) {
             return response()->json([
@@ -1200,25 +1249,107 @@ class ConsultaController extends Controller
 
         $clientes = \App\Models\Cliente::where('user_id', $user->id)
             ->whereIn('id', $clienteIds)
-            ->whereRaw("length(regexp_replace(coalesce(documento, ''), '[^0-9]', '', 'g')) = 14")
-            ->get(['id', 'documento', 'razao_social', 'uf']);
+            ->whereRaw("length(regexp_replace(coalesce(documento, ''), '[^0-9]', '', 'g')) in (11, 14)")
+            ->get([
+                'id', 'documento', 'nome', 'razao_social', 'tipo_pessoa', 'uf', 'municipio',
+                'data_inicio_atividade',
+            ]);
 
         if ($clientes->count() !== count($clienteIds)) {
             return response()->json([
                 'success' => false,
-                'error' => 'Alguns clientes selecionados são inválidos (CNPJ ausente) para consulta.',
+                'error' => 'Alguns clientes selecionados são inválidos (CPF/CNPJ ausente) para consulta.',
             ], Response::HTTP_FORBIDDEN);
         }
 
-        $alvos = $participantes->map(fn ($p) => [
-            'tipo' => 'participante', 'id' => $p->id,
-            'cnpj' => preg_replace('/[^0-9]/', '', (string) $p->documento), 'uf' => $p->uf, 'crt' => $p->crt,
-            'razao_social' => $p->razao_social,
-        ])->concat($clientes->map(fn ($c) => [
-            'tipo' => 'cliente', 'id' => $c->id,
-            'cnpj' => preg_replace('/[^0-9]/', '', (string) $c->documento), 'uf' => $c->uf ?? null, 'crt' => null,
-            'razao_social' => $c->razao_social,
-        ]))->values();
+        $dadosPfPorAlvo = collect($validated['dados_pf'] ?? [])->keyBy(
+            fn (array $dados) => $dados['tipo'].':'.$dados['id'],
+        );
+        $montarAlvo = function ($registro, string $tipo) use ($dadosPfPorAlvo): array {
+            $documento = preg_replace('/\D/', '', (string) $registro->documento);
+            $tipoPessoa = strlen($documento) === 11 ? 'PF' : 'PJ';
+            $dadosPf = (array) ($dadosPfPorAlvo->get($tipo.':'.$registro->id) ?? []);
+            $razaoSocial = trim((string) ($registro->razao_social ?? ''));
+            $nomeCadastro = trim((string) ($registro->nome ?? ''));
+            $nomeBase = $razaoSocial !== '' ? $razaoSocial : ($nomeCadastro !== '' ? $nomeCadastro : null);
+            $nome = trim((string) ($dadosPf['nome'] ?? $nomeBase ?? ''));
+            $dataInicio = $registro->data_inicio_atividade ?? null;
+            $dataInicio = $dataInicio instanceof \DateTimeInterface
+                ? $dataInicio->format('Y-m-d')
+                : trim((string) $dataInicio);
+
+            return [
+                'tipo' => $tipo,
+                'id' => $registro->id,
+                'tipo_pessoa' => $tipoPessoa,
+                'documento' => $documento,
+                // Aliases preservam todas as fontes legadas durante a migração do shape.
+                'cpf' => $tipoPessoa === 'PF' ? $documento : null,
+                'cnpj' => $tipoPessoa === 'PJ' ? $documento : null,
+                'uf' => $registro->uf ?? null,
+                'municipio' => $registro->municipio ?? null,
+                'crt' => $registro->crt ?? null,
+                'razao_social' => $nomeBase,
+                'nome' => $nome,
+                'birthdate' => trim((string) ($dadosPf['birthdate'] ?? '')),
+                'nome_mae' => trim((string) ($dadosPf['nome_mae'] ?? '')),
+                'nome_pai' => trim((string) ($dadosPf['nome_pai'] ?? '')),
+                'uf_nascimento' => strtoupper(trim((string) ($dadosPf['uf_nascimento'] ?? ''))),
+                'titulo_eleitoral' => preg_replace('/\D/', '', (string) ($dadosPf['titulo_eleitoral'] ?? '')),
+                'ano' => trim((string) ($dadosPf['ano'] ?? '')),
+                'data_inicio_atividade' => $dataInicio,
+            ];
+        };
+
+        $alvos = $participantes->map(fn ($p) => $montarAlvo($p, 'participante'))
+            ->concat($clientes->map(fn ($c) => $montarAlvo($c, 'cliente')))
+            ->values();
+
+        $tiposAlvos = $alvos->pluck('tipo_pessoa')->unique()->values()->all();
+        foreach ($tiposAlvos as $tipoPessoa) {
+            $incompativeis = $catalogo->fontesIncompativeis($fontesSelecionadas, $tipoPessoa);
+            if ($incompativeis !== []) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Fontes incompatíveis com alvo '.$tipoPessoa.': '.implode(', ', $incompativeis),
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+        }
+
+        $requisitosAlvo = $catalogo->requisitosAlvo($fontesSelecionadas);
+        foreach ($alvos as $alvo) {
+            $faltantes = array_values(array_filter(
+                $requisitosAlvo,
+                fn (string $campo) => trim((string) ($alvo[$campo] ?? '')) === '',
+            ));
+            if ($faltantes !== []) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Complete os dados do alvo antes de consultar: '.implode(', ', $faltantes).'.',
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+        }
+
+        $requisitosPf = $catalogo->requisitosPf($fontesSelecionadas);
+        foreach ($alvos->where('tipo_pessoa', 'PF') as $alvoPf) {
+            if (! \App\Support\Cpf::valido($alvoPf['documento'])) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'CPF inválido no alvo selecionado.',
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            $faltantes = array_values(array_filter(
+                $requisitosPf,
+                fn (string $campo) => trim((string) ($alvoPf[$campo] ?? '')) === '',
+            ));
+            if ($faltantes !== []) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Complete os dados da pessoa física antes de consultar: '.implode(', ', $faltantes).'.',
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+        }
 
         $totalAlvos = $alvos->count();
         // Precificação com kit (desconto aplicado por fonte): o mapa `precos` vira precosVenda —
@@ -1283,8 +1414,16 @@ class ConsultaController extends Controller
                 'creditos_cobrados' => $custoTotal,
             ]);
 
-            $consultasIncluidas = $catalogo->atributosDe($fontesSelecionadas);
-            $etapas = $catalogo->etapasDe($fontesSelecionadas);
+            $consultasIncluidas = [];
+            foreach ($tiposAlvos as $tipoPessoa) {
+                $consultasIncluidas = array_merge(
+                    $consultasIncluidas,
+                    $catalogo->atributosDe($fontesSelecionadas, $tipoPessoa),
+                );
+            }
+            $consultasIncluidas = array_values(array_unique($consultasIncluidas));
+            $tipoEtapas = in_array('PJ', $tiposAlvos, true) ? 'PJ' : 'PF';
+            $etapas = $catalogo->etapasDe($fontesSelecionadas, $tipoEtapas);
             $precosVenda = $preco['precos'];
 
             $jobs = $alvos->values()->map(fn ($alvo, $i) => new \App\Jobs\ProcessarConsultaJob(
@@ -1294,14 +1433,7 @@ class ConsultaController extends Controller
                 userId: $user->id,
                 tabId: $validated['tab_id'],
                 consultasIncluidas: $consultasIncluidas,
-                alvo: [
-                    'cnpj' => $alvo['cnpj'],
-                    'uf' => $alvo['uf'],
-                    'crt' => $alvo['crt'],
-                    // Fallback pras fontes de busca nominal (CEAT exige `nome`); o cadastro
-                    // sobrescreve com a razão oficial da RFB quando roda.
-                    'razao_social' => $alvo['razao_social'] ?? null,
-                ],
+                alvo: $alvo,
                 etapas: $etapas,
                 alvoIndice: $i + 1,
                 totalAlvos: $totalAlvos,
@@ -1751,6 +1883,17 @@ class ConsultaController extends Controller
                 'success' => false,
                 'error' => 'CNPJ inválido. Informe 14 dígitos.',
             ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $clienteDoDocumento = Cliente::where('user_id', $user->id)
+            ->where('documento', $cnpj)
+            ->first();
+        if ($clienteDoDocumento) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Este CNPJ já está cadastrado como Cliente. Selecione-o na aba Clientes.',
+                'cliente_id' => $clienteDoDocumento->id,
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         // Associação opcional a cliente existente
@@ -2237,9 +2380,43 @@ class ConsultaController extends Controller
 
         $statusLote = ConsultaLote::normalizeStatus($lote->status);
         $statusMeta = $this->getConsultaLoteStatusMeta($statusLote);
-        $etapas = $lote->ehAvulsoPorFontes()
-            ? app(\App\Services\Advocacia\CatalogoFontesAvulsas::class)->etapasDe($lote->fontes_selecionadas)
-            : ($lote->plano?->resolvedEtapas() ?? []);
+        if ($lote->ehAvulsoPorFontes()) {
+            $catalogoFontes = app(\App\Services\Advocacia\CatalogoFontesAvulsas::class);
+            $documentosAlvo = $lote->resultados()
+                ->with(['participante:id,documento', 'cliente:id,documento'])
+                ->get(['id', 'participante_id', 'cliente_id'])
+                ->map(fn (ConsultaResultado $resultado) => $resultado->participante?->documento
+                    ?: $resultado->cliente?->documento)
+                ->toBase()
+                // Participantes já estão no pivot antes de o worker criar consulta_resultados.
+                ->merge($lote->participantes()->pluck('documento'))
+                ->filter()
+                ->unique()
+                ->values();
+            $tiposAlvo = $documentosAlvo
+                ->map(fn (string $documento) => strlen(preg_replace('/\D/', '', $documento)) === 11 ? 'PF' : 'PJ')
+                ->unique()
+                ->values();
+
+            // Antes do worker persistir o contexto, uma seleção exclusivamente PF já permite
+            // reconstruir o strip correto. Se houver qualquer PJ, preserva a etapa cadastral
+            // automática desse tipo.
+            $tipoEtapas = $tiposAlvo->contains('PJ')
+                ? 'PJ'
+                : ($tiposAlvo->contains('PF') ? 'PF' : null);
+            if ($tipoEtapas === null) {
+                $selecionadas = (array) $lote->fontes_selecionadas;
+                $soPf = $selecionadas !== [] && collect($selecionadas)->every(
+                    fn (string $chave) => $catalogoFontes->aceitaTipo($chave, 'PF')
+                        && ! $catalogoFontes->aceitaTipo($chave, 'PJ'),
+                );
+                $tipoEtapas = $soPf ? 'PF' : 'PJ';
+            }
+
+            $etapas = $catalogoFontes->etapasDe((array) $lote->fontes_selecionadas, $tipoEtapas);
+        } else {
+            $etapas = $lote->plano?->resolvedEtapas() ?? [];
+        }
         $contadores = $lote->getContadoresResultados();
         $perPageResultados = 20;
         $temResultadosNoLote = false;
@@ -2605,7 +2782,7 @@ class ConsultaController extends Controller
             ->with([
                 'participante:id,documento,razao_social,uf,crt,regime_tributario',
                 'participante.score',
-                'cliente:id,documento,razao_social,uf',
+                'cliente:id,documento,nome,razao_social,uf',
             ])
             ->orderByDesc('consultado_em')
             ->orderBy('id')
@@ -2623,9 +2800,7 @@ class ConsultaController extends Controller
         // em vez de exibi-la como "—" (indistinguível de fora do plano). No lote avulso as
         // esperadas vêm da seleção à la carte, não de plano.
         $esperadasCert = $lote->ehAvulsoPorFontes()
-            ? $detalhePresenter->esperadasDoPlano(
-                app(\App\Services\Advocacia\CatalogoFontesAvulsas::class)->atributosDe($lote->fontes_selecionadas)
-            )
+            ? $detalhePresenter->esperadasDoPlano((array) $lote->fontes_selecionadas)
             : $detalhePresenter->esperadasDoPlano($lote->plano?->consultas_incluidas);
 
         return $resultados->map(function (ConsultaResultado $resultado) use ($parecerService, $detalhePresenter, $fiscalResumos, $clienteResumos, $esperadasCert, $lote) {
@@ -2639,7 +2814,13 @@ class ConsultaController extends Controller
                 ConsultaResultado::STATUS_ERRO => ['label' => 'Erro', 'hex' => '#dc2626'],
                 default => ['label' => 'Pendente', 'hex' => '#9ca3af'],
             };
-            $situacaoCadastral = trim((string) $resultado->getDado('situacao_cadastral'));
+            $cadastroPf = is_array($resultado->getDado('cadastro_pf'))
+                ? $resultado->getDado('cadastro_pf')
+                : [];
+            $situacaoCadastral = trim((string) (
+                $resultado->getDado('situacao_cadastral')
+                ?: ($cadastroPf['situacao_cadastral'] ?? $cadastroPf['status'] ?? '')
+            ));
             $regimeTributario = $resultado->getRegimeTributarioLabel();
             $cndFederal = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('cnd_federal'), true);
             $fgts = $this->normalizeConsultaLoteRegularidadeBadge($resultado->getDado('crf_fgts'), true);
@@ -2654,7 +2835,9 @@ class ConsultaController extends Controller
             $documento = $participante?->documento ?: $cliente?->documento;
             $razaoSocial = $participante?->razao_social
                 ?: ($cliente?->razao_social
-                ?: ($resultado->getDado('razao_social') ?: $resultado->getDado('nome_fantasia')));
+                ?: ($cliente?->nome
+                ?: ($resultado->getDado('razao_social')
+                ?: ($cadastroPf['nome'] ?? $resultado->getDado('nome_fantasia')))));
             $uf = $participante?->uf ?: ($cliente?->uf ?: ($enderecoConsulta['uf'] ?? null));
 
             $fiscalResumo = $resultado->participante_id

@@ -51,8 +51,9 @@ class DefinirClienteXmlService
         $contraparteMunCol = $lado === 'emit' ? 'dest_municipio_ibge' : 'emit_municipio_ibge';
         $contraparteIeCol = $lado === 'emit' ? 'dest_ie' : 'emit_ie';
         $contrapartePartCol = $lado === 'emit' ? 'dest_participante_id' : 'emit_participante_id';
+        $contraparteClienteCol = $lado === 'emit' ? 'dest_cliente_id' : 'emit_cliente_id';
 
-        return DB::transaction(function () use ($imp, $tipoNota, $docCol, $razaoCol, $ufCol, $ieCol, $clienteCol, $partCol, $contraparteDocCol, $contraparteRazaoCol, $contraparteUfCol, $contraparteMunCol, $contraparteIeCol, $contrapartePartCol) {
+        return DB::transaction(function () use ($imp, $tipoNota, $docCol, $razaoCol, $ufCol, $ieCol, $clienteCol, $partCol, $contraparteDocCol, $contraparteRazaoCol, $contraparteUfCol, $contraparteMunCol, $contraparteIeCol, $contrapartePartCol, $contraparteClienteCol) {
             $userId = (int) $imp->user_id;
             $clienteIds = [];
             $donoPartIds = [];
@@ -80,7 +81,10 @@ class DefinirClienteXmlService
                     $donoPartIds[] = (int) $nota->{$partCol};
                 }
 
-                $contraparte = $this->participanteContraparte(
+                $contraparteCliente = Cliente::where('user_id', $userId)
+                    ->where('documento', preg_replace('/\D/', '', (string) $nota->{$contraparteDocCol}))
+                    ->first();
+                $contraparte = $contraparteCliente ? null : $this->participanteContraparte(
                     $userId,
                     $cliente->id,
                     $nota->{$contraparteDocCol},
@@ -96,6 +100,7 @@ class DefinirClienteXmlService
                     $clienteCol => $cliente->id,
                     $partCol => null,
                     $contrapartePartCol => $contraparte?->id,
+                    $contraparteClienteCol => $contraparteCliente?->id,
                     'cliente_id' => $cliente->id,
                 ]);
             }
@@ -111,7 +116,9 @@ class DefinirClienteXmlService
                 ->filter()->unique()->values()->all();
             $imp->save();
 
-            $removidos = $this->limparOrfaos($userId, array_values(array_unique($donoPartIds)));
+            $donoPartIds = array_values(array_unique($donoPartIds));
+            $jaConsolidados = count($donoPartIds) - Participante::whereIn('id', $donoPartIds)->count();
+            $removidos = $jaConsolidados + $this->limparOrfaos($userId, $donoPartIds);
 
             return ['participantes_removidos' => $removidos, 'notas' => $notas->count(), 'cliente_id' => $clienteImportacao];
         });
@@ -157,8 +164,9 @@ class DefinirClienteXmlService
         $cpMunCol = $lado === 'emit' ? 'dest_municipio_ibge' : 'emit_municipio_ibge';
         $cpIeCol = $lado === 'emit' ? 'dest_ie' : 'emit_ie';
         $cpPartCol = $lado === 'emit' ? 'dest_participante_id' : 'emit_participante_id';
+        $cpClienteCol = $lado === 'emit' ? 'dest_cliente_id' : 'emit_cliente_id';
 
-        return DB::transaction(function () use ($imp, $documento, $tipoNota, $docCol, $razaoCol, $ufCol, $ieCol, $clienteCol, $partCol, $cpDocCol, $cpRazaoCol, $cpUfCol, $cpMunCol, $cpIeCol, $cpPartCol) {
+        return DB::transaction(function () use ($imp, $documento, $tipoNota, $docCol, $razaoCol, $ufCol, $ieCol, $clienteCol, $partCol, $cpDocCol, $cpRazaoCol, $cpUfCol, $cpMunCol, $cpIeCol, $cpPartCol, $cpClienteCol) {
             $userId = (int) $imp->user_id;
             $donoPartIds = [];
 
@@ -189,7 +197,10 @@ class DefinirClienteXmlService
                     $donoPartIds[] = (int) $nota->{$partCol};
                 }
 
-                $contraparte = $this->participanteContraparte(
+                $contraparteCliente = Cliente::where('user_id', $userId)
+                    ->where('documento', preg_replace('/\D/', '', (string) $nota->{$cpDocCol}))
+                    ->first();
+                $contraparte = $contraparteCliente ? null : $this->participanteContraparte(
                     $userId, $cliente->id, $nota->{$cpDocCol}, $nota->{$cpRazaoCol},
                     $nota->{$cpUfCol}, $nota->{$cpMunCol}, $nota->{$cpIeCol}, $imp
                 );
@@ -199,6 +210,7 @@ class DefinirClienteXmlService
                     $clienteCol => $cliente->id,
                     $partCol => null,
                     $cpPartCol => $contraparte?->id,
+                    $cpClienteCol => $contraparteCliente?->id,
                     'cliente_id' => $cliente->id,
                 ]);
             }
@@ -212,7 +224,9 @@ class DefinirClienteXmlService
                 ->filter()->unique()->values()->all();
             $imp->save();
 
-            $removidos = $this->limparOrfaos($userId, array_values(array_unique($donoPartIds)));
+            $donoPartIds = array_values(array_unique($donoPartIds));
+            $jaConsolidados = count($donoPartIds) - Participante::whereIn('id', $donoPartIds)->count();
+            $removidos = $jaConsolidados + $this->limparOrfaos($userId, $donoPartIds);
 
             return ['participantes_removidos' => $removidos, 'notas' => $notas->count(), 'cliente_id' => $cliente?->id];
         });
@@ -342,6 +356,10 @@ class DefinirClienteXmlService
     ): ?Participante {
         $doc = preg_replace('/\D/', '', (string) $doc);
         if ($doc === '') {
+            return null;
+        }
+
+        if (Cliente::where('user_id', $userId)->where('documento', $doc)->exists()) {
             return null;
         }
 

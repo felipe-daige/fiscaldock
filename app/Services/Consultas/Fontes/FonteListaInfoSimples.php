@@ -38,7 +38,7 @@ abstract class FonteListaInfoSimples extends FonteCertidaoInfoSimples
                 'nada_consta' => true,
                 'total_registros' => 0,
                 'registros' => [],
-                'mensagem' => 'Nada consta para este CNPJ.',
+                'mensagem' => 'Nada consta para este documento.',
             ]);
         }
 
@@ -76,8 +76,8 @@ abstract class FonteListaInfoSimples extends FonteCertidaoInfoSimples
             'total_registros' => $total,
             'registros' => $resumo,
             'mensagem' => $total === 0
-                ? 'Nada consta para este CNPJ.'
-                : "Constam {$total} registro(s) para este CNPJ.",
+                ? 'Nada consta para este documento.'
+                : "Constam {$total} registro(s) para este documento.",
         ];
     }
 }

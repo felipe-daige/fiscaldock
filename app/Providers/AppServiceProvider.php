@@ -41,6 +41,24 @@ class AppServiceProvider extends ServiceProvider
             new \App\Services\Consultas\Fontes\Advocacia\ImprobidadeFonte,
             new \App\Services\Consultas\Fontes\Advocacia\CeisFonte,
             new \App\Services\Consultas\Fontes\Advocacia\CnepFonte,
+            // Expansão pública: código pronto, mas `pronta()` exige validação/smoke por chave.
+            // Enquanto não liberadas, aparecem na vitrine e no admin como "Em manutenção".
+            new \App\Services\Consultas\Fontes\Advocacia\PgfnDevedoresFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\TcuCnpFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\TcuCniInidoneoFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\TcuCniInabilitadoFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\BcbValoresReceberFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\InpiMarcasTitularFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\IbamaEmbargosFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\IbamaDebitosFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\IbamaRegularidadeFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\IbamaAutuacoesFonte,
+            // Pessoa física: cadastro/situação cadastral + quitação eleitoral. As duas fontes
+            // sensíveis ficam registradas, mas `pronta()` exige flag LGPD explícita.
+            new \App\Services\Consultas\Fontes\Advocacia\CadastroPfFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\QuitacaoEleitoralFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\AntecedentesPfFonte,
+            new \App\Services\Consultas\Fontes\Advocacia\MandadoPrisaoFonte,
             // Certidão de 2 etapas (fase 4). Registrada p/ o follow-up job resolvê-la; fica oculta
             // da tela via `consultas.fontes_pausadas` até o smoke validar comarca/modelo.
             new \App\Services\Consultas\Fontes\Advocacia\TjmsPedidoFonte,

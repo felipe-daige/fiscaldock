@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class ClienteController extends Controller
@@ -93,12 +94,21 @@ class ClienteController extends Controller
     public function store(Request $request)
     {
         try {
+            $request->merge([
+                'documento' => preg_replace('/\D/', '', (string) $request->input('documento')),
+            ]);
             $tipoPessoa = $request->input('tipo_pessoa');
             $isPJ = $tipoPessoa === 'PJ';
 
             $rules = [
                 'tipo_pessoa' => 'required|in:PF,PJ',
-                'documento' => 'required|string|max:18|unique:clientes,documento',
+                'documento' => [
+                    'required',
+                    'string',
+                    'max:18',
+                    Rule::unique('clientes', 'documento')
+                        ->where(fn ($query) => $query->where('user_id', Auth::id())),
+                ],
                 'telefone' => 'nullable|string|max:20',
                 'email' => 'nullable|email|max:255',
                 'uf' => 'nullable|string|size:2',
@@ -308,12 +318,22 @@ class ClienteController extends Controller
             }
 
             $cliente = Cliente::where('user_id', $user->id)->findOrFail($id);
+            $request->merge([
+                'documento' => preg_replace('/\D/', '', (string) $request->input('documento')),
+            ]);
 
             $tipoPessoa = $cliente->tipo_pessoa;
             $isPJ = $tipoPessoa === 'PJ';
 
             $rules = [
-                'documento' => 'required|string|max:18|unique:clientes,documento,'.$cliente->id,
+                'documento' => [
+                    'required',
+                    'string',
+                    'max:18',
+                    Rule::unique('clientes', 'documento')
+                        ->where(fn ($query) => $query->where('user_id', $user->id))
+                        ->ignore($cliente->id),
+                ],
                 'telefone' => 'nullable|string|max:20',
                 'email' => 'nullable|email|max:255',
                 'uf' => 'nullable|string|size:2',

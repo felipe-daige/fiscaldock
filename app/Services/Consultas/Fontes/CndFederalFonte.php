@@ -21,9 +21,37 @@ class CndFederalFonte extends FonteCertidaoInfoSimples
         return (float) config('consultas.fontes.cnd_federal', 0.40);
     }
 
+    public function aceitaPessoa(): array
+    {
+        return $this->tiposPessoaComPfValidado();
+    }
+
+    public function aplicavelPara(array $alvo): bool
+    {
+        if (strtoupper((string) ($alvo['tipo_pessoa'] ?? 'PJ')) !== 'PF') {
+            return true;
+        }
+
+        return trim((string) ($alvo['birthdate'] ?? '')) !== '';
+    }
+
+    public function motivoIndisponivel(array $alvo): string
+    {
+        return strtoupper((string) ($alvo['tipo_pessoa'] ?? 'PJ')) === 'PF'
+            ? 'A CND Federal de pessoa física exige a data de nascimento.'
+            : parent::motivoIndisponivel($alvo);
+    }
+
     public function params(array $alvo): array
     {
         $params = parent::params($alvo) + ['preferencia_emissao' => '2via'];
+
+        // PF usa o próprio CPF e exige nascimento; a regra de matriz é exclusiva do CNPJ.
+        if (strtoupper((string) ($alvo['tipo_pessoa'] ?? 'PJ')) === 'PF') {
+            $params['birthdate'] = trim((string) ($alvo['birthdate'] ?? ''));
+
+            return $params;
+        }
 
         // A CND RFB/PGFN é unificada por base e só é emitida para a MATRIZ (regra da Receita).
         // Consultar a filial retorna 620 ("A certidão deve ser emitida para o CNPJ da matriz"),

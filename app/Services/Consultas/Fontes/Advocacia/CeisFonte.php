@@ -22,6 +22,11 @@ class CeisFonte extends FonteListaInfoSimples
         return (float) config('consultas.fontes.ceis', 1.00);
     }
 
+    public function aceitaPessoa(): array
+    {
+        return $this->tiposPessoaComPfValidado();
+    }
+
     protected function chavesLista(): array
     {
         return ['sancoes', 'registros', 'ocorrencias'];

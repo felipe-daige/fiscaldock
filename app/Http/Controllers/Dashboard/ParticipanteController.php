@@ -17,6 +17,7 @@ use App\Models\Participante;
 use App\Models\XmlNota;
 use App\Services\Consultas\PerfilConsultaHistoricoService;
 use App\Services\Consultas\ResultadoDetalhePresenter;
+use App\Services\Identidades\IdentidadeClienteParticipanteService;
 use App\Services\NotaFiscalService;
 use App\Services\ParecerFiscalService;
 use App\Services\Risk\RiscoCreditoCpfService;
@@ -54,6 +55,7 @@ class ParticipanteController extends Controller
         protected NotaFiscalService $notaFiscalService,
         protected ResultadoDetalhePresenter $detalhePresenter,
         protected PerfilConsultaHistoricoService $perfilConsultaHistorico,
+        protected IdentidadeClienteParticipanteService $identidades,
     ) {}
 
     /**
@@ -139,6 +141,19 @@ class ParticipanteController extends Controller
             return response()->json([
                 'success' => false,
                 'errors' => ['cnpj' => ["{$docLabel} deve conter {$expectedLen} dígitos."]],
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $clienteComDocumento = $this->identidades->clienteDoDocumento((int) $user->id, $doc);
+        if ($clienteComDocumento) {
+            return response()->json([
+                'success' => false,
+                'errors' => [
+                    'cnpj' => [
+                        "Este {$docLabel} já está cadastrado como Cliente. Use a ficha do Cliente; ele não pode ser duplicado como Participante.",
+                    ],
+                ],
+                'cliente_id' => $clienteComDocumento->id,
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 

@@ -7,6 +7,7 @@ use App\Models\ConsultaResultado;
 use App\Models\Participante;
 use App\Support\CertidaoBadge;
 use App\Support\Cnpj;
+use App\Support\Cpf;
 use App\Support\MensagemPublica;
 
 /**
@@ -25,6 +26,7 @@ class ResultadoDetalhePresenter
 {
     /** Ordem canônica dos blocos (cadastro sempre primeiro). */
     private const ORDEM = [
+        'cadastro_pf',
         'cnd_federal',
         'cnd_estadual',
         'cnd_municipal',
@@ -39,11 +41,24 @@ class ResultadoDetalhePresenter
         'certidao_mpf',
         'certidao_tjms',
         'certidao_tcu',
+        'tcu_cnp',
+        'tcu_cni_inidoneo',
+        'tcu_cni_inabilitado',
         'improbidade',
         'ceis',
         'cnep',
         'protestos',
         'falencias',
+        'pgfn_devedores',
+        'ibama_embargos',
+        'ibama_debitos',
+        'ibama_regularidade',
+        'ibama_autuacoes',
+        'bcb_valores_receber',
+        'inpi_marcas_titular',
+        'quitacao_eleitoral',
+        'antecedentes_pf',
+        'mandado_prisao',
     ];
 
     /** Fontes de regularidade exibidas no strip agrupado da tabela (sigla compacta). */
@@ -61,11 +76,25 @@ class ResultadoDetalhePresenter
         'certidao_mpt' => 'MPT',
         'certidao_mpf' => 'MPF',
         'certidao_tcu' => 'TCU',
+        'tcu_cnp' => 'TCU-CNP',
+        'tcu_cni_inidoneo' => 'TCU-INID',
+        'tcu_cni_inabilitado' => 'TCU-INAB',
         'improbidade' => 'IMPR',
         'ceis' => 'CEIS',
         'cnep' => 'CNEP',
         'protestos' => 'PROT',
         'falencias' => 'FALÊN',
+        'pgfn_devedores' => 'PGFN',
+        'ibama_embargos' => 'IBAMA-EMB',
+        'ibama_debitos' => 'IBAMA-DEB',
+        'ibama_regularidade' => 'IBAMA-REG',
+        'ibama_autuacoes' => 'IBAMA-AUT',
+        'bcb_valores_receber' => 'BCB',
+        'inpi_marcas_titular' => 'INPI',
+        'cadastro_pf' => 'CPF',
+        'quitacao_eleitoral' => 'TSE',
+        'antecedentes_pf' => 'ANT',
+        'mandado_prisao' => 'BNMP',
     ];
 
     // Órgão oficial dono de cada fonte — nomeado na mensagem de falha p/ deixar claro que a
@@ -85,11 +114,25 @@ class ResultadoDetalhePresenter
         'certidao_mpt' => 'O Ministério Público do Trabalho (MPT)',
         'certidao_mpf' => 'O Ministério Público Federal (MPF)',
         'certidao_tcu' => 'O Tribunal de Contas da União (TCU)',
+        'tcu_cnp' => 'O Tribunal de Contas da União (TCU)',
+        'tcu_cni_inidoneo' => 'O Tribunal de Contas da União (TCU)',
+        'tcu_cni_inabilitado' => 'O Tribunal de Contas da União (TCU)',
         'improbidade' => 'O Conselho Nacional de Justiça (CNJ)',
         'ceis' => 'O Portal da Transparência (CGU)',
         'cnep' => 'O Portal da Transparência (CGU)',
         'protestos' => 'O IEPTB (cartórios de protesto)',
         'falencias' => 'O Tribunal Superior do Trabalho (TST)',
+        'pgfn_devedores' => 'A Procuradoria-Geral da Fazenda Nacional (PGFN)',
+        'ibama_embargos' => 'O Instituto Brasileiro do Meio Ambiente (IBAMA)',
+        'ibama_debitos' => 'O Instituto Brasileiro do Meio Ambiente (IBAMA)',
+        'ibama_regularidade' => 'O Instituto Brasileiro do Meio Ambiente (IBAMA)',
+        'ibama_autuacoes' => 'O Instituto Brasileiro do Meio Ambiente (IBAMA)',
+        'bcb_valores_receber' => 'O Banco Central do Brasil (BCB)',
+        'inpi_marcas_titular' => 'O Instituto Nacional da Propriedade Industrial (INPI)',
+        'cadastro_pf' => 'A Receita Federal',
+        'quitacao_eleitoral' => 'O Tribunal Superior Eleitoral (TSE)',
+        'antecedentes_pf' => 'A Polícia Federal',
+        'mandado_prisao' => 'O Conselho Nacional de Justiça (CNJ/BNMP)',
     ];
 
     /**
@@ -185,7 +228,8 @@ class ResultadoDetalhePresenter
                 'documento' => $participante->cnpj_formatado ?? $participante->documento,
                 'uf' => $participante->uf,
                 'situacao' => $participante->situacao_cadastral
-                    ?? ($ultima->resultado_dados['situacao_cadastral'] ?? null),
+                    ?? ($ultima->resultado_dados['situacao_cadastral']
+                    ?? ($ultima->resultado_dados['cadastro_pf']['situacao_cadastral'] ?? null)),
             ],
             $somenteConsultadas,
             $somenteFontes,
@@ -235,7 +279,8 @@ class ResultadoDetalhePresenter
                 'documento' => $cliente->documento_formatado ?? $cliente->documento,
                 'uf' => $cliente->uf,
                 'situacao' => $cliente->situacao_cadastral
-                    ?? ($ultima->resultado_dados['situacao_cadastral'] ?? null),
+                    ?? ($ultima->resultado_dados['situacao_cadastral']
+                    ?? ($ultima->resultado_dados['cadastro_pf']['situacao_cadastral'] ?? null)),
             ],
             $somenteConsultadas,
             $somenteFontes,
@@ -332,6 +377,23 @@ class ResultadoDetalhePresenter
 
             $bloco = match ($chave) {
                 'sintegra' => $this->blocoSintegra($dados[$chave], $ufFallback, $resultado->getKey()),
+                'cadastro_pf' => $this->blocoCadastroPf($dados[$chave], $resultado->getKey()),
+                'quitacao_eleitoral' => $this->blocoQuitacaoEleitoral($dados[$chave], $resultado->getKey()),
+                'mandado_prisao' => $this->blocoMandadoPrisao($dados[$chave]),
+                'tcu_cnp',
+                'tcu_cni_inidoneo',
+                'tcu_cni_inabilitado',
+                'pgfn_devedores',
+                'ibama_embargos',
+                'ibama_debitos',
+                'ibama_regularidade',
+                'ibama_autuacoes',
+                'bcb_valores_receber',
+                'inpi_marcas_titular' => $this->blocoConsultaPublica(
+                    $chave,
+                    $dados[$chave],
+                    $resultado->getKey(),
+                ),
                 default => $this->blocoCertidao(
                     $chave,
                     $dados[$chave],
@@ -385,7 +447,7 @@ class ResultadoDetalhePresenter
                         'estado' => 'neutro',
                         'glyph' => '·',
                         'motivo' => null,
-                        'descricao' => 'Esta consulta ainda não foi realizada para este CNPJ.',
+                        'descricao' => 'Esta consulta ainda não foi realizada para este documento.',
                     ];
 
                     continue;
@@ -542,7 +604,7 @@ class ResultadoDetalhePresenter
             ['label' => 'Não consultada', 'hex' => '#9ca3af'],
             [],
             [],
-            'Esta consulta ainda não foi realizada para este CNPJ.',
+            'Esta consulta ainda não foi realizada para este documento.',
         );
     }
 
@@ -723,10 +785,10 @@ class ResultadoDetalhePresenter
     private function textoAnalise(int $total, array $cnpjs, int $falhas = 0): string
     {
         if ($total === 0) {
-            return 'Nenhum CNPJ consultado neste lote.';
+            return 'Nenhum documento consultado neste lote.';
         }
 
-        $plural = $total > 1 ? 'CNPJs consultados' : 'CNPJ consultado';
+        $plural = $total > 1 ? 'documentos consultados' : 'documento consultado';
         $partes = [];
         if ($cnpjs['regular'] > 0) {
             $partes[] = $cnpjs['regular'].' totalmente '.($cnpjs['regular'] > 1 ? 'regulares' : 'regular');
@@ -864,6 +926,176 @@ class ResultadoDetalhePresenter
         }
 
         return $this->bloco('cadastro', 'Dados cadastrais', $badge, $itens, $listas);
+    }
+
+    private function blocoCadastroPf(array $d, int|string|null $resultadoId = null): array
+    {
+        $situacao = trim((string) ($d['situacao_cadastral'] ?? $d['status'] ?? ''));
+        $badge = ! empty($d['falecido'])
+            ? ['label' => 'Óbito informado', 'hex' => CertidaoBadge::HEX_IRREGULAR]
+            : CertidaoBadge::classificar(['status' => $situacao], true);
+
+        return $this->bloco(
+            'cadastro_pf',
+            'Cadastro e situação do CPF',
+            $badge,
+            [
+                $this->item('Nome', $d['nome'] ?? null),
+                $this->item('Nome civil', $d['nome_civil'] ?? null),
+                $this->item('Nome social', $d['nome_social'] ?? null),
+                $this->item('CPF', isset($d['cpf']) ? Cpf::formatar((string) $d['cpf']) : null),
+                $this->item('Situação cadastral', $situacao !== '' ? $situacao : null),
+                $this->item('Nascimento', $d['data_nascimento'] ?? null),
+                $this->item('Inscrição no CPF', $d['data_inscricao'] ?? null),
+                $this->item('Ano do óbito', $d['ano_obito'] ?? null),
+                $this->item('Consulta realizada em', $d['consulta_em'] ?? null),
+            ],
+            [],
+            ! empty($d['falecido']) ? 'A Receita Federal informa ano de óbito para este CPF.' : null,
+            $this->comprovanteUrl($resultadoId, 'cadastro_pf', $d),
+        );
+    }
+
+    private function blocoQuitacaoEleitoral(array $d, int|string|null $resultadoId = null): array
+    {
+        $domicilio = is_array($d['domicilio_eleitoral'] ?? null) ? $d['domicilio_eleitoral'] : [];
+        $domicilioTexto = $this->juntar(array_values(array_filter([
+            $domicilio['municipio'] ?? null,
+            $domicilio['uf'] ?? null,
+            isset($domicilio['zona']) ? 'Zona '.$domicilio['zona'] : null,
+            isset($domicilio['secao']) ? 'Seção '.$domicilio['secao'] : null,
+        ])));
+
+        return $this->bloco(
+            'quitacao_eleitoral',
+            'Quitação Eleitoral (TSE)',
+            CertidaoBadge::classificar($d, true),
+            [
+                $this->item('Situação informada', $d['status'] ?? null),
+                $this->item('Nome', $d['nome'] ?? null),
+                $this->item('Nascimento', $d['data_nascimento'] ?? null),
+                $this->item('Título eleitoral', $d['titulo_eleitoral'] ?? null),
+                $this->item('Biometria coletada', $this->simNao($d['biometria_coletada'] ?? null)),
+                $this->item('Certidão nº', $d['certidao_codigo'] ?? null),
+                $this->item('Emissão', $d['emissao_data'] ?? null),
+                $this->item('Domicílio eleitoral', $domicilioTexto),
+            ],
+            [],
+            $d['mensagem'] ?? null,
+            $this->comprovanteUrl($resultadoId, 'quitacao_eleitoral', $d),
+        );
+    }
+
+    private function blocoMandadoPrisao(array $d): array
+    {
+        $registros = is_array($d['registros'] ?? null) ? $d['registros'] : [];
+        $linhas = array_map(function (array $registro): string {
+            $identificador = trim((string) ($registro['mandado'] ?? ''));
+            $processo = trim((string) ($registro['processo'] ?? ''));
+            $cabecalho = $identificador !== '' ? "Mandado {$identificador}" : 'Mandado';
+            if ($processo !== '') {
+                $cabecalho .= " · Processo {$processo}";
+            }
+
+            $detalhes = array_values(array_filter([
+                $registro['situacao'] ?? null,
+                $registro['tribunal'] ?? $registro['orgao_judicial'] ?? null,
+                $registro['especie_prisao'] ?? null,
+                $registro['normalizado_validade_data'] ?? $registro['validade_data'] ?? null,
+            ]));
+
+            return $cabecalho.($detalhes !== [] ? ' — '.implode(' · ', $detalhes) : '');
+        }, $registros);
+
+        return $this->bloco(
+            'mandado_prisao',
+            'Mandados de Prisão vigentes (CNJ/BNMP)',
+            CertidaoBadge::classificar($d, true),
+            [
+                $this->item('Situação informada', $d['status'] ?? null),
+                $this->item('Mandados vigentes', $d['total_registros'] ?? count($registros)),
+            ],
+            [$this->lista('Mandados encontrados', $linhas)],
+            $d['mensagem'] ?? null,
+        );
+    }
+
+    /**
+     * Card comum das fontes públicas de expansão. Preserva totais/paginação e transforma os
+     * subconjuntos normalizados de registros em linhas legíveis, sem expor o payload bruto.
+     */
+    private function blocoConsultaPublica(
+        string $chave,
+        array $d,
+        int|string|null $resultadoId = null,
+    ): array {
+        $registros = is_array($d['registros'] ?? null)
+            ? $d['registros']
+            : (is_array($d['processos'] ?? null) ? $d['processos'] : []);
+        $rotulos = [
+            'numero' => 'Nº',
+            'processo' => 'Processo',
+            'acordao' => 'Acórdão',
+            'marca' => 'Marca',
+            'registro' => 'Registro',
+            'tipo' => 'Tipo',
+            'data' => 'Data',
+            'prioridade' => 'Prioridade',
+            'situacao' => 'Situação',
+            'status_debito' => 'Débito',
+            'valor_multa' => 'Multa',
+            'estado' => 'UF',
+            'municipio' => 'Município',
+            'classe' => 'Classe',
+            'entrada_cadastro' => 'Entrada',
+            'saida_cadastro' => 'Saída',
+        ];
+        $linhas = array_map(function ($registro) use ($rotulos): string {
+            $partes = [];
+            foreach ($rotulos as $campo => $rotulo) {
+                $valor = trim((string) (((array) $registro)[$campo] ?? ''));
+                if ($valor !== '') {
+                    $partes[] = "{$rotulo}: {$valor}";
+                }
+            }
+
+            return $partes !== [] ? implode(' · ', $partes) : 'Registro retornado pela fonte.';
+        }, $registros);
+
+        $badge = $chave === 'bcb_valores_receber'
+            ? null
+            : CertidaoBadge::classificar($d, true);
+        $itens = [
+            $this->item('Situação informada', $d['status'] ?? null),
+            $this->item('Nome', $d['nome'] ?? $d['interessado'] ?? null),
+            $this->item('Documento', $d['cpf_cnpj'] ?? null),
+            $this->item('Certidão nº', $d['certidao_codigo'] ?? null),
+            $this->item('Emissão', $d['emissao_data'] ?? null),
+            $this->item('Validade', $d['data_validade'] ?? null),
+            $this->item('Total de registros', $d['total_registros'] ?? $d['total_processos'] ?? null),
+            $this->item('Valor total', $d['valor_infracoes'] ?? $d['total_divida'] ?? null),
+            $this->item('Página', $d['pagina_atual'] ?? $d['pagina'] ?? null),
+            $this->item('Total de páginas', $d['total_paginas'] ?? null),
+            $this->item(
+                'Possui valores a receber',
+                array_key_exists('possui_valores_receber', $d)
+                    ? $this->simNao($d['possui_valores_receber'])
+                    : null,
+            ),
+        ];
+
+        return $this->bloco(
+            $chave,
+            $this->nomeFonte($chave),
+            $badge,
+            $itens,
+            [$this->lista('Registros encontrados', $linhas)],
+            $d['mensagem'] ?? null,
+            $this->comprovanteUrl($resultadoId, $chave, $d),
+            ! empty($d['tem_mais_paginas'])
+                ? 'Existem páginas adicionais; elas não são consultadas automaticamente para evitar novas cobranças.'
+                : null,
+        );
     }
 
     // ──────────────────────────────────────────────────────────────────────────

@@ -17,7 +17,7 @@
                 <p class="mt-1 text-xs text-gray-500">{{ $empresa->razao_social ?? $empresa->nome }} — <span class="font-mono">{{ $empresa->documento_formatado }}</span></p>
             </div>
             <div>
-                <a href="/app/consulta/nova?participante={{ $participante->id ?? '' }}" data-link class="inline-flex items-center gap-2 px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">
+                <a href="/app/consulta/nova?clientes={{ $empresa->id }}" data-link class="inline-flex items-center gap-2 px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
@@ -124,7 +124,7 @@
                     </svg>
                     <h3 class="mt-4 text-sm font-semibold text-gray-900 uppercase tracking-wide">Nenhuma consulta realizada</h3>
                     <p class="mt-2 text-xs text-gray-500">Ainda não foram realizadas consultas para esta empresa.</p>
-                    <a href="/app/consulta/nova?participante={{ $participante->id ?? '' }}" data-link class="mt-6 inline-flex items-center gap-2 px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">
+                    <a href="/app/consulta/nova?clientes={{ $empresa->id }}" data-link class="mt-6 inline-flex items-center gap-2 px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>

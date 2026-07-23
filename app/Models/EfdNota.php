@@ -14,7 +14,7 @@ class EfdNota extends Model
     protected $table = 'efd_notas';
 
     protected $fillable = [
-        'user_id', 'cliente_id', 'participante_id', 'importacao_id', 'chave_acesso', 'modelo', 'numero',
+        'user_id', 'cliente_id', 'participante_id', 'contraparte_cliente_id', 'importacao_id', 'chave_acesso', 'modelo', 'numero',
         'serie', 'data_emissao', 'tipo_operacao', 'valor_total',
         'valor_desconto', 'origem_arquivo', 'metadados', 'validacao', 'cancelada',
     ];
@@ -68,6 +68,11 @@ class EfdNota extends Model
     public function participante(): BelongsTo
     {
         return $this->belongsTo(Participante::class, 'participante_id');
+    }
+
+    public function contraparteCliente(): BelongsTo
+    {
+        return $this->belongsTo(Cliente::class, 'contraparte_cliente_id');
     }
 
     public function itens(): HasMany

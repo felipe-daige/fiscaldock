@@ -89,6 +89,12 @@ class AnaliseFiscalFonte implements Fonte
         return 0; // derivada: sem custo interno de provedor
     }
 
+    /** Deriva do cadastro/regime PJ (EFD, CNAE, S.A.); sem análogo PF. */
+    public function aceitaPessoa(): array
+    {
+        return ['PJ'];
+    }
+
     public function pronta(): bool
     {
         return true; // grátis no provedor (deriva do cadastro), sempre disponível

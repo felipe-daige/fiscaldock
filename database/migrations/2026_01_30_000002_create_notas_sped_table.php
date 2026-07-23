@@ -15,6 +15,10 @@ return new class extends Migration
             $table->foreignId('cliente_id')->constrained('clientes')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('participante_id')->nullable()->constrained('participantes')->nullOnDelete();
+            // Quando a contraparte também é uma empresa administrada, ela é Cliente e não
+            // pode ganhar uma ficha duplicada em participantes. `cliente_id` acima continua
+            // sendo o dono do SPED; esta FK identifica a contraparte.
+            $table->foreignId('contraparte_cliente_id')->nullable()->constrained('clientes')->nullOnDelete();
             $table->foreignId('importacao_id')->constrained('efd_importacoes')->cascadeOnDelete();
             $table->string('chave_acesso', 44)->nullable();
             $table->string('modelo', 2)->index();

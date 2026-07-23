@@ -19,6 +19,11 @@ class CndtFonte extends FonteCertidaoInfoSimples
         return (float) config('consultas.fontes.cndt', 0.40);
     }
 
+    public function aceitaPessoa(): array
+    {
+        return $this->tiposPessoaComPfValidado();
+    }
+
     protected function mapearSucesso(array $data): array
     {
         return [

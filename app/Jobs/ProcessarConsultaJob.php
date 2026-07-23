@@ -94,7 +94,12 @@ class ProcessarConsultaJob implements ShouldQueue
         // Ordena as fontes pela ETAPA (cadastrais→federais→estaduais) para que o
         // progresso avance de forma monotônica. O cadastro (etapa 2) cai naturalmente em
         // primeiro, garantindo a captura de UF/município antes das fontes UF-dependentes.
-        $fontes = $registry->fontesDe($this->consultasIncluidas);
+        $tipoPessoa = strtoupper((string) ($alvo['tipo_pessoa'] ?? (
+            strlen(preg_replace('/\D/', '', (string) ($alvo['documento'] ?? $alvo['cnpj'] ?? ''))) === 11
+                ? 'PF'
+                : 'PJ'
+        )));
+        $fontes = $registry->fontesDe($this->consultasIncluidas, $tipoPessoa);
         // Fontes DERIVADAS (ex.: analise_fiscal) não fazem chamada externa: são só flag de unlock
         // do bloco enriquecido do cadastro. Fora do loop de provedores (não viram etapa/consulta).
         $fontes = array_values(array_filter($fontes, fn ($f) => $f->provider() !== 'derivado'));
@@ -111,6 +116,7 @@ class ProcessarConsultaJob implements ShouldQueue
 
         // Idempotência de retry: fontes pagas já persistidas numa tentativa anterior não são
         // re-consultadas (evita re-cobrar InfoSimples se o worker matar/re-executar o job).
+        $persistencia->gravarContextoAlvo($this->loteId, $this->alvoTipo, $this->alvoId, $alvo);
         $jaPersistidas = $persistencia->chavesPersistidas($this->loteId, $this->alvoTipo, $this->alvoId);
 
         $totalFontes = count($fontes);
@@ -209,6 +215,13 @@ class ProcessarConsultaJob implements ShouldQueue
             $total,
         );
 
+        // Re-grava o contexto com o alvo JÁ ENRIQUECIDO pelo cadastro (data_inicio_atividade,
+        // razão social e município oficiais). A gravação da linha 119 acontece antes do loop,
+        // quando esses campos ainda não existem — sem esta segunda passada, a reconsulta manual
+        // de uma fonte que depende deles (BCB Valores a Receber de PJ) cairia em INDISPONÍVEL
+        // mesmo tendo funcionado na consulta original. Sem mudança, não gera escrita.
+        $persistencia->gravarContextoAlvo($this->loteId, $this->alvoTipo, $this->alvoId, $alvo);
+
         // Fecha o progresso DESTE alvo em pctGlobal(total, total). Sem isso a última emissão
         // parava em (N-1)/N — e num retry escopado a 1 fonte a ÚNICA emissão era 0%, deixando
         // a barra parada durante a reconsulta inteira. Multi-alvo segue monotônico: o fechamento
@@ -252,7 +265,10 @@ class ProcessarConsultaJob implements ShouldQueue
                 $arquivo = $comprovanteArquivador->arquivar(
                     (string) $bloco['comprovante'],
                     $this->userId,
-                    ComprovanteArquivador::rotuloFonte($fonte->chave(), (string) ($alvo['cnpj'] ?? '')),
+                    ComprovanteArquivador::rotuloFonte(
+                        $fonte->chave(),
+                        (string) ($alvo['documento'] ?? $alvo['cpf'] ?? $alvo['cnpj'] ?? ''),
+                    ),
                 );
 
                 if ($arquivo !== null) {
@@ -278,6 +294,12 @@ class ProcessarConsultaJob implements ShouldQueue
                 // (ex.: CndFederalFonte::params()) — mais confiável que a ORDEM do CNPJ.
                 if (! empty($dados['matriz_filial'])) {
                     $alvo['matriz_filial'] = $dados['matriz_filial'];
+                }
+                // Abertura oficial da PJ — complemento exigido pelo BCB Valores a Receber.
+                // Propaga em memória para que a fonte seguinte use o dado fresco sem persistir
+                // alterações no Participante/Cliente.
+                if (! empty($dados['data_inicio_atividade'])) {
+                    $alvo['data_inicio_atividade'] = $dados['data_inicio_atividade'];
                 }
 
                 // Raio-X tributário (regime + estimativa) só é PROCESSADO quando a Análise Fiscal
@@ -334,6 +356,13 @@ class ProcessarConsultaJob implements ShouldQueue
                 }
             }
 
+            // Cadastro PF pago também é fonte de identidade para as consultas seguintes do mesmo
+            // alvo (TSE/BNMP). Não toca no model Participante; só enriquece o alvo em memória.
+            if ($fonte->chave() === 'cadastro_pf' && ! empty($dados['cadastro_pf']['nome'])) {
+                $alvo['nome'] = $dados['cadastro_pf']['nome'];
+                $alvo['razao_social'] = $dados['cadastro_pf']['nome'];
+            }
+
             $resultado = new ResultadoFonte(
                 $fonte->chave(), $dados,
                 $resp->status, $fonte->custoCreditos(), $resp->mensagem,
@@ -352,7 +381,7 @@ class ProcessarConsultaJob implements ShouldQueue
                         $this->userId,
                         $this->alvoTipo,
                         $this->alvoId,
-                        (string) ($alvo['cnpj'] ?? ''),
+                        (string) ($alvo['documento'] ?? $alvo['cpf'] ?? $alvo['cnpj'] ?? ''),
                         $this->loteId,
                     );
                 } catch (\Throwable $e) {
@@ -370,7 +399,7 @@ class ProcessarConsultaJob implements ShouldQueue
                         $this->userId,
                         $this->alvoTipo,
                         $this->alvoId,
-                        (string) ($alvo['cnpj'] ?? ''),
+                        (string) ($alvo['documento'] ?? $alvo['cpf'] ?? $alvo['cnpj'] ?? ''),
                         $this->loteId,
                     );
                 } catch (\Throwable $e) {

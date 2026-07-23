@@ -132,22 +132,27 @@ it('lote de PLANO tambem registra certidoes (nao e exclusivo do avulso)', functi
     expect($certidao->consulta_lote_id)->toBe($lote->id);
 });
 
-it('mesmo CNPJ como participante E cliente do usuario gera DUAS linhas (nao colide na unique)', function () {
+it('CNPJ que já é participante vira cliente: a certidão consolida numa linha só (invariante de identidade)', function () {
     [$user, $pid] = alvoParticipante();
-    $cid = DB::table('clientes')->insertGetId([
-        'user_id' => $user->id, 'documento' => '19131243000197', 'razao_social' => 'EMPRESA PROPRIA',
-        'created_at' => now(), 'updated_at' => now(),
-    ]);
     $registro = app(CertidaoRegistro::class);
 
+    // Certidão emitida enquanto o CNPJ era só contraparte (participante).
     $comoPart = $registro->registrar('certidao_stj', ['status' => 'Negativa'], $user->id, 'participante', $pid, '19131243000197', 0);
-    $comoCli = $registro->registrar('certidao_stj', ['status' => 'Negativa'], $user->id, 'cliente', $cid, '19131243000197', 0);
 
-    // Antes do fix (unique só user+documento+tipo) o 2º updateOrCreate sobrescrevia o 1º.
-    expect(Certidao::where('user_id', $user->id)->where('tipo', 'certidao_stj')->count())->toBe(2)
-        ->and($comoPart->id)->not->toBe($comoCli->id)
-        ->and($comoPart->fresh()->participante_id)->toBe($pid)
-        ->and($comoPart->fresh()->cliente_id)->toBeNull()
-        ->and($comoCli->cliente_id)->toBe($cid)
-        ->and($comoCli->participante_id)->toBeNull();
+    // O usuário passa a administrar esse CNPJ → vira Cliente. A invariante de identidade
+    // (trigger) proíbe o mesmo documento em ambos: consolida o participante no cliente,
+    // então a certidão MIGRA para o cliente em vez de duplicar. (O cenário "duas linhas"
+    // do modelo antigo é impossível agora; consolidação coberta em IdentidadeClienteParticipanteTest.)
+    $cliente = App\Models\Cliente::create([
+        'user_id' => $user->id, 'tipo_pessoa' => 'PJ',
+        'documento' => '19131243000197', 'razao_social' => 'EMPRESA PROPRIA',
+    ]);
+
+    $certidoes = Certidao::where('user_id', $user->id)->where('tipo', 'certidao_stj')->get();
+    expect($certidoes)->toHaveCount(1)
+        ->and($certidoes->first()->id)->toBe($comoPart->id)
+        ->and($certidoes->first()->cliente_id)->toBe($cliente->id)
+        ->and($certidoes->first()->participante_id)->toBeNull()
+        ->and($certidoes->first()->alvo_tipo)->toBe('cliente')
+        ->and(App\Models\Participante::whereKey($pid)->exists())->toBeFalse();
 });

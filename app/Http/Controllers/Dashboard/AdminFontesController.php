@@ -12,11 +12,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 /**
- * Painel admin de PREÇO POR FONTE (fonte_precos) — somente operador FiscalDock (EnsureAdmin).
+ * Painel admin do CATÁLOGO POR FONTE (fonte_precos) — somente operador FiscalDock (EnsureAdmin).
  *
  * No modelo à la carte (migração 2026-07-22) não há mais escada fixa: cada consulta tem preço
- * próprio (R$ 1,00 default). Aqui o admin ajusta o preço de venda e liga/desliga cada fonte
- * comercialmente. Fonte única do preço: CatalogoFontesAvulsas::precoDe (DB → config → default).
+ * próprio (R$ 1,00 default). Aqui o admin ajusta preço e publicação de TODA fonte planejada,
+ * inclusive as ainda em manutenção. Fonte não pronta pode ser publicada na vitrine, mas nunca
+ * selecionada/cobrada. Fonte única do preço: CatalogoFontesAvulsas::precoDe.
  *
  * Padrão espelha AdminKitsController (form único, upsert em lote).
  */
@@ -99,7 +100,7 @@ class AdminFontesController extends Controller
             'created_at' => now(),
         ]);
 
-        return redirect()->route('app.admin.fontes.index')->with('status', 'Preços das consultas salvos.');
+        return redirect()->route('app.admin.fontes.index')->with('status', 'Catálogo de consultas salvo.');
     }
 
     /**
@@ -160,6 +161,17 @@ class AdminFontesController extends Controller
             foreach ((array) ($grupo['fontes'] ?? []) as $chave) {
                 $fonte = $this->registry->get($chave);
                 $override = $overrides->get($chave);
+                $meta = (array) config("advocacia.catalogo_fontes.{$chave}", []);
+                $tiposOperacionais = $fonte
+                    ? array_values(array_unique(array_map('strtoupper', $fonte->aceitaPessoa())))
+                    : [];
+                $tiposPlanejados = array_values(array_unique(array_map(
+                    'strtoupper',
+                    (array) ($meta['tipos_pessoa'] ?? $tiposOperacionais),
+                )));
+                $pausada = in_array($chave, $pausadas, true);
+                $pronta = $fonte !== null && $fonte->pronta() && ! $pausada;
+
                 $fontes[] = [
                     'chave' => $chave,
                     'nome' => (string) config("consultas.fonte_nome.{$chave}", $chave),
@@ -167,7 +179,14 @@ class AdminFontesController extends Controller
                     'tem_override' => $override !== null,
                     'ativo' => $override !== null ? (bool) $override->ativo : true,
                     'registrada' => $fonte !== null,
-                    'pausada' => in_array($chave, $pausadas, true),
+                    'pronta' => $pronta,
+                    'pausada' => $pausada,
+                    'tipos_operacionais_label' => $tiposOperacionais !== []
+                        ? $this->catalogo->rotuloDocumentosAceitos($tiposOperacionais)
+                        : null,
+                    'tipos_planejados_label' => (string) ($meta['documentos_label']
+                        ?? $this->catalogo->rotuloDocumentosAceitos($tiposPlanejados)),
+                    'requer_autenticacao' => (bool) ($meta['requer_autenticacao'] ?? false),
                 ];
             }
             $out[$chaveGrupo] = ['label' => (string) ($grupo['label'] ?? $chaveGrupo), 'fontes' => $fontes];

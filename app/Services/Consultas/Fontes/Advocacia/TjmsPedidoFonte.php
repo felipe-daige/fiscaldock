@@ -37,6 +37,12 @@ class TjmsPedidoFonte extends FonteCertidaoInfoSimples implements FonteDuasEtapa
         return (float) config('consultas.fontes.certidao_tjms', 1.00);
     }
 
+    /** Pedido de certidão do TJMS hoje monta o alvo por CNPJ; PF entra quando a fase 4 tratar CPF. */
+    public function aceitaPessoa(): array
+    {
+        return ['PJ'];
+    }
+
     public function aplicavelPara(array $alvo): bool
     {
         // MS-only (comarcas do TJMS) + razão social + comarca resolvível + e-mail de sistema.

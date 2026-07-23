@@ -3,11 +3,12 @@
 namespace App\Services\Consultas;
 
 use App\Models\Certidao;
+use App\Support\Cpf;
 use App\Support\DataBr;
 
 /**
  * Grava/atualiza o registro canônico da certidão emitida (tabela `certidoes`) a partir do
- * bloco normalizado da fonte. 1 linha por (user, documento, fonte) — a emissão mais recente
+ * bloco normalizado da fonte. 1 linha por (user, documento, fonte), para CPF ou CNPJ — a emissão mais recente
  * vence; status "não emitida" (INDISPONIVEL/NAO_ENCONTRADA/INDETERMINADO) NÃO sobrescreve um
  * registro anterior: o usuário ainda tem em mãos a última certidão de fato emitida.
  *
@@ -32,7 +33,11 @@ class CertidaoRegistro
     ): ?Certidao {
         $status = trim((string) ($bloco['status'] ?? ''));
         $documento = preg_replace('/\D/', '', $documento) ?? '';
-        if ($status === '' || in_array(strtoupper($status), self::STATUS_NAO_EMITIDA, true) || strlen($documento) !== 14) {
+        $documentoValido = strlen($documento) === 14
+            || (strlen($documento) === 11 && Cpf::valido($documento));
+        if ($status === ''
+            || in_array(strtoupper($status), self::STATUS_NAO_EMITIDA, true)
+            || ! $documentoValido) {
             return null;
         }
 
@@ -53,8 +58,8 @@ class CertidaoRegistro
         $orgao = ResultadoDetalhePresenter::ORGAO[$chaveFonte] ?? null;
         $orgao = $orgao !== null ? (preg_replace('/^[AO]\s+/u', '', $orgao) ?: $orgao) : null;
 
-        // Chave inclui alvo_tipo: o MESMO CNPJ pode existir como participante (contraparte) E
-        // cliente (empresa gerida) do mesmo usuário — sem isso as duas consultas colidiriam na
+        // Chave inclui alvo_tipo: o MESMO documento pode existir como participante (contraparte) E
+        // cliente (pessoa gerida) do mesmo usuário — sem isso as duas consultas colidiriam na
         // mesma linha e o alerta/re-emissão apontaria pro alvo errado.
         return Certidao::updateOrCreate(
             ['user_id' => $userId, 'alvo_tipo' => $alvoTipo, 'alvo_documento' => $documento, 'tipo' => $chaveFonte],

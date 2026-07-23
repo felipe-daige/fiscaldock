@@ -424,11 +424,22 @@ class MonitoramentoController extends Controller
 
         $adicionados = 0;
         $duplicados = 0;
+        $documentosClientes = Cliente::where('user_id', $user->id)
+            ->pluck('documento')
+            ->map(fn ($documento) => preg_replace('/\D/', '', (string) $documento))
+            ->filter()
+            ->flip();
 
         try {
             DB::beginTransaction();
 
             foreach ($cnpjs as $cnpj) {
+                if (isset($documentosClientes[$cnpj])) {
+                    $duplicados++;
+
+                    continue;
+                }
+
                 // Verificar se já existe
                 $existente = Participante::where('user_id', $user->id)
                     ->where('documento', $cnpj)

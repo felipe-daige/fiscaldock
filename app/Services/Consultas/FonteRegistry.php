@@ -28,6 +28,14 @@ class FonteRegistry
         return $this->fontes[$chave] ?? null;
     }
 
+    public function aceitaTipo(string $chave, string $tipoPessoa): bool
+    {
+        $fonte = $this->get($chave);
+
+        return $fonte !== null
+            && in_array(strtoupper($tipoPessoa), array_map('strtoupper', $fonte->aceitaPessoa()), true);
+    }
+
     /**
      * Fonte PAUSADA na origem (`consultas.fontes_pausadas`, env CONSULTAS_FONTES_PAUSADAS): a
      * InfoSimples despausa/pausa endpoints globalmente quando o site oficial está instável.
@@ -74,7 +82,7 @@ class FonteRegistry
      *
      * @return Fonte[]
      */
-    public function fontesDe(array $atributos): array
+    public function fontesDe(array $atributos, ?string $tipoPessoa = null): array
     {
         $out = [];
         foreach ($atributos as $atributo) {
@@ -82,7 +90,9 @@ class FonteRegistry
             // Pausada na origem não roda nem cobra, mesmo que o atributo venha de um lote/plano
             // criado antes da pausa (`get()` segue devolvendo a fonte: o follow-up de 2 etapas
             // precisa resolver pedidos já pagos e em voo).
-            if ($fonte && ! $this->pausada($fonte->chave())) {
+            if ($fonte
+                && ! $this->pausada($fonte->chave())
+                && ($tipoPessoa === null || $this->aceitaTipo($fonte->chave(), $tipoPessoa))) {
                 $out[$fonte->chave()] = $fonte;
             }
         }

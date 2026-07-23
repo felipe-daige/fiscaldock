@@ -6,8 +6,8 @@ use App\Models\EfdImportacao;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Preenche `efd_notas.participante_id` re-parseando o SPED bruto (`arquivo_base64`):
- * COD_PART do C100/D100 × 0150 → documento × `participantes(user_id, documento)` → id.
+ * Preenche a identidade da contraparte em `efd_notas` re-parseando o SPED bruto:
+ * COD_PART do C100/D100 × 0150 → documento → Participante OU Cliente.
  * §L5 / §10.6 passo 4. Universal (fiscal e contribuições).
  *
  * Generaliza `BackfillParticipantesFiscal::parseArquivo` (que lê arquivos em disco) pra
@@ -28,38 +28,42 @@ class ParticipanteResolver
             return 0;
         }
 
-        $docParaId = $this->documentoParaParticipante((int) $imp->user_id);
+        $docParaAlvo = $this->documentoParaAlvo((int) $imp->user_id);
 
-        // Coleta id→participante em memória com chunkById (cursor por id, não OFFSET:
+        // Coleta alvo→notas em memória com chunkById (cursor por id, não OFFSET:
         // `chunk` paginaria por OFFSET enquanto o UPDATE remove linhas do próprio filtro
         // `whereNull('participante_id')`, pulando ~30% das notas). Depois agrupa por pid e
         // faz UM update por participante (evita 1 UPDATE por nota — N+1).
-        $notaIdsPorPid = [];
+        $notaIdsPorAlvo = [];
         DB::table('efd_notas')
             ->where('user_id', $imp->user_id)
             ->where('importacao_id', $imp->id)
             ->whereNull('participante_id')
+            ->whereNull('contraparte_cliente_id')
             ->whereNotNull('chave_acesso')
             ->select('id', 'chave_acesso')
             ->orderBy('id')
-            ->chunkById(1000, function ($notas) use ($chaveParaDoc, $docParaId, &$notaIdsPorPid) {
+            ->chunkById(1000, function ($notas) use ($chaveParaDoc, $docParaAlvo, &$notaIdsPorAlvo) {
                 foreach ($notas as $nota) {
                     $doc = $chaveParaDoc[$nota->chave_acesso] ?? null;
                     if ($doc === null) {
                         continue; // sem COD_PART no SPED (consumidor final) ou fora do arquivo
                     }
-                    $pid = $docParaId[$doc] ?? null;
-                    if ($pid === null) {
-                        continue; // documento sem participante cadastrado
+                    $alvo = $docParaAlvo[$doc] ?? null;
+                    if ($alvo === null) {
+                        continue; // documento sem identidade cadastrada
                     }
-                    $notaIdsPorPid[$pid][] = $nota->id;
+                    $chaveAlvo = ($alvo['participante_id'] ? 'p:' : 'c:')
+                        .($alvo['participante_id'] ?? $alvo['contraparte_cliente_id']);
+                    $notaIdsPorAlvo[$chaveAlvo]['alvo'] = $alvo;
+                    $notaIdsPorAlvo[$chaveAlvo]['ids'][] = $nota->id;
                 }
             });
 
         $atualizadas = 0;
-        foreach ($notaIdsPorPid as $pid => $ids) {
-            foreach (array_chunk($ids, 1000) as $lote) {
-                $atualizadas += DB::table('efd_notas')->whereIn('id', $lote)->update(['participante_id' => $pid]);
+        foreach ($notaIdsPorAlvo as $grupo) {
+            foreach (array_chunk($grupo['ids'], 1000) as $lote) {
+                $atualizadas += DB::table('efd_notas')->whereIn('id', $lote)->update($grupo['alvo']);
             }
         }
 
@@ -118,11 +122,11 @@ class ParticipanteResolver
     }
 
     /**
-     * documento (só dígitos) → participante_id, no escopo do usuário.
+     * documento (só dígitos) → identidade exclusiva, no escopo do usuário.
      *
-     * @return array<string, int>
+     * @return array<string, array{participante_id:?int,contraparte_cliente_id:?int}>
      */
-    private function documentoParaParticipante(int $userId): array
+    private function documentoParaAlvo(int $userId): array
     {
         $map = [];
         $participantes = DB::table('participantes')
@@ -134,7 +138,29 @@ class ParticipanteResolver
         foreach ($participantes as $p) {
             $doc = preg_replace('/\D/', '', (string) $p->documento);
             if ($doc !== '') {
-                $map[$doc] = (int) $p->id;
+                $map[$doc] = [
+                    'participante_id' => (int) $p->id,
+                    'contraparte_cliente_id' => null,
+                ];
+            }
+        }
+
+        // Vínculo de cliente é ADITIVO: preserva o participante_id já mapeado (é ele que liga a
+        // nota às superfícies analíticas) e apenas acrescenta a marca de que a contraparte também
+        // é cliente do usuário. Sobrescrever com null zerava o vínculo e escondia o movimento.
+        foreach (
+            DB::table('clientes')
+                ->where('user_id', $userId)
+                ->whereNotNull('documento')
+                ->select('id', 'documento')
+                ->get() as $cliente
+        ) {
+            $doc = preg_replace('/\D/', '', (string) $cliente->documento);
+            if ($doc !== '') {
+                $map[$doc] = [
+                    'participante_id' => $map[$doc]['participante_id'] ?? null,
+                    'contraparte_cliente_id' => (int) $cliente->id,
+                ];
             }
         }
 

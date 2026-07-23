@@ -94,6 +94,87 @@ it('monta bloco de dados cadastrais com itens e listas (CNAEs/QSA)', function ()
     expect($tituloListas)->toContain('CNAEs')->toContain('Quadro societário (QSA)');
 });
 
+it('monta blocos ricos das fontes PF sem tratar cadastro como certidao generica', function () {
+    $blocos = (new ResultadoDetalhePresenter)->blocos(resultadoComDados([
+        'cadastro_pf' => [
+            'status' => 'REGULAR',
+            'situacao_cadastral' => 'REGULAR',
+            'cpf' => '52998224725',
+            'nome' => 'MARIA DA SILVA',
+            'data_nascimento' => '10/05/1980',
+        ],
+        'quitacao_eleitoral' => [
+            'status' => 'Negativa',
+            'nome' => 'MARIA DA SILVA',
+            'titulo_eleitoral' => '123456789012',
+            'biometria_coletada' => true,
+            'certidao_codigo' => 'TSE-1',
+            'domicilio_eleitoral' => ['municipio' => 'Dourados', 'uf' => 'MS', 'zona' => '18'],
+        ],
+        'mandado_prisao' => [
+            'status' => 'Positiva',
+            'total_registros' => 1,
+            'registros' => [[
+                'mandado' => 'M-1',
+                'processo' => 'P-1',
+                'situacao' => 'Aguardando cumprimento',
+                'tribunal' => 'TJMS',
+            ]],
+        ],
+    ]));
+
+    $cadastro = bloco($blocos, 'cadastro_pf');
+    $quitacao = bloco($blocos, 'quitacao_eleitoral');
+    $mandado = bloco($blocos, 'mandado_prisao');
+
+    expect(collect($cadastro['itens'])->keyBy('label')->get('CPF')['valor'])->toBe('529.982.247-25')
+        ->and(collect($quitacao['itens'])->keyBy('label')->get('Domicílio eleitoral')['valor'])
+        ->toContain('Dourados')
+        ->and($mandado['listas'][0]['linhas'][0])->toContain('Mandado M-1')
+        ->and($mandado['listas'][0]['linhas'][0])->toContain('Processo P-1');
+});
+
+it('monta blocos das novas fontes públicas com registros e paginação', function () {
+    $blocos = (new ResultadoDetalhePresenter)->blocos(resultadoComDados([
+        'tcu_cni_inidoneo' => [
+            'status' => 'Positiva',
+            'certidao_codigo' => 'CNI-1',
+            'total_processos' => 1,
+            'processos' => [[
+                'processo' => '1111111-11.1111.1.11.1111',
+                'acordao' => '111/2026',
+            ]],
+        ],
+        'inpi_marcas_titular' => [
+            'status' => 'Positiva',
+            'total_registros' => 8,
+            'pagina_atual' => 1,
+            'total_paginas' => 3,
+            'tem_mais_paginas' => true,
+            'registros' => [[
+                'numero' => '123',
+                'marca' => 'FiscalDock',
+                'situacao' => 'Registro em vigor',
+            ]],
+        ],
+        'bcb_valores_receber' => [
+            'status' => 'Positiva',
+            'possui_valores_receber' => true,
+            'mensagem' => 'Há valores a receber.',
+        ],
+    ]));
+
+    $tcu = bloco($blocos, 'tcu_cni_inidoneo');
+    $inpi = bloco($blocos, 'inpi_marcas_titular');
+    $bcb = bloco($blocos, 'bcb_valores_receber');
+
+    expect($tcu['listas'][0]['linhas'][0])->toContain('Acórdão: 111/2026')
+        ->and($inpi['listas'][0]['linhas'][0])->toContain('Marca: FiscalDock')
+        ->and($inpi['nota'])->toContain('páginas adicionais')
+        ->and(collect($bcb['itens'])->keyBy('label')->get('Possui valores a receber')['valor'])
+        ->toBe('Sim');
+});
+
 it('monta blocos de certidões com código, validade e mensagem oficial', function () {
     $blocos = (new ResultadoDetalhePresenter)->blocos(resultadoComDados([
         'cnd_federal' => [

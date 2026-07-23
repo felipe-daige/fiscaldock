@@ -43,6 +43,15 @@ interface Fonte
     public function custoCreditos(): float;
 
     /**
+     * Tipos de pessoa que esta fonte aceita como ALVO: ['PJ'], ['PF'] ou ['PF','PJ'].
+     * Default histórico é ['PJ'] (o sistema nasceu CNPJ-only). O registry/catálogo filtram
+     * a seleção pelo tipo do alvo — fonte PJ-only nunca roda (nem cobra) num alvo CPF.
+     *
+     * @return list<string>
+     */
+    public function aceitaPessoa(): array;
+
+    /**
      * A fonte está operacional para rotear pro Laravel? Gate de cutover seguro:
      * fontes InfoSimples só ficam prontas quando ativadas (token + flag), evitando
      * migrar um plano pago pro Laravel antes do provedor estar pago/validado.

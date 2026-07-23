@@ -366,10 +366,10 @@ it('auto: empresa própria no destinatário associa o emitente ao cliente própr
     expect(Participante::find($nota->emit_participante_id)->cliente_id)->toBe($cliente->id);
 });
 
-it('auto: dois clientes comuns → emitente vence e o destinatário é o participante', function () {
+it('auto: dois clientes comuns → emitente vence e o destinatário continua cliente', function () {
     $user = User::factory()->create();
     $emitCliente = Cliente::create(['user_id' => $user->id, 'documento' => '97551165000193', 'razao_social' => 'HIDRATOP', 'is_empresa_propria' => false]);
-    Cliente::create(['user_id' => $user->id, 'documento' => '44373108000600', 'razao_social' => 'COCAL', 'is_empresa_propria' => false]);
+    $destCliente = Cliente::create(['user_id' => $user->id, 'documento' => '44373108000600', 'razao_social' => 'COCAL', 'is_empresa_propria' => false]);
     $imp = novaImportacaoXml($user);
 
     app(XmlNotaImporter::class)->importar(parsedFixture(), null, $imp);
@@ -377,8 +377,9 @@ it('auto: dois clientes comuns → emitente vence e o destinatário é o partici
     $nota = XmlNota::where('user_id', $user->id)->first();
     expect($nota->tipo_nota)->toBe(XmlNota::TIPO_SAIDA);
     expect($nota->emit_participante_id)->toBeNull();
-    expect($nota->dest_participante_id)->not->toBeNull();
-    expect(Participante::find($nota->dest_participante_id)->cliente_id)->toBe($emitCliente->id);
+    expect($nota->emit_cliente_id)->toBe($emitCliente->id);
+    expect($nota->dest_participante_id)->toBeNull();
+    expect($nota->dest_cliente_id)->toBe($destCliente->id);
 });
 
 it('não sobrescreve o cliente_id de uma contraparte que já pertence a outro cliente', function () {

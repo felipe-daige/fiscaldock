@@ -8,6 +8,9 @@ use App\Services\Consultas\Fontes\Advocacia\ProtestosFonte;
 beforeEach(function () {
     config()->set('consultas.infosimples_ativo', true);
     config()->set('consultas.providers.infosimples.token', 'test-token');
+    // As PF nativas ficam atrás do gate de smoke (params ainda não confirmados no painel);
+    // os testes as liberam explicitamente para exercitar o pipeline.
+    config()->set('advocacia.fontes_publicas_liberadas', ['cadastro_pf', 'quitacao_eleitoral']);
 });
 
 test('as 11 fontes advocacia estao registradas e prontas', function () {
@@ -24,26 +27,45 @@ test('as 11 fontes advocacia estao registradas e prontas', function () {
     }
 });
 
-test('catalogo avulso expoe 20 fontes em 4 grupos (TJMS 2-etapas + cadastro gratis + analise fiscal)', function () {
+test('catalogo avulso expoe fontes operacionais e futuras agrupadas', function () {
     config()->set('consultas.fontes_pausadas', []); // baseline: nada pausado na origem
     $grupos = app(\App\Services\Advocacia\CatalogoFontesAvulsas::class)->grupos();
 
-    expect(array_keys($grupos))->toBe(['judicial', 'integridade', 'passivo', 'fiscal'])
-        ->and(count($grupos['judicial']['fontes']))->toBe(6) // + certidao_tjms (fase 4)
-        ->and(count($grupos['integridade']['fontes']))->toBe(4)
-        ->and(count($grupos['passivo']['fontes']))->toBe(2)
-        ->and(count($grupos['fiscal']['fontes']))->toBe(8); // + cadastro (grátis) + analise_fiscal (paga)
+    expect(array_keys($grupos))->toBe([
+        'pessoa_fisica', 'judicial', 'integridade', 'ambiental', 'patrimonio',
+        'imoveis', 'processual', 'passivo', 'fiscal',
+    ]);
 
-    // R$ 1,00 default em todas as single-call. Exceção: fonte de 2 ETAPAS custa ≥2 chamadas pagas
-    // ao provedor (pedido + conferências), então tem override em `advocacia.precos`.
+    $fontes = collect($grupos)->flatMap(fn (array $grupo) => $grupo['fontes'])->keyBy('chave');
+    expect($fontes['cadastro_pf']['selecionavel'])->toBeTrue()
+        ->and($fontes['quitacao_eleitoral']['selecionavel'])->toBeTrue()
+        ->and($fontes['antecedentes_pf']['selecionavel'])->toBeFalse()
+        ->and($fontes['pgfn_devedores']['selecionavel'])->toBeFalse()
+        ->and($fontes['pgfn_devedores']['em_manutencao'])->toBeTrue()
+        ->and($fontes['receita_situacao_fiscal']['requer_autenticacao'])->toBeTrue()
+        ->and($fontes['car_imovel']['documentos_aceitos_label'])->toBe('Número do CAR');
+
     $overrides = (array) config('advocacia.precos', []);
-    foreach ($grupos as $g) {
-        foreach ($g['fontes'] as $f) {
-            expect($f['preco'])->toBe((float) ($overrides[$f['chave']] ?? 1.00));
-        }
-    }
-
     expect($overrides['certidao_tjms'] ?? null)->toBe(2.00); // 2 etapas não cabe no R$ 1,00
+});
+
+test('fontes PF sensiveis ficam registradas mas desligadas por padrao', function () {
+    $registry = app(FonteRegistry::class);
+
+    expect($registry->get('cadastro_pf'))->not->toBeNull()
+        ->and($registry->get('cadastro_pf')->pronta())->toBeTrue()
+        ->and($registry->get('quitacao_eleitoral'))->not->toBeNull()
+        ->and($registry->get('quitacao_eleitoral')->pronta())->toBeTrue()
+        ->and($registry->get('antecedentes_pf'))->not->toBeNull()
+        ->and($registry->get('antecedentes_pf')->pronta())->toBeFalse()
+        ->and($registry->get('mandado_prisao'))->not->toBeNull()
+        ->and($registry->get('mandado_prisao')->pronta())->toBeFalse();
+
+    config()->set('advocacia.fontes_sensiveis.antecedentes_pf', true);
+    config()->set('advocacia.fontes_sensiveis.mandado_prisao', true);
+
+    expect($registry->get('antecedentes_pf')->pronta())->toBeTrue()
+        ->and($registry->get('mandado_prisao')->pronta())->toBeTrue();
 });
 
 test('etapas dinamicas incluem os grupos novos em ordem canonica', function () {
@@ -269,20 +291,23 @@ test('TRF: certidao EMITIDA nunca vira "Em andamento", mesmo com frase parecida'
     expect($pendente['certidao_trf']['status'])->toBe('Em andamento');
 });
 
-test('fonte pausada na origem some da tela e da selecao, sem cobrar', function () {
+test('fonte pausada na origem fica visivel como manutencao e sai da selecao', function () {
     $catalogo = app(\App\Services\Advocacia\CatalogoFontesAvulsas::class);
 
     config()->set('consultas.fontes_pausadas', []);
     expect($catalogo->chavesDisponiveis())->toContain('falencias')->toContain('protestos');
 
-    // Pausa protestos+falencias (estado prod 2026-07-22): saem do catálogo e do grupo passivo.
+    // Pausa protestos+falencias: continuam publicadas como manutenção, mas saem da seleção.
     config()->set('consultas.fontes_pausadas', ['falencias', 'protestos']);
     $catalogo = app(\App\Services\Advocacia\CatalogoFontesAvulsas::class); // memo por instância
     $disp = $catalogo->chavesDisponiveis();
+    $passivo = collect($catalogo->grupos()['passivo']['fontes'])->keyBy('chave');
     expect($disp)->not->toContain('falencias')
         ->and($disp)->not->toContain('protestos')
         ->and($disp)->toContain('certidao_stj') // as demais seguem disponíveis
-        ->and(array_key_exists('passivo', $catalogo->grupos()))->toBeFalse(); // grupo vazio some
+        ->and($passivo['falencias']['selecionavel'])->toBeFalse()
+        ->and($passivo['falencias']['pausada'])->toBeTrue()
+        ->and($passivo['protestos']['selecionavel'])->toBeFalse();
 });
 
 test('pausa na origem vale pra QUALQUER fonte e barra a execucao, nao so a vitrine', function () {
@@ -377,4 +402,17 @@ test('presenter classifica bloco de lista Positiva como atencao no strip', funct
     expect($porChave['protestos']['estado'])->toBe('atencao')
         ->and($porChave['certidao_stj']['estado'])->toBe('regular')
         ->and($porChave['certidao_stj']['sigla'])->toBe('STJ');
+});
+
+test('PF nativas nao sao vendaveis com o gate de smoke vazio (estado de producao)', function () {
+    // Trava do gate: `receita-federal/cpf` e `tribunal/tse/certidao` não estão em
+    // docs/infosimples/README.md — a grafia dos params foi inferida e 606/607 são BILLABLE.
+    // Enquanto o contrato real não for colado na doc, elas não podem ser cobradas.
+    config()->set('advocacia.fontes_publicas_liberadas', []);
+    $registry = app(FonteRegistry::class);
+
+    expect($registry->get('cadastro_pf')->pronta())->toBeFalse()
+        ->and($registry->get('quitacao_eleitoral')->pronta())->toBeFalse()
+        ->and(app(\App\Services\Advocacia\CatalogoFontesAvulsas::class)->chavesDisponiveis('PF'))
+        ->toBe([]);
 });

@@ -61,9 +61,12 @@ it('classificar lado emit cria cliente com dados da SEFAZ, reassocia snapshot e 
         ->and(Participante::where('user_id', $user->id)->where('documento', '13305697000150')->exists())->toBeTrue();
 });
 
-it('não remove participante manual com o mesmo CNPJ (só o auto-criado pelo clearance)', function () {
+it('participante SEM nota com o CNPJ que vira cliente é consolidado (a invariante ignora a origem)', function () {
     $user = User::factory()->create();
     cpSnapshot($user);
+    // Participante manual, mas SEM nenhuma nota vinculada = duplicata de cadastro. A invariante
+    // de identidade não distingue origem (manual/auto): ao virar cliente, consolida. Só um
+    // participante COM nota (movimento real) sobreviveria — coberto em IdentidadeClienteParticipanteTest.
     Participante::create([
         'user_id' => $user->id, 'documento' => '97551165000193', 'tipo_documento' => 'PJ',
         'razao_social' => 'MANUAL', 'origem_tipo' => 'MANUAL',
@@ -73,7 +76,7 @@ it('não remove participante manual com o mesmo CNPJ (só o auto-criado pelo cle
         'chave_acesso' => cpChave(), 'lado' => 'emit',
     ])->assertOk();
 
-    expect(Participante::where('user_id', $user->id)->where('documento', '97551165000193')->exists())->toBeTrue();
+    expect(Participante::where('user_id', $user->id)->where('documento', '97551165000193')->exists())->toBeFalse();
 });
 
 it('reusa cliente existente com o CNPJ em vez de duplicar', function () {

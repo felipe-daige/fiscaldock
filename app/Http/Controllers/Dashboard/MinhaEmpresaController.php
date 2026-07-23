@@ -43,18 +43,8 @@ class MinhaEmpresaController extends Controller
             abort(404, 'Empresa própria não encontrada.');
         }
 
-        // Buscar ou criar participante correspondente ao CNPJ da empresa
-        $cnpjLimpo = preg_replace('/\D/', '', $empresa->documento);
-        $participante = Participante::firstOrCreate(
-            ['user_id' => $user->id, 'documento' => $cnpjLimpo],
-            [
-                'razao_social' => $empresa->razao_social ?? $empresa->nome,
-                'origem_tipo' => 'PROPRIO',
-            ]
-        );
-
-        // Consulta e score podem estar ligados ao cliente OU ao participante espelho. O perfil
-        // usa uma projeção única por CNPJ para cadastro, score e certidões não divergirem.
+        // Empresa própria é Cliente. Nunca cria um Participante espelho do mesmo documento.
+        // A projeção por CNPJ mantém apenas a leitura retrocompatível de histórico legado.
         $snapshot = app(\App\Services\Perfis\PerfilCnpjSnapshotService::class)
             ->resolver((int) $user->id, (string) $empresa->documento);
         $score = $snapshot['score'];
@@ -83,13 +73,10 @@ class MinhaEmpresaController extends Controller
         $notasFiscais = app(\App\Services\NotaFiscalService::class)
             ->listarUnificadas((int) $user->id, ['cliente_id' => $empresa->id], 10, 1, '/app/cliente/'.$empresa->id.'/notas');
 
-        // Assinatura de monitoramento contínuo da empresa própria (alvo cliente OU participante).
+        // Assinatura de monitoramento contínuo da empresa própria (alvo Cliente).
         $monitoramento = \App\Models\MonitoramentoAssinatura::where('user_id', $user->id)
             ->where('status', 'ativo')
-            ->where(function ($query) use ($empresa, $participante) {
-                $query->where('cliente_id', $empresa->id)
-                    ->orWhere('participante_id', $participante->id);
-            })
+            ->where('cliente_id', $empresa->id)
             ->first();
 
         // Perfil do score (breakdown por categoria) — mesma decomposição de clientes/show e
@@ -109,7 +96,7 @@ class MinhaEmpresaController extends Controller
             // Consolidado fiscal acumulado (C190/D190 de todas as importações EFD da empresa).
             'consolidadoFiscal' => $this->consolidadoFiscal
                 ->porCliente((int) $empresa->id, (int) $user->id),
-            'participante' => $participante,
+            'participante' => null,
             'score' => $score,
             'scoreDetalhamento' => $scoreDetalhamento,
             'ultimaConsulta' => $ultimaConsulta,
@@ -179,25 +166,14 @@ class MinhaEmpresaController extends Controller
             abort(404, 'Empresa própria não encontrada.');
         }
 
-        $cnpjLimpo = preg_replace('/\D/', '', $empresa->documento);
-        $participante = Participante::where('user_id', $user->id)
-            ->where('documento', $cnpjLimpo)
-            ->first();
-
-        // Resultado pode estar no participante espelho OU no cliente (empresa própria).
-        $consultas = ConsultaResultado::where(function ($query) use ($participante, $empresa) {
-            if ($participante) {
-                $query->where('participante_id', $participante->id);
-            }
-            $query->orWhere('cliente_id', $empresa->id);
-        })
+        $consultas = ConsultaResultado::where('cliente_id', $empresa->id)
             ->with('lote')
             ->latest('consultado_em')
             ->paginate(20);
 
         return $this->render($request, 'historico', [
             'empresa' => $empresa,
-            'participante' => $participante,
+            'participante' => null,
             'consultas' => $consultas,
         ]);
     }

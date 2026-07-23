@@ -8,6 +8,46 @@ use App\Services\Consultas\Dto\ResultadoFonte;
 class PersistenciaCnpj
 {
     /**
+     * Persiste o mínimo necessário para uma reconsulta reproduzir os parâmetros complementares
+     * originais. Fica no próprio resultado agnóstico ao documento; não cria cadastro paralelo.
+     *
+     * Chamado DUAS vezes por alvo (job): antes do loop de fontes e de novo ao final. A segunda
+     * passada é o que salva a reconsulta manual das fontes que exigem complemento vindo do
+     * CADASTRO daquele mesmo lote — `data_inicio_atividade` (BCB Valores a Receber de PJ) só
+     * entra no alvo quando a minhareceita responde, depois da primeira gravação. Sem ela, um
+     * alvo sem a data no cadastro local consultava na primeira vez e ficava INDISPONÍVEL no
+     * retry. Gravação sem mudança é descartada (não gera UPDATE por alvo).
+     */
+    public function gravarContextoAlvo(int $loteId, string $alvoTipo, int $alvoId, array $alvo): void
+    {
+        $chaveEscopo = $alvoTipo === 'cliente' ? 'cliente_id' : 'participante_id';
+        $linha = ConsultaResultado::firstOrNew([
+            'consulta_lote_id' => $loteId,
+            $chaveEscopo => $alvoId,
+        ]);
+        $dados = $linha->resultado_dados ?? [];
+        $campos = [
+            'documento', 'tipo_pessoa', 'nome', 'birthdate', 'nome_mae', 'nome_pai',
+            'uf_nascimento', 'titulo_eleitoral', 'ano', 'data_inicio_atividade',
+        ];
+        $contexto = array_filter(
+            array_intersect_key($alvo, array_flip($campos)),
+            fn ($valor) => $valor !== null && $valor !== '',
+        );
+
+        // `==` (não `===`): compara par a par ignorando a ORDEM das chaves — o alvo enriquecido
+        // pelo cadastro pode trazer os mesmos valores em ordem diferente.
+        if ($linha->exists && ($dados['_alvo_contexto'] ?? null) == $contexto) {
+            return;
+        }
+
+        $dados['_alvo_contexto'] = $contexto;
+        $linha->resultado_dados = $dados;
+        $linha->status ??= ConsultaResultado::STATUS_PENDENTE;
+        $linha->save();
+    }
+
+    /**
      * Chaves de fonte já persistidas para este alvo no lote (top-level de resultado_dados).
      * Usado pelo job p/ idempotência: em retry, não re-consultar (nem re-cobrar) o que já rodou.
      *
@@ -64,7 +104,9 @@ class PersistenciaCnpj
         }
 
         $linha->resultado_dados = $dados;
-        $linha->status = $resultado->status === 'sucesso' ? 'sucesso' : ($linha->status ?: 'erro');
+        $linha->status = $resultado->status === 'sucesso'
+            ? 'sucesso'
+            : ($this->statusResolvido($linha->status) ?: 'erro');
         if ($resultado->status !== 'sucesso' && $resultado->mensagem) {
             $linha->error_message = $resultado->mensagem;
         }
@@ -113,9 +155,20 @@ class PersistenciaCnpj
         $dados['_fontes_erro'] = $erros;
 
         $linha->resultado_dados = $dados;
-        $linha->status = $linha->status ?: 'erro';
+        $linha->status = $this->statusResolvido($linha->status) ?: 'erro';
         $linha->consultado_em = now();
         $linha->save();
+    }
+
+    /**
+     * Status "real" da linha para o cálculo de desfecho. O placeholder PENDENTE gravado por
+     * gravarContextoAlvo ANTES do loop de fontes NÃO é um desfecho: precisa ceder para
+     * 'sucesso'/'erro' quando uma fonte de fato grava. Sem isso, um alvo cujas fontes TODAS
+     * falham (ex.: PF sem cadastro auto) ficaria preso em 'pendente' num lote já CONCLUIDO.
+     */
+    private function statusResolvido(?string $status): ?string
+    {
+        return $status === ConsultaResultado::STATUS_PENDENTE ? null : $status;
     }
 
     /**

@@ -1,10 +1,10 @@
-{{-- Consulta por Fontes (à la carte) — seletor canônico de consulta CNPJ (migração 2026-07-22).
+{{-- Consulta por Fontes (à la carte) — seletor canônico de consulta por CPF/CNPJ.
      Seleção de consultas/kit/preset via MODAL; usuário salva a própria combinação ("meu plano"). --}}
 @php
     // Helper local: badge "Grátis" (hex inline, regra do design system) quando preço = 0.
     $precoLabel = fn ($p) => $p <= 0
         ? '<span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#047857">Grátis</span>'
-        : '<span class="text-gray-500">'.\App\Support\Dinheiro::brl($p).' <span class="text-gray-400">por CNPJ</span></span>';
+        : '<span class="text-gray-500">'.\App\Support\Dinheiro::brl($p).' <span class="text-gray-400">por alvo</span></span>';
 @endphp
 <div class="bg-gray-100 min-h-screen" id="consulta-fontes-container"
      @if(!empty($prefill)) data-prefill='@json($prefill)' @endif>
@@ -13,7 +13,7 @@
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
             <div class="min-w-0">
                 <h1 class="text-lg sm:text-xl font-bold text-gray-900 uppercase tracking-wide">Nova Consulta</h1>
-                <p class="text-xs text-gray-500 mt-0.5">Monte a consulta escolhendo exatamente o que precisa. Preço por consulta, por CNPJ. Os dados cadastrais básicos entram grátis.</p>
+                <p class="text-xs text-gray-500 mt-0.5">Monte a consulta por CPF ou CNPJ escolhendo exatamente as fontes necessárias. Cadastro básico grátis vale apenas para CNPJ.</p>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
                 <a href="/app/consulta/historico" class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-50 sm:px-4 sm:text-sm" data-link>
@@ -62,7 +62,7 @@
                             <span class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-white text-[11px] font-bold" style="background-color:#1f2937">2</span>
                             <div class="min-w-0">
                                 <h2 class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Quem consultar</h2>
-                                <p class="text-[11px] text-gray-500 leading-tight">Busque nos seus participantes e clientes (somente CNPJ).</p>
+                                <p class="text-[11px] text-gray-500 leading-tight">Busque CPF ou CNPJ nos seus participantes e clientes.</p>
                             </div>
                         </div>
                         <span class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded flex-shrink-0">{{ $totalParticipantes }} na base</span>
@@ -71,7 +71,7 @@
                         <div class="flex items-center gap-2">
                             <div class="relative flex-1">
                                 <svg class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                                <input type="search" id="fontes-busca-alvo" placeholder="Buscar por razão social ou CNPJ…" autocomplete="off"
+                                <input type="search" id="fontes-busca-alvo" placeholder="Buscar por nome, CPF, razão social ou CNPJ…" autocomplete="off"
                                        class="w-full border border-gray-300 rounded text-sm pl-9 pr-3 py-2.5 focus:ring-1 focus:ring-gray-400 focus:border-gray-400 focus:outline-none">
                             </div>
                             <button type="button" id="fontes-ver-todos" class="inline-flex items-center gap-1.5 rounded border border-gray-300 bg-white px-3 py-2.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50 flex-shrink-0">
@@ -80,7 +80,12 @@
                             </button>
                         </div>
                         {{-- Filtros (aparecem ao expandir "Ver todos") --}}
-                        <div id="fontes-filtros" class="hidden mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <div id="fontes-filtros" class="hidden mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            <select id="filtro-tipo-pessoa" class="border border-gray-300 rounded text-[13px] px-2 py-2 focus:ring-1 focus:ring-gray-400 focus:border-gray-400 focus:outline-none">
+                                <option value="">Pessoa (todas)</option>
+                                <option value="PF">Pessoa física</option>
+                                <option value="PJ">Pessoa jurídica</option>
+                            </select>
                             <select id="filtro-uf" class="border border-gray-300 rounded text-[13px] px-2 py-2 focus:ring-1 focus:ring-gray-400 focus:border-gray-400 focus:outline-none">
                                 <option value="">UF (todas)</option>
                                 @foreach($participantesUfs as $uf)<option value="{{ $uf }}">{{ $uf }}</option>@endforeach
@@ -97,7 +102,8 @@
                             </select>
                         </div>
                         <div id="fontes-resultados-alvo" class="mt-2 max-h-72 overflow-y-auto divide-y divide-gray-100 border border-gray-200 rounded hidden"></div>
-                        <div id="fontes-selecionados" class="mt-3 flex flex-wrap gap-1.5"></div>
+                        <p id="fontes-compat-aviso" class="hidden mt-2 rounded px-3 py-2 text-[11px]" style="background-color:#fffbeb;color:#92400e;"></p>
+                        <div id="fontes-selecionados" class="mt-3 space-y-2"></div>
                     </div>
                 </div>
             </div>
@@ -115,12 +121,12 @@
                                 <p id="fontes-resumo-fontes" class="text-lg font-bold text-gray-900">0</p>
                             </div>
                             <div class="px-3 py-2.5 text-center">
-                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">CNPJs</p>
+                                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Alvos</p>
                                 <p id="fontes-resumo-alvos" class="text-lg font-bold text-gray-900">0</p>
                             </div>
                         </div>
                         <div class="space-y-1.5 text-sm">
-                            <div class="flex justify-between"><span class="text-gray-500">Preço por CNPJ</span><strong id="fontes-resumo-unitario" class="text-gray-900 font-mono">R$ 0,00</strong></div>
+                            <div class="flex justify-between"><span class="text-gray-500">Preço por alvo</span><strong id="fontes-resumo-unitario" class="text-gray-900 font-mono">R$ 0,00</strong></div>
                             <div id="fontes-resumo-desconto-linha" class="hidden flex justify-between"><span style="color:#047857">Desconto <span id="fontes-resumo-kit-nome"></span></span><strong id="fontes-resumo-desconto" class="font-mono" style="color:#047857">−R$ 0,00</strong></div>
                         </div>
                         <div class="flex items-baseline justify-between border-t border-gray-200 pt-3 mt-3">
@@ -173,7 +179,7 @@
                                             <span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white" style="background-color:#047857">Grátis</span>
                                         @else
                                             @if($kit['preco_total'] < $kit['preco_bruto'])<s class="text-[11px] text-gray-400">{{ \App\Support\Dinheiro::brl($kit['preco_bruto']) }}</s>@endif
-                                            <strong class="text-sm text-gray-900 font-mono">{{ \App\Support\Dinheiro::brl($kit['preco_total']) }}</strong><span class="text-[11px] text-gray-400">/CNPJ</span>
+                                            <strong class="text-sm text-gray-900 font-mono">{{ \App\Support\Dinheiro::brl($kit['preco_total']) }}</strong><span class="text-[11px] text-gray-400">/alvo</span>
                                         @endif
                                         <span class="ml-auto text-[10px] font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{{ count($kit['fontes']) }} {{ count($kit['fontes']) === 1 ? 'consulta' : 'consultas' }}</span>
                                     </span>
@@ -197,7 +203,7 @@
                                     <button type="button" class="preset-aplicar text-left min-w-0 flex-1">
                                         <span class="block text-[13px] font-bold text-gray-900">{{ $preset['nome'] }}</span>
                                         <span class="mt-1 flex items-baseline gap-1.5">
-                                            <strong class="text-sm text-gray-900 font-mono">{{ \App\Support\Dinheiro::brl($preset['preco_total']) }}</strong><span class="text-[11px] text-gray-400">/CNPJ</span>
+                                            <strong class="text-sm text-gray-900 font-mono">{{ \App\Support\Dinheiro::brl($preset['preco_total']) }}</strong><span class="text-[11px] text-gray-400">/alvo</span>
                                             <span class="ml-auto text-[10px] font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{{ count($preset['fontes']) }} consultas</span>
                                         </span>
                                     </button>
@@ -216,6 +222,11 @@
                     </div>
                     <div class="space-y-2">
                         @forelse($gruposFontes as $chaveGrupo => $grupo)
+                            @php
+                                $grupoTemSelecionavel = collect($grupo['fontes'])->contains(
+                                    fn ($fonte) => (bool) ($fonte['selecionavel'] ?? false)
+                                );
+                            @endphp
                             <details class="grupo-consultas rounded-lg border border-gray-200 overflow-hidden" data-grupo="{{ $chaveGrupo }}" open>
                                 <summary class="flex items-center justify-between gap-2 px-3 py-2.5 cursor-pointer select-none bg-gray-50 hover:bg-gray-100 transition-colors">
                                     <span class="flex items-center gap-2 min-w-0">
@@ -224,17 +235,57 @@
                                         <span class="text-[10px] text-gray-400">{{ count($grupo['fontes']) }} {{ count($grupo['fontes']) === 1 ? 'consulta' : 'consultas' }}</span>
                                     </span>
                                     <span class="flex items-center gap-3 flex-shrink-0">
-                                        <button type="button" class="grupo-toggle text-[11px] font-semibold text-gray-500 hover:text-gray-900" data-grupo="{{ $chaveGrupo }}">Selecionar todos</button>
+                                        @if($grupoTemSelecionavel)
+                                            <button type="button" class="grupo-toggle text-[11px] font-semibold text-gray-500 hover:text-gray-900" data-grupo="{{ $chaveGrupo }}">Selecionar todos</button>
+                                        @else
+                                            <span class="text-[9px] font-bold uppercase tracking-wide text-amber-700">Em manutenção</span>
+                                        @endif
                                         <svg class="chev h-4 w-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                     </span>
                                 </summary>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-2.5 border-t border-gray-100">
                                     @foreach($grupo['fontes'] as $fonte)
-                                        <label class="fonte-opt flex items-center gap-2.5 rounded-lg border border-gray-300 px-3 py-2 cursor-pointer transition-colors hover:bg-gray-50">
-                                            <input type="checkbox" name="fontes[]" value="{{ $fonte['chave'] }}" data-preco="{{ $fonte['preco'] }}" data-nome="{{ $fonte['nome'] }}" class="h-4 w-4 flex-shrink-0 rounded border-gray-300 text-gray-800 focus:ring-gray-500">
+                                        @php
+                                            $documentosLabel = $fonte['documentos_aceitos_label'];
+                                            $selecionavel = (bool) ($fonte['selecionavel'] ?? false);
+                                            $tiposEmManutencao = (array) ($fonte['tipos_pessoa_em_manutencao'] ?? []);
+                                            $documentosHex = $documentosLabel === 'CPF e CNPJ'
+                                                ? '#0f766e'
+                                                : ($documentosLabel === 'CPF' ? '#6b7280' : '#374151');
+                                        @endphp
+                                        <label class="fonte-opt flex items-center gap-2.5 rounded-lg border px-3 py-2 transition-colors {{ $selecionavel ? 'border-gray-300 cursor-pointer hover:bg-gray-50' : 'border-gray-200 cursor-not-allowed bg-gray-50/70' }}"
+                                               data-tipos-pessoa='@json($fonte['tipos_pessoa'])'
+                                               data-tipos-planejados='@json($fonte['tipos_pessoa_planejados'])'
+                                               data-selecionavel-base="{{ $selecionavel ? '1' : '0' }}"
+                                               data-documentos-label="{{ $documentosLabel }}">
+                                            <input type="checkbox" name="fontes[]" value="{{ $fonte['chave'] }}" data-preco="{{ $fonte['preco'] }}" data-nome="{{ $fonte['nome'] }}"
+                                                   data-tipos-pessoa='@json($fonte['tipos_pessoa'])' data-documentos-label="{{ $documentosLabel }}"
+                                                   data-requisitos-pf='@json($fonte['requisitos_pf'])'
+                                                   data-requisitos-alvo='@json($fonte['requisitos_alvo'])'
+                                                   {{ $selecionavel ? '' : 'disabled' }}
+                                                   class="h-4 w-4 flex-shrink-0 rounded border-gray-300 text-gray-800 focus:ring-gray-500 disabled:cursor-not-allowed disabled:opacity-40">
                                             <span class="min-w-0 flex-1">
-                                                <span class="block text-[13px] font-semibold text-gray-900 leading-tight">{{ $fonte['nome'] }}</span>
-                                                <span class="block text-[11px] mt-0.5">{!! $precoLabel($fonte['preco']) !!}</span>
+                                                <span class="flex items-center gap-1.5">
+                                                    <span class="min-w-0 flex-1 text-[13px] font-semibold {{ $selecionavel ? 'text-gray-900' : 'text-gray-600' }} leading-tight">{{ $fonte['nome'] }}</span>
+                                                    <span class="inline-flex flex-shrink-0 items-center rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white"
+                                                          style="background-color:{{ $documentosHex }}">{{ $documentosLabel }}</span>
+                                                </span>
+                                                @if($tiposEmManutencao !== [])
+                                                    <span class="mt-1 inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white" style="background-color:#b45309">
+                                                        {{ implode(' e ', array_map(fn ($tipo) => $tipo === 'PF' ? 'CPF' : 'CNPJ', $tiposEmManutencao)) }} em manutenção
+                                                    </span>
+                                                @endif
+                                                @if($selecionavel)
+                                                    <span class="block text-[11px] mt-0.5">{!! $precoLabel($fonte['preco']) !!}</span>
+                                                @else
+                                                    <span class="mt-1 inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white" style="background-color:#b45309">Em manutenção</span>
+                                                @endif
+                                                @if(!empty($fonte['descricao']))
+                                                    <span class="mt-1 block text-[10px] leading-snug text-gray-500">{{ $fonte['descricao'] }}</span>
+                                                @endif
+                                                @if(!$selecionavel && !empty($fonte['motivo_manutencao']))
+                                                    <span class="mt-1 block text-[10px] leading-snug text-gray-400">{{ $fonte['motivo_manutencao'] }}</span>
+                                                @endif
                                             </span>
                                         </label>
                                     @endforeach
@@ -258,7 +309,7 @@
                 </div>
                 {{-- Linha principal: contagem/preço + ações --}}
                 <div class="flex items-center justify-between gap-3 px-5 py-3.5">
-                    <span class="text-[12px] text-gray-500"><strong id="modal-consultas-contagem" class="text-gray-900">0</strong> consultas · <strong id="modal-consultas-preco" class="text-gray-900 font-mono">R$ 0,00</strong>/CNPJ</span>
+                    <span class="text-[12px] text-gray-500"><strong id="modal-consultas-contagem" class="text-gray-900">0</strong> consultas · <strong id="modal-consultas-preco" class="text-gray-900 font-mono">R$ 0,00</strong>/alvo</span>
                     <div class="flex items-center gap-2">
                         {{-- Só aparece com ≥1 consulta na seleção (togglado pelo JS) --}}
                         <span id="salvar-plano-bloco" class="hidden">

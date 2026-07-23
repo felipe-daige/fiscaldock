@@ -2,6 +2,7 @@
 
 use App\Services\Consultas\Providers\InfoSimplesProvider;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 it('classifica pelo code do corpo (não pelo HTTP) — 200 sucesso', function () {
     Http::fake(['api.infosimples.com/*' => Http::response(['code' => 200, 'code_message' => 'ok', 'data' => [['tipo' => 'Negativa']]], 200)]);
@@ -45,6 +46,27 @@ it('guard de teste: CNPJ na allowlist é consultado normalmente', function () {
 
     expect($resp->status)->toBe('sucesso');
     Http::assertSent(fn ($req) => str_contains($req->url(), 'receita-federal/pgfn'));
+});
+
+it('guard de teste aplica allowlist propria a CPF', function () {
+    config()->set('consultas.infosimples_teste_cpfs', ['52998224725']);
+    Http::fake(['api.infosimples.com/*' => Http::response(['code' => 200, 'data' => []], 200)]);
+    Log::spy();
+
+    app(InfoSimplesProvider::class)
+        ->consultar('receita-federal/cpf', ['cpf' => '11144477735'])
+        ->status === 'nao_aplicavel' || throw new RuntimeException('CPF fora da allowlist deveria ser bloqueado.');
+
+    $resp = app(InfoSimplesProvider::class)
+        ->consultar('receita-federal/cpf', ['cpf' => '529.982.247-25']);
+
+    expect($resp->status)->toBe('sucesso');
+    Http::assertSentCount(1);
+    Log::shouldHaveReceived('info')->with(
+        'InfoSimples consulta',
+        Mockery::on(fn (array $contexto) => ($contexto['cpf_final'] ?? null) === '4725'
+            && ! array_key_exists('cpf', $contexto)),
+    )->once();
 });
 
 it('allowlist vazia = todos liberados (produção normal)', function () {

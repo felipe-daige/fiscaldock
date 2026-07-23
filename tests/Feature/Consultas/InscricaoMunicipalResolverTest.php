@@ -117,23 +117,27 @@ it('nada no perfil nem no acervo: retorna null (CND cai em INDISPONIVEL até col
     expect($im)->toBeNull();
 });
 
-it('cross-cadastro: IM do mesmo CNPJ em outro cadastro serve e persiste no alvo', function () {
+it('CNPJ que era participante com IM vira cliente: a IM migra na consolidacao e segue resolvivel', function () {
     $u = novoUser();
-    // Empresa-própria (cliente) já tem a IM (ex.: veio do EFD 0000 via n8n).
-    Cliente::create([
-        'user_id' => $u->id, 'documento' => '56786908000127', 'razao_social' => 'COPECAR MATRIZ',
-        'is_empresa_propria' => true, 'inscricao_municipal' => 'CROSS-777',
-    ]);
-    // Mesmo CNPJ aparece como participante de outro cliente, sem IM.
-    $part = Participante::create([
+    // Contraparte (participante) com IM já resolvida (ex.: colhida de uma CND anterior).
+    Participante::create([
         'user_id' => $u->id, 'documento' => '56786908000127', 'razao_social' => 'COPECAR PART',
+        'inscricao_municipal' => 'CROSS-777',
+    ]);
+    // O usuário passa a administrar esse CNPJ → vira Cliente. A invariante de identidade
+    // proíbe o mesmo documento em ambos: consolida o participante no cliente. A IM (número
+    // estável, resolvido 1x) MIGRA para o cliente em vez de se perder com o participante.
+    $cliente = Cliente::create([
+        'user_id' => $u->id, 'documento' => '56786908000127', 'razao_social' => 'COPECAR MATRIZ',
     ]);
 
-    $im = app(InscricaoMunicipalResolver::class)
-        ->resolver(['cnpj' => '56.786.908/0001-27'], 'participante', $part->id, $u->id);
+    expect($cliente->fresh()->inscricao_municipal)->toBe('CROSS-777')
+        ->and(Participante::where('user_id', $u->id)->where('documento', '56786908000127')->exists())->toBeFalse();
 
+    // E o resolver serve a IM pelo perfil do cliente, sem reconsulta.
+    $im = app(InscricaoMunicipalResolver::class)
+        ->resolver(['cnpj' => '56.786.908/0001-27'], 'cliente', $cliente->id, $u->id);
     expect($im)->toBe('CROSS-777');
-    expect($part->fresh()->inscricao_municipal)->toBe('CROSS-777');
 });
 
 it('cross-cadastro não vaza IM entre usuários diferentes', function () {

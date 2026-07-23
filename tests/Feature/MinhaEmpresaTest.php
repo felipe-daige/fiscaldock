@@ -52,13 +52,17 @@ test('rotas de alteracao da empresa propria nao existem', function () {
 });
 
 test('cockpit nao oferece acao para alterar empresa propria', function () {
-    empresaPropria($this->user);
+    $empresa = empresaPropria($this->user);
 
     $response = $this->get('/app/minha-empresa');
 
     $response->assertOk();
     $response->assertDontSee('Alterar empresa');
     $response->assertDontSee('/app/minha-empresa/configurar', false);
+    $response->assertSee('/app/consulta/painel?clientes='.$empresa->id, false);
+    expect(Participante::where('user_id', $this->user->id)
+        ->where('documento', $empresa->documento)
+        ->exists())->toBeFalse();
 });
 
 test('cockpit usa fluxo vertical estavel sem o grid assimetrico anterior', function () {
@@ -373,7 +377,7 @@ test('historico lista consulta gravada no cliente da empresa propria', function 
         ->assertSee('Consulta gravada no alvo cliente.');
 });
 
-test('historico da minha empresa exibe mensagem operacional da consulta', function () {
+test('historico da minha empresa exibe mensagem operacional da consulta no cliente', function () {
     $cliente = Cliente::create([
         'user_id' => $this->user->id,
         'tipo_pessoa' => 'PJ',
@@ -381,13 +385,6 @@ test('historico da minha empresa exibe mensagem operacional da consulta', functi
         'nome' => 'Empresa Historico',
         'razao_social' => 'Empresa Historico Ltda',
         'is_empresa_propria' => true,
-    ]);
-
-    $participante = Participante::create([
-        'user_id' => $this->user->id,
-        'documento' => preg_replace('/\D/', '', $cliente->documento),
-        'razao_social' => 'Empresa Historico Ltda',
-        'origem_tipo' => 'PROPRIO',
     ]);
 
     $plano = MonitoramentoPlano::porCodigo('gratuito') ?? MonitoramentoPlano::firstOrFail();
@@ -404,7 +401,8 @@ test('historico da minha empresa exibe mensagem operacional da consulta', functi
 
     ConsultaResultado::create([
         'consulta_lote_id' => $lote->id,
-        'participante_id' => $participante->id,
+        'cliente_id' => $cliente->id,
+        'participante_id' => null,
         'status' => ConsultaResultado::STATUS_SUCESSO,
         'resultado_dados' => [
             'situacao_cadastral' => 'ATIVA',
