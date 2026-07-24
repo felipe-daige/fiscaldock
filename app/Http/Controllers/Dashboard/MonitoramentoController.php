@@ -538,6 +538,21 @@ class MonitoramentoController extends Controller
         ));
         $alaCarte = $fontesInput !== [];
 
+        // Safeguard LGPD: fonte sensível (antecedentes/mandado, art. 11) NÃO pode entrar em
+        // monitoramento recorrente. O safeguard do `executarFontes` exige declaração de finalidade
+        // POR consulta; um disparo agendado não tem humano declarando a finalidade a cada ciclo,
+        // então dado criminal sensível processado em lote automático não se sustenta. Bloqueia.
+        if ($alaCarte) {
+            $sensiveis = array_values(array_intersect($fontesInput, $catalogo->chavesSensiveis()));
+            if ($sensiveis !== []) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Consulta a dado sensível ('.implode(', ', $sensiveis).') não pode ser '
+                        .'monitorada de forma recorrente. Faça a consulta avulsa, com a declaração de finalidade.',
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+        }
+
         if ((empty($participanteIds) && empty($clienteIds) && empty($grupoId)) || (empty($planoId) && ! $alaCarte)) {
             return response()->json([
                 'success' => false,

@@ -273,3 +273,23 @@ it('permite Compliance em qualquer tier quando o produto está ativo', function 
 
     expect(MonitoramentoAssinatura::where('participante_id', $p->id)->count())->toBe(1);
 });
+
+it('barra fonte sensível (LGPD art. 11) no monitoramento à la carte recorrente', function () {
+    // Safeguard: dado criminal sensível não pode ser monitorado em lote automático — o safeguard
+    // de finalidade do executarFontes não existe no disparo agendado. Deve devolver 422.
+    config()->set('consultas.infosimples_ativo', true);
+    config()->set('consultas.providers.infosimples.token', 'x');
+    config()->set('advocacia.fontes_sensiveis', ['mandado_prisao' => true]);
+    config()->set('advocacia.fontes_publicas_liberadas', ['mandado_prisao']);
+
+    $user = User::factory()->create();
+    $p = fase5Participante($user, '52998224725'); // CPF (PF)
+
+    actingAs($user)->postJson(route('app.monitoramento.assinatura.criar'), [
+        'participante_id' => $p->id,
+        'fontes' => ['mandado_prisao'],
+        'frequencia' => 'mensal',
+    ])->assertStatus(422)->assertJsonFragment(['success' => false]);
+
+    expect(MonitoramentoAssinatura::where('participante_id', $p->id)->count())->toBe(0);
+});

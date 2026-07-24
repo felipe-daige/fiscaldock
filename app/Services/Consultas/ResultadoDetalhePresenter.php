@@ -56,6 +56,7 @@ class ResultadoDetalhePresenter
         'ibama_autuacoes',
         'bcb_valores_receber',
         'inpi_marcas_titular',
+        'sigef_parcelas',
         'quitacao_eleitoral',
         'antecedentes_pf',
         'mandado_prisao',
@@ -91,6 +92,7 @@ class ResultadoDetalhePresenter
         'ibama_autuacoes' => 'IBAMA-AUT',
         'bcb_valores_receber' => 'BCB',
         'inpi_marcas_titular' => 'INPI',
+        'sigef_parcelas' => 'SIGEF',
         'cadastro_pf' => 'CPF',
         'quitacao_eleitoral' => 'TSE',
         'antecedentes_pf' => 'ANT',
@@ -129,6 +131,7 @@ class ResultadoDetalhePresenter
         'ibama_autuacoes' => 'O Instituto Brasileiro do Meio Ambiente (IBAMA)',
         'bcb_valores_receber' => 'O Banco Central do Brasil (BCB)',
         'inpi_marcas_titular' => 'O Instituto Nacional da Propriedade Industrial (INPI)',
+        'sigef_parcelas' => 'O INCRA (SIGEF)',
         'cadastro_pf' => 'A Receita Federal',
         'quitacao_eleitoral' => 'O Tribunal Superior Eleitoral (TSE)',
         'antecedentes_pf' => 'A Polícia Federal',
@@ -389,7 +392,8 @@ class ResultadoDetalhePresenter
                 'ibama_regularidade',
                 'ibama_autuacoes',
                 'bcb_valores_receber',
-                'inpi_marcas_titular' => $this->blocoConsultaPublica(
+                'inpi_marcas_titular',
+                'sigef_parcelas' => $this->blocoConsultaPublica(
                     $chave,
                     $dados[$chave],
                     $resultado->getKey(),

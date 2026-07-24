@@ -192,12 +192,25 @@ class ConsultaSmokeFonteCommand extends Command
         return $alvo;
     }
 
-    /** Mascara o CPF nos params ecoados no terminal (dado pessoal). */
+    /**
+     * Mascara dados sensíveis nos params ecoados no terminal: CPF (alvo/solicitante) e QUALQUER
+     * chave de credencial (login_senha, pkcs12_pass...). As fontes GOV.BR injetam login_cpf +
+     * login_senha — sem isto a senha gov.br de sistema apareceria em texto puro no terminal/logs.
+     */
     private function mascarar(array $params): array
     {
-        if (isset($params['cpf'])) {
-            $cpf = preg_replace('/\D/', '', (string) $params['cpf']);
-            $params['cpf'] = strlen($cpf) === 11 ? '*******'.substr($cpf, -4) : $params['cpf'];
+        foreach (['cpf', 'login_cpf', 'cpf_solicitante'] as $chaveCpf) {
+            if (isset($params[$chaveCpf])) {
+                $d = preg_replace('/\D/', '', (string) $params[$chaveCpf]);
+                $params[$chaveCpf] = strlen($d) === 11 ? '*******'.substr($d, -4) : $params[$chaveCpf];
+            }
+        }
+
+        // Credenciais/segredos: nunca ecoar o valor. Casa por substring do nome da chave.
+        foreach ($params as $chave => $valor) {
+            if (is_string($chave) && preg_match('/senha|pass|secret|token|pkcs12/i', $chave)) {
+                $params[$chave] = $valor === null || $valor === '' ? $valor : '***';
+            }
         }
 
         return $params;
