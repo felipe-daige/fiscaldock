@@ -72,6 +72,7 @@ class ConsultaSmokeFonteCommand extends Command
             'nome_mae' => $this->option('nome-mae'),
             'nome_pai' => $this->option('nome-pai'),
             'uf' => $this->option('uf'),
+            'uf_nascimento' => $this->option('uf'),
             'municipio' => $this->option('municipio'),
             'ano' => $this->option('ano'),
             'data_inicio_atividade' => $this->option('abertura'),
