@@ -32,7 +32,23 @@ test('cadastro PF exige CPF e nascimento e normaliza identidade situacao e obito
     expect($dados['cadastro_pf']['status'])->toBe('REGULAR')
         ->and($dados['cadastro_pf']['nome'])->toBe('MARIA DA SILVA')
         ->and($dados['cadastro_pf']['falecido'])->toBeTrue()
+        ->and($dados['cadastro_pf']['ano_obito'])->toBe(2024)
         ->and($dados['consultas_realizadas'])->toBe(['cadastro_pf']);
+});
+
+test('cadastro PF vivo: ano_obito=0 nao marca falecido (smoke real pegou filled(0) true)', function () {
+    // A Receita devolve ano_obito=0 para vivo (não null). `filled(0)` é true → o normalizer
+    // marcava "falecido: true" num CPF vivo. Confirmado no smoke pago de 2026-07-23.
+    $fonte = new CadastroPfFonte;
+
+    $dados = $fonte->normalizar(['data' => [[
+        'nome' => 'FELIPE VIVO',
+        'situacao_cadastral' => 'REGULAR',
+        'normalizado_ano_obito' => 0,
+    ]]], 'sucesso');
+
+    expect($dados['cadastro_pf']['falecido'])->toBeFalse()
+        ->and($dados['cadastro_pf']['ano_obito'])->toBeNull();
 });
 
 test('quitacao eleitoral monta os parametros PF e traduz quite para certidao negativa', function () {

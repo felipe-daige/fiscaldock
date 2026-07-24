@@ -65,7 +65,10 @@ class CadastroPfFonte extends FonteInfoSimplesBase
     {
         if ($status === 'sucesso') {
             $data = (array) ($raw['data'][0] ?? []);
-            $anoObito = $data['normalizado_ano_obito'] ?? $data['ano_obito'] ?? null;
+            // A Receita devolve ano_obito=0 para vivo (não null). `filled(0)` é true, então o
+            // óbito precisa ser aferido por > 0 — smoke real (CPF vivo) marcava "falecido: true".
+            $anoObito = (int) ($data['normalizado_ano_obito'] ?? $data['ano_obito'] ?? 0);
+            $falecido = $anoObito > 0;
 
             return $this->bloco([
                 'status' => $data['situacao_cadastral'] ?? null,
@@ -76,8 +79,8 @@ class CadastroPfFonte extends FonteInfoSimplesBase
                 'nome_social' => $data['nome_social'] ?? null,
                 'data_nascimento' => $data['normalizado_data_nascimento'] ?? $data['data_nascimento'] ?? null,
                 'data_inscricao' => $data['normalizado_data_inscricao'] ?? $data['data_inscricao'] ?? null,
-                'ano_obito' => $anoObito,
-                'falecido' => filled($anoObito),
+                'ano_obito' => $anoObito > 0 ? $anoObito : null,
+                'falecido' => $falecido,
                 'consulta_em' => $data['normalizado_consulta_datahora'] ?? $data['consulta_datahora'] ?? null,
                 'comprovante' => $data['consulta_comprovante'] ?? ($data['site_receipt'] ?? null),
             ]);
