@@ -31,7 +31,10 @@ class ConsultaSmokeFonteCommand extends Command
         .' {--nome-pai= : nome do pai (antecedentes)}'
         .' {--uf= : UF (nascimento/sede, conforme a fonte)}'
         .' {--ano= : ano-base (ibama_autuacoes)}'
+        .' {--abertura= : data de abertura da PJ ISO AAAA-MM-DD (bcb_valores_receber PJ)}'
         .' {--municipio= : município do alvo}'
+        .' {--com-cadastro : roda o cadastro (minhareceita, grátis p/ PJ) ANTES e injeta uf/município/'
+        .'razão/abertura no alvo — espelha produção (o cadastro roda junto com a fonte no lote real)}'
         .' {--force : pula a confirmação interativa (execução não-interativa)}';
 
     protected $description = 'Consulta UMA fonte no InfoSimples e imprime o contrato cru — sem cobrar saldo nem persistir';
@@ -71,7 +74,16 @@ class ConsultaSmokeFonteCommand extends Command
             'uf' => $this->option('uf'),
             'municipio' => $this->option('municipio'),
             'ano' => $this->option('ano'),
+            'data_inicio_atividade' => $this->option('abertura'),
+            'data_abertura_empresa' => $this->option('abertura'),
         ], fn ($v) => $v !== null && $v !== '');
+
+        // Espelha produção: no lote real o cadastro roda ANTES e injeta uf/município/razão/abertura
+        // no alvo, que as fontes seguintes (ex.: bcb_valores_receber PJ) consomem. Grátis p/ PJ
+        // (minhareceita); PF usaria o cadastro_pf pago, então só faz sentido em PJ.
+        if ($this->option('com-cadastro') && $cnpj !== '') {
+            $alvo = $this->injetarCadastro($alvo, $cnpj);
+        }
 
         if (! $fonte->aplicavelPara($alvo)) {
             $this->warn('Fonte não aplicável a este alvo (não cobraria em produção): '.$fonte->motivoIndisponivel($alvo));
@@ -137,6 +149,46 @@ class ConsultaSmokeFonteCommand extends Command
         $this->line(json_encode($fonte->normalizar($raw, $resp->status), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Roda o cadastro grátis (minhareceita) e injeta no alvo os campos autoritativos que as
+     * fontes seguintes consomem — igual ao ProcessarConsultaJob. Falha do cadastro não aborta
+     * o smoke (só não injeta).
+     *
+     * @param  array<string,mixed>  $alvo
+     * @return array<string,mixed>
+     */
+    private function injetarCadastro(array $alvo, string $cnpj): array
+    {
+        $provider = app(\App\Services\Consultas\Providers\MinhaReceitaProvider::class);
+        $resp = $provider->consultar('', ['cnpj' => $cnpj]);
+
+        if ($resp->status !== 'sucesso') {
+            $this->warn("--com-cadastro: minhareceita não respondeu ({$resp->status}); alvo segue sem enriquecimento.");
+
+            return $alvo;
+        }
+
+        $dados = (new \App\Services\Consultas\Fontes\CadastroFonte($provider))->normalizar($resp->raw, $resp->status);
+        $end = (array) ($dados['endereco'] ?? []);
+
+        // Só preenche o que ainda não veio por --option (option explícita vence).
+        $alvo += array_filter([
+            'uf' => $end['uf'] ?? null,
+            'municipio' => $end['municipio'] ?? null,
+            'razao_social' => $dados['razao_social'] ?? null,
+            'nome' => $dados['razao_social'] ?? null,
+            'data_inicio_atividade' => $dados['data_inicio_atividade'] ?? null,
+            'data_abertura_empresa' => $dados['data_inicio_atividade'] ?? null,
+            'matriz_filial' => $dados['matriz_filial'] ?? null,
+        ], fn ($v) => $v !== null && $v !== '');
+
+        $this->line('--com-cadastro: injetado uf='.($alvo['uf'] ?? '?')
+            .' municipio='.($alvo['municipio'] ?? '?')
+            .' abertura='.($alvo['data_inicio_atividade'] ?? '?'));
+
+        return $alvo;
     }
 
     /** Mascara o CPF nos params ecoados no terminal (dado pessoal). */
