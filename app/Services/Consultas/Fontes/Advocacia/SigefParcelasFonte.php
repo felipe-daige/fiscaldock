@@ -24,9 +24,10 @@ class SigefParcelasFonte extends FonteGovBrInfoSimples
         return 'incra/sigef/parcelas';
     }
 
+    /** SIGEF indexa por CPF e CNPJ do titular — smoke 2026-07-24 validou os dois ramos. */
     public function aceitaPessoa(): array
     {
-        return $this->tiposPessoaComPfValidado();
+        return ['PF', 'PJ'];
     }
 
     public function custoCreditos(): float
