@@ -80,6 +80,13 @@ class CertidaoBadge
             return ['label' => 'Indisponível', 'hex' => self::HEX_NEUTRO];
         }
 
+        // GOV.BR: serviço exige autorização manual de 1ª vez (SIGEF). Acionável pelo usuário —
+        // âmbar de atenção, não falha. Antes do bloco negativa/positiva (não tem essas palavras,
+        // mas fica explícito). Detectado do status AUTORIZACAO_PENDENTE das fontes GOV.BR.
+        if (str_contains($t, 'autorizacao_pendente') || str_contains($t, 'autorização pendente')) {
+            return ['label' => 'Autorização pendente', 'hex' => self::HEX_INDETERMINADO];
+        }
+
         // Pedido aceito mas ainda não emitido (ex.: TRF unificada/CJF entrega por e-mail em até 6h).
         // NÃO é "indeterminado" (a fonte não recusou) — é pendente: âmbar de atenção, sem o flag
         // indeterminado (o card mostra o status real "Em andamento", não "Sem emissão online").
