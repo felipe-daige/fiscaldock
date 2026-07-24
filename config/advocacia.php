@@ -43,6 +43,18 @@ return [
         'mandado_prisao' => (bool) env('ADVOCACIA_MANDADO_PRISAO_HABILITADO', false),
     ],
 
+    // Safeguard LGPD para dado sensível (art. 11): antes de rodar fonte sensível, o advogado
+    // declara base legal + finalidade, persistidas na trilha de auditoria (consulta_lotes).
+    // Base legal do vertical advocacia: exercício regular de direitos em processo (art. 11, II, d)
+    // — o titular é terceiro (parte investigada), consentimento é inviável.
+    'sensivel' => [
+        'base_legal' => env('ADVOCACIA_SENSIVEL_BASE_LEGAL',
+            'Exercício regular de direitos em processo judicial, administrativo ou arbitral '
+            .'(LGPD art. 11, II, "d").'),
+        'finalidade_min' => 10,   // mínimo de caracteres da finalidade declarada
+        'retencao_dias' => (int) env('ADVOCACIA_SENSIVEL_RETENCAO_DIAS', 180),
+    ],
+
     // Campos adicionais do alvo exigidos antes de cobrar uma fonte PF. O controller valida de
     // novo; o JS usa o mesmo mapa renderizado nos data-attributes para habilitar o submit.
     'requisitos_pf' => [

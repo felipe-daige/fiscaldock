@@ -35,6 +35,9 @@ class ConsultaLote extends Model
         'tab_id',
         'resultado_resumo',
         'fontes_selecionadas',
+        'sensivel_finalidade',
+        'sensivel_base_legal',
+        'sensivel_declarado_em',
         'error_code',
         'error_message',
         'processado_em',
@@ -45,6 +48,7 @@ class ConsultaLote extends Model
         'creditos_cobrados' => 'float',
         'resultado_resumo' => 'array',
         'fontes_selecionadas' => 'array',
+        'sensivel_declarado_em' => 'datetime',
         'processado_em' => 'datetime',
     ];
 

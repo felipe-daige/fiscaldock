@@ -112,6 +112,7 @@ class CatalogoFontesAvulsas
                     'descricao' => $meta['descricao'] ?? null,
                     'requisitos_pf' => (array) config("advocacia.requisitos_pf.{$chave}", []),
                     'requisitos_alvo' => (array) config("advocacia.requisitos_alvo.{$chave}", []),
+                    'sensivel' => in_array($chave, $this->chavesSensiveis(), true),
                 ];
             }
             if ($fontes !== []) {
@@ -189,6 +190,18 @@ class CatalogoFontesAvulsas
         }
 
         return (float) (config("advocacia.precos.{$chave}") ?? config('advocacia.preco_fonte_default', 1.00));
+    }
+
+    /** Chaves de fonte marcadas como sensíveis (dado pessoal sensível LGPD art. 11). */
+    public function chavesSensiveis(): array
+    {
+        return array_keys((array) config('advocacia.fontes_sensiveis', []));
+    }
+
+    /** A seleção contém alguma fonte sensível? (dispara a exigência da declaração LGPD). */
+    public function selecaoTemSensivel(array $chaves): bool
+    {
+        return array_intersect(array_unique($chaves), $this->chavesSensiveis()) !== [];
     }
 
     /**

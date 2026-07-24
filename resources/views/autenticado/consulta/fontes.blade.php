@@ -134,6 +134,13 @@
                             <strong id="fontes-resumo-total" class="text-xl font-bold text-gray-900 font-mono">R$ 0,00</strong>
                         </div>
                         <p id="fontes-saldo-aviso" class="hidden text-[11px] rounded px-2 py-1.5 mt-2" style="background-color:#fffbeb;color:#b45309;">Saldo insuficiente para esta seleção. <a href="/app/saldo" class="underline font-medium" data-link>Adicionar saldo</a></p>
+                        <div id="fontes-sensivel-bloco" class="hidden mt-3 rounded border p-3" style="border-color:#fecaca;background-color:#fef2f2;">
+                            <p class="text-[11px] font-semibold" style="color:#991b1b;">Dado pessoal sensível (LGPD art. 11)</p>
+                            <p class="text-[11px] mt-1 leading-snug" style="color:#7f1d1d;">Esta seleção inclui consulta a dado sensível de terceiro. Base legal: {{ config('advocacia.sensivel.base_legal') }} Declare abaixo a finalidade — o registro fica na trilha de auditoria.</p>
+                            <textarea id="fontes-sensivel-finalidade" rows="2" maxlength="2000"
+                                      placeholder="Finalidade (ex.: nº do processo, contexto da investigação de parte)…"
+                                      class="mt-2 w-full rounded border border-red-200 px-2 py-1.5 text-[12px] focus:border-red-400 focus:ring-red-300"></textarea>
+                        </div>
                         <button type="button" id="fontes-executar" disabled
                                 class="w-full mt-3 inline-flex items-center justify-center gap-2 rounded bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed">
                             Executar consulta
@@ -262,6 +269,7 @@
                                                    data-tipos-pessoa='@json($fonte['tipos_pessoa'])' data-documentos-label="{{ $documentosLabel }}"
                                                    data-requisitos-pf='@json($fonte['requisitos_pf'])'
                                                    data-requisitos-alvo='@json($fonte['requisitos_alvo'])'
+                                                   data-sensivel="{{ !empty($fonte['sensivel']) ? '1' : '0' }}"
                                                    {{ $selecionavel ? '' : 'disabled' }}
                                                    class="h-4 w-4 flex-shrink-0 rounded border-gray-300 text-gray-800 focus:ring-gray-500 disabled:cursor-not-allowed disabled:opacity-40">
                                             <span class="min-w-0 flex-1">

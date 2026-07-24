@@ -281,6 +281,18 @@
             atualizarResumo();
         }
 
+        // Alguma fonte sensível (dado LGPD art. 11) marcada? Dispara a exigência da declaração.
+        function temSensivelMarcada() {
+            return fontesMarcadas().some(function (cb) { return cb.dataset.sensivel === '1'; });
+        }
+
+        // Declaração de finalidade OK? (sensível exige ≥10 caracteres; sem sensível, sempre ok).
+        function sensivelOk() {
+            if (!temSensivelMarcada()) return true;
+            var ta = document.getElementById('fontes-sensivel-finalidade');
+            return ta && ta.value.trim().length >= 10;
+        }
+
         function atualizarResumo() {
             var fontes = fontesMarcadas();
             var precoUnitario = fontes.reduce(function (s, cb) { return s + parseFloat(cb.dataset.preco || '0'); }, 0);
@@ -292,8 +304,12 @@
             document.getElementById('fontes-resumo-unitario').textContent = brl(precoUnitario);
             document.getElementById('fontes-resumo-total').textContent = brl(total);
 
+            // Bloco de declaração LGPD: aparece só quando há fonte sensível na seleção.
+            var blocoSensivel = document.getElementById('fontes-sensivel-bloco');
+            if (blocoSensivel) blocoSensivel.classList.toggle('hidden', !temSensivelMarcada());
+
             var pfCompleto = dadosPfCompletos();
-            btnExecutar.disabled = !(fontes.length > 0 && nAlvos > 0 && pfCompleto);
+            btnExecutar.disabled = !(fontes.length > 0 && nAlvos > 0 && pfCompleto && sensivelOk());
             avisoSaldo.classList.add('hidden');
             document.getElementById('fontes-resumo-desconto-linha').classList.add('hidden');
 
@@ -656,6 +672,10 @@
             cb.addEventListener('change', sincronizar);
         });
 
+        // Digitar a finalidade re-habilita o botão (a declaração LGPD entra no gate do submit).
+        var finalidadeSensivel = document.getElementById('fontes-sensivel-finalidade');
+        if (finalidadeSensivel) finalidadeSensivel.addEventListener('input', atualizarResumo);
+
         // "Selecionar todas" global: marca todas; se já estiverem todas, limpa.
         var toggleTodas = document.getElementById('toggle-todas');
         if (toggleTodas) toggleTodas.addEventListener('click', function () {
@@ -881,6 +901,10 @@
                     cliente_ids: clienteIds,
                     fontes: fontes,
                     dados_pf: dadosPf,
+                    finalidade_sensivel: (function () {
+                        var ta = document.getElementById('fontes-sensivel-finalidade');
+                        return temSensivelMarcada() && ta ? ta.value.trim() : '';
+                    })(),
                     tab_id: tabId
                 })
             }).then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })

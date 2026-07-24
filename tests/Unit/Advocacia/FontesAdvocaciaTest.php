@@ -408,7 +408,10 @@ test('PF nativas nao sao vendaveis com o gate de smoke vazio (estado de producao
     // Trava do gate: `receita-federal/cpf` e `tribunal/tse/certidao` não estão em
     // docs/infosimples/README.md — a grafia dos params foi inferida e 606/607 são BILLABLE.
     // Enquanto o contrato real não for colado na doc, elas não podem ser cobradas.
+    // Zera os DOIS gates explicitamente: o .env de prod (montado no container de teste) pode ter
+    // ADVOCACIA_FONTES_PF_LIBERADAS/PUBLICAS setado — o teste do "gate vazio" precisa ser determinístico.
     config()->set('advocacia.fontes_publicas_liberadas', []);
+    config()->set('advocacia.fontes_pf_liberadas', []);
     $registry = app(FonteRegistry::class);
 
     expect($registry->get('cadastro_pf')->pronta())->toBeFalse()

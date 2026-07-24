@@ -24,6 +24,11 @@ return new class extends Migration
             // Lote avulso por fontes (vertical advocacia): chaves selecionadas à la carte.
             // NULL = lote de plano (plano_id set) ou de clearance (plano_id null + fontes null).
             $table->jsonb('fontes_selecionadas')->nullable();
+            // Safeguard LGPD (dado sensível art. 11): declaração feita ao consultar fonte sensível
+            // (antecedentes/mandado). Trilha de auditoria — quem consultou declarou finalidade+base.
+            $table->text('sensivel_finalidade')->nullable();
+            $table->string('sensivel_base_legal', 255)->nullable();
+            $table->timestamp('sensivel_declarado_em')->nullable();
             $table->string('error_code', 50)->nullable();
             $table->text('error_message')->nullable();
             $table->timestamp('processado_em')->nullable();

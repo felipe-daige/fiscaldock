@@ -254,6 +254,10 @@ services:
       CONSULTAS_FONTES_PAUSADAS: ""
       ADVOCACIA_ANTECEDENTES_PF_HABILITADO: "false"
       ADVOCACIA_MANDADO_PRISAO_HABILITADO: "false"
+      # Gates de liberação de fonte: neutralizados para os testes serem determinísticos
+      # (o .env de prod montado no container os populava e vazava pros testes de "gate vazio").
+      ADVOCACIA_FONTES_PUBLICAS_LIBERADAS: ""
+      ADVOCACIA_FONTES_PF_LIBERADAS: ""
     profiles:
       - test
 

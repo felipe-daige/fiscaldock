@@ -1202,6 +1202,7 @@ class ConsultaController extends Controller
             'fontes.*' => 'string|max:40',
             'cliente_id' => 'nullable|integer|exists:clientes,id',
             'tab_id' => 'required|string|max:36',
+            'finalidade_sensivel' => 'nullable|string|max:2000',
             'dados_pf' => 'nullable|array|max:1000',
             'dados_pf.*.tipo' => 'required_with:dados_pf|string|in:participante,cliente',
             'dados_pf.*.id' => 'required_with:dados_pf|integer',
@@ -1221,6 +1222,24 @@ class ConsultaController extends Controller
                 'success' => false,
                 'error' => 'Fontes indisponíveis para consulta avulsa: '.implode(', ', $invalidas),
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        // Safeguard LGPD: fonte sensível (antecedentes/mandado) exige declaração de finalidade.
+        // A base legal é do sistema (art. 11, II, d — exercício regular de direitos); a finalidade
+        // é declarada pelo advogado e persistida na trilha de auditoria (consulta_lotes).
+        $finalidadeSensivel = null;
+        if ($catalogo->selecaoTemSensivel($fontesSelecionadas)) {
+            $finalidadeSensivel = trim((string) ($validated['finalidade_sensivel'] ?? ''));
+            $min = (int) config('advocacia.sensivel.finalidade_min', 10);
+            if (mb_strlen($finalidadeSensivel) < $min) {
+                return response()->json([
+                    'success' => false,
+                    'error' => "Consulta a dado sensível exige declaração de finalidade (mínimo {$min} caracteres) "
+                        .'para o exercício regular de direitos (LGPD art. 11).',
+                    'requer_finalidade_sensivel' => true,
+                    'base_legal' => config('advocacia.sensivel.base_legal'),
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
         }
 
         $participanteIds = array_values(array_unique($validated['participante_ids'] ?? []));
@@ -1399,6 +1418,10 @@ class ConsultaController extends Controller
                 'total_participantes' => $totalAlvos,
                 'creditos_cobrados' => $custoTotal,
                 'tab_id' => $validated['tab_id'],
+                // Trilha de auditoria LGPD: só preenche quando a seleção tem fonte sensível.
+                'sensivel_finalidade' => $finalidadeSensivel,
+                'sensivel_base_legal' => $finalidadeSensivel !== null ? config('advocacia.sensivel.base_legal') : null,
+                'sensivel_declarado_em' => $finalidadeSensivel !== null ? now() : null,
             ]);
 
             if (! empty($participanteIds)) {
