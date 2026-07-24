@@ -22,6 +22,12 @@ class CertidaoMptFonte extends FonteCertidaoInfoSimples
         return 'mpt/cnf/unificada';
     }
 
+    /** MPT aceita CPF e CNPJ; PF liberada via advocacia.fontes_pf_liberadas (smoke 2026-07-23). */
+    public function aceitaPessoa(): array
+    {
+        return $this->tiposPessoaComPfValidado();
+    }
+
     public function aplicavelPara(array $alvo): bool
     {
         return trim((string) ($alvo['uf'] ?? '')) !== '';
