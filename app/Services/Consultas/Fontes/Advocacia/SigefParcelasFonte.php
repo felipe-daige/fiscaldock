@@ -34,10 +34,27 @@ class SigefParcelasFonte extends FonteGovBrInfoSimples
         return (float) config('consultas.fontes.sigef_parcelas', 1.00);
     }
 
+    public function normalizar(array $raw, string $status = 'sucesso'): array
+    {
+        // 612 do SIGEF = "não foram encontradas parcelas" = nada consta = Negativa (o alvo não
+        // tem imóvel rural certificado). Não é falha nem indeterminação — confirmado no smoke
+        // 2026-07-24 (CPF sem imóvel: 612 billable). Sem isto cairia em NAO_ENCONTRADA (ambíguo).
+        if ($status === 'nao_encontrado') {
+            return $this->bloco([
+                'status' => 'Negativa',
+                'nada_consta' => true,
+                'total_registros' => 0,
+                'parcelas' => [],
+                'mensagem' => $this->mensagem($raw),
+            ]);
+        }
+
+        return parent::normalizar($raw, $status);
+    }
+
     protected function mapearSucesso(array $data): array
     {
-        // Shape a confirmar no smoke; guarda a lista de parcelas e o resumo mínimo sem inventar
-        // campos. `parcelas` costuma vir como lista; total_registros para o rollup.
+        // Shape a confirmar quando um alvo COM parcela aparecer; `parcelas` costuma vir como lista.
         $parcelas = is_array($data['parcelas'] ?? null) ? $data['parcelas'] : [];
 
         return [
