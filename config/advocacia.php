@@ -121,6 +121,7 @@ return [
         ],
 
         // Imóveis/rural: algumas fontes começam pela pessoa; outras pelo identificador do bem.
+        // sigef_parcelas: tem classe própria (SigefParcelasFonte) — metadata de auth só p/ a UI.
         'sigef_parcelas' => [
             'tipos_pessoa' => ['PF', 'PJ'],
             'requer_autenticacao' => true,

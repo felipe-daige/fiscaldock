@@ -53,6 +53,8 @@ class AppServiceProvider extends ServiceProvider
             new \App\Services\Consultas\Fontes\Advocacia\IbamaDebitosFonte,
             new \App\Services\Consultas\Fontes\Advocacia\IbamaRegularidadeFonte,
             new \App\Services\Consultas\Fontes\Advocacia\IbamaAutuacoesFonte,
+            // GOV.BR (login do solicitante obrigatório) — credencial de sistema na fase de validação.
+            new \App\Services\Consultas\Fontes\Advocacia\SigefParcelasFonte,
             // Pessoa física: cadastro/situação cadastral + quitação eleitoral. As duas fontes
             // sensíveis ficam registradas, mas `pronta()` exige flag LGPD explícita.
             new \App\Services\Consultas\Fontes\Advocacia\CadastroPfFonte,

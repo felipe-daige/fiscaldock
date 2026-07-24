@@ -21,6 +21,18 @@ return [
         ],
     ],
 
+    // Credencial GOV.BR de SISTEMA (fase de validação apenas). As fontes GOV.BR (SIGEF, situação
+    // fiscal PF) exigem login_cpf+login_senha do SOLICITANTE em cada chamada. Enquanto a custódia
+    // por-usuário (cert A1) não existe, uma credencial única de sistema roda a feature para smoke.
+    // NUNCA hardcodar a senha: fica só no .env do host (fora do git). Sem credencial, as fontes
+    // GOV.BR ficam INDISPONÍVEL (não chamam, não cobram).
+    // MIGRAÇÃO: quando a captura de cert A1 por usuário existir, trocar a origem de login_* aqui
+    // por pkcs12_cert/pkcs12_pass do usuário — a Fonte não muda, só a fonte da credencial.
+    'govbr' => [
+        'login_cpf' => env('CONSULTAS_GOVBR_LOGIN_CPF'),
+        'login_senha' => env('CONSULTAS_GOVBR_LOGIN_SENHA'),
+    ],
+
     // Liga/desliga do provider InfoSimples: enquanto false, as fontes InfoSimples
     // não são consultadas. Ligar só após pagar/validar o InfoSimples e confirmar o
     // estorno preciso por fonte. ENV: CONSULTAS_INFOSIMPLES_ATIVO.
@@ -363,6 +375,7 @@ return [
         'ibama_debitos' => (float) env('CONSULTA_CREDITOS_IBAMA_DEBITOS', 1.00),
         'ibama_regularidade' => (float) env('CONSULTA_CREDITOS_IBAMA_REGULARIDADE', 1.00),
         'ibama_autuacoes' => (float) env('CONSULTA_CREDITOS_IBAMA_AUTUACOES', 1.00),
+        'sigef_parcelas' => (float) env('CONSULTA_CREDITOS_SIGEF_PARCELAS', 1.00),
     ],
 
     // Reconsulta de fontes com falha transitória (classe `retry`, ex. código 600).
